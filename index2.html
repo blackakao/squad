@@ -14,6 +14,23 @@ h2 {
   margin: 16px;
 }
 
+.nav {
+  margin: 0 16px 8px;
+}
+
+.page {
+  width: 100%;
+}
+
+.page.hidden,
+.modal.hidden {
+  display: none;
+}
+
+.hidden {
+  display: none !important;
+}
+
 #root {
   display: flex;
   width: 100%;
@@ -96,13 +113,85 @@ button {
   border-top: 1px solid #ddd;
   padding-top: 6px;
 }
+
+#monsterPage,
+#characterPage {
+  box-sizing: border-box;
+  height: calc(100vh - 96px);
+  padding: 5px 16px 16px;
+}
+
+.data-toolbar {
+  margin-bottom: 8px;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.data-table th,
+.data-table td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: left;
+}
+
+.data-table th:first-child,
+.data-table td:first-child {
+  width: 44px;
+  text-align: center;
+}
+
+.data-table th:last-child,
+.data-table td:last-child {
+  width: 90px;
+  text-align: center;
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.modal-content {
+  width: min(420px, calc(100vw - 32px));
+  border: 1px solid #999;
+  background: #fff;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.form-row input,
+.form-row select {
+  padding: 6px;
+  box-sizing: border-box;
+}
 </style>
 </head>
 <body>
 
 <h2>스쿼드 자동전투 프로토타입</h2>
 
-<div id="root">
+<div class="nav">
+  <button onclick="showPage('battle')">전투</button>
+  <button onclick="showPage('character')">캐릭터 관리</button>
+  <button onclick="showPage('monster')">몬스터 관리</button>
+</div>
+
+<div id="root" class="page">
   <div class="col left">
     <div class="panel char-panel">
       <h4>내 캐릭터</h4>
@@ -137,15 +226,115 @@ button {
   <div class="col right">
     <div class="panel enemy-control">
       <h4>적 추가</h4>
-      <button onclick="selectEnemy('slime')">슬라임</button>
-      <button onclick="selectEnemy('orc')">오크</button>
-      <button onclick="selectEnemy('dragon')">드래곤</button>
+      <div id="enemyButtons"></div>
     </div>
 
     <div class="panel status-panel">
       <h4>적 상태</h4>
       <div id="enemyStatus"></div>
     </div>
+  </div>
+</div>
+
+<div id="monsterPage" class="page hidden">
+  <div class="panel">
+    <h4>몬스터 관리</h4>
+    <div class="data-toolbar">
+      <button onclick="openMonsterModal()">추가</button>
+      <button onclick="deleteSelectedMonsters()">선택 삭제</button>
+      <button onclick="resetMonsterJson()">기본값 복원</button>
+    </div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>선택</th>
+          <th>이름</th>
+          <th>체력</th>
+          <th>공격력</th>
+          <th>역할</th>
+          <th>수정</th>
+        </tr>
+      </thead>
+      <tbody id="monsterTableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<div id="characterPage" class="page hidden">
+  <div class="panel">
+    <h4>캐릭터 관리</h4>
+    <div class="data-toolbar">
+      <button onclick="openCharacterModal()">추가</button>
+      <button onclick="deleteSelectedCharacters()">선택 삭제</button>
+      <button onclick="resetCharacterJson()">기본값 복원</button>
+    </div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>선택</th>
+          <th>이름</th>
+          <th>체력</th>
+          <th>공격력</th>
+          <th>역할</th>
+          <th>수정</th>
+        </tr>
+      </thead>
+      <tbody id="characterTableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<div id="monsterModal" class="modal hidden">
+  <div class="modal-content">
+    <h4 id="monsterModalTitle">몬스터 추가</h4>
+    <form id="monsterForm" onsubmit="saveMonsterFromForm(event)">
+      <input type="hidden" id="monsterEditIndex">
+      <div class="form-row">
+        <label for="monsterLabel">이름</label>
+        <input id="monsterLabel" required placeholder="슬라임">
+      </div>
+      <div class="form-row">
+        <label for="monsterHp">체력</label>
+        <input id="monsterHp" type="number" min="1" required>
+      </div>
+      <div class="form-row">
+        <label for="monsterAtk">공격력</label>
+        <input id="monsterAtk" type="number" min="1" required>
+      </div>
+      <div class="form-row">
+        <label for="monsterRole">역할</label>
+        <select id="monsterRole" required></select>
+      </div>
+      <button type="submit">저장</button>
+      <button type="button" onclick="closeMonsterModal()">취소</button>
+    </form>
+  </div>
+</div>
+
+<div id="characterModal" class="modal hidden">
+  <div class="modal-content">
+    <h4 id="characterModalTitle">캐릭터 추가</h4>
+    <form id="characterForm" onsubmit="saveCharacterFromForm(event)">
+      <input type="hidden" id="characterEditIndex">
+      <div class="form-row">
+        <label for="characterName">이름</label>
+        <input id="characterName" required placeholder="tank1">
+      </div>
+      <div class="form-row">
+        <label for="characterHp">체력</label>
+        <input id="characterHp" type="number" min="1" required>
+      </div>
+      <div class="form-row">
+        <label for="characterAtk">공격력</label>
+        <input id="characterAtk" type="number" min="1" required>
+      </div>
+      <div class="form-row">
+        <label for="characterRole">역할</label>
+        <select id="characterRole" required></select>
+      </div>
+      <button type="submit">저장</button>
+      <button type="button" onclick="closeCharacterModal()">취소</button>
+    </form>
   </div>
 </div>
 
@@ -158,13 +347,37 @@ const playerStatusEl = document.getElementById("playerStatus");
 const enemyStatusEl = document.getElementById("enemyStatus");
 const battleBtnEl = document.getElementById("battleBtn");
 const logEl = document.getElementById("log");
+const enemyButtonsEl = document.getElementById("enemyButtons");
+const battlePageEl = document.getElementById("root");
+const monsterPageEl = document.getElementById("monsterPage");
+const characterPageEl = document.getElementById("characterPage");
+const monsterTableBodyEl = document.getElementById("monsterTableBody");
+const monsterModalEl = document.getElementById("monsterModal");
+const monsterModalTitleEl = document.getElementById("monsterModalTitle");
+const monsterFormEl = document.getElementById("monsterForm");
+const monsterEditIndexEl = document.getElementById("monsterEditIndex");
+const monsterLabelEl = document.getElementById("monsterLabel");
+const monsterHpEl = document.getElementById("monsterHp");
+const monsterAtkEl = document.getElementById("monsterAtk");
+const monsterRoleEl = document.getElementById("monsterRole");
+const characterTableBodyEl = document.getElementById("characterTableBody");
+const characterModalEl = document.getElementById("characterModal");
+const characterModalTitleEl = document.getElementById("characterModalTitle");
+const characterFormEl = document.getElementById("characterForm");
+const characterEditIndexEl = document.getElementById("characterEditIndex");
+const characterNameEl = document.getElementById("characterName");
+const characterHpEl = document.getElementById("characterHp");
+const characterAtkEl = document.getElementById("characterAtk");
+const characterRoleEl = document.getElementById("characterRole");
 
 const ROLES = ["tank", "melee", "ranged", "healer"];
-const ENEMY_TYPES = {
-  slime: { label: "슬라임", hp: 80, atk: 8, role: "melee" },
-  orc: { label: "오크", hp: 120, atk: 12, role: "ranged" },
-  dragon: { label: "드래곤", hp: 200, atk: 20, role: "melee" }
-};
+const MONSTER_STORAGE_KEY = "squadAutoBattle.monsters";
+const CHARACTER_STORAGE_KEY = "squadAutoBattle.characters";
+const DEFAULT_MONSTER_JSON = [
+  { label: "슬라임", hp: 80, atk: 8, role: "melee" },
+  { label: "오크", hp: 120, atk: 12, role: "ranged" },
+  { label: "드래곤", hp: 200, atk: 20, role: "melee" }
+];
 
 const ROLE_STATS = {
   tank: { hp: 150, atk: 10, color: "gray", range: 10, speedMultiplier: 1.2 },
@@ -178,7 +391,6 @@ const ATTACK_COOLDOWN = 30;
 const COLLISION_DISTANCE = 10;
 const UNIT_RADIUS = 5;
 const MAX_PLAYER_SQUAD = 10;
-const TOTAL_CHARACTERS = 20;
 const PROJECTILE_SPEED = 7;
 const EFFECT_DURATION = 18;
 const EFFECT_COLORS = {
@@ -193,6 +405,8 @@ let projectiles = [];
 let isBattleRunning = false;
 let gameSpeed = 1;
 let scale = 1;
+let monsterJson = [];
+let characterJson = [];
 
 function createStats() {
   return { damage: 0, taken: 0, heal: 0 };
@@ -206,17 +420,302 @@ function getUnitRange(role) {
   return ROLE_STATS[role]?.range ?? 10;
 }
 
-function createCharacter(id) {
-  const role = ROLES[Math.floor(id / 5)];
-  const roleStat = ROLE_STATS[role];
+function createDefaultCharacterJson() {
+  const characters = [];
+
+  ROLES.forEach(role => {
+    const roleStat = ROLE_STATS[role];
+
+    for (let i = 0; i < 5; i++) {
+      characters.push({
+        name: `${role}${i + 1}`,
+        hp: roleStat.hp,
+        atk: roleStat.atk,
+        role
+      });
+    }
+  });
+
+  return characters;
+}
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    "\"": "&quot;",
+    "'": "&#39;"
+  }[char]));
+}
+
+function normalizeCombatJson(items, defaults, nameKey) {
+  if (!Array.isArray(items)) {
+    return defaults.map(item => ({ ...item }));
+  }
+
+  if (items.length === 0) {
+    return [];
+  }
+
+  const normalized = items
+    .map(item => ({
+      [nameKey]: String(item[nameKey] ?? item.label ?? item.name ?? "").trim(),
+      hp: Number(item.hp),
+      atk: Number(item.atk),
+      role: String(item.role ?? "").trim()
+    }))
+    .filter(item => item[nameKey] && item.hp > 0 && item.atk > 0 && ROLES.includes(item.role));
+
+  return normalized.length > 0 ? normalized : defaults.map(item => ({ ...item }));
+}
+
+function loadMonsterJson() {
+  try {
+    const savedJson = localStorage.getItem(MONSTER_STORAGE_KEY);
+    monsterJson = savedJson
+      ? normalizeCombatJson(JSON.parse(savedJson), DEFAULT_MONSTER_JSON, "label")
+      : DEFAULT_MONSTER_JSON.map(monster => ({ ...monster }));
+  } catch (error) {
+    monsterJson = DEFAULT_MONSTER_JSON.map(monster => ({ ...monster }));
+  }
+
+  saveMonsterJson();
+}
+
+function saveMonsterJson() {
+  try {
+    localStorage.setItem(MONSTER_STORAGE_KEY, JSON.stringify(monsterJson));
+  } catch (error) {
+    log("몬스터 JSON 저장에 실패했습니다.");
+  }
+}
+
+function refreshMonsterUI() {
+  renderEnemyButtons();
+  renderMonsterTable();
+}
+
+function renderEnemyButtons() {
+  enemyButtonsEl.innerHTML = monsterJson.map((monster, index) => (
+    `<button onclick="selectEnemy(${index})">${escapeHtml(monster.label)}</button>`
+  )).join("");
+}
+
+function renderMonsterTable() {
+  monsterTableBodyEl.innerHTML = monsterJson.map((monster, index) => `
+    <tr>
+      <td><input type="checkbox" class="monster-check" value="${index}"></td>
+      <td>${escapeHtml(monster.label)}</td>
+      <td>${monster.hp}</td>
+      <td>${monster.atk}</td>
+      <td>${escapeHtml(monster.role)}</td>
+      <td><button onclick="openMonsterModal(${index})">수정</button></td>
+    </tr>
+  `).join("");
+}
+
+function showPage(pageName) {
+  battlePageEl.classList.toggle("hidden", pageName !== "battle");
+  monsterPageEl.classList.toggle("hidden", pageName !== "monster");
+  characterPageEl.classList.toggle("hidden", pageName !== "character");
+  if (pageName === "battle") {
+    resizeCanvas();
+  }
+}
+
+function openMonsterModal(index = "") {
+  const monster = monsterJson[index];
+
+  monsterModalTitleEl.innerText = monster ? "몬스터 수정" : "몬스터 추가";
+  monsterEditIndexEl.value = monster ? index : "";
+  monsterLabelEl.value = monster?.label ?? "";
+  monsterHpEl.value = monster?.hp ?? 100;
+  monsterAtkEl.value = monster?.atk ?? 10;
+  monsterRoleEl.value = monster?.role ?? "melee";
+  monsterModalEl.classList.remove("hidden");
+}
+
+function closeMonsterModal() {
+  monsterModalEl.classList.add("hidden");
+  monsterFormEl.reset();
+}
+
+function saveMonsterFromForm(event) {
+  event.preventDefault();
+
+  const editIndex = monsterEditIndexEl.value;
+  const monster = {
+    label: monsterLabelEl.value.trim(),
+    hp: Number(monsterHpEl.value),
+    atk: Number(monsterAtkEl.value),
+    role: monsterRoleEl.value
+  };
+
+  if (!monster.label || monster.hp < 1 || monster.atk < 1) {
+    alert("몬스터 정보를 올바르게 입력해주세요.");
+    return;
+  }
+
+  if (editIndex !== "") {
+    monsterJson[Number(editIndex)] = monster;
+  } else {
+    monsterJson.push(monster);
+  }
+
+  saveMonsterJson();
+  refreshMonsterUI();
+  closeMonsterModal();
+}
+
+function deleteSelectedMonsters() {
+  const checkedIndexes = [...document.querySelectorAll(".monster-check:checked")]
+    .map(input => Number(input.value))
+    .sort((a, b) => b - a);
+
+  if (checkedIndexes.length === 0) {
+    alert("삭제할 몬스터를 선택해주세요.");
+    return;
+  }
+
+  checkedIndexes.forEach(index => monsterJson.splice(index, 1));
+  saveMonsterJson();
+  refreshMonsterUI();
+  updateStatusUI();
+}
+
+function resetMonsterJson() {
+  monsterJson = DEFAULT_MONSTER_JSON.map(monster => ({ ...monster }));
+  saveMonsterJson();
+  refreshMonsterUI();
+  updateStatusUI();
+}
+
+function initRoleOptions() {
+  monsterRoleEl.innerHTML = ROLES.map(role => `<option value="${role}">${role}</option>`).join("");
+  characterRoleEl.innerHTML = ROLES.map(role => `<option value="${role}">${role}</option>`).join("");
+}
+
+function loadCharacterJson() {
+  const defaults = createDefaultCharacterJson();
+
+  try {
+    const savedJson = localStorage.getItem(CHARACTER_STORAGE_KEY);
+    characterJson = savedJson
+      ? normalizeCombatJson(JSON.parse(savedJson), defaults, "name")
+      : defaults;
+  } catch (error) {
+    characterJson = defaults;
+  }
+
+  saveCharacterJson();
+}
+
+function saveCharacterJson() {
+  try {
+    localStorage.setItem(CHARACTER_STORAGE_KEY, JSON.stringify(characterJson));
+  } catch (error) {
+    log("캐릭터 JSON 저장에 실패했습니다.");
+  }
+}
+
+function refreshCharacterUI() {
+  renderCharacterTable();
+  initCharacters();
+  updateStatusUI();
+}
+
+function renderCharacterTable() {
+  characterTableBodyEl.innerHTML = characterJson.map((character, index) => `
+    <tr>
+      <td><input type="checkbox" class="character-check" value="${index}"></td>
+      <td>${escapeHtml(character.name)}</td>
+      <td>${character.hp}</td>
+      <td>${character.atk}</td>
+      <td>${escapeHtml(character.role)}</td>
+      <td><button onclick="openCharacterModal(${index})">수정</button></td>
+    </tr>
+  `).join("");
+}
+
+function openCharacterModal(index = "") {
+  const character = characterJson[index];
+
+  characterModalTitleEl.innerText = character ? "캐릭터 수정" : "캐릭터 추가";
+  characterEditIndexEl.value = character ? index : "";
+  characterNameEl.value = character?.name ?? "";
+  characterHpEl.value = character?.hp ?? 100;
+  characterAtkEl.value = character?.atk ?? 10;
+  characterRoleEl.value = character?.role ?? "melee";
+  characterModalEl.classList.remove("hidden");
+}
+
+function closeCharacterModal() {
+  characterModalEl.classList.add("hidden");
+  characterFormEl.reset();
+}
+
+function saveCharacterFromForm(event) {
+  event.preventDefault();
+
+  const editIndex = characterEditIndexEl.value;
+  const character = {
+    name: characterNameEl.value.trim(),
+    hp: Number(characterHpEl.value),
+    atk: Number(characterAtkEl.value),
+    role: characterRoleEl.value
+  };
+
+  if (!character.name || character.hp < 1 || character.atk < 1) {
+    alert("캐릭터 정보를 올바르게 입력해주세요.");
+    return;
+  }
+
+  if (editIndex !== "") {
+    characterJson[Number(editIndex)] = character;
+  } else {
+    characterJson.push(character);
+  }
+
+  playerSquad = [];
+  saveCharacterJson();
+  refreshCharacterUI();
+  closeCharacterModal();
+}
+
+function deleteSelectedCharacters() {
+  const checkedIndexes = [...document.querySelectorAll(".character-check:checked")]
+    .map(input => Number(input.value))
+    .sort((a, b) => b - a);
+
+  if (checkedIndexes.length === 0) {
+    alert("삭제할 캐릭터를 선택해주세요.");
+    return;
+  }
+
+  checkedIndexes.forEach(index => characterJson.splice(index, 1));
+  playerSquad = [];
+  saveCharacterJson();
+  refreshCharacterUI();
+}
+
+function resetCharacterJson() {
+  characterJson = createDefaultCharacterJson();
+  playerSquad = [];
+  saveCharacterJson();
+  refreshCharacterUI();
+}
+
+function createCharacter(characterData, index) {
+  const role = characterData.role;
 
   return {
-    id,
+    id: index,
     role,
-    name: `${role}${(id % 5) + 1}`,
-    hp: roleStat.hp,
-    maxHp: roleStat.hp,
-    atk: roleStat.atk,
+    name: characterData.name,
+    hp: characterData.hp,
+    maxHp: characterData.hp,
+    atk: characterData.atk,
     x: Math.random() * canvas.width * 0.3,
     y: Math.random() * canvas.height,
     vx: 0,
@@ -229,18 +728,21 @@ function createCharacter(id) {
   };
 }
 
-function createEnemy(type) {
-  const enemyType = ENEMY_TYPES[type];
-  const role = enemyType.role;
+function createEnemy(monsterIndex) {
+  const monster = monsterJson[monsterIndex];
+  if (!monster) {
+    return null;
+  }
+
+  const role = monster.role;
 
   return {
     id: enemySquad.length,
-    type,
     role,
-    name: `${enemyType.label}-${enemySquad.length + 1}`,
-    hp: enemyType.hp,
-    maxHp: enemyType.hp,
-    atk: enemyType.atk,
+    name: `${monster.label}-${enemySquad.length + 1}`,
+    hp: monster.hp,
+    maxHp: monster.hp,
+    atk: monster.atk,
     x: Math.random() * 100 + 250,
     y: Math.random() * 200 + 50,
     vx: 0,
@@ -296,16 +798,16 @@ function initCharacters() {
   charactersEl.innerHTML = "";
   allCharacters = [];
 
-  for (let i = 0; i < TOTAL_CHARACTERS; i++) {
-    const character = createCharacter(i);
+  characterJson.forEach((characterData, index) => {
+    const character = createCharacter(characterData, index);
     const button = document.createElement("button");
 
     allCharacters.push(character);
-    button.innerText = `${character.role.toUpperCase()} ${i}`;
+    button.innerText = character.name;
     button.onclick = () => toggleSelect(character, button);
 
     charactersEl.appendChild(button);
-  }
+  });
 }
 
 function toggleSelect(character, button) {
@@ -320,10 +822,16 @@ function toggleSelect(character, button) {
   updateStatusUI();
 }
 
-function selectEnemy(type) {
-  enemySquad.push(createEnemy(type));
+function selectEnemy(monsterIndex) {
+  const enemy = createEnemy(monsterIndex);
+  if (!enemy) {
+    alert("존재하지 않는 몬스터입니다.");
+    return;
+  }
+
+  enemySquad.push(enemy);
   updateStatusUI();
-  log(`${ENEMY_TYPES[type].label} 추가됨`);
+  log(`${enemy.name} 추가됨`);
 }
 
 function startBattle() {
@@ -506,6 +1014,10 @@ function heal(healer, team) {
 }
 
 function applyHeal(healer, target) {
+  if (!target.alive || target.hp <= 0) {
+    return;
+  }
+
   const amount = 10;
   const previousHp = target.hp;
 
@@ -541,7 +1053,7 @@ function updateProjectiles() {
   projectiles.forEach(projectile => {
     const { source, target, type } = projectile;
 
-    if ((!target.alive && type !== "heal") || !source.alive) {
+    if (!target.alive || !source.alive) {
       return;
     }
 
@@ -687,7 +1199,11 @@ function gameLoop() {
 resizeCanvas();
 window.addEventListener("resize", resizeCanvas);
 
-initCharacters();
+loadMonsterJson();
+loadCharacterJson();
+initRoleOptions();
+refreshMonsterUI();
+refreshCharacterUI();
 updateBattleButton();
 updateStatusUI();
 gameLoop();
