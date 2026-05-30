@@ -115,7 +115,8 @@ button {
 }
 
 #monsterPage,
-#characterPage {
+#characterPage,
+#recordPage {
   box-sizing: border-box;
   height: calc(100vh - 96px);
   padding: 5px 16px 16px;
@@ -148,6 +149,14 @@ button {
 .data-table td:last-child {
   width: 90px;
   text-align: center;
+}
+
+.record-table th:first-child,
+.record-table td:first-child,
+.record-table th:last-child,
+.record-table td:last-child {
+  width: auto;
+  text-align: left;
 }
 
 .modal {
@@ -189,6 +198,7 @@ button {
   <button onclick="showPage('battle')">전투</button>
   <button onclick="showPage('character')">캐릭터 관리</button>
   <button onclick="showPage('monster')">몬스터 관리</button>
+  <button onclick="showPage('record')">전투 기록</button>
 </div>
 
 <div id="root" class="page">
@@ -242,7 +252,6 @@ button {
     <div class="data-toolbar">
       <button onclick="openMonsterModal()">추가</button>
       <button onclick="deleteSelectedMonsters()">선택 삭제</button>
-      <button onclick="resetMonsterJson()">기본값 복원</button>
     </div>
     <table class="data-table">
       <thead>
@@ -251,6 +260,7 @@ button {
           <th>이름</th>
           <th>체력</th>
           <th>공격력</th>
+          <th>이동속도</th>
           <th>역할</th>
           <th>수정</th>
         </tr>
@@ -266,7 +276,6 @@ button {
     <div class="data-toolbar">
       <button onclick="openCharacterModal()">추가</button>
       <button onclick="deleteSelectedCharacters()">선택 삭제</button>
-      <button onclick="resetCharacterJson()">기본값 복원</button>
     </div>
     <table class="data-table">
       <thead>
@@ -275,11 +284,34 @@ button {
           <th>이름</th>
           <th>체력</th>
           <th>공격력</th>
+          <th>이동속도</th>
           <th>역할</th>
           <th>수정</th>
         </tr>
       </thead>
       <tbody id="characterTableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<div id="recordPage" class="page hidden">
+  <div class="panel">
+    <h4>전투 기록</h4>
+    <div class="data-toolbar">
+      <button onclick="clearBattleRecords()">기록 비우기</button>
+    </div>
+    <table class="data-table record-table">
+      <thead>
+        <tr>
+          <th>전투일시</th>
+          <th>결과</th>
+          <th>아군 멤버</th>
+          <th>몬스터 멤버</th>
+          <th>소요시간</th>
+          <th>전투 후 생명력 총합</th>
+        </tr>
+      </thead>
+      <tbody id="recordTableBody"></tbody>
     </table>
   </div>
 </div>
@@ -300,6 +332,10 @@ button {
       <div class="form-row">
         <label for="monsterAtk">공격력</label>
         <input id="monsterAtk" type="number" min="1" required>
+      </div>
+      <div class="form-row">
+        <label for="monsterSpeed">이동속도</label>
+        <input id="monsterSpeed" type="number" min="0.1" step="0.1" required>
       </div>
       <div class="form-row">
         <label for="monsterRole">역할</label>
@@ -329,6 +365,10 @@ button {
         <input id="characterAtk" type="number" min="1" required>
       </div>
       <div class="form-row">
+        <label for="characterSpeed">이동속도</label>
+        <input id="characterSpeed" type="number" min="0.1" step="0.1" required>
+      </div>
+      <div class="form-row">
         <label for="characterRole">역할</label>
         <select id="characterRole" required></select>
       </div>
@@ -351,7 +391,9 @@ const enemyButtonsEl = document.getElementById("enemyButtons");
 const battlePageEl = document.getElementById("root");
 const monsterPageEl = document.getElementById("monsterPage");
 const characterPageEl = document.getElementById("characterPage");
+const recordPageEl = document.getElementById("recordPage");
 const monsterTableBodyEl = document.getElementById("monsterTableBody");
+const recordTableBodyEl = document.getElementById("recordTableBody");
 const monsterModalEl = document.getElementById("monsterModal");
 const monsterModalTitleEl = document.getElementById("monsterModalTitle");
 const monsterFormEl = document.getElementById("monsterForm");
@@ -359,6 +401,7 @@ const monsterEditIndexEl = document.getElementById("monsterEditIndex");
 const monsterLabelEl = document.getElementById("monsterLabel");
 const monsterHpEl = document.getElementById("monsterHp");
 const monsterAtkEl = document.getElementById("monsterAtk");
+const monsterSpeedEl = document.getElementById("monsterSpeed");
 const monsterRoleEl = document.getElementById("monsterRole");
 const characterTableBodyEl = document.getElementById("characterTableBody");
 const characterModalEl = document.getElementById("characterModal");
@@ -368,15 +411,19 @@ const characterEditIndexEl = document.getElementById("characterEditIndex");
 const characterNameEl = document.getElementById("characterName");
 const characterHpEl = document.getElementById("characterHp");
 const characterAtkEl = document.getElementById("characterAtk");
+const characterSpeedEl = document.getElementById("characterSpeed");
 const characterRoleEl = document.getElementById("characterRole");
 
 const ROLES = ["tank", "melee", "ranged", "healer"];
-const MONSTER_STORAGE_KEY = "squadAutoBattle.monsters";
-const CHARACTER_STORAGE_KEY = "squadAutoBattle.characters";
+const DATA_FILES = {
+  monsters: "data/monsters.json",
+  characters: "data/characters.json",
+  records: "data/battle-records.json"
+};
 const DEFAULT_MONSTER_JSON = [
-  { label: "슬라임", hp: 80, atk: 8, role: "melee" },
-  { label: "오크", hp: 120, atk: 12, role: "ranged" },
-  { label: "드래곤", hp: 200, atk: 20, role: "melee" }
+  { label: "슬라임", hp: 80, atk: 8, speed: 1.2, role: "melee" },
+  { label: "오크", hp: 120, atk: 12, speed: 1, role: "ranged" },
+  { label: "드래곤", hp: 200, atk: 20, speed: 1.2, role: "melee" }
 ];
 
 const ROLE_STATS = {
@@ -386,7 +433,6 @@ const ROLE_STATS = {
   healer: { hp: 100, atk: 10, color: "violet", range: 60, speedMultiplier: 1 }
 };
 
-const BASE_MOVE_SPEED = 1.2;
 const ATTACK_COOLDOWN = 30;
 const COLLISION_DISTANCE = 10;
 const UNIT_RADIUS = 5;
@@ -407,6 +453,14 @@ let gameSpeed = 1;
 let scale = 1;
 let monsterJson = [];
 let characterJson = [];
+let battleRecordsJson = [];
+let battleStartedAt = null;
+let battleStartedAtText = "";
+let dirtyData = {
+  monsters: false,
+  characters: false,
+  records: false
+};
 
 function createStats() {
   return { damage: 0, taken: 0, heal: 0 };
@@ -431,6 +485,7 @@ function createDefaultCharacterJson() {
         name: `${role}${i + 1}`,
         hp: roleStat.hp,
         atk: roleStat.atk,
+        speed: roleStat.speedMultiplier,
         role
       });
     }
@@ -463,32 +518,57 @@ function normalizeCombatJson(items, defaults, nameKey) {
       [nameKey]: String(item[nameKey] ?? item.label ?? item.name ?? "").trim(),
       hp: Number(item.hp),
       atk: Number(item.atk),
+      speed: Number(item.speed ?? ROLE_STATS[item.role]?.speedMultiplier ?? 1),
       role: String(item.role ?? "").trim()
     }))
-    .filter(item => item[nameKey] && item.hp > 0 && item.atk > 0 && ROLES.includes(item.role));
+    .filter(item => item[nameKey] && item.hp > 0 && item.atk > 0 && item.speed > 0 && ROLES.includes(item.role));
 
   return normalized.length > 0 ? normalized : defaults.map(item => ({ ...item }));
 }
 
-function loadMonsterJson() {
-  try {
-    const savedJson = localStorage.getItem(MONSTER_STORAGE_KEY);
-    monsterJson = savedJson
-      ? normalizeCombatJson(JSON.parse(savedJson), DEFAULT_MONSTER_JSON, "label")
-      : DEFAULT_MONSTER_JSON.map(monster => ({ ...monster }));
-  } catch (error) {
-    monsterJson = DEFAULT_MONSTER_JSON.map(monster => ({ ...monster }));
+function normalizeRecordJson(records) {
+  if (!Array.isArray(records)) {
+    return [];
   }
 
-  saveMonsterJson();
+  return records
+    .map(record => ({
+      battleAt: String(record.battleAt ?? "").trim(),
+      result: String(record.result ?? "").trim(),
+      playerMembers: Array.isArray(record.playerMembers) ? record.playerMembers.map(String) : [],
+      monsterMembers: Array.isArray(record.monsterMembers) ? record.monsterMembers.map(String) : [],
+      durationSeconds: Number(record.durationSeconds) || 0,
+      totalHpAfterBattle: {
+        players: Number(record.totalHpAfterBattle?.players) || 0,
+        monsters: Number(record.totalHpAfterBattle?.monsters) || 0,
+        total: Number(record.totalHpAfterBattle?.total) || 0
+      }
+    }))
+    .filter(record => record.battleAt && record.result);
+}
+
+async function loadJsonFile(kind, defaults = []) {
+  try {
+    const response = await fetch(DATA_FILES[kind], { cache: "no-store" });
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    log(`${DATA_FILES[kind]} 파일을 읽지 못해 기본 데이터를 사용합니다.`);
+    return defaults.map(item => ({ ...item }));
+  }
+}
+
+async function loadMonsterJson() {
+  const rawJson = await loadJsonFile("monsters", DEFAULT_MONSTER_JSON);
+  monsterJson = normalizeCombatJson(rawJson, DEFAULT_MONSTER_JSON, "label");
 }
 
 function saveMonsterJson() {
-  try {
-    localStorage.setItem(MONSTER_STORAGE_KEY, JSON.stringify(monsterJson));
-  } catch (error) {
-    log("몬스터 JSON 저장에 실패했습니다.");
-  }
+  dirtyData.monsters = true;
+  log("몬스터 데이터가 현재 페이지에 반영되었습니다.");
 }
 
 function refreshMonsterUI() {
@@ -509,16 +589,33 @@ function renderMonsterTable() {
       <td>${escapeHtml(monster.label)}</td>
       <td>${monster.hp}</td>
       <td>${monster.atk}</td>
+      <td>${monster.speed}</td>
       <td>${escapeHtml(monster.role)}</td>
       <td><button onclick="openMonsterModal(${index})">수정</button></td>
     </tr>
   `).join("");
 }
 
-function showPage(pageName) {
+async function showPage(pageName) {
   battlePageEl.classList.toggle("hidden", pageName !== "battle");
   monsterPageEl.classList.toggle("hidden", pageName !== "monster");
   characterPageEl.classList.toggle("hidden", pageName !== "character");
+  recordPageEl.classList.toggle("hidden", pageName !== "record");
+
+  if (pageName === "monster" && !dirtyData.monsters) {
+    await loadMonsterJson();
+    enemySquad = [];
+    refreshMonsterUI();
+    updateStatusUI();
+  } else if (pageName === "character" && !dirtyData.characters) {
+    await loadCharacterJson();
+    playerSquad = [];
+    refreshCharacterUI();
+  } else if (pageName === "record" && !dirtyData.records) {
+    await loadBattleRecordsJson();
+    renderBattleRecords();
+  }
+
   if (pageName === "battle") {
     resizeCanvas();
   }
@@ -532,6 +629,7 @@ function openMonsterModal(index = "") {
   monsterLabelEl.value = monster?.label ?? "";
   monsterHpEl.value = monster?.hp ?? 100;
   monsterAtkEl.value = monster?.atk ?? 10;
+  monsterSpeedEl.value = monster?.speed ?? 1;
   monsterRoleEl.value = monster?.role ?? "melee";
   monsterModalEl.classList.remove("hidden");
 }
@@ -549,10 +647,11 @@ function saveMonsterFromForm(event) {
     label: monsterLabelEl.value.trim(),
     hp: Number(monsterHpEl.value),
     atk: Number(monsterAtkEl.value),
+    speed: Number(monsterSpeedEl.value),
     role: monsterRoleEl.value
   };
 
-  if (!monster.label || monster.hp < 1 || monster.atk < 1) {
+  if (!monster.label || monster.hp < 1 || monster.atk < 1 || monster.speed <= 0) {
     alert("몬스터 정보를 올바르게 입력해주세요.");
     return;
   }
@@ -584,39 +683,20 @@ function deleteSelectedMonsters() {
   updateStatusUI();
 }
 
-function resetMonsterJson() {
-  monsterJson = DEFAULT_MONSTER_JSON.map(monster => ({ ...monster }));
-  saveMonsterJson();
-  refreshMonsterUI();
-  updateStatusUI();
-}
-
 function initRoleOptions() {
   monsterRoleEl.innerHTML = ROLES.map(role => `<option value="${role}">${role}</option>`).join("");
   characterRoleEl.innerHTML = ROLES.map(role => `<option value="${role}">${role}</option>`).join("");
 }
 
-function loadCharacterJson() {
+async function loadCharacterJson() {
   const defaults = createDefaultCharacterJson();
-
-  try {
-    const savedJson = localStorage.getItem(CHARACTER_STORAGE_KEY);
-    characterJson = savedJson
-      ? normalizeCombatJson(JSON.parse(savedJson), defaults, "name")
-      : defaults;
-  } catch (error) {
-    characterJson = defaults;
-  }
-
-  saveCharacterJson();
+  const rawJson = await loadJsonFile("characters", defaults);
+  characterJson = normalizeCombatJson(rawJson, defaults, "name");
 }
 
 function saveCharacterJson() {
-  try {
-    localStorage.setItem(CHARACTER_STORAGE_KEY, JSON.stringify(characterJson));
-  } catch (error) {
-    log("캐릭터 JSON 저장에 실패했습니다.");
-  }
+  dirtyData.characters = true;
+  log("캐릭터 데이터가 현재 페이지에 반영되었습니다.");
 }
 
 function refreshCharacterUI() {
@@ -632,6 +712,7 @@ function renderCharacterTable() {
       <td>${escapeHtml(character.name)}</td>
       <td>${character.hp}</td>
       <td>${character.atk}</td>
+      <td>${character.speed}</td>
       <td>${escapeHtml(character.role)}</td>
       <td><button onclick="openCharacterModal(${index})">수정</button></td>
     </tr>
@@ -646,6 +727,7 @@ function openCharacterModal(index = "") {
   characterNameEl.value = character?.name ?? "";
   characterHpEl.value = character?.hp ?? 100;
   characterAtkEl.value = character?.atk ?? 10;
+  characterSpeedEl.value = character?.speed ?? 1;
   characterRoleEl.value = character?.role ?? "melee";
   characterModalEl.classList.remove("hidden");
 }
@@ -663,10 +745,11 @@ function saveCharacterFromForm(event) {
     name: characterNameEl.value.trim(),
     hp: Number(characterHpEl.value),
     atk: Number(characterAtkEl.value),
+    speed: Number(characterSpeedEl.value),
     role: characterRoleEl.value
   };
 
-  if (!character.name || character.hp < 1 || character.atk < 1) {
+  if (!character.name || character.hp < 1 || character.atk < 1 || character.speed <= 0) {
     alert("캐릭터 정보를 올바르게 입력해주세요.");
     return;
   }
@@ -699,11 +782,33 @@ function deleteSelectedCharacters() {
   refreshCharacterUI();
 }
 
-function resetCharacterJson() {
-  characterJson = createDefaultCharacterJson();
-  playerSquad = [];
-  saveCharacterJson();
-  refreshCharacterUI();
+async function loadBattleRecordsJson() {
+  const rawJson = await loadJsonFile("records", []);
+  battleRecordsJson = normalizeRecordJson(rawJson);
+}
+
+function saveBattleRecordsJson() {
+  dirtyData.records = true;
+  log("전투 기록이 현재 페이지에 반영되었습니다.");
+}
+
+function renderBattleRecords() {
+  recordTableBodyEl.innerHTML = battleRecordsJson.map(record => `
+    <tr>
+      <td>${escapeHtml(record.battleAt)}</td>
+      <td>${escapeHtml(record.result)}</td>
+      <td>${escapeHtml(record.playerMembers.join(", "))}</td>
+      <td>${escapeHtml(record.monsterMembers.join(", "))}</td>
+      <td>${record.durationSeconds.toFixed(1)}초</td>
+      <td>${record.totalHpAfterBattle.total} (아군 ${record.totalHpAfterBattle.players}, 몬스터 ${record.totalHpAfterBattle.monsters})</td>
+    </tr>
+  `).join("");
+}
+
+function clearBattleRecords() {
+  battleRecordsJson = [];
+  saveBattleRecordsJson();
+  renderBattleRecords();
 }
 
 function createCharacter(characterData, index) {
@@ -716,6 +821,7 @@ function createCharacter(characterData, index) {
     hp: characterData.hp,
     maxHp: characterData.hp,
     atk: characterData.atk,
+    speed: characterData.speed,
     x: Math.random() * canvas.width * 0.3,
     y: Math.random() * canvas.height,
     vx: 0,
@@ -743,6 +849,7 @@ function createEnemy(monsterIndex) {
     hp: monster.hp,
     maxHp: monster.hp,
     atk: monster.atk,
+    speed: monster.speed,
     x: Math.random() * 100 + 250,
     y: Math.random() * 200 + 50,
     vx: 0,
@@ -834,6 +941,42 @@ function selectEnemy(monsterIndex) {
   log(`${enemy.name} 추가됨`);
 }
 
+function sumAliveHp(units) {
+  return units.reduce((sum, unit) => sum + Math.max(0, Math.floor(unit.hp)), 0);
+}
+
+function createBattleRecord(result) {
+  const playerHp = sumAliveHp(playerSquad);
+  const monsterHp = sumAliveHp(enemySquad);
+
+  return {
+    battleAt: battleStartedAtText || new Date().toISOString(),
+    result,
+    playerMembers: playerSquad.map(unit => unit.name),
+    monsterMembers: enemySquad.map(unit => unit.name),
+    durationSeconds: battleStartedAt ? (Date.now() - battleStartedAt) / 1000 : 0,
+    totalHpAfterBattle: {
+      players: playerHp,
+      monsters: monsterHp,
+      total: playerHp + monsterHp
+    }
+  };
+}
+
+function finishBattle(result) {
+  isBattleRunning = false;
+  updateBattleButton();
+
+  const record = createBattleRecord(result);
+  battleRecordsJson.unshift(record);
+  saveBattleRecordsJson();
+  renderBattleRecords();
+  log(result);
+
+  battleStartedAt = null;
+  battleStartedAtText = "";
+}
+
 function startBattle() {
   if (playerSquad.length < 1) {
     alert("최소 1명 필요");
@@ -848,6 +991,8 @@ function startBattle() {
   playerSquad.forEach(resetUnitForBattle);
   enemySquad.forEach(resetUnitForBattle);
 
+  battleStartedAt = Date.now();
+  battleStartedAtText = new Date(battleStartedAt).toISOString();
   isBattleRunning = true;
   updateBattleButton();
   log("전투 시작!");
@@ -855,6 +1000,8 @@ function startBattle() {
 
 function stopBattle() {
   isBattleRunning = false;
+  battleStartedAt = null;
+  battleStartedAtText = "";
   updateBattleButton();
   log("전투 중지");
 }
@@ -899,7 +1046,7 @@ function moveUnit(unit, targets) {
     return;
   }
 
-  const speed = BASE_MOVE_SPEED * (ROLE_STATS[unit.role]?.speedMultiplier ?? 1);
+  const speed = unit.speed ?? ROLE_STATS[unit.role]?.speedMultiplier ?? 1;
   const desiredRange = getUnitRange(unit.role);
 
   if (dist > desiredRange) {
@@ -958,9 +1105,7 @@ function updateCombat() {
   const aliveEnemies = enemySquad.filter(unit => unit.alive);
 
   if (alivePlayers.length === 0 || aliveEnemies.length === 0) {
-    isBattleRunning = false;
-    updateBattleButton();
-    log(alivePlayers.length > 0 ? "승리!" : "패배!");
+    finishBattle(alivePlayers.length > 0 ? "승리" : "패배");
     return;
   }
 
@@ -1165,6 +1310,8 @@ function resetGame() {
   playerSquad = [];
   enemySquad = [];
   projectiles = [];
+  battleStartedAt = null;
+  battleStartedAtText = "";
 
   initCharacters();
   updateBattleButton();
@@ -1199,14 +1346,23 @@ function gameLoop() {
 resizeCanvas();
 window.addEventListener("resize", resizeCanvas);
 
-loadMonsterJson();
-loadCharacterJson();
-initRoleOptions();
-refreshMonsterUI();
-refreshCharacterUI();
-updateBattleButton();
-updateStatusUI();
-gameLoop();
+async function initApp() {
+  await Promise.all([
+    loadMonsterJson(),
+    loadCharacterJson(),
+    loadBattleRecordsJson()
+  ]);
+
+  initRoleOptions();
+  refreshMonsterUI();
+  refreshCharacterUI();
+  renderBattleRecords();
+  updateBattleButton();
+  updateStatusUI();
+  gameLoop();
+}
+
+initApp();
 </script>
 
 </body>

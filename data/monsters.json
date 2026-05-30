@@ -1,0 +1,23 @@
+[
+  {
+    "label": "슬라임",
+    "hp": 80,
+    "atk": 8,
+    "speed": 1.2,
+    "role": "melee"
+  },
+  {
+    "label": "오크",
+    "hp": 120,
+    "atk": 12,
+    "speed": 1,
+    "role": "ranged"
+  },
+  {
+    "label": "드래곤",
+    "hp": 200,
+    "atk": 20,
+    "speed": 1.2,
+    "role": "melee"
+  }
+]

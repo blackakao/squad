@@ -1,0 +1,142 @@
+[
+  {
+    "name": "tank1",
+    "hp": 150,
+    "atk": 10,
+    "speed": 1.2,
+    "role": "tank"
+  },
+  {
+    "name": "tank2",
+    "hp": 150,
+    "atk": 10,
+    "speed": 1.2,
+    "role": "tank"
+  },
+  {
+    "name": "tank3",
+    "hp": 150,
+    "atk": 10,
+    "speed": 1.2,
+    "role": "tank"
+  },
+  {
+    "name": "tank4",
+    "hp": 150,
+    "atk": 10,
+    "speed": 1.2,
+    "role": "tank"
+  },
+  {
+    "name": "tank5",
+    "hp": 150,
+    "atk": 10,
+    "speed": 1.2,
+    "role": "tank"
+  },
+  {
+    "name": "melee1",
+    "hp": 100,
+    "atk": 10,
+    "speed": 1.2,
+    "role": "melee"
+  },
+  {
+    "name": "melee2",
+    "hp": 100,
+    "atk": 10,
+    "speed": 1.2,
+    "role": "melee"
+  },
+  {
+    "name": "melee3",
+    "hp": 100,
+    "atk": 10,
+    "speed": 1.2,
+    "role": "melee"
+  },
+  {
+    "name": "melee4",
+    "hp": 100,
+    "atk": 10,
+    "speed": 1.2,
+    "role": "melee"
+  },
+  {
+    "name": "melee5",
+    "hp": 100,
+    "atk": 10,
+    "speed": 1.2,
+    "role": "melee"
+  },
+  {
+    "name": "ranged1",
+    "hp": 100,
+    "atk": 12,
+    "speed": 1,
+    "role": "ranged"
+  },
+  {
+    "name": "ranged2",
+    "hp": 100,
+    "atk": 12,
+    "speed": 1,
+    "role": "ranged"
+  },
+  {
+    "name": "ranged3",
+    "hp": 100,
+    "atk": 12,
+    "speed": 1,
+    "role": "ranged"
+  },
+  {
+    "name": "ranged4",
+    "hp": 100,
+    "atk": 12,
+    "speed": 1,
+    "role": "ranged"
+  },
+  {
+    "name": "ranged5",
+    "hp": 100,
+    "atk": 12,
+    "speed": 1,
+    "role": "ranged"
+  },
+  {
+    "name": "healer1",
+    "hp": 100,
+    "atk": 10,
+    "speed": 1,
+    "role": "healer"
+  },
+  {
+    "name": "healer2",
+    "hp": 100,
+    "atk": 10,
+    "speed": 1,
+    "role": "healer"
+  },
+  {
+    "name": "healer3",
+    "hp": 100,
+    "atk": 10,
+    "speed": 1,
+    "role": "healer"
+  },
+  {
+    "name": "healer4",
+    "hp": 100,
+    "atk": 10,
+    "speed": 1,
+    "role": "healer"
+  },
+  {
+    "name": "healer5",
+    "hp": 100,
+    "atk": 10,
+    "speed": 1,
+    "role": "healer"
+  }
+]
