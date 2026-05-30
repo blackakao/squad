@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Squad Auto Battle Prototype</title>
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+h2 {
+  margin: 16px;
+}
+
+#root {
+  display: flex;
+  width: 100%;
+  height: calc(100vh - 64px);
+}
+
+.col {
+  display: flex;
+  flex-direction: column;
+  padding: 5px;
+  box-sizing: border-box;
+}
+
+.col.left { width: 25%; }
+.col.center { width: 50%; }
+.col.right { width: 25%; }
+
+.panel {
+  border: 1px solid #ccc;
+  padding: 8px;
+  margin-bottom: 5px;
+  box-sizing: border-box;
+}
+
+.char-panel,
+.enemy-control {
+  height: 40%;
+  overflow-y: auto;
+}
+
+.status-panel {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.battle-panel {
+  height: 80%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.control-panel {
+  height: 20%;
+  overflow-y: auto;
+}
+
+#battleCanvas {
+  width: 100%;
+  height: 100%;
+  border: 1px solid #000;
+}
+
+button {
+  margin: 3px;
+}
+
+.unit-status {
+  margin-bottom: 10px;
+}
+
+.unit-meta {
+  font-size: 11px;
+}
+
+.hp-track {
+  background: #ddd;
+}
+
+.hp-fill {
+  height: 6px;
+}
+
+#log {
+  margin-top: 8px;
+  max-height: 70px;
+  overflow-y: auto;
+  font-size: 12px;
+  line-height: 1.4;
+  border-top: 1px solid #ddd;
+  padding-top: 6px;
+}
+</style>
+</head>
+<body>
+
+<h2>스쿼드 자동전투 프로토타입</h2>
+
+<div id="root">
+  <div class="col left">
+    <div class="panel char-panel">
+      <h4>내 캐릭터</h4>
+      <div id="characters"></div>
+    </div>
+
+    <div class="panel status-panel">
+      <h4>아군 상태</h4>
+      <div id="playerStatus"></div>
+    </div>
+  </div>
+
+  <div class="col center">
+    <div class="panel battle-panel">
+      <canvas id="battleCanvas"></canvas>
+    </div>
+
+    <div class="panel control-panel">
+      <h4>조작</h4>
+      <button id="battleBtn" onclick="toggleBattle()">전투 시작</button>
+      <button onclick="resetGame()">초기화</button>
+
+      <h4>배속</h4>
+      <button onclick="setSpeed(1)">x1</button>
+      <button onclick="setSpeed(2)">x2</button>
+      <button onclick="setSpeed(4)">x4</button>
+
+      <div id="log"></div>
+    </div>
+  </div>
+
+  <div class="col right">
+    <div class="panel enemy-control">
+      <h4>적 추가</h4>
+      <button onclick="selectEnemy('slime')">슬라임</button>
+      <button onclick="selectEnemy('orc')">오크</button>
+      <button onclick="selectEnemy('dragon')">드래곤</button>
+    </div>
+
+    <div class="panel status-panel">
+      <h4>적 상태</h4>
+      <div id="enemyStatus"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById("battleCanvas");
+const ctx = canvas.getContext("2d");
+
+const charactersEl = document.getElementById("characters");
+const playerStatusEl = document.getElementById("playerStatus");
+const enemyStatusEl = document.getElementById("enemyStatus");
+const battleBtnEl = document.getElementById("battleBtn");
+const logEl = document.getElementById("log");
+
+const ROLES = ["tank", "melee", "ranged", "healer"];
+const ENEMY_TYPES = {
+  slime: { label: "슬라임", hp: 80, atk: 8, role: "melee" },
+  orc: { label: "오크", hp: 120, atk: 12, role: "ranged" },
+  dragon: { label: "드래곤", hp: 200, atk: 20, role: "melee" }
+};
+
+const ROLE_STATS = {
+  tank: { hp: 150, atk: 10, color: "gray", range: 10, speedMultiplier: 1.2 },
+  melee: { hp: 100, atk: 10, color: "yellow", range: 10, speedMultiplier: 1.2 },
+  ranged: { hp: 100, atk: 12, color: "blue", range: 60, speedMultiplier: 1 },
+  healer: { hp: 100, atk: 10, color: "violet", range: 60, speedMultiplier: 1 }
+};
+
+const BASE_MOVE_SPEED = 1.2;
+const ATTACK_COOLDOWN = 30;
+const COLLISION_DISTANCE = 10;
+const UNIT_RADIUS = 5;
+const MAX_PLAYER_SQUAD = 10;
+const TOTAL_CHARACTERS = 20;
+const PROJECTILE_SPEED = 7;
+const EFFECT_DURATION = 18;
+const EFFECT_COLORS = {
+  damage: "#fff18f",
+  heal: "#8fffc1"
+};
+
+let allCharacters = [];
+let playerSquad = [];
+let enemySquad = [];
+let projectiles = [];
+let isBattleRunning = false;
+let gameSpeed = 1;
+let scale = 1;
+
+function createStats() {
+  return { damage: 0, taken: 0, heal: 0 };
+}
+
+function getRoleColor(role) {
+  return ROLE_STATS[role]?.color ?? "black";
+}
+
+function getUnitRange(role) {
+  return ROLE_STATS[role]?.range ?? 10;
+}
+
+function createCharacter(id) {
+  const role = ROLES[Math.floor(id / 5)];
+  const roleStat = ROLE_STATS[role];
+
+  return {
+    id,
+    role,
+    name: `${role}${(id % 5) + 1}`,
+    hp: roleStat.hp,
+    maxHp: roleStat.hp,
+    atk: roleStat.atk,
+    x: Math.random() * canvas.width * 0.3,
+    y: Math.random() * canvas.height,
+    vx: 0,
+    vy: 0,
+    attackCooldown: 0,
+    alive: true,
+    stats: createStats(),
+    effectType: null,
+    effectTimer: 0
+  };
+}
+
+function createEnemy(type) {
+  const enemyType = ENEMY_TYPES[type];
+  const role = enemyType.role;
+
+  return {
+    id: enemySquad.length,
+    type,
+    role,
+    name: `${enemyType.label}-${enemySquad.length + 1}`,
+    hp: enemyType.hp,
+    maxHp: enemyType.hp,
+    atk: enemyType.atk,
+    x: Math.random() * 100 + 250,
+    y: Math.random() * 200 + 50,
+    vx: 0,
+    vy: 0,
+    attackCooldown: 0,
+    alive: true,
+    stats: createStats(),
+    effectType: null,
+    effectTimer: 0
+  };
+}
+
+function resetUnitForBattle(unit) {
+  unit.hp = unit.maxHp;
+  unit.alive = true;
+  unit.vx = 0;
+  unit.vy = 0;
+  unit.attackCooldown = 0;
+  unit.stats = createStats();
+  unit.effectType = null;
+  unit.effectTimer = 0;
+}
+
+function log(message) {
+  logEl.innerHTML += `${message}<br>`;
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+function distance(a, b) {
+  return Math.hypot(a.x - b.x, a.y - b.y);
+}
+
+function clampPosition(unit) {
+  const margin = UNIT_RADIUS;
+
+  unit.x = Math.max(margin, Math.min(canvas.width - margin, unit.x));
+  unit.y = Math.max(margin, Math.min(canvas.height - margin, unit.y));
+}
+
+function syncAliveState(unit) {
+  if (unit.hp <= 0) {
+    unit.hp = 0;
+    unit.alive = false;
+  }
+}
+
+function triggerEffect(unit, effectType) {
+  unit.effectType = effectType;
+  unit.effectTimer = EFFECT_DURATION;
+}
+
+function initCharacters() {
+  charactersEl.innerHTML = "";
+  allCharacters = [];
+
+  for (let i = 0; i < TOTAL_CHARACTERS; i++) {
+    const character = createCharacter(i);
+    const button = document.createElement("button");
+
+    allCharacters.push(character);
+    button.innerText = `${character.role.toUpperCase()} ${i}`;
+    button.onclick = () => toggleSelect(character, button);
+
+    charactersEl.appendChild(button);
+  }
+}
+
+function toggleSelect(character, button) {
+  if (playerSquad.includes(character)) {
+    playerSquad = playerSquad.filter(unit => unit !== character);
+    button.style.background = "";
+  } else if (playerSquad.length < MAX_PLAYER_SQUAD) {
+    playerSquad.push(character);
+    button.style.background = "lightblue";
+  }
+
+  updateStatusUI();
+}
+
+function selectEnemy(type) {
+  enemySquad.push(createEnemy(type));
+  updateStatusUI();
+  log(`${ENEMY_TYPES[type].label} 추가됨`);
+}
+
+function startBattle() {
+  if (playerSquad.length < 1) {
+    alert("최소 1명 필요");
+    return;
+  }
+
+  if (enemySquad.length < 1) {
+    alert("적을 1명 이상 추가해주세요");
+    return;
+  }
+
+  playerSquad.forEach(resetUnitForBattle);
+  enemySquad.forEach(resetUnitForBattle);
+
+  isBattleRunning = true;
+  updateBattleButton();
+  log("전투 시작!");
+}
+
+function stopBattle() {
+  isBattleRunning = false;
+  updateBattleButton();
+  log("전투 중지");
+}
+
+function toggleBattle() {
+  if (isBattleRunning) {
+    stopBattle();
+  } else {
+    startBattle();
+  }
+}
+
+function setSpeed(speed) {
+  gameSpeed = speed;
+  log(`배속 x${speed}`);
+}
+
+function updateBattleButton() {
+  battleBtnEl.innerText = isBattleRunning ? "전투 중지" : "전투 시작";
+}
+
+function updateMovement() {
+  playerSquad.forEach(unit => moveUnit(unit, enemySquad));
+  enemySquad.forEach(unit => moveUnit(unit, playerSquad));
+}
+
+function moveUnit(unit, targets) {
+  if (!unit.alive) {
+    return;
+  }
+
+  const target = targets.find(candidate => candidate.alive);
+  if (!target) {
+    return;
+  }
+
+  const dx = target.x - unit.x;
+  const dy = target.y - unit.y;
+  const dist = Math.hypot(dx, dy);
+
+  if (dist === 0) {
+    return;
+  }
+
+  const speed = BASE_MOVE_SPEED * (ROLE_STATS[unit.role]?.speedMultiplier ?? 1);
+  const desiredRange = getUnitRange(unit.role);
+
+  if (dist > desiredRange) {
+    unit.vx = (dx / dist) * speed;
+    unit.vy = (dy / dist) * speed;
+  } else if (dist < desiredRange - 5 && (unit.role === "ranged" || unit.role === "healer")) {
+    unit.vx = -(dx / dist) * speed;
+    unit.vy = -(dy / dist) * speed;
+  } else {
+    unit.vx = 0;
+    unit.vy = 0;
+  }
+
+  unit.x += unit.vx;
+  unit.y += unit.vy;
+  clampPosition(unit);
+}
+
+function resolveCollision() {
+  const units = [...playerSquad, ...enemySquad];
+
+  for (let i = 0; i < units.length; i++) {
+    for (let j = i + 1; j < units.length; j++) {
+      const a = units[i];
+      const b = units[j];
+
+      if (!a.alive || !b.alive) {
+        continue;
+      }
+
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      const dist = Math.hypot(dx, dy);
+
+      if (dist >= COLLISION_DISTANCE || dist === 0) {
+        continue;
+      }
+
+      const overlap = (COLLISION_DISTANCE - dist) / 2;
+      const nx = dx / dist;
+      const ny = dy / dist;
+
+      a.x -= nx * overlap;
+      a.y -= ny * overlap;
+      b.x += nx * overlap;
+      b.y += ny * overlap;
+
+      clampPosition(a);
+      clampPosition(b);
+    }
+  }
+}
+
+function updateCombat() {
+  const alivePlayers = playerSquad.filter(unit => unit.alive);
+  const aliveEnemies = enemySquad.filter(unit => unit.alive);
+
+  if (alivePlayers.length === 0 || aliveEnemies.length === 0) {
+    isBattleRunning = false;
+    updateBattleButton();
+    log(alivePlayers.length > 0 ? "승리!" : "패배!");
+    return;
+  }
+
+  alivePlayers.forEach(unit => takeAction(unit, alivePlayers, aliveEnemies));
+  aliveEnemies.forEach(unit => takeAction(unit, aliveEnemies, alivePlayers));
+}
+
+function takeAction(unit, allies, enemies) {
+  if (unit.attackCooldown > 0) {
+    unit.attackCooldown--;
+    return;
+  }
+
+  if (unit.role === "healer") {
+    if (heal(unit, allies)) {
+      unit.attackCooldown = ATTACK_COOLDOWN;
+    }
+    return;
+  }
+
+  const target = findTarget(unit, enemies);
+  if (!target) {
+    return;
+  }
+
+  if (unit.role === "ranged") {
+    spawnProjectile(unit, target, "attack");
+  } else {
+    doAttack(unit, target);
+  }
+
+  unit.attackCooldown = ATTACK_COOLDOWN;
+}
+
+function findTarget(unit, enemies) {
+  if (unit.role === "ranged") {
+    return enemies.find(enemy => enemy.alive);
+  }
+
+  return enemies.find(enemy => enemy.alive && distance(unit, enemy) < 30);
+}
+
+function heal(healer, team) {
+  const target = team.find(unit => unit.alive && unit.hp < unit.maxHp);
+  if (!target) {
+    return false;
+  }
+
+  spawnProjectile(healer, target, "heal");
+  return true;
+}
+
+function applyHeal(healer, target) {
+  const amount = 10;
+  const previousHp = target.hp;
+
+  target.hp = Math.min(target.maxHp, target.hp + amount);
+  healer.stats.heal += target.hp - previousHp;
+  triggerEffect(target, "heal");
+}
+
+function doAttack(attacker, target) {
+  const damage = attacker.atk;
+
+  target.hp -= damage;
+  target.stats.taken += damage;
+  attacker.stats.damage += damage;
+
+  syncAliveState(target);
+  triggerEffect(target, "damage");
+}
+
+function spawnProjectile(source, target, type) {
+  projectiles.push({
+    source,
+    target,
+    type,
+    x: source.x,
+    y: source.y
+  });
+}
+
+function updateProjectiles() {
+  const activeProjectiles = [];
+
+  projectiles.forEach(projectile => {
+    const { source, target, type } = projectile;
+
+    if ((!target.alive && type !== "heal") || !source.alive) {
+      return;
+    }
+
+    const dx = target.x - projectile.x;
+    const dy = target.y - projectile.y;
+    const dist = Math.hypot(dx, dy);
+
+    if (dist <= PROJECTILE_SPEED || dist === 0) {
+      if (type === "heal") {
+        applyHeal(source, target);
+      } else {
+        doAttack(source, target);
+      }
+      return;
+    }
+
+    projectile.x += (dx / dist) * PROJECTILE_SPEED;
+    projectile.y += (dy / dist) * PROJECTILE_SPEED;
+    activeProjectiles.push(projectile);
+  });
+
+  projectiles = activeProjectiles;
+}
+
+function updateEffects() {
+  [...playerSquad, ...enemySquad].forEach(unit => {
+    if (unit.effectTimer > 0) {
+      unit.effectTimer--;
+      if (unit.effectTimer === 0) {
+        unit.effectType = null;
+      }
+    }
+  });
+}
+
+function drawUnit(unit, isEnemy) {
+  if (!unit.alive) {
+    return;
+  }
+
+  const isBlinkFrame = unit.effectTimer > 0 && Math.floor(unit.effectTimer / 3) % 2 === 0;
+  const baseColor = isEnemy ? "red" : getRoleColor(unit.role);
+
+  ctx.fillStyle = isBlinkFrame ? EFFECT_COLORS[unit.effectType] ?? baseColor : baseColor;
+  ctx.beginPath();
+  ctx.arc(unit.x, unit.y, UNIT_RADIUS * scale, 0, Math.PI * 2);
+  ctx.fill();
+
+  const hpRatio = unit.hp / unit.maxHp;
+
+  ctx.fillStyle = "red";
+  ctx.fillRect(unit.x - 10 * scale, unit.y - 12 * scale, 20 * scale, 3 * scale);
+
+  ctx.fillStyle = "green";
+  ctx.fillRect(unit.x - 10 * scale, unit.y - 12 * scale, 20 * scale * hpRatio, 3 * scale);
+
+  ctx.fillStyle = "black";
+  ctx.font = `${10 * scale}px Arial`;
+  ctx.fillText(unit.name, unit.x - 12 * scale, unit.y - 16 * scale);
+}
+
+function drawProjectiles() {
+  projectiles.forEach(projectile => {
+    ctx.fillStyle = projectile.type === "heal" ? "#4fd88b" : "#ff9b54";
+    ctx.beginPath();
+    ctx.arc(projectile.x, projectile.y, 3 * scale, 0, Math.PI * 2);
+    ctx.fill();
+  });
+}
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  playerSquad.forEach(unit => drawUnit(unit, false));
+  enemySquad.forEach(unit => drawUnit(unit, true));
+  drawProjectiles();
+}
+
+function renderStatus(units, colorResolver) {
+  return units.map(unit => {
+    const hpRatio = Math.max(0, (unit.hp / unit.maxHp) * 100);
+
+    return `
+      <div class="unit-status">
+        <div>${unit.name} (${unit.role})</div>
+        <div class="unit-meta">${Math.floor(unit.hp)} / ${unit.maxHp}</div>
+        <div class="hp-track">
+          <div class="hp-fill" style="width:${hpRatio}%; background:${colorResolver(unit)};"></div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function updateStatusUI() {
+  playerStatusEl.innerHTML = renderStatus(playerSquad, unit => getRoleColor(unit.role));
+  enemyStatusEl.innerHTML = renderStatus(enemySquad, () => "red");
+}
+
+function resizeCanvas() {
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width;
+  canvas.height = rect.height;
+  scale = canvas.width / 400;
+}
+
+function resetGame() {
+  isBattleRunning = false;
+  gameSpeed = 1;
+  playerSquad = [];
+  enemySquad = [];
+  projectiles = [];
+
+  initCharacters();
+  updateBattleButton();
+  updateStatusUI();
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  log("게임 초기화 완료");
+}
+
+function gameLoop() {
+  if (isBattleRunning) {
+    for (let i = 0; i < gameSpeed; i++) {
+      if (!isBattleRunning) {
+        break;
+      }
+
+      updateMovement();
+      resolveCollision();
+      updateCombat();
+      updateProjectiles();
+      updateEffects();
+    }
+  } else {
+    updateEffects();
+  }
+
+  draw();
+  updateStatusUI();
+  requestAnimationFrame(gameLoop);
+}
+
+resizeCanvas();
+window.addEventListener("resize", resizeCanvas);
+
+initCharacters();
+updateBattleButton();
+updateStatusUI();
+gameLoop();
+</script>
+
+</body>
+</html>
