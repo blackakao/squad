@@ -5,7 +5,6 @@ const charactersEl = document.getElementById("characters");
 const playerStatusEl = document.getElementById("playerStatus");
 const enemyStatusEl = document.getElementById("enemyStatus");
 const battleBtnEl = document.getElementById("battleBtn");
-const logEl = document.getElementById("log");
 const enemyButtonsEl = document.getElementById("enemyButtons");
 const battlePageEl = document.getElementById("root");
 const monsterPageEl = document.getElementById("monsterPage");

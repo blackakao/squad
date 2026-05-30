@@ -10,8 +10,7 @@
 }
 
 function log(message) {
-  logEl.innerHTML += `${message}<br>`;
-  logEl.scrollTop = logEl.scrollHeight;
+  console.log(message);
 }
 
 function distance(a, b) {
