@@ -7,8 +7,9 @@
         {
             "type": "msedge",
             "request": "launch",
-            "name": "Open index2.html",
-            "file": "c:\\Users\\park\\Desktop\\project\\index2.html"
+            "name": "Open local battle app",
+            "url": "http://127.0.0.1:8000/index2.html",
+            "webRoot": "${workspaceFolder}"
         }
     ]
 }

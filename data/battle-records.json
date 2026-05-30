@@ -1,1 +1,251 @@
-[]
+[
+  {
+    "battleAt": "2026-05-30T16:11:29.890Z",
+    "result": "승리",
+    "playerMembers": [
+      {
+        "name": "ranged1",
+        "role": "ranged",
+        "hp": 100,
+        "maxHp": 100
+      },
+      {
+        "name": "ranged2",
+        "role": "ranged",
+        "hp": 100,
+        "maxHp": 100
+      },
+      {
+        "name": "ranged3",
+        "role": "ranged",
+        "hp": 100,
+        "maxHp": 100
+      },
+      {
+        "name": "ranged4",
+        "role": "ranged",
+        "hp": 100,
+        "maxHp": 100
+      },
+      {
+        "name": "ranged5",
+        "role": "ranged",
+        "hp": 100,
+        "maxHp": 100
+      }
+    ],
+    "monsterMembers": [
+      {
+        "name": "슬라임-1",
+        "role": "melee",
+        "hp": 0,
+        "maxHp": 80
+      },
+      {
+        "name": "슬라임-2",
+        "role": "melee",
+        "hp": 0,
+        "maxHp": 80
+      }
+    ],
+    "durationSeconds": 1.719
+  },
+  {
+    "battleAt": "2026-05-30T16:10:37.283Z",
+    "result": "승리",
+    "playerMembers": [
+      {
+        "name": "퓨어탱커",
+        "role": "tank",
+        "hp": 340,
+        "maxHp": 500
+      },
+      {
+        "name": "강한밀리",
+        "role": "melee",
+        "hp": 100,
+        "maxHp": 100
+      },
+      {
+        "name": "빠른밀리",
+        "role": "melee",
+        "hp": 100,
+        "maxHp": 100
+      }
+    ],
+    "monsterMembers": [
+      {
+        "name": "슬라임-1",
+        "role": "melee",
+        "hp": 0,
+        "maxHp": 80
+      },
+      {
+        "name": "슬라임-2",
+        "role": "melee",
+        "hp": 0,
+        "maxHp": 80
+      },
+      {
+        "name": "슬라임-3",
+        "role": "melee",
+        "hp": 0,
+        "maxHp": 80
+      },
+      {
+        "name": "슬라임-4",
+        "role": "melee",
+        "hp": 0,
+        "maxHp": 80
+      }
+    ],
+    "durationSeconds": 4.674
+  },
+  {
+    "battleAt": "2026-05-30T16:05:26.585Z",
+    "result": "승리",
+    "playerMembers": [
+      {
+        "name": "퓨어탱커",
+        "role": "tank",
+        "hp": 484,
+        "maxHp": 500
+      },
+      {
+        "name": "딜탱",
+        "role": "tank",
+        "hp": 284,
+        "maxHp": 300
+      },
+      {
+        "name": "보조탱커",
+        "role": "tank",
+        "hp": 400,
+        "maxHp": 400
+      }
+    ],
+    "monsterMembers": [
+      {
+        "name": "슬라임-1",
+        "role": "melee",
+        "hp": 0,
+        "maxHp": 80
+      }
+    ],
+    "durationSeconds": 2.952
+  },
+  {
+    "battleAt": "2026-05-30T16:02:08.322Z",
+    "result": "승리",
+    "playerMembers": [
+      {
+        "name": "퓨어탱커",
+        "role": "tank",
+        "hp": 130,
+        "maxHp": 500
+      },
+      {
+        "name": "딜탱",
+        "role": "tank",
+        "hp": 280,
+        "maxHp": 300
+      },
+      {
+        "name": "메인힐러",
+        "role": "healer",
+        "hp": 100,
+        "maxHp": 100
+      },
+      {
+        "name": "서브힐러",
+        "role": "healer",
+        "hp": 100,
+        "maxHp": 100
+      },
+      {
+        "name": "빠른밀리",
+        "role": "melee",
+        "hp": 70,
+        "maxHp": 100
+      },
+      {
+        "name": "강한밀리",
+        "role": "melee",
+        "hp": 100,
+        "maxHp": 100
+      },
+      {
+        "name": "ranged1",
+        "role": "ranged",
+        "hp": 100,
+        "maxHp": 100
+      },
+      {
+        "name": "ranged2",
+        "role": "ranged",
+        "hp": 100,
+        "maxHp": 100
+      },
+      {
+        "name": "ranged3",
+        "role": "ranged",
+        "hp": 100,
+        "maxHp": 100
+      },
+      {
+        "name": "ranged4",
+        "role": "ranged",
+        "hp": 100,
+        "maxHp": 100
+      }
+    ],
+    "monsterMembers": [
+      {
+        "name": "보스급 몬스터-1",
+        "role": "melee",
+        "hp": 0,
+        "maxHp": 5000
+      }
+    ],
+    "durationSeconds": 8.859
+  },
+  {
+    "battleAt": "2026-05-30T15:50:06.227Z",
+    "result": "패배",
+    "playerMembers": [
+      {
+        "name": "탱커1",
+        "role": "tank",
+        "hp": 0,
+        "maxHp": 150
+      }
+    ],
+    "monsterMembers": [
+      {
+        "name": "드래곤-1",
+        "role": "melee",
+        "hp": 180,
+        "maxHp": 200
+      },
+      {
+        "name": "드래곤-2",
+        "role": "melee",
+        "hp": 190,
+        "maxHp": 200
+      },
+      {
+        "name": "드래곤-3",
+        "role": "melee",
+        "hp": 200,
+        "maxHp": 200
+      },
+      {
+        "name": "드래곤-4",
+        "role": "melee",
+        "hp": 200,
+        "maxHp": 200
+      }
+    ],
+    "durationSeconds": 2.49
+  }
+]

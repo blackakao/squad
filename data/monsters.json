@@ -19,5 +19,12 @@
     "atk": 20,
     "speed": 1.2,
     "role": "melee"
+  },
+  {
+    "label": "보스급 몬스터",
+    "hp": 5000,
+    "atk": 30,
+    "speed": 0.1,
+    "role": "melee"
   }
 ]
