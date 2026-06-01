@@ -13,6 +13,7 @@
 <div class="nav">
   <button onclick="showPage('battle')">전투</button>
   <button onclick="showPage('character')">캐릭터 관리</button>
+  <button onclick="showPage('stats')">스탯 관리</button>
   <button onclick="showPage('monster')">몬스터 관리</button>
   <button onclick="showPage('record')">전투 기록</button>
 </div>
@@ -108,6 +109,31 @@
   </div>
 </div>
 
+<div id="statsPage" class="page hidden">
+  <div class="panel">
+    <h4>스탯 관리</h4>
+    <div class="stat-manager">
+      <div class="stat-character-list">
+        <h5>캐릭터</h5>
+        <div id="statCharacterButtons"></div>
+      </div>
+      <div class="stat-editor">
+        <div class="stat-editor-header">
+          <div>
+            <div id="statSelectedName" class="stat-selected-name">캐릭터를 선택하세요</div>
+            <div id="statPointSummary" class="stat-point-summary">0 / 150</div>
+          </div>
+          <button type="button" onclick="resetSelectedCharacterStats()">초기화</button>
+        </div>
+        <div id="statRows" class="stat-rows"></div>
+        <div class="stat-actions">
+          <button type="button" onclick="saveSelectedCharacterStats()">적용</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="recordPage" class="page hidden">
   <div class="panel">
     <h4>전투 기록</h4>
@@ -198,6 +224,7 @@
 <script src="js/api.js"></script>
 <script src="js/monster.js"></script>
 <script src="js/character.js"></script>
+<script src="js/stats.js"></script>
 <script src="js/record.js"></script>
 <script src="js/battle.js"></script>
 <script src="js/main.js"></script>

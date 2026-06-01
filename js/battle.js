@@ -37,6 +37,7 @@ function triggerEffect(unit, effectType) {
 }
 
 async function finishBattle(result) {
+  lastBattleDurationMs = battleStartedAt ? Date.now() - battleStartedAt : lastBattleDurationMs;
   isBattleRunning = false;
   updateBattleButton();
 
@@ -69,6 +70,7 @@ function startBattle() {
   playerSquad.forEach(resetUnitForBattle);
   enemySquad.forEach(resetUnitForBattle);
 
+  lastBattleDurationMs = 0;
   battleStartedAt = Date.now();
   battleStartedAtText = new Date(battleStartedAt).toISOString();
   isBattleRunning = true;
@@ -77,6 +79,7 @@ function startBattle() {
 }
 
 function stopBattle() {
+  lastBattleDurationMs = battleStartedAt ? Date.now() - battleStartedAt : lastBattleDurationMs;
   isBattleRunning = false;
   battleStartedAt = null;
   battleStartedAtText = "";
@@ -362,6 +365,7 @@ function resetGame() {
   projectiles = [];
   battleStartedAt = null;
   battleStartedAtText = "";
+  lastBattleDurationMs = 0;
 
   initCharacters();
   updateBattleButton();

@@ -9,6 +9,7 @@ const enemyButtonsEl = document.getElementById("enemyButtons");
 const battlePageEl = document.getElementById("root");
 const monsterPageEl = document.getElementById("monsterPage");
 const characterPageEl = document.getElementById("characterPage");
+const statsPageEl = document.getElementById("statsPage");
 const recordPageEl = document.getElementById("recordPage");
 const monsterTableBodyEl = document.getElementById("monsterTableBody");
 const recordTableBodyEl = document.getElementById("recordTableBody");
@@ -32,8 +33,23 @@ const characterHpEl = document.getElementById("characterHp");
 const characterAtkEl = document.getElementById("characterAtk");
 const characterSpeedEl = document.getElementById("characterSpeed");
 const characterRoleEl = document.getElementById("characterRole");
+const statCharacterButtonsEl = document.getElementById("statCharacterButtons");
+const statSelectedNameEl = document.getElementById("statSelectedName");
+const statPointSummaryEl = document.getElementById("statPointSummary");
+const statRowsEl = document.getElementById("statRows");
 
 const ROLES = ["tank", "melee", "ranged", "healer"];
+const CHARACTER_STAT_DEFS = [
+  { key: "str", label: "힘" },
+  { key: "vit", label: "체력" },
+  { key: "agi", label: "민첩" },
+  { key: "focus", label: "집중" },
+  { key: "int", label: "지능" },
+  { key: "wis", label: "지혜" }
+];
+const CHARACTER_STAT_MAX = 50;
+const CHARACTER_STAT_TOTAL = 150;
+const CHARACTER_STAT_STEP = 10;
 const API_URLS = {
   monsters: "/api/monsters",
   characters: "/api/characters",
@@ -75,9 +91,36 @@ let characterJson = [];
 let battleRecordsJson = [];
 let battleStartedAt = null;
 let battleStartedAtText = "";
+let lastBattleDurationMs = 0;
+let selectedStatCharacterIndex = "";
 
 function createStats() {
   return { damage: 0, taken: 0, heal: 0 };
+}
+
+function createCharacterAttributes(source = {}) {
+  return CHARACTER_STAT_DEFS.reduce((attributes, stat) => {
+    const value = Number(source[stat.key] ?? 0);
+    attributes[stat.key] = Math.max(0, Math.min(CHARACTER_STAT_MAX, Math.floor(value / CHARACTER_STAT_STEP) * CHARACTER_STAT_STEP));
+    return attributes;
+  }, {});
+}
+
+function getAttributeTotal(attributes) {
+  return CHARACTER_STAT_DEFS.reduce((total, stat) => total + Number(attributes?.[stat.key] ?? 0), 0);
+}
+
+function getBattleElapsedSeconds() {
+  if (battleStartedAt) {
+    return Math.max(0.001, (Date.now() - battleStartedAt) / 1000);
+  }
+
+  return Math.max(0.001, lastBattleDurationMs / 1000);
+}
+
+function getUnitDps(unit) {
+  const elapsedSeconds = getBattleElapsedSeconds();
+  return (unit.stats?.damage ?? 0) / elapsedSeconds;
 }
 
 function getRoleColor(role) {
@@ -128,13 +171,21 @@ function normalizeCombatJson(items, defaults, nameKey) {
   }
 
   const normalized = items
-    .map(item => ({
-      [nameKey]: String(item[nameKey] ?? item.label ?? item.name ?? "").trim(),
-      hp: Number(item.hp),
-      atk: Number(item.atk),
-      speed: Number(item.speed ?? ROLE_STATS[item.role]?.speedMultiplier ?? 1),
-      role: String(item.role ?? "").trim()
-    }))
+    .map(item => {
+      const normalizedItem = {
+        [nameKey]: String(item[nameKey] ?? item.label ?? item.name ?? "").trim(),
+        hp: Number(item.hp),
+        atk: Number(item.atk),
+        speed: Number(item.speed ?? ROLE_STATS[item.role]?.speedMultiplier ?? 1),
+        role: String(item.role ?? "").trim()
+      };
+
+      if (nameKey === "name") {
+        normalizedItem.attributes = createCharacterAttributes(item.attributes);
+      }
+
+      return normalizedItem;
+    })
     .filter(item => item[nameKey] && item.hp > 0 && item.atk > 0 && item.speed > 0 && ROLES.includes(item.role));
 
   return normalized.length > 0 ? normalized : defaults.map(item => ({ ...item }));
@@ -144,6 +195,7 @@ async function showPage(pageName) {
   battlePageEl.classList.toggle("hidden", pageName !== "battle");
   monsterPageEl.classList.toggle("hidden", pageName !== "monster");
   characterPageEl.classList.toggle("hidden", pageName !== "character");
+  statsPageEl.classList.toggle("hidden", pageName !== "stats");
   recordPageEl.classList.toggle("hidden", pageName !== "record");
 
   if (pageName === "monster") {
@@ -155,6 +207,9 @@ async function showPage(pageName) {
     await loadCharacterJson();
     playerSquad = [];
     refreshCharacterUI();
+  } else if (pageName === "stats") {
+    await loadCharacterJson();
+    renderStatsPage();
   } else if (pageName === "record") {
     await loadBattleRecordsJson();
     renderBattleRecords();
@@ -173,13 +228,15 @@ function initRoleOptions() {
 function renderStatus(units, colorResolver) {
   return units.map(unit => {
     const hpRatio = Math.max(0, (unit.hp / unit.maxHp) * 100);
+    const hpText = `${Math.floor(unit.hp)} / ${unit.maxHp}`;
+    const dpsText = `DPS ${getUnitDps(unit).toFixed(1)}`;
 
     return `
       <div class="unit-status">
         <div>${unit.name} (${unit.role})</div>
-        <div class="unit-meta">${Math.floor(unit.hp)} / ${unit.maxHp}</div>
         <div class="hp-track">
           <div class="hp-fill" style="width:${hpRatio}%; background:${colorResolver(unit)};"></div>
+          <div class="hp-label">${hpText} · ${dpsText}</div>
         </div>
       </div>
     `;

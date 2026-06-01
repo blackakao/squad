@@ -51,12 +51,14 @@ async function saveCharacterFromForm(event) {
   event.preventDefault();
 
   const editIndex = characterEditIndexEl.value;
+  const previousAttributes = editIndex !== "" ? characterJson[Number(editIndex)]?.attributes : {};
   const character = {
     name: characterNameEl.value.trim(),
     hp: Number(characterHpEl.value),
     atk: Number(characterAtkEl.value),
     speed: Number(characterSpeedEl.value),
-    role: characterRoleEl.value
+    role: characterRoleEl.value,
+    attributes: createCharacterAttributes(previousAttributes)
   };
 
   if (!character.name || character.hp < 1 || character.atk < 1 || character.speed <= 0) {
@@ -111,6 +113,7 @@ function createCharacter(characterData, index) {
     maxHp: characterData.hp,
     atk: characterData.atk,
     speed: characterData.speed,
+    attributes: createCharacterAttributes(characterData.attributes),
     x: Math.random() * canvas.width * 0.3,
     y: Math.random() * canvas.height,
     vx: 0,

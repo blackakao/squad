@@ -4,125 +4,269 @@
     "hp": 500,
     "atk": 3,
     "speed": 1.2,
-    "role": "tank"
+    "role": "tank",
+    "attributes": {
+      "str": 0,
+      "vit": 0,
+      "agi": 0,
+      "focus": 0,
+      "int": 0,
+      "wis": 0
+    }
   },
   {
     "name": "딜탱",
     "hp": 300,
     "atk": 20,
     "speed": 1.2,
-    "role": "tank"
+    "role": "tank",
+    "attributes": {
+      "str": 0,
+      "vit": 0,
+      "agi": 0,
+      "focus": 0,
+      "int": 0,
+      "wis": 0
+    }
   },
   {
     "name": "보조탱커",
     "hp": 400,
     "atk": 10,
     "speed": 1.2,
-    "role": "tank"
+    "role": "tank",
+    "attributes": {
+      "str": 0,
+      "vit": 0,
+      "agi": 0,
+      "focus": 0,
+      "int": 0,
+      "wis": 0
+    }
   },
   {
     "name": "빠른밀리",
     "hp": 100,
     "atk": 25,
     "speed": 2,
-    "role": "melee"
+    "role": "melee",
+    "attributes": {
+      "str": 0,
+      "vit": 0,
+      "agi": 0,
+      "focus": 0,
+      "int": 0,
+      "wis": 0
+    }
   },
   {
     "name": "강한밀리",
     "hp": 100,
     "atk": 30,
     "speed": 1.2,
-    "role": "melee"
+    "role": "melee",
+    "attributes": {
+      "str": 0,
+      "vit": 0,
+      "agi": 0,
+      "focus": 0,
+      "int": 0,
+      "wis": 0
+    }
   },
   {
     "name": "melee3",
     "hp": 100,
     "atk": 10,
     "speed": 1.2,
-    "role": "melee"
+    "role": "melee",
+    "attributes": {
+      "str": 0,
+      "vit": 0,
+      "agi": 0,
+      "focus": 0,
+      "int": 0,
+      "wis": 0
+    }
   },
   {
     "name": "melee4",
     "hp": 100,
     "atk": 10,
     "speed": 1.2,
-    "role": "melee"
+    "role": "melee",
+    "attributes": {
+      "str": 0,
+      "vit": 0,
+      "agi": 0,
+      "focus": 0,
+      "int": 0,
+      "wis": 0
+    }
   },
   {
     "name": "melee5",
     "hp": 100,
     "atk": 10,
     "speed": 1.2,
-    "role": "melee"
+    "role": "melee",
+    "attributes": {
+      "str": 0,
+      "vit": 0,
+      "agi": 0,
+      "focus": 0,
+      "int": 0,
+      "wis": 0
+    }
   },
   {
     "name": "ranged1",
     "hp": 100,
     "atk": 12,
     "speed": 1,
-    "role": "ranged"
+    "role": "ranged",
+    "attributes": {
+      "str": 0,
+      "vit": 0,
+      "agi": 0,
+      "focus": 0,
+      "int": 0,
+      "wis": 0
+    }
   },
   {
     "name": "ranged2",
     "hp": 100,
     "atk": 12,
     "speed": 1,
-    "role": "ranged"
+    "role": "ranged",
+    "attributes": {
+      "str": 0,
+      "vit": 0,
+      "agi": 0,
+      "focus": 0,
+      "int": 0,
+      "wis": 0
+    }
   },
   {
     "name": "ranged3",
     "hp": 100,
     "atk": 12,
     "speed": 1,
-    "role": "ranged"
+    "role": "ranged",
+    "attributes": {
+      "str": 0,
+      "vit": 0,
+      "agi": 0,
+      "focus": 0,
+      "int": 0,
+      "wis": 0
+    }
   },
   {
     "name": "ranged4",
     "hp": 100,
     "atk": 12,
     "speed": 1,
-    "role": "ranged"
+    "role": "ranged",
+    "attributes": {
+      "str": 0,
+      "vit": 0,
+      "agi": 0,
+      "focus": 0,
+      "int": 0,
+      "wis": 0
+    }
   },
   {
     "name": "ranged5",
     "hp": 100,
     "atk": 12,
     "speed": 1,
-    "role": "ranged"
+    "role": "ranged",
+    "attributes": {
+      "str": 0,
+      "vit": 0,
+      "agi": 0,
+      "focus": 0,
+      "int": 0,
+      "wis": 0
+    }
   },
   {
     "name": "메인힐러",
     "hp": 100,
     "atk": 30,
     "speed": 1,
-    "role": "healer"
+    "role": "healer",
+    "attributes": {
+      "str": 0,
+      "vit": 0,
+      "agi": 0,
+      "focus": 0,
+      "int": 0,
+      "wis": 0
+    }
   },
   {
     "name": "서브힐러",
     "hp": 100,
     "atk": 10,
     "speed": 1,
-    "role": "healer"
+    "role": "healer",
+    "attributes": {
+      "str": 0,
+      "vit": 0,
+      "agi": 0,
+      "focus": 0,
+      "int": 0,
+      "wis": 0
+    }
   },
   {
     "name": "healer3",
     "hp": 100,
     "atk": 10,
     "speed": 1,
-    "role": "healer"
+    "role": "healer",
+    "attributes": {
+      "str": 0,
+      "vit": 0,
+      "agi": 0,
+      "focus": 0,
+      "int": 0,
+      "wis": 0
+    }
   },
   {
     "name": "healer4",
     "hp": 100,
     "atk": 10,
     "speed": 1,
-    "role": "healer"
+    "role": "healer",
+    "attributes": {
+      "str": 0,
+      "vit": 0,
+      "agi": 0,
+      "focus": 0,
+      "int": 0,
+      "wis": 0
+    }
   },
   {
     "name": "healer5",
     "hp": 100,
     "atk": 10,
     "speed": 1,
-    "role": "healer"
+    "role": "healer",
+    "attributes": {
+      "str": 0,
+      "vit": 0,
+      "agi": 0,
+      "focus": 0,
+      "int": 0,
+      "wis": 0
+    }
   }
 ]
