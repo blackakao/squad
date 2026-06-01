@@ -117,6 +117,7 @@ button {
 
 #monsterPage,
 #characterPage,
+#factionPage,
 #statsPage,
 #recordPage {
   box-sizing: border-box;
@@ -211,6 +212,16 @@ button {
   margin-bottom: 8px;
 }
 
+.data-toolbar input {
+  padding: 6px;
+  box-sizing: border-box;
+}
+
+.empty-text {
+  color: #777;
+  font-size: 12px;
+}
+
 .data-table {
   width: 100%;
   border-collapse: collapse;
@@ -243,6 +254,21 @@ button {
 .record-table td:last-child {
   width: auto;
   text-align: center;
+}
+
+.faction-table th:first-child,
+.faction-table td:first-child {
+  width: 44px;
+}
+
+.faction-table th:nth-child(2),
+.faction-table td:nth-child(2) {
+  width: 180px;
+}
+
+.faction-table th:last-child,
+.faction-table td:last-child {
+  width: 90px;
 }
 
 .member-table {
@@ -278,6 +304,8 @@ button {
 
 .modal-content {
   width: min(420px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
   border: 1px solid #999;
   background: #fff;
   padding: 16px;

@@ -4,6 +4,7 @@ window.addEventListener("resize", resizeCanvas);
 async function initApp() {
   await Promise.all([
     loadMonsterJson(),
+    loadFactionJson(),
     loadCharacterJson(),
     loadBattleRecordsJson()
   ]);

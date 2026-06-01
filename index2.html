@@ -13,6 +13,7 @@
 <div class="nav">
   <button onclick="showPage('battle')">전투</button>
   <button onclick="showPage('character')">캐릭터 관리</button>
+  <button onclick="showPage('faction')">진영 관리</button>
   <button onclick="showPage('stats')">스탯 관리</button>
   <button onclick="showPage('monster')">몬스터 관리</button>
   <button onclick="showPage('record')">전투 기록</button>
@@ -75,8 +76,13 @@
           <th>이름</th>
           <th>체력</th>
           <th>공격력</th>
+          <th>마력</th>
           <th>이동속도</th>
-          <th>역할</th>
+          <th>공격속도</th>
+          <th>방어력</th>
+          <th>저항력</th>
+          <th>사정거리</th>
+          <th>계열</th>
           <th>수정</th>
         </tr>
       </thead>
@@ -96,15 +102,43 @@
       <thead>
         <tr>
           <th>선택</th>
+          <th>진영</th>
+          <th>계열</th>
           <th>이름</th>
           <th>체력</th>
           <th>공격력</th>
+          <th>마력</th>
           <th>이동속도</th>
-          <th>역할</th>
+          <th>공격속도</th>
+          <th>방어력</th>
+          <th>저항력</th>
+          <th>사정거리</th>
           <th>수정</th>
         </tr>
       </thead>
       <tbody id="characterTableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<div id="factionPage" class="page hidden">
+  <div class="panel">
+    <h4>진영 관리</h4>
+    <div class="data-toolbar">
+      <input id="factionName" placeholder="진영 이름">
+      <button onclick="addFactionFromInput()">추가</button>
+      <button onclick="deleteSelectedFactions()">선택 삭제</button>
+    </div>
+    <table class="data-table faction-table">
+      <thead>
+        <tr>
+          <th>선택</th>
+          <th>진영</th>
+          <th>캐릭터</th>
+          <th>수정</th>
+        </tr>
+      </thead>
+      <tbody id="factionTableBody"></tbody>
     </table>
   </div>
 </div>
@@ -176,11 +210,31 @@
         <input id="monsterAtk" type="number" min="1" required>
       </div>
       <div class="form-row">
+        <label for="monsterMagic">마력</label>
+        <input id="monsterMagic" type="number" min="0" step="0.1" required>
+      </div>
+      <div class="form-row">
         <label for="monsterSpeed">이동속도</label>
         <input id="monsterSpeed" type="number" min="0.1" step="0.1" required>
       </div>
       <div class="form-row">
-        <label for="monsterRole">역할</label>
+        <label for="monsterAttackSpeed">공격속도</label>
+        <input id="monsterAttackSpeed" type="number" min="0.1" step="0.1" required>
+      </div>
+      <div class="form-row">
+        <label for="monsterDefense">방어력</label>
+        <input id="monsterDefense" type="number" min="0" max="100" step="0.1" required>
+      </div>
+      <div class="form-row">
+        <label for="monsterResistance">저항력</label>
+        <input id="monsterResistance" type="number" min="0" max="100" step="0.1" required>
+      </div>
+      <div class="form-row">
+        <label for="monsterAttackRange">사정거리</label>
+        <input id="monsterAttackRange" type="number" min="1" step="0.1" required>
+      </div>
+      <div class="form-row">
+        <label for="monsterRole">계열</label>
         <select id="monsterRole" required></select>
       </div>
       <button type="submit">저장</button>
@@ -207,12 +261,36 @@
         <input id="characterAtk" type="number" min="1" required>
       </div>
       <div class="form-row">
+        <label for="characterMagic">마력</label>
+        <input id="characterMagic" type="number" min="0" step="0.1" required>
+      </div>
+      <div class="form-row">
         <label for="characterSpeed">이동속도</label>
         <input id="characterSpeed" type="number" min="0.1" step="0.1" required>
       </div>
       <div class="form-row">
-        <label for="characterRole">역할</label>
+        <label for="characterAttackSpeed">공격속도</label>
+        <input id="characterAttackSpeed" type="number" min="0.1" step="0.1" required>
+      </div>
+      <div class="form-row">
+        <label for="characterDefense">방어력</label>
+        <input id="characterDefense" type="number" min="0" max="100" step="0.1" required>
+      </div>
+      <div class="form-row">
+        <label for="characterResistance">저항력</label>
+        <input id="characterResistance" type="number" min="0" max="100" step="0.1" required>
+      </div>
+      <div class="form-row">
+        <label for="characterAttackRange">사정거리</label>
+        <input id="characterAttackRange" type="number" min="1" step="0.1" required>
+      </div>
+      <div class="form-row">
+        <label for="characterRole">계열</label>
         <select id="characterRole" required></select>
+      </div>
+      <div class="form-row">
+        <label for="characterFaction">진영</label>
+        <select id="characterFaction" required></select>
       </div>
       <button type="submit">저장</button>
       <button type="button" onclick="closeCharacterModal()">취소</button>
@@ -223,6 +301,7 @@
 <script src="js/ui.js"></script>
 <script src="js/api.js"></script>
 <script src="js/monster.js"></script>
+<script src="js/faction.js"></script>
 <script src="js/character.js"></script>
 <script src="js/stats.js"></script>
 <script src="js/record.js"></script>

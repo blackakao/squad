@@ -26,8 +26,13 @@ function renderMonsterTable() {
       <td>${escapeHtml(monster.label)}</td>
       <td>${monster.hp}</td>
       <td>${monster.atk}</td>
+      <td>${monster.magic}</td>
       <td>${monster.speed}</td>
-      <td>${escapeHtml(monster.role)}</td>
+      <td>${monster.attackSpeed}</td>
+      <td>${monster.defense}</td>
+      <td>${monster.resistance}</td>
+      <td>${monster.attackRange}</td>
+      <td>${escapeHtml(getRoleLabel(monster.role))}</td>
       <td><button onclick="openMonsterModal(${index})">수정</button></td>
     </tr>
   `).join("");
@@ -41,7 +46,12 @@ function openMonsterModal(index = "") {
   monsterLabelEl.value = monster?.label ?? "";
   monsterHpEl.value = monster?.hp ?? 100;
   monsterAtkEl.value = monster?.atk ?? 10;
+  monsterMagicEl.value = monster?.magic ?? getDefaultAbility(monster?.role ?? "melee", "magic");
   monsterSpeedEl.value = monster?.speed ?? 1;
+  monsterAttackSpeedEl.value = monster?.attackSpeed ?? getDefaultAbility(monster?.role ?? "melee", "attackSpeed");
+  monsterDefenseEl.value = monster?.defense ?? getDefaultAbility(monster?.role ?? "melee", "defense");
+  monsterResistanceEl.value = monster?.resistance ?? getDefaultAbility(monster?.role ?? "melee", "resistance");
+  monsterAttackRangeEl.value = monster?.attackRange ?? getDefaultAbility(monster?.role ?? "melee", "attackRange");
   monsterRoleEl.value = monster?.role ?? "melee";
   monsterModalEl.classList.remove("hidden");
 }
@@ -59,11 +69,18 @@ async function saveMonsterFromForm(event) {
     label: monsterLabelEl.value.trim(),
     hp: Number(monsterHpEl.value),
     atk: Number(monsterAtkEl.value),
+    magic: Number(monsterMagicEl.value),
     speed: Number(monsterSpeedEl.value),
+    attackSpeed: Number(monsterAttackSpeedEl.value),
+    defense: Number(monsterDefenseEl.value),
+    resistance: Number(monsterResistanceEl.value),
+    attackRange: Number(monsterAttackRangeEl.value),
     role: monsterRoleEl.value
   };
 
-  if (!monster.label || monster.hp < 1 || monster.atk < 1 || monster.speed <= 0) {
+  if (!monster.label || monster.hp < 1 || monster.atk < 1 || monster.magic < 0 || monster.speed <= 0
+    || monster.attackSpeed <= 0 || monster.defense < 0 || monster.defense > 100
+    || monster.resistance < 0 || monster.resistance > 100 || monster.attackRange < 1) {
     alert("몬스터 정보를 올바르게 입력해주세요.");
     return;
   }
@@ -118,7 +135,13 @@ function createEnemy(monsterIndex) {
     hp: monster.hp,
     maxHp: monster.hp,
     atk: monster.atk,
+    magic: monster.magic,
     speed: monster.speed,
+    attackSpeed: monster.attackSpeed,
+    defense: monster.defense,
+    resistance: monster.resistance,
+    attackRange: monster.attackRange,
+    faction: "몬스터",
     x: Math.random() * 100 + 250,
     y: Math.random() * 200 + 50,
     vx: 0,

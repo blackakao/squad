@@ -128,7 +128,7 @@ function moveUnit(unit, targets) {
   }
 
   const speed = unit.speed ?? ROLE_STATS[unit.role]?.speedMultiplier ?? 1;
-  const desiredRange = getUnitRange(unit.role);
+  const desiredRange = getUnitRange(unit);
 
   if (dist > desiredRange) {
     unit.vx = (dx / dist) * speed;
@@ -202,7 +202,7 @@ function takeAction(unit, allies, enemies) {
 
   if (unit.role === "healer") {
     if (heal(unit, allies)) {
-      unit.attackCooldown = ATTACK_COOLDOWN;
+      unit.attackCooldown = getAttackCooldown(unit);
     }
     return;
   }
@@ -218,19 +218,17 @@ function takeAction(unit, allies, enemies) {
     doAttack(unit, target);
   }
 
-  unit.attackCooldown = ATTACK_COOLDOWN;
+  unit.attackCooldown = getAttackCooldown(unit);
 }
 
 function findTarget(unit, enemies) {
-  if (unit.role === "ranged") {
-    return enemies.find(enemy => enemy.alive);
-  }
-
-  return enemies.find(enemy => enemy.alive && distance(unit, enemy) < 30);
+  const attackRange = getUnitRange(unit);
+  return enemies.find(enemy => enemy.alive && distance(unit, enemy) <= attackRange);
 }
 
 function heal(healer, team) {
-  const target = team.find(unit => unit.alive && unit.hp < unit.maxHp);
+  const healRange = getUnitRange(healer);
+  const target = team.find(unit => unit.alive && unit.hp < unit.maxHp && distance(healer, unit) <= healRange);
   if (!target) {
     return false;
   }
@@ -244,7 +242,7 @@ function applyHeal(healer, target) {
     return;
   }
 
-  const amount = 10;
+  const amount = getHealAmount(healer);
   const previousHp = target.hp;
 
   target.hp = Math.min(target.maxHp, target.hp + amount);
@@ -253,7 +251,7 @@ function applyHeal(healer, target) {
 }
 
 function doAttack(attacker, target) {
-  const damage = attacker.atk;
+  const damage = getReducedDamage(attacker, target);
 
   target.hp -= damage;
   target.stats.taken += damage;

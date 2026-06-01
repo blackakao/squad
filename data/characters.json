@@ -1,9 +1,14 @@
 [
   {
-    "name": "퓨어탱커",
+    "name": "전사",
     "hp": 500,
     "atk": 3,
+    "magic": 10,
     "speed": 1.2,
+    "attackSpeed": 1,
+    "defense": 30,
+    "resistance": 0,
+    "attackRange": 1,
     "role": "tank",
     "attributes": {
       "str": 0,
@@ -12,13 +17,19 @@
       "focus": 0,
       "int": 0,
       "wis": 0
-    }
+    },
+    "faction": "쥬신"
   },
   {
-    "name": "딜탱",
+    "name": "기사",
     "hp": 300,
     "atk": 20,
-    "speed": 1.2,
+    "magic": 10,
+    "speed": 2,
+    "attackSpeed": 3,
+    "defense": 0,
+    "resistance": 0,
+    "attackRange": 1,
     "role": "tank",
     "attributes": {
       "str": 0,
@@ -27,13 +38,19 @@
       "focus": 0,
       "int": 0,
       "wis": 0
-    }
+    },
+    "faction": "프라가"
   },
   {
     "name": "보조탱커",
     "hp": 400,
     "atk": 10,
+    "magic": 10,
     "speed": 1.2,
+    "attackSpeed": 1,
+    "defense": 0,
+    "resistance": 0,
+    "attackRange": 1,
     "role": "tank",
     "attributes": {
       "str": 0,
@@ -42,13 +59,19 @@
       "focus": 0,
       "int": 0,
       "wis": 0
-    }
+    },
+    "faction": "프라가"
   },
   {
     "name": "빠른밀리",
     "hp": 100,
     "atk": 25,
+    "magic": 10,
     "speed": 2,
+    "attackSpeed": 5,
+    "defense": 0,
+    "resistance": 0,
+    "attackRange": 1,
     "role": "melee",
     "attributes": {
       "str": 0,
@@ -57,13 +80,19 @@
       "focus": 0,
       "int": 0,
       "wis": 0
-    }
+    },
+    "faction": "프라가"
   },
   {
     "name": "강한밀리",
     "hp": 100,
     "atk": 30,
+    "magic": 10,
     "speed": 1.2,
+    "attackSpeed": 1,
+    "defense": 0,
+    "resistance": 0,
+    "attackRange": 1,
     "role": "melee",
     "attributes": {
       "str": 0,
@@ -72,134 +101,21 @@
       "focus": 0,
       "int": 0,
       "wis": 0
-    }
+    },
+    "faction": "프라가"
   },
   {
-    "name": "melee3",
-    "hp": 100,
-    "atk": 10,
-    "speed": 1.2,
-    "role": "melee",
-    "attributes": {
-      "str": 0,
-      "vit": 0,
-      "agi": 0,
-      "focus": 0,
-      "int": 0,
-      "wis": 0
-    }
-  },
-  {
-    "name": "melee4",
-    "hp": 100,
-    "atk": 10,
-    "speed": 1.2,
-    "role": "melee",
-    "attributes": {
-      "str": 0,
-      "vit": 0,
-      "agi": 0,
-      "focus": 0,
-      "int": 0,
-      "wis": 0
-    }
-  },
-  {
-    "name": "melee5",
-    "hp": 100,
-    "atk": 10,
-    "speed": 1.2,
-    "role": "melee",
-    "attributes": {
-      "str": 0,
-      "vit": 0,
-      "agi": 0,
-      "focus": 0,
-      "int": 0,
-      "wis": 0
-    }
-  },
-  {
-    "name": "ranged1",
-    "hp": 100,
-    "atk": 12,
-    "speed": 1,
-    "role": "ranged",
-    "attributes": {
-      "str": 0,
-      "vit": 0,
-      "agi": 0,
-      "focus": 0,
-      "int": 0,
-      "wis": 0
-    }
-  },
-  {
-    "name": "ranged2",
-    "hp": 100,
-    "atk": 12,
-    "speed": 1,
-    "role": "ranged",
-    "attributes": {
-      "str": 0,
-      "vit": 0,
-      "agi": 0,
-      "focus": 0,
-      "int": 0,
-      "wis": 0
-    }
-  },
-  {
-    "name": "ranged3",
-    "hp": 100,
-    "atk": 12,
-    "speed": 1,
-    "role": "ranged",
-    "attributes": {
-      "str": 0,
-      "vit": 0,
-      "agi": 0,
-      "focus": 0,
-      "int": 0,
-      "wis": 0
-    }
-  },
-  {
-    "name": "ranged4",
-    "hp": 100,
-    "atk": 12,
-    "speed": 1,
-    "role": "ranged",
-    "attributes": {
-      "str": 0,
-      "vit": 0,
-      "agi": 0,
-      "focus": 0,
-      "int": 0,
-      "wis": 0
-    }
-  },
-  {
-    "name": "ranged5",
-    "hp": 100,
-    "atk": 12,
-    "speed": 1,
-    "role": "ranged",
-    "attributes": {
-      "str": 0,
-      "vit": 0,
-      "agi": 0,
-      "focus": 0,
-      "int": 0,
-      "wis": 0
-    }
-  },
-  {
-    "name": "메인힐러",
+    "name": "근접힐러",
     "hp": 100,
     "atk": 30,
-    "speed": 1,
+    "magic": 30,
+    "speed": 1.4,
+    "attackSpeed": 1,
+    "defense": 20,
+    "resistance": 0,
+    "attackRange": 1,
     "role": "healer",
+    "faction": "프라가",
     "attributes": {
       "str": 0,
       "vit": 0,
@@ -213,7 +129,12 @@
     "name": "서브힐러",
     "hp": 100,
     "atk": 10,
+    "magic": 10,
     "speed": 1,
+    "attackSpeed": 1,
+    "defense": 0,
+    "resistance": 0,
+    "attackRange": 5,
     "role": "healer",
     "attributes": {
       "str": 0,
@@ -222,14 +143,20 @@
       "focus": 0,
       "int": 0,
       "wis": 0
-    }
+    },
+    "faction": "프라가"
   },
   {
-    "name": "healer3",
+    "name": "위자드",
     "hp": 100,
     "atk": 10,
+    "magic": 100,
     "speed": 1,
-    "role": "healer",
+    "attackSpeed": 1,
+    "defense": 0,
+    "resistance": 0,
+    "attackRange": 5,
+    "role": "ranged",
     "attributes": {
       "str": 0,
       "vit": 0,
@@ -237,14 +164,20 @@
       "focus": 0,
       "int": 0,
       "wis": 0
-    }
+    },
+    "faction": "프라가"
   },
   {
-    "name": "healer4",
+    "name": "궁사",
     "hp": 100,
-    "atk": 10,
+    "atk": 30,
+    "magic": 10,
     "speed": 1,
-    "role": "healer",
+    "attackSpeed": 3,
+    "defense": 0,
+    "resistance": 0,
+    "attackRange": 6,
+    "role": "melee",
     "attributes": {
       "str": 0,
       "vit": 0,
@@ -252,21 +185,7 @@
       "focus": 0,
       "int": 0,
       "wis": 0
-    }
-  },
-  {
-    "name": "healer5",
-    "hp": 100,
-    "atk": 10,
-    "speed": 1,
-    "role": "healer",
-    "attributes": {
-      "str": 0,
-      "vit": 0,
-      "agi": 0,
-      "focus": 0,
-      "int": 0,
-      "wis": 0
-    }
+    },
+    "faction": "프라가"
   }
 ]

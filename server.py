@@ -1,12 +1,14 @@
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 import json
+import os
 
 
 ROOT = Path(__file__).resolve().parent
 DATA_FILES = {
     "/api/monsters": ROOT / "data" / "monsters.json",
     "/api/characters": ROOT / "data" / "characters.json",
+    "/api/factions": ROOT / "data" / "factions.json",
     "/api/records": ROOT / "data" / "battle-records.json",
 }
 
@@ -73,6 +75,7 @@ class BattleHandler(SimpleHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    server = ThreadingHTTPServer(("127.0.0.1", 8000), BattleHandler)
-    print("Serving http://127.0.0.1:8000/index2.html")
+    port = int(os.environ.get("PORT", "8000"))
+    server = ThreadingHTTPServer(("127.0.0.1", port), BattleHandler)
+    print(f"Serving http://127.0.0.1:{port}/index2.html")
     server.serve_forever()

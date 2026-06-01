@@ -47,7 +47,7 @@ function renderMemberTable(members) {
       <thead>
         <tr>
           <th>이름</th>
-          <th>역할</th>
+          <th>계열</th>
           <th>생명력</th>
         </tr>
       </thead>
@@ -55,7 +55,7 @@ function renderMemberTable(members) {
         ${members.map(member => `
           <tr>
             <td>${escapeHtml(member.name)}</td>
-            <td>${escapeHtml(member.role)}</td>
+            <td>${escapeHtml(getRoleLabel(member.role))}</td>
             <td>${Math.floor(member.hp)} / ${member.maxHp}</td>
           </tr>
         `).join("")}

@@ -1,5 +1,353 @@
 [
   {
+    "battleAt": "2026-06-01T14:46:27.333Z",
+    "result": "승리",
+    "playerMembers": [
+      {
+        "name": "궁사",
+        "role": "melee",
+        "hp": 100,
+        "maxHp": 100
+      }
+    ],
+    "monsterMembers": [
+      {
+        "name": "슬라임-1",
+        "role": "melee",
+        "hp": 0,
+        "maxHp": 80
+      },
+      {
+        "name": "슬라임-2",
+        "role": "melee",
+        "hp": 0,
+        "maxHp": 80
+      }
+    ],
+    "durationSeconds": 2.709
+  },
+  {
+    "battleAt": "2026-06-01T14:46:16.523Z",
+    "result": "패배",
+    "playerMembers": [
+      {
+        "name": "궁사",
+        "role": "melee",
+        "hp": 0,
+        "maxHp": 100
+      }
+    ],
+    "monsterMembers": [
+      {
+        "name": "항마력 보스-1",
+        "role": "tank",
+        "hp": 520,
+        "maxHp": 1000
+      },
+      {
+        "name": "슬라임-2",
+        "role": "melee",
+        "hp": 80,
+        "maxHp": 80
+      },
+      {
+        "name": "슬라임-3",
+        "role": "melee",
+        "hp": 80,
+        "maxHp": 80
+      },
+      {
+        "name": "슬라임-4",
+        "role": "melee",
+        "hp": 80,
+        "maxHp": 80
+      }
+    ],
+    "durationSeconds": 5.452
+  },
+  {
+    "battleAt": "2026-06-01T14:44:57.363Z",
+    "result": "승리",
+    "playerMembers": [
+      {
+        "name": "위자드",
+        "role": "ranged",
+        "hp": 100,
+        "maxHp": 100
+      }
+    ],
+    "monsterMembers": [
+      {
+        "name": "항마력 보스-1",
+        "role": "tank",
+        "hp": 0,
+        "maxHp": 1000
+      }
+    ],
+    "durationSeconds": 20.844
+  },
+  {
+    "battleAt": "2026-06-01T14:44:39.693Z",
+    "result": "패배",
+    "playerMembers": [
+      {
+        "name": "위자드",
+        "role": "ranged",
+        "hp": 0,
+        "maxHp": 100
+      }
+    ],
+    "monsterMembers": [
+      {
+        "name": "항마력 보스-1",
+        "role": "tank",
+        "hp": 950,
+        "maxHp": 1000
+      }
+    ],
+    "durationSeconds": 2.413
+  },
+  {
+    "battleAt": "2026-06-01T14:41:33.072Z",
+    "result": "승리",
+    "playerMembers": [
+      {
+        "name": "기사",
+        "role": "tank",
+        "hp": 180,
+        "maxHp": 300
+      }
+    ],
+    "monsterMembers": [
+      {
+        "name": "오크-1",
+        "role": "ranged",
+        "hp": 0,
+        "maxHp": 120
+      },
+      {
+        "name": "오크-2",
+        "role": "ranged",
+        "hp": 0,
+        "maxHp": 120
+      }
+    ],
+    "durationSeconds": 8.08
+  },
+  {
+    "battleAt": "2026-06-01T14:41:06.693Z",
+    "result": "승리",
+    "playerMembers": [
+      {
+        "name": "전사",
+        "role": "tank",
+        "hp": 460,
+        "maxHp": 500
+      },
+      {
+        "name": "기사",
+        "role": "tank",
+        "hp": 280,
+        "maxHp": 300
+      }
+    ],
+    "monsterMembers": [
+      {
+        "name": "오크-1",
+        "role": "ranged",
+        "hp": 0,
+        "maxHp": 120
+      },
+      {
+        "name": "오크-2",
+        "role": "ranged",
+        "hp": 0,
+        "maxHp": 120
+      }
+    ],
+    "durationSeconds": 5.608
+  },
+  {
+    "battleAt": "2026-06-01T14:17:55.617Z",
+    "result": "승리",
+    "playerMembers": [
+      {
+        "name": "퓨어탱커",
+        "role": "tank",
+        "hp": 500,
+        "maxHp": 500
+      },
+      {
+        "name": "메인힐러",
+        "role": "healer",
+        "hp": 100,
+        "maxHp": 100
+      },
+      {
+        "name": "서브힐러",
+        "role": "healer",
+        "hp": 100,
+        "maxHp": 100
+      }
+    ],
+    "monsterMembers": [
+      {
+        "name": "슬라임-1",
+        "role": "melee",
+        "hp": 0,
+        "maxHp": 80
+      },
+      {
+        "name": "슬라임-2",
+        "role": "melee",
+        "hp": 0,
+        "maxHp": 80
+      },
+      {
+        "name": "슬라임-3",
+        "role": "melee",
+        "hp": 0,
+        "maxHp": 80
+      }
+    ],
+    "durationSeconds": 21.725
+  },
+  {
+    "battleAt": "2026-06-01T14:17:00.089Z",
+    "result": "승리",
+    "playerMembers": [
+      {
+        "name": "메인힐러",
+        "role": "healer",
+        "hp": 0,
+        "maxHp": 100
+      },
+      {
+        "name": "서브힐러",
+        "role": "healer",
+        "hp": 78,
+        "maxHp": 100
+      },
+      {
+        "name": "퓨어탱커",
+        "role": "tank",
+        "hp": 494,
+        "maxHp": 500
+      }
+    ],
+    "monsterMembers": [
+      {
+        "name": "슬라임-1",
+        "role": "melee",
+        "hp": 0,
+        "maxHp": 80
+      },
+      {
+        "name": "슬라임-2",
+        "role": "melee",
+        "hp": 0,
+        "maxHp": 80
+      }
+    ],
+    "durationSeconds": 13.952
+  },
+  {
+    "battleAt": "2026-06-01T14:14:30.090Z",
+    "result": "패배",
+    "playerMembers": [
+      {
+        "name": "퓨어탱커",
+        "role": "tank",
+        "hp": 0,
+        "maxHp": 500
+      }
+    ],
+    "monsterMembers": [
+      {
+        "name": "보스급 몬스터-1",
+        "role": "melee",
+        "hp": 4928,
+        "maxHp": 5000
+      }
+    ],
+    "durationSeconds": 6.997
+  },
+  {
+    "battleAt": "2026-06-01T14:13:26.372Z",
+    "result": "승리",
+    "playerMembers": [
+      {
+        "name": "빠른밀리",
+        "role": "melee",
+        "hp": 84,
+        "maxHp": 100
+      }
+    ],
+    "monsterMembers": [
+      {
+        "name": "슬라임-1",
+        "role": "melee",
+        "hp": 0,
+        "maxHp": 80
+      },
+      {
+        "name": "슬라임-2",
+        "role": "melee",
+        "hp": 0,
+        "maxHp": 80
+      }
+    ],
+    "durationSeconds": 2.547
+  },
+  {
+    "battleAt": "2026-06-01T14:11:50.107Z",
+    "result": "승리",
+    "playerMembers": [
+      {
+        "name": "빠른밀리",
+        "role": "melee",
+        "hp": 20,
+        "maxHp": 100
+      }
+    ],
+    "monsterMembers": [
+      {
+        "name": "슬라임-1",
+        "role": "melee",
+        "hp": 0,
+        "maxHp": 80
+      },
+      {
+        "name": "슬라임-2",
+        "role": "melee",
+        "hp": 0,
+        "maxHp": 80
+      }
+    ],
+    "durationSeconds": 8.01
+  },
+  {
+    "battleAt": "2026-06-01T14:11:09.507Z",
+    "result": "승리",
+    "playerMembers": [
+      {
+        "name": "빠른밀리",
+        "role": "melee",
+        "hp": 20,
+        "maxHp": 100
+      }
+    ],
+    "monsterMembers": [
+      {
+        "name": "슬라임-1",
+        "role": "melee",
+        "hp": 0,
+        "maxHp": 80
+      }
+    ],
+    "durationSeconds": 10.925
+  },
+  {
     "battleAt": "2026-06-01T13:32:29.139Z",
     "result": "승리",
     "playerMembers": [
