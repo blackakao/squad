@@ -322,8 +322,39 @@ button {
 .record-table td:first-child,
 .record-table th:last-child,
 .record-table td:last-child {
-  width: auto;
   text-align: center;
+}
+
+.record-table th:nth-child(1),
+.record-table td:nth-child(1) {
+  width: 44px;
+}
+
+.record-table th:nth-child(2),
+.record-table td:nth-child(2) {
+  width: 140px;
+}
+
+.record-table th:nth-child(3),
+.record-table td:nth-child(3) {
+  width: 72px;
+}
+
+.record-table th:nth-child(4),
+.record-table td:nth-child(4),
+.record-table th:nth-child(5),
+.record-table td:nth-child(5) {
+  width: calc((100% - 340px) / 2);
+}
+
+.record-table th:nth-child(6),
+.record-table td:nth-child(6) {
+  width: 84px;
+}
+
+.record-table td:nth-child(4),
+.record-table td:nth-child(5) {
+  padding: 6px;
 }
 
 .faction-table th:first-child,

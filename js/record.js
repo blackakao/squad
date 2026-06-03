@@ -50,7 +50,13 @@ function formatMemberResource(current, max) {
   return max > 0 ? `${Math.floor(current)} / ${max}` : "-";
 }
 
+function sortMembersByDps(members) {
+  return [...members].sort((a, b) => (Number(b.dps) || 0) - (Number(a.dps) || 0));
+}
+
 function renderMemberTable(members) {
+  const sortedMembers = sortMembersByDps(members);
+
   return `
     <table class="member-table">
       <thead>
@@ -58,19 +64,15 @@ function renderMemberTable(members) {
           <th>이름</th>
           <th>계열</th>
           <th>HP</th>
-          <th>MP</th>
-          <th>ST</th>
           <th>DPS</th>
         </tr>
       </thead>
       <tbody>
-        ${members.map(member => `
+        ${sortedMembers.map(member => `
           <tr>
             <td>${escapeHtml(member.name)}</td>
             <td>${escapeHtml(getRoleLabel(member.role))}</td>
             <td>${Math.floor(member.hp)} / ${member.maxHp}</td>
-            <td>${formatMemberResource(member.mp, member.maxMp)}</td>
-            <td>${formatMemberResource(member.st, member.maxSt)}</td>
             <td>${member.dps.toFixed(1)}</td>
           </tr>
         `).join("")}
@@ -169,7 +171,7 @@ async function clearBattleRecords() {
 }
 
 function createRecordMembers(units, durationSeconds) {
-  return units.map(unit => {
+  return sortMembersByDps(units.map(unit => {
     const maxMp = Math.max(0, Number(unit.maxMp ?? DEFAULT_RESOURCE_VALUE));
     const maxSt = Math.max(0, Number(unit.maxSt ?? DEFAULT_RESOURCE_VALUE));
 
@@ -184,7 +186,7 @@ function createRecordMembers(units, durationSeconds) {
       maxSt,
       dps: durationSeconds > 0 ? (Number(unit.stats?.damage) || 0) / durationSeconds : 0
     };
-  });
+  }));
 }
 
 function createBattleRecord(result) {
