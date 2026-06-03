@@ -74,7 +74,9 @@
         <tr>
           <th>선택</th>
           <th>이름</th>
-          <th>체력</th>
+          <th>HP</th>
+          <th>MP</th>
+          <th>ST</th>
           <th>공격력</th>
           <th>마력</th>
           <th>이동속도</th>
@@ -105,7 +107,9 @@
           <th>진영</th>
           <th>계열</th>
           <th>이름</th>
-          <th>체력</th>
+          <th>HP</th>
+          <th>MP</th>
+          <th>ST</th>
           <th>공격력</th>
           <th>마력</th>
           <th>이동속도</th>
@@ -202,8 +206,16 @@
         <input id="monsterLabel" required placeholder="슬라임">
       </div>
       <div class="form-row">
-        <label for="monsterHp">체력</label>
+        <label for="monsterHp">HP</label>
         <input id="monsterHp" type="number" min="1" required>
+      </div>
+      <div class="form-row">
+        <label for="monsterMp">MP</label>
+        <input id="monsterMp" type="number" min="0" step="0.1" required>
+      </div>
+      <div class="form-row">
+        <label for="monsterSt">ST</label>
+        <input id="monsterSt" type="number" min="0" step="0.1" required>
       </div>
       <div class="form-row">
         <label for="monsterAtk">공격력</label>
@@ -253,8 +265,16 @@
         <input id="characterName" required placeholder="tank1">
       </div>
       <div class="form-row">
-        <label for="characterHp">체력</label>
+        <label for="characterHp">HP</label>
         <input id="characterHp" type="number" min="1" required>
+      </div>
+      <div class="form-row">
+        <label for="characterMp">MP</label>
+        <input id="characterMp" type="number" min="0" step="0.1" required>
+      </div>
+      <div class="form-row">
+        <label for="characterSt">ST</label>
+        <input id="characterSt" type="number" min="0" step="0.1" required>
       </div>
       <div class="form-row">
         <label for="characterAtk">공격력</label>

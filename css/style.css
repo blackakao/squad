@@ -94,9 +94,41 @@ button {
   box-sizing: border-box;
 }
 
+.mp-track {
+  background: #d9e5f8;
+  position: relative;
+  height: 16px;
+  overflow: hidden;
+  border: 1px solid #9fb8dc;
+  border-top: 0;
+  box-sizing: border-box;
+}
+
+.st-track {
+  background: #efe4d4;
+  position: relative;
+  height: 16px;
+  overflow: hidden;
+  border: 1px solid #d1ad7a;
+  border-top: 0;
+  box-sizing: border-box;
+}
+
 .hp-fill {
   height: 100%;
   min-width: 0;
+}
+
+.mp-fill {
+  height: 100%;
+  min-width: 0;
+  background: #5b8def;
+}
+
+.st-fill {
+  height: 100%;
+  min-width: 0;
+  background: #d99a3d;
 }
 
 .hp-label {

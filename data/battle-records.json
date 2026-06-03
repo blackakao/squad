@@ -1,13 +1,691 @@
 [
   {
-    "battleAt": "2026-06-01T14:46:27.333Z",
+    "battleAt": "2026-06-03T13:25:51.207Z",
+    "result": "패배",
+    "playerMembers": [
+      {
+        "name": "전사",
+        "role": "tank",
+        "hp": 0,
+        "maxHp": 500,
+        "mp": 100,
+        "maxMp": 100,
+        "st": 0,
+        "maxSt": 100,
+        "dps": 4.320276497695853
+      },
+      {
+        "name": "서브힐러",
+        "role": "healer",
+        "hp": 0,
+        "maxHp": 100,
+        "mp": 3,
+        "maxMp": 100,
+        "st": 95,
+        "maxSt": 100,
+        "dps": 0
+      }
+    ],
+    "monsterMembers": [
+      {
+        "name": "보스급 몬스터-1",
+        "role": "tank",
+        "hp": 4895,
+        "maxHp": 5000,
+        "mp": 100,
+        "maxMp": 100,
+        "st": 32,
+        "maxSt": 100,
+        "dps": 35.17939433838052
+      }
+    ],
+    "durationSeconds": 24.304
+  },
+  {
+    "battleAt": "2026-06-03T13:18:57.696Z",
+    "result": "패배",
+    "playerMembers": [
+      {
+        "name": "전사",
+        "role": "tank",
+        "hp": 0,
+        "maxHp": 500,
+        "mp": 100,
+        "maxMp": 100,
+        "st": 0,
+        "maxSt": 100,
+        "dps": 5.720512122037592
+      },
+      {
+        "name": "서브힐러",
+        "role": "healer",
+        "hp": 0,
+        "maxHp": 100,
+        "mp": 2,
+        "maxMp": 100,
+        "st": 97,
+        "maxSt": 100,
+        "dps": 0
+      }
+    ],
+    "monsterMembers": [
+      {
+        "name": "보스급 몬스터-1",
+        "role": "tank",
+        "hp": 4895,
+        "maxHp": 5000,
+        "mp": 100,
+        "maxMp": 100,
+        "st": 20,
+        "maxSt": 100,
+        "dps": 46.58131299373468
+      }
+    ],
+    "durationSeconds": 18.355
+  },
+  {
+    "battleAt": "2026-06-03T13:17:35.203Z",
+    "result": "패배",
+    "playerMembers": [
+      {
+        "name": "전사",
+        "role": "tank",
+        "hp": 0,
+        "maxHp": 500,
+        "mp": 100,
+        "maxMp": 100,
+        "st": 66,
+        "maxSt": 100,
+        "dps": 1.5234613040828764
+      }
+    ],
+    "monsterMembers": [
+      {
+        "name": "오크-1",
+        "role": "ranged",
+        "hp": 111,
+        "maxHp": 120,
+        "mp": 59,
+        "maxMp": 100,
+        "st": 90,
+        "maxSt": 100,
+        "dps": 10.156408693885842
+      },
+      {
+        "name": "오크-2",
+        "role": "ranged",
+        "hp": 120,
+        "maxHp": 120,
+        "mp": 59,
+        "maxMp": 100,
+        "st": 100,
+        "maxSt": 100,
+        "dps": 10.156408693885842
+      },
+      {
+        "name": "오크-3",
+        "role": "ranged",
+        "hp": 120,
+        "maxHp": 120,
+        "mp": 59,
+        "maxMp": 100,
+        "st": 100,
+        "maxSt": 100,
+        "dps": 10.156408693885842
+      },
+      {
+        "name": "오크-4",
+        "role": "ranged",
+        "hp": 114,
+        "maxHp": 120,
+        "mp": 59,
+        "maxMp": 100,
+        "st": 90,
+        "maxSt": 100,
+        "dps": 10.156408693885842
+      },
+      {
+        "name": "오크-5",
+        "role": "ranged",
+        "hp": 120,
+        "maxHp": 120,
+        "mp": 59,
+        "maxMp": 100,
+        "st": 100,
+        "maxSt": 100,
+        "dps": 10.156408693885842
+      }
+    ],
+    "durationSeconds": 9.846
+  },
+  {
+    "battleAt": "2026-06-03T13:17:13.872Z",
+    "result": "패배",
+    "playerMembers": [
+      {
+        "name": "전사",
+        "role": "tank",
+        "hp": 0,
+        "maxHp": 500,
+        "mp": 100,
+        "maxMp": 100,
+        "st": 90,
+        "maxSt": 100,
+        "dps": 2.8411160486632183
+      }
+    ],
+    "monsterMembers": [
+      {
+        "name": "드래곤-1",
+        "role": "melee",
+        "hp": 164,
+        "maxHp": 200,
+        "mp": 100,
+        "maxMp": 100,
+        "st": 91,
+        "maxSt": 100,
+        "dps": 13.258541560428352
+      },
+      {
+        "name": "드래곤-2",
+        "role": "melee",
+        "hp": 197,
+        "maxHp": 200,
+        "mp": 100,
+        "maxMp": 100,
+        "st": 95,
+        "maxSt": 100,
+        "dps": 13.258541560428352
+      },
+      {
+        "name": "오크-3",
+        "role": "ranged",
+        "hp": 120,
+        "maxHp": 120,
+        "mp": 43,
+        "maxMp": 100,
+        "st": 100,
+        "maxSt": 100,
+        "dps": 10.198878123406425
+      }
+    ],
+    "durationSeconds": 13.727
+  },
+  {
+    "battleAt": "2026-06-03T12:59:54.434Z",
+    "result": "승리",
+    "playerMembers": [
+      {
+        "name": "전사",
+        "role": "tank",
+        "hp": 430,
+        "maxHp": 500,
+        "mp": 100,
+        "maxMp": 100,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 2.2896393817973673
+      },
+      {
+        "name": "기사",
+        "role": "tank",
+        "hp": 300,
+        "maxHp": 300,
+        "mp": 100,
+        "maxMp": 100,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 41.9767219996184
+      },
+      {
+        "name": "근접힐러",
+        "role": "healer",
+        "hp": 100,
+        "maxHp": 100,
+        "mp": 94,
+        "maxMp": 100,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
+      },
+      {
+        "name": "서브힐러",
+        "role": "healer",
+        "hp": 100,
+        "maxHp": 100,
+        "mp": 84,
+        "maxMp": 100,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
+      },
+      {
+        "name": "위자드",
+        "role": "ranged",
+        "hp": 100,
+        "maxHp": 100,
+        "mp": 79,
+        "maxMp": 100,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 47.70082045411181
+      },
+      {
+        "name": "궁사",
+        "role": "melee",
+        "hp": 100,
+        "maxHp": 100,
+        "mp": 100,
+        "maxMp": 100,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 85.86147681740127
+      },
+      {
+        "name": "갑사",
+        "role": "melee",
+        "hp": 100,
+        "maxHp": 100,
+        "mp": 100,
+        "maxMp": 100,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 13.737836290784202
+      }
+    ],
+    "monsterMembers": [
+      {
+        "name": "마법형 보스-1",
+        "role": "ranged",
+        "hp": 0,
+        "maxHp": 1000,
+        "mp": 489,
+        "maxMp": 500,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 28.62049227246709
+      }
+    ],
+    "durationSeconds": 5.241
+  },
+  {
+    "battleAt": "2026-06-03T12:52:06.245Z",
+    "result": "승리",
+    "playerMembers": [
+      {
+        "name": "전사",
+        "role": "tank",
+        "hp": 36,
+        "maxHp": 500,
+        "mp": 100,
+        "maxMp": 100,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 2.837037243067338
+      },
+      {
+        "name": "빠른밀리",
+        "role": "melee",
+        "hp": 100,
+        "maxHp": 100,
+        "mp": 100,
+        "maxMp": 100,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 109.17030567685589
+      },
+      {
+        "name": "강한밀리",
+        "role": "melee",
+        "hp": 100,
+        "maxHp": 100,
+        "mp": 100,
+        "maxMp": 100,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 27.53594971212416
+      },
+      {
+        "name": "근접힐러",
+        "role": "healer",
+        "hp": 100,
+        "maxHp": 100,
+        "mp": 100,
+        "maxMp": 100,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
+      },
+      {
+        "name": "서브힐러",
+        "role": "healer",
+        "hp": 100,
+        "maxHp": 100,
+        "mp": 4,
+        "maxMp": 100,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
+      }
+    ],
+    "monsterMembers": [
+      {
+        "name": "보스급 몬스터-1",
+        "role": "tank",
+        "hp": 0,
+        "maxHp": 5000,
+        "mp": 100,
+        "maxMp": 100,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 20.52679887631074
+      }
+    ],
+    "durationSeconds": 35.953
+  },
+  {
+    "battleAt": "2026-06-03T12:50:52.383Z",
+    "result": "승리",
+    "playerMembers": [
+      {
+        "name": "근접힐러",
+        "role": "healer",
+        "hp": 94,
+        "maxHp": 100,
+        "mp": 79,
+        "maxMp": 100,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
+      },
+      {
+        "name": "서브힐러",
+        "role": "healer",
+        "hp": 100,
+        "maxHp": 100,
+        "mp": 79,
+        "maxMp": 100,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
+      },
+      {
+        "name": "위자드",
+        "role": "ranged",
+        "hp": 100,
+        "maxHp": 100,
+        "mp": 75,
+        "maxMp": 100,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 91.6590284142988
+      }
+    ],
+    "monsterMembers": [
+      {
+        "name": "드래곤-1",
+        "role": "melee",
+        "hp": 0,
+        "maxHp": 200,
+        "mp": 100,
+        "maxMp": 100,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 4.88848151542927
+      },
+      {
+        "name": "드래곤-2",
+        "role": "melee",
+        "hp": 0,
+        "maxHp": 200,
+        "mp": 100,
+        "maxMp": 100,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 7.332722273143904
+      },
+      {
+        "name": "드래곤-3",
+        "role": "melee",
+        "hp": 0,
+        "maxHp": 200,
+        "mp": 100,
+        "maxMp": 100,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 12.221203788573174
+      }
+    ],
+    "durationSeconds": 6.546
+  },
+  {
+    "battleAt": "2026-06-03T12:50:01.469Z",
+    "result": "승리",
+    "playerMembers": [
+      {
+        "name": "위자드",
+        "role": "ranged",
+        "hp": 70,
+        "maxHp": 100,
+        "mp": 91,
+        "maxMp": 100,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 84.74576271186442
+      },
+      {
+        "name": "궁사",
+        "role": "melee",
+        "hp": 80,
+        "maxHp": 100,
+        "mp": 100,
+        "maxMp": 100,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 88.98305084745763
+      }
+    ],
+    "monsterMembers": [
+      {
+        "name": "오크-1",
+        "role": "ranged",
+        "hp": 0,
+        "maxHp": 120,
+        "mp": 91,
+        "maxMp": 100,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 4.237288135593221
+      },
+      {
+        "name": "오크-2",
+        "role": "ranged",
+        "hp": 0,
+        "maxHp": 120,
+        "mp": 91,
+        "maxMp": 100,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 8.474576271186441
+      },
+      {
+        "name": "오크-3",
+        "role": "ranged",
+        "hp": 0,
+        "maxHp": 120,
+        "mp": 91,
+        "maxMp": 100,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 8.474576271186441
+      }
+    ],
+    "durationSeconds": 2.36
+  },
+  {
+    "battleAt": "2026-06-03T12:20:31.427Z",
     "result": "승리",
     "playerMembers": [
       {
         "name": "궁사",
         "role": "melee",
+        "hp": 80,
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 78.10240092565809
+      },
+      {
+        "name": "갑사",
+        "role": "melee",
+        "hp": 80,
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 13.884871275672548
+      },
+      {
+        "name": "위자드",
+        "role": "ranged",
         "hp": 100,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 115.70726063060458
+      }
+    ],
+    "monsterMembers": [
+      {
+        "name": "드래곤-1",
+        "role": "melee",
+        "hp": 0,
+        "maxHp": 200,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
+      },
+      {
+        "name": "드래곤-2",
+        "role": "melee",
+        "hp": 0,
+        "maxHp": 200,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 5.7853630315302285
+      },
+      {
+        "name": "드래곤-3",
+        "role": "melee",
+        "hp": 0,
+        "maxHp": 200,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 5.7853630315302285
+      }
+    ],
+    "durationSeconds": 3.457
+  },
+  {
+    "battleAt": "2026-06-03T12:16:39.259Z",
+    "result": "승리",
+    "playerMembers": [
+      {
+        "name": "궁사",
+        "role": "melee",
+        "hp": 90,
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
+      },
+      {
+        "name": "갑사",
+        "role": "melee",
+        "hp": 80,
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
+      },
+      {
+        "name": "위자드",
+        "role": "ranged",
+        "hp": 90,
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
+      }
+    ],
+    "monsterMembers": [
+      {
+        "name": "오크-1",
+        "role": "ranged",
+        "hp": 0,
+        "maxHp": 120,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
+      },
+      {
+        "name": "오크-2",
+        "role": "ranged",
+        "hp": 0,
+        "maxHp": 120,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
+      },
+      {
+        "name": "오크-3",
+        "role": "ranged",
+        "hp": 0,
+        "maxHp": 120,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
+      }
+    ],
+    "durationSeconds": 2.935
+  },
+  {
+    "battleAt": "2026-06-03T12:09:25.782Z",
+    "result": "승리",
+    "playerMembers": [
+      {
+        "name": "위자드",
+        "role": "ranged",
+        "hp": 100,
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       }
     ],
     "monsterMembers": [
@@ -15,13 +693,140 @@
         "name": "슬라임-1",
         "role": "melee",
         "hp": 0,
-        "maxHp": 80
+        "maxHp": 80,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "슬라임-2",
         "role": "melee",
         "hp": 0,
-        "maxHp": 80
+        "maxHp": 80,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
+      },
+      {
+        "name": "슬라임-3",
+        "role": "melee",
+        "hp": 0,
+        "maxHp": 80,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
+      }
+    ],
+    "durationSeconds": 3.32
+  },
+  {
+    "battleAt": "2026-06-03T12:09:05.467Z",
+    "result": "승리",
+    "playerMembers": [
+      {
+        "name": "궁사",
+        "role": "melee",
+        "hp": 92,
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
+      },
+      {
+        "name": "갑사",
+        "role": "melee",
+        "hp": 84,
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
+      }
+    ],
+    "monsterMembers": [
+      {
+        "name": "슬라임-1",
+        "role": "melee",
+        "hp": 0,
+        "maxHp": 80,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
+      },
+      {
+        "name": "슬라임-2",
+        "role": "melee",
+        "hp": 0,
+        "maxHp": 80,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
+      },
+      {
+        "name": "슬라임-3",
+        "role": "melee",
+        "hp": 0,
+        "maxHp": 80,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
+      }
+    ],
+    "durationSeconds": 2.851
+  },
+  {
+    "battleAt": "2026-06-01T14:46:27.333Z",
+    "result": "승리",
+    "playerMembers": [
+      {
+        "name": "궁사",
+        "role": "melee",
+        "hp": 100,
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
+      }
+    ],
+    "monsterMembers": [
+      {
+        "name": "슬라임-1",
+        "role": "melee",
+        "hp": 0,
+        "maxHp": 80,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
+      },
+      {
+        "name": "슬라임-2",
+        "role": "melee",
+        "hp": 0,
+        "maxHp": 80,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       }
     ],
     "durationSeconds": 2.709
@@ -34,7 +839,12 @@
         "name": "궁사",
         "role": "melee",
         "hp": 0,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       }
     ],
     "monsterMembers": [
@@ -42,25 +852,45 @@
         "name": "항마력 보스-1",
         "role": "tank",
         "hp": 520,
-        "maxHp": 1000
+        "maxHp": 1000,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "슬라임-2",
         "role": "melee",
         "hp": 80,
-        "maxHp": 80
+        "maxHp": 80,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "슬라임-3",
         "role": "melee",
         "hp": 80,
-        "maxHp": 80
+        "maxHp": 80,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "슬라임-4",
         "role": "melee",
         "hp": 80,
-        "maxHp": 80
+        "maxHp": 80,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       }
     ],
     "durationSeconds": 5.452
@@ -73,7 +903,12 @@
         "name": "위자드",
         "role": "ranged",
         "hp": 100,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       }
     ],
     "monsterMembers": [
@@ -81,7 +916,12 @@
         "name": "항마력 보스-1",
         "role": "tank",
         "hp": 0,
-        "maxHp": 1000
+        "maxHp": 1000,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       }
     ],
     "durationSeconds": 20.844
@@ -94,7 +934,12 @@
         "name": "위자드",
         "role": "ranged",
         "hp": 0,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       }
     ],
     "monsterMembers": [
@@ -102,7 +947,12 @@
         "name": "항마력 보스-1",
         "role": "tank",
         "hp": 950,
-        "maxHp": 1000
+        "maxHp": 1000,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       }
     ],
     "durationSeconds": 2.413
@@ -115,7 +965,12 @@
         "name": "기사",
         "role": "tank",
         "hp": 180,
-        "maxHp": 300
+        "maxHp": 300,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       }
     ],
     "monsterMembers": [
@@ -123,13 +978,23 @@
         "name": "오크-1",
         "role": "ranged",
         "hp": 0,
-        "maxHp": 120
+        "maxHp": 120,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "오크-2",
         "role": "ranged",
         "hp": 0,
-        "maxHp": 120
+        "maxHp": 120,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       }
     ],
     "durationSeconds": 8.08
@@ -142,13 +1007,23 @@
         "name": "전사",
         "role": "tank",
         "hp": 460,
-        "maxHp": 500
+        "maxHp": 500,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "기사",
         "role": "tank",
         "hp": 280,
-        "maxHp": 300
+        "maxHp": 300,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       }
     ],
     "monsterMembers": [
@@ -156,13 +1031,23 @@
         "name": "오크-1",
         "role": "ranged",
         "hp": 0,
-        "maxHp": 120
+        "maxHp": 120,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "오크-2",
         "role": "ranged",
         "hp": 0,
-        "maxHp": 120
+        "maxHp": 120,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       }
     ],
     "durationSeconds": 5.608
@@ -175,19 +1060,34 @@
         "name": "퓨어탱커",
         "role": "tank",
         "hp": 500,
-        "maxHp": 500
+        "maxHp": 500,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "메인힐러",
         "role": "healer",
         "hp": 100,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "서브힐러",
         "role": "healer",
         "hp": 100,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       }
     ],
     "monsterMembers": [
@@ -195,19 +1095,34 @@
         "name": "슬라임-1",
         "role": "melee",
         "hp": 0,
-        "maxHp": 80
+        "maxHp": 80,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "슬라임-2",
         "role": "melee",
         "hp": 0,
-        "maxHp": 80
+        "maxHp": 80,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "슬라임-3",
         "role": "melee",
         "hp": 0,
-        "maxHp": 80
+        "maxHp": 80,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       }
     ],
     "durationSeconds": 21.725
@@ -220,19 +1135,34 @@
         "name": "메인힐러",
         "role": "healer",
         "hp": 0,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "서브힐러",
         "role": "healer",
         "hp": 78,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "퓨어탱커",
         "role": "tank",
         "hp": 494,
-        "maxHp": 500
+        "maxHp": 500,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       }
     ],
     "monsterMembers": [
@@ -240,13 +1170,23 @@
         "name": "슬라임-1",
         "role": "melee",
         "hp": 0,
-        "maxHp": 80
+        "maxHp": 80,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "슬라임-2",
         "role": "melee",
         "hp": 0,
-        "maxHp": 80
+        "maxHp": 80,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       }
     ],
     "durationSeconds": 13.952
@@ -259,7 +1199,12 @@
         "name": "퓨어탱커",
         "role": "tank",
         "hp": 0,
-        "maxHp": 500
+        "maxHp": 500,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       }
     ],
     "monsterMembers": [
@@ -267,7 +1212,12 @@
         "name": "보스급 몬스터-1",
         "role": "melee",
         "hp": 4928,
-        "maxHp": 5000
+        "maxHp": 5000,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       }
     ],
     "durationSeconds": 6.997
@@ -280,7 +1230,12 @@
         "name": "빠른밀리",
         "role": "melee",
         "hp": 84,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       }
     ],
     "monsterMembers": [
@@ -288,13 +1243,23 @@
         "name": "슬라임-1",
         "role": "melee",
         "hp": 0,
-        "maxHp": 80
+        "maxHp": 80,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "슬라임-2",
         "role": "melee",
         "hp": 0,
-        "maxHp": 80
+        "maxHp": 80,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       }
     ],
     "durationSeconds": 2.547
@@ -307,7 +1272,12 @@
         "name": "빠른밀리",
         "role": "melee",
         "hp": 20,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       }
     ],
     "monsterMembers": [
@@ -315,13 +1285,23 @@
         "name": "슬라임-1",
         "role": "melee",
         "hp": 0,
-        "maxHp": 80
+        "maxHp": 80,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "슬라임-2",
         "role": "melee",
         "hp": 0,
-        "maxHp": 80
+        "maxHp": 80,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       }
     ],
     "durationSeconds": 8.01
@@ -334,7 +1314,12 @@
         "name": "빠른밀리",
         "role": "melee",
         "hp": 20,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       }
     ],
     "monsterMembers": [
@@ -342,7 +1327,12 @@
         "name": "슬라임-1",
         "role": "melee",
         "hp": 0,
-        "maxHp": 80
+        "maxHp": 80,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       }
     ],
     "durationSeconds": 10.925
@@ -355,31 +1345,56 @@
         "name": "ranged1",
         "role": "ranged",
         "hp": 100,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "ranged2",
         "role": "ranged",
         "hp": 100,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "ranged3",
         "role": "ranged",
         "hp": 100,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "ranged4",
         "role": "ranged",
         "hp": 100,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "ranged5",
         "role": "ranged",
         "hp": 100,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       }
     ],
     "monsterMembers": [
@@ -387,13 +1402,23 @@
         "name": "슬라임-1",
         "role": "melee",
         "hp": 0,
-        "maxHp": 80
+        "maxHp": 80,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "슬라임-2",
         "role": "melee",
         "hp": 0,
-        "maxHp": 80
+        "maxHp": 80,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       }
     ],
     "durationSeconds": 1.679
@@ -406,31 +1431,56 @@
         "name": "강한밀리",
         "role": "melee",
         "hp": 0,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "퓨어탱커",
         "role": "tank",
         "hp": 452,
-        "maxHp": 500
+        "maxHp": 500,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "딜탱",
         "role": "tank",
         "hp": 300,
-        "maxHp": 300
+        "maxHp": 300,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "보조탱커",
         "role": "tank",
         "hp": 400,
-        "maxHp": 400
+        "maxHp": 400,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "빠른밀리",
         "role": "melee",
         "hp": 100,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       }
     ],
     "monsterMembers": [
@@ -438,13 +1488,23 @@
         "name": "오크-1",
         "role": "ranged",
         "hp": 0,
-        "maxHp": 120
+        "maxHp": 120,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "오크-2",
         "role": "ranged",
         "hp": 0,
-        "maxHp": 120
+        "maxHp": 120,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       }
     ],
     "durationSeconds": 4.628
@@ -457,31 +1517,56 @@
         "name": "퓨어탱커",
         "role": "tank",
         "hp": 468,
-        "maxHp": 500
+        "maxHp": 500,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "딜탱",
         "role": "tank",
         "hp": 292,
-        "maxHp": 300
+        "maxHp": 300,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "보조탱커",
         "role": "tank",
         "hp": 400,
-        "maxHp": 400
+        "maxHp": 400,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "빠른밀리",
         "role": "melee",
         "hp": 100,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "강한밀리",
         "role": "melee",
         "hp": 100,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       }
     ],
     "monsterMembers": [
@@ -489,13 +1574,23 @@
         "name": "슬라임-1",
         "role": "melee",
         "hp": 0,
-        "maxHp": 80
+        "maxHp": 80,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "슬라임-2",
         "role": "melee",
         "hp": 0,
-        "maxHp": 80
+        "maxHp": 80,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       }
     ],
     "durationSeconds": 2.237
@@ -508,31 +1603,56 @@
         "name": "퓨어탱커",
         "role": "tank",
         "hp": 176,
-        "maxHp": 500
+        "maxHp": 500,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "딜탱",
         "role": "tank",
         "hp": 300,
-        "maxHp": 300
+        "maxHp": 300,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "보조탱커",
         "role": "tank",
         "hp": 400,
-        "maxHp": 400
+        "maxHp": 400,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "빠른밀리",
         "role": "melee",
         "hp": 100,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "강한밀리",
         "role": "melee",
         "hp": 100,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       }
     ],
     "monsterMembers": [
@@ -540,19 +1660,34 @@
         "name": "오크-1",
         "role": "ranged",
         "hp": 0,
-        "maxHp": 120
+        "maxHp": 120,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "오크-2",
         "role": "ranged",
         "hp": 0,
-        "maxHp": 120
+        "maxHp": 120,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "오크-3",
         "role": "ranged",
         "hp": 0,
-        "maxHp": 120
+        "maxHp": 120,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       }
     ],
     "durationSeconds": 5.103
@@ -565,61 +1700,111 @@
         "name": "퓨어탱커",
         "role": "tank",
         "hp": 100,
-        "maxHp": 500
+        "maxHp": 500,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "딜탱",
         "role": "tank",
         "hp": 300,
-        "maxHp": 300
+        "maxHp": 300,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "보조탱커",
         "role": "tank",
         "hp": 400,
-        "maxHp": 400
+        "maxHp": 400,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "빠른밀리",
         "role": "melee",
         "hp": 70,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "강한밀리",
         "role": "melee",
         "hp": 100,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "메인힐러",
         "role": "healer",
         "hp": 100,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "서브힐러",
         "role": "healer",
         "hp": 100,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "ranged1",
         "role": "ranged",
         "hp": 100,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "ranged2",
         "role": "ranged",
         "hp": 100,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "ranged3",
         "role": "ranged",
         "hp": 100,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       }
     ],
     "monsterMembers": [
@@ -627,7 +1812,12 @@
         "name": "보스급 몬스터-1",
         "role": "melee",
         "hp": 0,
-        "maxHp": 5000
+        "maxHp": 5000,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       }
     ],
     "durationSeconds": 10.198
@@ -640,43 +1830,78 @@
         "name": "퓨어탱커",
         "role": "tank",
         "hp": 0,
-        "maxHp": 500
+        "maxHp": 500,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "딜탱",
         "role": "tank",
         "hp": 220,
-        "maxHp": 300
+        "maxHp": 300,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "보조탱커",
         "role": "tank",
         "hp": 400,
-        "maxHp": 400
+        "maxHp": 400,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "빠른밀리",
         "role": "melee",
         "hp": 80,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "강한밀리",
         "role": "melee",
         "hp": 100,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "메인힐러",
         "role": "healer",
         "hp": 100,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "서브힐러",
         "role": "healer",
         "hp": 100,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       }
     ],
     "monsterMembers": [
@@ -684,7 +1909,12 @@
         "name": "보스급 몬스터-1",
         "role": "melee",
         "hp": 0,
-        "maxHp": 5000
+        "maxHp": 5000,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       }
     ],
     "durationSeconds": 8.932
@@ -697,49 +1927,89 @@
         "name": "퓨어탱커",
         "role": "tank",
         "hp": 444,
-        "maxHp": 500
+        "maxHp": 500,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "딜탱",
         "role": "tank",
         "hp": 300,
-        "maxHp": 300
+        "maxHp": 300,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "보조탱커",
         "role": "tank",
         "hp": 392,
-        "maxHp": 400
+        "maxHp": 400,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "빠른밀리",
         "role": "melee",
         "hp": 92,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "강한밀리",
         "role": "melee",
         "hp": 100,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "ranged3",
         "role": "ranged",
         "hp": 100,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "ranged4",
         "role": "ranged",
         "hp": 92,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "ranged5",
         "role": "ranged",
         "hp": 100,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       }
     ],
     "monsterMembers": [
@@ -747,19 +2017,34 @@
         "name": "슬라임-1",
         "role": "melee",
         "hp": 0,
-        "maxHp": 80
+        "maxHp": 80,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "오크-2",
         "role": "ranged",
         "hp": 0,
-        "maxHp": 120
+        "maxHp": 120,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "슬라임-3",
         "role": "melee",
         "hp": 0,
-        "maxHp": 80
+        "maxHp": 80,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       }
     ],
     "durationSeconds": 2.522
@@ -772,31 +2057,56 @@
         "name": "ranged1",
         "role": "ranged",
         "hp": 100,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "ranged2",
         "role": "ranged",
         "hp": 100,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "ranged3",
         "role": "ranged",
         "hp": 100,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "ranged4",
         "role": "ranged",
         "hp": 100,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "ranged5",
         "role": "ranged",
         "hp": 100,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       }
     ],
     "monsterMembers": [
@@ -804,13 +2114,23 @@
         "name": "슬라임-1",
         "role": "melee",
         "hp": 0,
-        "maxHp": 80
+        "maxHp": 80,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "슬라임-2",
         "role": "melee",
         "hp": 0,
-        "maxHp": 80
+        "maxHp": 80,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       }
     ],
     "durationSeconds": 1.719
@@ -823,19 +2143,34 @@
         "name": "퓨어탱커",
         "role": "tank",
         "hp": 340,
-        "maxHp": 500
+        "maxHp": 500,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "강한밀리",
         "role": "melee",
         "hp": 100,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "빠른밀리",
         "role": "melee",
         "hp": 100,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       }
     ],
     "monsterMembers": [
@@ -843,25 +2178,45 @@
         "name": "슬라임-1",
         "role": "melee",
         "hp": 0,
-        "maxHp": 80
+        "maxHp": 80,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "슬라임-2",
         "role": "melee",
         "hp": 0,
-        "maxHp": 80
+        "maxHp": 80,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "슬라임-3",
         "role": "melee",
         "hp": 0,
-        "maxHp": 80
+        "maxHp": 80,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "슬라임-4",
         "role": "melee",
         "hp": 0,
-        "maxHp": 80
+        "maxHp": 80,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       }
     ],
     "durationSeconds": 4.674
@@ -874,19 +2229,34 @@
         "name": "퓨어탱커",
         "role": "tank",
         "hp": 484,
-        "maxHp": 500
+        "maxHp": 500,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "딜탱",
         "role": "tank",
         "hp": 284,
-        "maxHp": 300
+        "maxHp": 300,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "보조탱커",
         "role": "tank",
         "hp": 400,
-        "maxHp": 400
+        "maxHp": 400,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       }
     ],
     "monsterMembers": [
@@ -894,7 +2264,12 @@
         "name": "슬라임-1",
         "role": "melee",
         "hp": 0,
-        "maxHp": 80
+        "maxHp": 80,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       }
     ],
     "durationSeconds": 2.952
@@ -907,61 +2282,111 @@
         "name": "퓨어탱커",
         "role": "tank",
         "hp": 130,
-        "maxHp": 500
+        "maxHp": 500,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "딜탱",
         "role": "tank",
         "hp": 280,
-        "maxHp": 300
+        "maxHp": 300,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "메인힐러",
         "role": "healer",
         "hp": 100,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "서브힐러",
         "role": "healer",
         "hp": 100,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "빠른밀리",
         "role": "melee",
         "hp": 70,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "강한밀리",
         "role": "melee",
         "hp": 100,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "ranged1",
         "role": "ranged",
         "hp": 100,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "ranged2",
         "role": "ranged",
         "hp": 100,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "ranged3",
         "role": "ranged",
         "hp": 100,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "ranged4",
         "role": "ranged",
         "hp": 100,
-        "maxHp": 100
+        "maxHp": 100,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       }
     ],
     "monsterMembers": [
@@ -969,7 +2394,12 @@
         "name": "보스급 몬스터-1",
         "role": "melee",
         "hp": 0,
-        "maxHp": 5000
+        "maxHp": 5000,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       }
     ],
     "durationSeconds": 8.859
@@ -982,7 +2412,12 @@
         "name": "탱커1",
         "role": "tank",
         "hp": 0,
-        "maxHp": 150
+        "maxHp": 150,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       }
     ],
     "monsterMembers": [
@@ -990,25 +2425,45 @@
         "name": "드래곤-1",
         "role": "melee",
         "hp": 180,
-        "maxHp": 200
+        "maxHp": 200,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "드래곤-2",
         "role": "melee",
         "hp": 190,
-        "maxHp": 200
+        "maxHp": 200,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "드래곤-3",
         "role": "melee",
         "hp": 200,
-        "maxHp": 200
+        "maxHp": 200,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       },
       {
         "name": "드래곤-4",
         "role": "melee",
         "hp": 200,
-        "maxHp": 200
+        "maxHp": 200,
+        "mp": 0,
+        "maxMp": 0,
+        "st": 0,
+        "maxSt": 0,
+        "dps": 0
       }
     ],
     "durationSeconds": 2.49

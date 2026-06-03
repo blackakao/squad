@@ -2,6 +2,8 @@
   {
     "label": "슬라임",
     "hp": 80,
+    "mp": 100,
+    "st": 100,
     "atk": 8,
     "magic": 10,
     "speed": 1.2,
@@ -14,6 +16,8 @@
   {
     "label": "오크",
     "hp": 120,
+    "mp": 100,
+    "st": 100,
     "atk": 12,
     "magic": 10,
     "speed": 1,
@@ -26,6 +30,8 @@
   {
     "label": "드래곤",
     "hp": 200,
+    "mp": 100,
+    "st": 100,
     "atk": 20,
     "magic": 10,
     "speed": 1.2,
@@ -38,25 +44,29 @@
   {
     "label": "보스급 몬스터",
     "hp": 5000,
+    "mp": 100,
+    "st": 100,
     "atk": 30,
     "magic": 10,
-    "speed": 0.1,
+    "speed": 1,
     "attackSpeed": 1,
     "defense": 0,
     "resistance": 0,
     "attackRange": 1,
-    "role": "melee"
+    "role": "tank"
   },
   {
-    "label": "항마력 보스",
+    "label": "마법형 보스",
     "hp": 1000,
+    "mp": 500,
+    "st": 100,
     "atk": 50,
-    "magic": 10,
-    "speed": 0.1,
-    "attackSpeed": 1,
+    "magic": 50,
+    "speed": 1,
+    "attackSpeed": 0.7,
     "defense": 0,
     "resistance": 50,
     "attackRange": 1,
-    "role": "tank"
+    "role": "ranged"
   }
 ]

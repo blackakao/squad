@@ -24,6 +24,8 @@ function renderCharacterTable() {
       <td>${escapeHtml(getRoleLabel(character.role))}</td>
       <td>${escapeHtml(character.name)}</td>
       <td>${character.hp}</td>
+      <td>${character.mp}</td>
+      <td>${character.st}</td>
       <td>${character.atk}</td>
       <td>${character.magic}</td>
       <td>${character.speed}</td>
@@ -43,6 +45,8 @@ function openCharacterModal(index = "") {
   characterEditIndexEl.value = character ? index : "";
   characterNameEl.value = character?.name ?? "";
   characterHpEl.value = character?.hp ?? 100;
+  characterMpEl.value = character?.mp ?? DEFAULT_RESOURCE_VALUE;
+  characterStEl.value = character?.st ?? DEFAULT_RESOURCE_VALUE;
   characterAtkEl.value = character?.atk ?? 10;
   characterMagicEl.value = character?.magic ?? getDefaultAbility(character?.role ?? "melee", "magic");
   characterSpeedEl.value = character?.speed ?? 1;
@@ -69,6 +73,8 @@ async function saveCharacterFromForm(event) {
   const character = {
     name: characterNameEl.value.trim(),
     hp: Number(characterHpEl.value),
+    mp: Number(characterMpEl.value),
+    st: Number(characterStEl.value),
     atk: Number(characterAtkEl.value),
     magic: Number(characterMagicEl.value),
     speed: Number(characterSpeedEl.value),
@@ -81,7 +87,7 @@ async function saveCharacterFromForm(event) {
     attributes: createCharacterAttributes(previousAttributes)
   };
 
-  if (!character.name || !character.faction || character.hp < 1 || character.atk < 1 || character.magic < 0 || character.speed <= 0
+  if (!character.name || !character.faction || character.hp < 1 || character.mp < 0 || character.st < 0 || character.atk < 1 || character.magic < 0 || character.speed <= 0
     || character.attackSpeed <= 0 || character.defense < 0 || character.defense > 100
     || character.resistance < 0 || character.resistance > 100 || character.attackRange < 1) {
     alert("캐릭터 정보를 올바르게 입력해주세요.");
@@ -133,6 +139,10 @@ function createCharacter(characterData, index) {
     name: characterData.name,
     hp: characterData.hp,
     maxHp: characterData.hp,
+    mp: characterData.mp,
+    maxMp: characterData.mp,
+    st: characterData.st,
+    maxSt: characterData.st,
     atk: characterData.atk,
     magic: characterData.magic,
     speed: characterData.speed,

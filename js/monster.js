@@ -25,6 +25,8 @@ function renderMonsterTable() {
       <td><input type="checkbox" class="monster-check" value="${index}"></td>
       <td>${escapeHtml(monster.label)}</td>
       <td>${monster.hp}</td>
+      <td>${monster.mp}</td>
+      <td>${monster.st}</td>
       <td>${monster.atk}</td>
       <td>${monster.magic}</td>
       <td>${monster.speed}</td>
@@ -45,6 +47,8 @@ function openMonsterModal(index = "") {
   monsterEditIndexEl.value = monster ? index : "";
   monsterLabelEl.value = monster?.label ?? "";
   monsterHpEl.value = monster?.hp ?? 100;
+  monsterMpEl.value = monster?.mp ?? DEFAULT_RESOURCE_VALUE;
+  monsterStEl.value = monster?.st ?? DEFAULT_RESOURCE_VALUE;
   monsterAtkEl.value = monster?.atk ?? 10;
   monsterMagicEl.value = monster?.magic ?? getDefaultAbility(monster?.role ?? "melee", "magic");
   monsterSpeedEl.value = monster?.speed ?? 1;
@@ -68,6 +72,8 @@ async function saveMonsterFromForm(event) {
   const monster = {
     label: monsterLabelEl.value.trim(),
     hp: Number(monsterHpEl.value),
+    mp: Number(monsterMpEl.value),
+    st: Number(monsterStEl.value),
     atk: Number(monsterAtkEl.value),
     magic: Number(monsterMagicEl.value),
     speed: Number(monsterSpeedEl.value),
@@ -78,7 +84,7 @@ async function saveMonsterFromForm(event) {
     role: monsterRoleEl.value
   };
 
-  if (!monster.label || monster.hp < 1 || monster.atk < 1 || monster.magic < 0 || monster.speed <= 0
+  if (!monster.label || monster.hp < 1 || monster.mp < 0 || monster.st < 0 || monster.atk < 1 || monster.magic < 0 || monster.speed <= 0
     || monster.attackSpeed <= 0 || monster.defense < 0 || monster.defense > 100
     || monster.resistance < 0 || monster.resistance > 100 || monster.attackRange < 1) {
     alert("몬스터 정보를 올바르게 입력해주세요.");
@@ -134,6 +140,10 @@ function createEnemy(monsterIndex) {
     name: `${monster.label}-${enemySquad.length + 1}`,
     hp: monster.hp,
     maxHp: monster.hp,
+    mp: monster.mp,
+    maxMp: monster.mp,
+    st: monster.st,
+    maxSt: monster.st,
     atk: monster.atk,
     magic: monster.magic,
     speed: monster.speed,

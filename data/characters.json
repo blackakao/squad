@@ -115,7 +115,6 @@
     "resistance": 0,
     "attackRange": 1,
     "role": "healer",
-    "faction": "프라가",
     "attributes": {
       "str": 0,
       "vit": 0,
@@ -123,7 +122,8 @@
       "focus": 0,
       "int": 0,
       "wis": 0
-    }
+    },
+    "faction": "프라가"
   },
   {
     "name": "서브힐러",
@@ -187,5 +187,26 @@
       "wis": 0
     },
     "faction": "프라가"
+  },
+  {
+    "name": "갑사",
+    "hp": 100,
+    "atk": 4,
+    "magic": 10,
+    "speed": 1,
+    "attackSpeed": 4,
+    "defense": 0,
+    "resistance": 0,
+    "attackRange": 3.7,
+    "role": "melee",
+    "faction": "쥬신",
+    "attributes": {
+      "str": 0,
+      "vit": 0,
+      "agi": 0,
+      "focus": 0,
+      "int": 0,
+      "wis": 0
+    }
   }
 ]

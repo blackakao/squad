@@ -1,5 +1,12 @@
 ﻿function resetUnitForBattle(unit) {
   unit.hp = unit.maxHp;
+  unit.maxMp = Math.max(0, Number(unit.maxMp ?? DEFAULT_RESOURCE_VALUE));
+  unit.mp = unit.maxMp;
+  unit.maxSt = Math.max(0, Number(unit.maxSt ?? DEFAULT_RESOURCE_VALUE));
+  unit.st = unit.maxSt;
+  unit.exhausted = false;
+  unit.isMoving = false;
+  unit.didAct = false;
   unit.alive = true;
   unit.vx = 0;
   unit.vy = 0;
@@ -11,6 +18,92 @@
 
 function log(message) {
   console.log(message);
+}
+
+function updateResources() {
+  const now = Date.now();
+  if (!lastResourceUpdateAt) {
+    lastResourceUpdateAt = now;
+    return;
+  }
+
+  const elapsedSeconds = Math.max(0, (now - lastResourceUpdateAt) / 1000);
+  lastResourceUpdateAt = now;
+
+  [...playerSquad, ...enemySquad].forEach(unit => {
+    if (!unit.alive) {
+      return;
+    }
+
+    const maxMp = Math.max(0, Number(unit.maxMp ?? DEFAULT_RESOURCE_VALUE));
+    const maxSt = Math.max(0, Number(unit.maxSt ?? DEFAULT_RESOURCE_VALUE));
+    unit.maxMp = maxMp;
+    unit.maxSt = maxSt;
+    unit.mp = Math.min(maxMp, (Number(unit.mp) || 0) + MP_REGEN_PER_SECOND * elapsedSeconds);
+
+    if (unit.exhausted) {
+      const exhaustedRecoveryThreshold = maxSt * ST_EXHAUSTED_MIN_RECOVERY_RATIO;
+      const exhaustedRegenPerSecond = maxSt * ST_EXHAUSTED_REGEN_RATIO_PER_SECOND + ST_EXHAUSTED_REGEN_FLAT_PER_SECOND;
+
+      unit.st = Math.min(maxSt, (Number(unit.st) || 0) + exhaustedRegenPerSecond * elapsedSeconds);
+      if (unit.isMoving) {
+        unit.st = Math.max(0, unit.st - ST_MOVE_COST_PER_SECOND * elapsedSeconds);
+      }
+      if (unit.st >= exhaustedRecoveryThreshold) {
+        unit.exhausted = false;
+      }
+    } else if (unit.isMoving) {
+      unit.st = Math.max(0, (Number(unit.st) || 0) - ST_MOVE_COST_PER_SECOND * elapsedSeconds);
+      if (unit.st <= 0) {
+        unit.exhausted = true;
+      }
+    } else if (!unit.didAct) {
+      unit.st = Math.min(maxSt, (Number(unit.st) || 0) + ST_IDLE_REGEN_PER_SECOND * elapsedSeconds);
+    }
+
+    unit.isMoving = false;
+    unit.didAct = false;
+  });
+}
+
+function hasEnoughMpForAction(unit) {
+  return !isMagicRole(unit.role) || (Number(unit.mp) || 0) >= MP_ACTION_COST;
+}
+
+function spendMpForAction(unit) {
+  if (!isMagicRole(unit.role)) {
+    return;
+  }
+
+  unit.mp = Math.max(0, (Number(unit.mp) || 0) - MP_ACTION_COST);
+}
+
+function markAction(unit) {
+  unit.didAct = true;
+}
+
+function hasEnoughStForPhysicalAttack(unit) {
+  if (!isPhysicalAttackRole(unit.role)) {
+    return true;
+  }
+
+  if ((Number(unit.st) || 0) >= ST_PHYSICAL_ATTACK_COST) {
+    return true;
+  }
+
+  unit.exhausted = true;
+  return false;
+}
+
+function spendStForPhysicalAttack(unit) {
+  if (!isPhysicalAttackRole(unit.role)) {
+    return;
+  }
+
+  unit.st = Math.max(0, (Number(unit.st) || 0) - ST_PHYSICAL_ATTACK_COST);
+  if (unit.st <= 0) {
+    unit.exhausted = true;
+  }
 }
 
 function distance(a, b) {
@@ -37,6 +130,7 @@ function triggerEffect(unit, effectType) {
 }
 
 async function finishBattle(result) {
+  updateResources();
   lastBattleDurationMs = battleStartedAt ? Date.now() - battleStartedAt : lastBattleDurationMs;
   isBattleRunning = false;
   updateBattleButton();
@@ -54,6 +148,7 @@ async function finishBattle(result) {
 
   battleStartedAt = null;
   battleStartedAtText = "";
+  lastResourceUpdateAt = null;
 }
 
 function startBattle() {
@@ -73,6 +168,7 @@ function startBattle() {
   lastBattleDurationMs = 0;
   battleStartedAt = Date.now();
   battleStartedAtText = new Date(battleStartedAt).toISOString();
+  lastResourceUpdateAt = battleStartedAt;
   isBattleRunning = true;
   updateBattleButton();
   log("전투 시작!");
@@ -83,6 +179,7 @@ function stopBattle() {
   isBattleRunning = false;
   battleStartedAt = null;
   battleStartedAtText = "";
+  lastResourceUpdateAt = null;
   updateBattleButton();
   log("전투 중지");
 }
@@ -127,7 +224,7 @@ function moveUnit(unit, targets) {
     return;
   }
 
-  const speed = unit.speed ?? ROLE_STATS[unit.role]?.speedMultiplier ?? 1;
+  const speed = (unit.speed ?? ROLE_STATS[unit.role]?.speedMultiplier ?? 1) * (unit.exhausted ? EXHAUSTED_MOVE_MULTIPLIER : 1);
   const desiredRange = getUnitRange(unit);
 
   if (dist > desiredRange) {
@@ -140,6 +237,8 @@ function moveUnit(unit, targets) {
     unit.vx = 0;
     unit.vy = 0;
   }
+
+  unit.isMoving = Math.hypot(unit.vx, unit.vy) > 0;
 
   unit.x += unit.vx;
   unit.y += unit.vy;
@@ -201,7 +300,13 @@ function takeAction(unit, allies, enemies) {
   }
 
   if (unit.role === "healer") {
+    if (!hasEnoughMpForAction(unit)) {
+      return;
+    }
+
     if (heal(unit, allies)) {
+      spendMpForAction(unit);
+      markAction(unit);
       unit.attackCooldown = getAttackCooldown(unit);
     }
     return;
@@ -213,8 +318,20 @@ function takeAction(unit, allies, enemies) {
   }
 
   if (unit.role === "ranged") {
+    if (!hasEnoughMpForAction(unit)) {
+      return;
+    }
+
+    spendMpForAction(unit);
+    markAction(unit);
     spawnProjectile(unit, target, "attack");
   } else {
+    if (!hasEnoughStForPhysicalAttack(unit)) {
+      return;
+    }
+
+    spendStForPhysicalAttack(unit);
+    markAction(unit);
     doAttack(unit, target);
   }
 
@@ -363,6 +480,7 @@ function resetGame() {
   projectiles = [];
   battleStartedAt = null;
   battleStartedAtText = "";
+  lastResourceUpdateAt = null;
   lastBattleDurationMs = 0;
 
   initCharacters();
@@ -375,6 +493,8 @@ function resetGame() {
 
 function gameLoop() {
   if (isBattleRunning) {
+    updateResources();
+
     for (let i = 0; i < gameSpeed; i++) {
       if (!isBattleRunning) {
         break;

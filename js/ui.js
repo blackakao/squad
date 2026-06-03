@@ -20,6 +20,8 @@ const monsterFormEl = document.getElementById("monsterForm");
 const monsterEditIndexEl = document.getElementById("monsterEditIndex");
 const monsterLabelEl = document.getElementById("monsterLabel");
 const monsterHpEl = document.getElementById("monsterHp");
+const monsterMpEl = document.getElementById("monsterMp");
+const monsterStEl = document.getElementById("monsterSt");
 const monsterAtkEl = document.getElementById("monsterAtk");
 const monsterMagicEl = document.getElementById("monsterMagic");
 const monsterSpeedEl = document.getElementById("monsterSpeed");
@@ -38,6 +40,8 @@ const characterFormEl = document.getElementById("characterForm");
 const characterEditIndexEl = document.getElementById("characterEditIndex");
 const characterNameEl = document.getElementById("characterName");
 const characterHpEl = document.getElementById("characterHp");
+const characterMpEl = document.getElementById("characterMp");
+const characterStEl = document.getElementById("characterSt");
 const characterAtkEl = document.getElementById("characterAtk");
 const characterMagicEl = document.getElementById("characterMagic");
 const characterSpeedEl = document.getElementById("characterSpeed");
@@ -75,6 +79,17 @@ const CHARACTER_STAT_DEFS = [
 const CHARACTER_STAT_MAX = 50;
 const CHARACTER_STAT_TOTAL = 150;
 const CHARACTER_STAT_STEP = 10;
+const DEFAULT_RESOURCE_VALUE = 100;
+const MP_ACTION_COST = 5;
+const MP_REGEN_PER_SECOND = 1;
+const ST_MOVE_COST_PER_SECOND = 1;
+const ST_IDLE_REGEN_PER_SECOND = 10;
+const ST_EXHAUSTED_MIN_RECOVERY_RATIO = 0.6;
+const ST_EXHAUSTED_REGEN_RATIO_PER_SECOND = 0.05;
+const ST_EXHAUSTED_REGEN_FLAT_PER_SECOND = 25;
+const ST_PHYSICAL_ATTACK_COST = 10;
+const EXHAUSTED_MOVE_MULTIPLIER = 0.5;
+const EXHAUSTED_ATTACK_SPEED_MULTIPLIER = 0.7;
 const API_URLS = {
   monsters: "/api/monsters",
   characters: "/api/characters",
@@ -82,17 +97,17 @@ const API_URLS = {
   records: "/api/records"
 };
 const DEFAULT_MONSTER_JSON = [
-  { label: "슬라임", hp: 80, atk: 8, magic: 10, speed: 1.2, attackSpeed: 1, defense: 0, resistance: 0, attackRange: 1, role: "melee" },
-  { label: "오크", hp: 120, atk: 12, magic: 10, speed: 1, attackSpeed: 1, defense: 0, resistance: 0, attackRange: 1, role: "ranged" },
-  { label: "드래곤", hp: 200, atk: 20, magic: 10, speed: 1.2, attackSpeed: 1, defense: 0, resistance: 0, attackRange: 1, role: "melee" }
+  { label: "슬라임", hp: 80, mp: DEFAULT_RESOURCE_VALUE, st: DEFAULT_RESOURCE_VALUE, atk: 8, magic: 10, speed: 1.2, attackSpeed: 1, defense: 0, resistance: 0, attackRange: 1, role: "melee" },
+  { label: "오크", hp: 120, mp: DEFAULT_RESOURCE_VALUE, st: DEFAULT_RESOURCE_VALUE, atk: 12, magic: 10, speed: 1, attackSpeed: 1, defense: 0, resistance: 0, attackRange: 1, role: "ranged" },
+  { label: "드래곤", hp: 200, mp: DEFAULT_RESOURCE_VALUE, st: DEFAULT_RESOURCE_VALUE, atk: 20, magic: 10, speed: 1.2, attackSpeed: 1, defense: 0, resistance: 0, attackRange: 1, role: "melee" }
 ];
 
 const ROLE_STATS = {
-  tank: { hp: 150, atk: 10, magic: 10, color: "gray", attackRange: 1, attackSpeed: 1, defense: 0, resistance: 0, speedMultiplier: 1.2 },
-  melee: { hp: 100, atk: 10, magic: 10, color: "yellow", attackRange: 1, attackSpeed: 1, defense: 0, resistance: 0, speedMultiplier: 1.2 },
-  ranged: { hp: 100, atk: 12, magic: 10, color: "blue", attackRange: 1, attackSpeed: 1, defense: 0, resistance: 0, speedMultiplier: 1 },
-  healer: { hp: 100, atk: 10, magic: 10, color: "violet", attackRange: 1, attackSpeed: 1, defense: 0, resistance: 0, speedMultiplier: 1 },
-  special: { hp: 100, atk: 10, magic: 10, color: "orange", attackRange: 1, attackSpeed: 1, defense: 0, resistance: 0, speedMultiplier: 1 }
+  tank: { hp: 150, mp: DEFAULT_RESOURCE_VALUE, st: DEFAULT_RESOURCE_VALUE, atk: 10, magic: 10, color: "gray", attackRange: 1, attackSpeed: 1, defense: 0, resistance: 0, speedMultiplier: 1.2 },
+  melee: { hp: 100, mp: DEFAULT_RESOURCE_VALUE, st: DEFAULT_RESOURCE_VALUE, atk: 10, magic: 10, color: "yellow", attackRange: 1, attackSpeed: 1, defense: 0, resistance: 0, speedMultiplier: 1.2 },
+  ranged: { hp: 100, mp: DEFAULT_RESOURCE_VALUE, st: DEFAULT_RESOURCE_VALUE, atk: 12, magic: 10, color: "blue", attackRange: 1, attackSpeed: 1, defense: 0, resistance: 0, speedMultiplier: 1 },
+  healer: { hp: 100, mp: DEFAULT_RESOURCE_VALUE, st: DEFAULT_RESOURCE_VALUE, atk: 10, magic: 10, color: "violet", attackRange: 1, attackSpeed: 1, defense: 0, resistance: 0, speedMultiplier: 1 },
+  special: { hp: 100, mp: DEFAULT_RESOURCE_VALUE, st: DEFAULT_RESOURCE_VALUE, atk: 10, magic: 10, color: "orange", attackRange: 1, attackSpeed: 1, defense: 0, resistance: 0, speedMultiplier: 1 }
 };
 
 const BASE_ATTACK_COOLDOWN = 60;
@@ -121,6 +136,7 @@ let battleRecordsJson = [];
 let battleStartedAt = null;
 let battleStartedAtText = "";
 let lastBattleDurationMs = 0;
+let lastResourceUpdateAt = null;
 let selectedStatCharacterIndex = "";
 
 function createStats() {
@@ -180,11 +196,17 @@ function getUnitRange(unit) {
 
 function getAttackCooldown(unit) {
   const attackSpeed = Math.max(0.1, Number(unit.attackSpeed ?? getDefaultAbility(unit.role, "attackSpeed")));
-  return Math.max(1, Math.round(BASE_ATTACK_COOLDOWN / attackSpeed));
+  const exhaustedMultiplier = unit.exhausted ? EXHAUSTED_ATTACK_SPEED_MULTIPLIER : 1;
+  return Math.max(1, Math.round(BASE_ATTACK_COOLDOWN / (attackSpeed * exhaustedMultiplier)));
 }
 
 function isMagicRole(role) {
   return normalizeRole(role) === "ranged" || normalizeRole(role) === "healer";
+}
+
+function isPhysicalAttackRole(role) {
+  const normalizedRole = normalizeRole(role);
+  return normalizedRole === "tank" || normalizedRole === "melee";
 }
 
 function getReducedDamage(attacker, target) {
@@ -216,6 +238,8 @@ function createDefaultCharacterJson() {
       characters.push({
         name: `${role}${i + 1}`,
         hp: roleStat.hp,
+        mp: roleStat.mp,
+        st: roleStat.st,
         atk: roleStat.atk,
         magic: roleStat.magic,
         speed: roleStat.speedMultiplier,
@@ -257,6 +281,8 @@ function normalizeCombatJson(items, defaults, nameKey) {
       const normalizedItem = {
         [nameKey]: String(item[nameKey] ?? item.label ?? item.name ?? "").trim(),
         hp: Number(item.hp),
+        mp: normalizeCombatValue(item.mp, getDefaultAbility(role, "mp"), 0),
+        st: normalizeCombatValue(item.st, getDefaultAbility(role, "st"), 0),
         atk: Number(item.atk),
         magic: normalizeCombatValue(item.magic, getDefaultAbility(role, "magic"), 0),
         speed: normalizeCombatValue(item.speed, getDefaultAbility(role, "speedMultiplier"), 0.1),
@@ -274,7 +300,7 @@ function normalizeCombatJson(items, defaults, nameKey) {
 
       return normalizedItem;
     })
-    .filter(item => item[nameKey] && item.hp > 0 && item.atk > 0 && item.magic >= 0 && item.speed > 0
+    .filter(item => item[nameKey] && item.hp > 0 && item.mp >= 0 && item.st >= 0 && item.atk > 0 && item.magic >= 0 && item.speed > 0
       && item.attackSpeed > 0 && item.defense >= 0 && item.resistance >= 0 && item.attackRange >= 1 && ROLES.includes(item.role));
 
   return normalized.length > 0 ? normalized : defaults.map(item => ({ ...item }));
@@ -330,6 +356,15 @@ function renderStatus(units, colorResolver) {
   return units.map(unit => {
     const hpRatio = Math.max(0, (unit.hp / unit.maxHp) * 100);
     const hpText = `${Math.floor(unit.hp)} / ${unit.maxHp}`;
+    const maxMp = Math.max(0, Number(unit.maxMp ?? DEFAULT_RESOURCE_VALUE));
+    const mp = Math.max(0, Number(unit.mp ?? maxMp));
+    const mpRatio = maxMp > 0 ? Math.max(0, Math.min(100, (mp / maxMp) * 100)) : 0;
+    const mpText = `${Math.floor(mp)} / ${maxMp}`;
+    const maxSt = Math.max(0, Number(unit.maxSt ?? DEFAULT_RESOURCE_VALUE));
+    const st = Math.max(0, Number(unit.st ?? maxSt));
+    const stRatio = maxSt > 0 ? Math.max(0, Math.min(100, (st / maxSt) * 100)) : 0;
+    const stText = `${Math.floor(st)} / ${maxSt}`;
+    const exhaustedText = unit.exhausted ? " · 지침" : "";
     const dpsText = `DPS ${getUnitDps(unit).toFixed(1)}`;
 
     return `
@@ -337,7 +372,15 @@ function renderStatus(units, colorResolver) {
         <div>${unit.name} (${getRoleLabel(unit.role)})</div>
         <div class="hp-track">
           <div class="hp-fill" style="width:${hpRatio}%; background:${colorResolver(unit)};"></div>
-          <div class="hp-label">${hpText} · ${dpsText}</div>
+          <div class="hp-label">HP ${hpText} · ${dpsText}</div>
+        </div>
+        <div class="mp-track">
+          <div class="mp-fill" style="width:${mpRatio}%;"></div>
+          <div class="hp-label">MP ${mpText}</div>
+        </div>
+        <div class="st-track">
+          <div class="st-fill" style="width:${stRatio}%;"></div>
+          <div class="hp-label">ST ${stText}${exhaustedText}</div>
         </div>
       </div>
     `;

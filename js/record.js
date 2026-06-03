@@ -8,14 +8,19 @@ function normalizeRecordJson(records) {
 
   const normalizeMember = member => {
     if (typeof member === "string") {
-      return { name: member, role: "", hp: 0, maxHp: 0 };
+      return { name: member, role: "", hp: 0, maxHp: 0, mp: 0, maxMp: 0, st: 0, maxSt: 0, dps: 0 };
     }
 
     return {
       name: String(member.name ?? "").trim(),
       role: String(member.role ?? "").trim(),
       hp: Number(member.hp) || 0,
-      maxHp: Number(member.maxHp) || 0
+      maxHp: Number(member.maxHp) || 0,
+      mp: Number(member.mp) || 0,
+      maxMp: Number(member.maxMp) || 0,
+      st: Number(member.st) || 0,
+      maxSt: Number(member.maxSt) || 0,
+      dps: Number(member.dps) || 0
     };
   };
 
@@ -41,6 +46,10 @@ async function saveBattleRecordsJson() {
   log("전투 기록이 저장되었습니다.");
 }
 
+function formatMemberResource(current, max) {
+  return max > 0 ? `${Math.floor(current)} / ${max}` : "-";
+}
+
 function renderMemberTable(members) {
   return `
     <table class="member-table">
@@ -48,7 +57,10 @@ function renderMemberTable(members) {
         <tr>
           <th>이름</th>
           <th>계열</th>
-          <th>생명력</th>
+          <th>HP</th>
+          <th>MP</th>
+          <th>ST</th>
+          <th>DPS</th>
         </tr>
       </thead>
       <tbody>
@@ -57,6 +69,9 @@ function renderMemberTable(members) {
             <td>${escapeHtml(member.name)}</td>
             <td>${escapeHtml(getRoleLabel(member.role))}</td>
             <td>${Math.floor(member.hp)} / ${member.maxHp}</td>
+            <td>${formatMemberResource(member.mp, member.maxMp)}</td>
+            <td>${formatMemberResource(member.st, member.maxSt)}</td>
+            <td>${member.dps.toFixed(1)}</td>
           </tr>
         `).join("")}
       </tbody>
@@ -153,21 +168,33 @@ async function clearBattleRecords() {
   }
 }
 
-function createRecordMembers(units) {
-  return units.map(unit => ({
-    name: unit.name,
-    role: unit.role,
-    hp: Math.max(0, Math.floor(unit.hp)),
-    maxHp: unit.maxHp
-  }));
+function createRecordMembers(units, durationSeconds) {
+  return units.map(unit => {
+    const maxMp = Math.max(0, Number(unit.maxMp ?? DEFAULT_RESOURCE_VALUE));
+    const maxSt = Math.max(0, Number(unit.maxSt ?? DEFAULT_RESOURCE_VALUE));
+
+    return {
+      name: unit.name,
+      role: unit.role,
+      hp: Math.max(0, Math.floor(Number(unit.hp) || 0)),
+      maxHp: Number(unit.maxHp) || 0,
+      mp: Math.max(0, Math.floor(Number(unit.mp) || 0)),
+      maxMp,
+      st: Math.max(0, Math.floor(Number(unit.st) || 0)),
+      maxSt,
+      dps: durationSeconds > 0 ? (Number(unit.stats?.damage) || 0) / durationSeconds : 0
+    };
+  });
 }
 
 function createBattleRecord(result) {
+  const durationSeconds = battleStartedAt ? (Date.now() - battleStartedAt) / 1000 : 0;
+
   return {
     battleAt: battleStartedAtText || new Date().toISOString(),
     result,
-    playerMembers: createRecordMembers(playerSquad),
-    monsterMembers: createRecordMembers(enemySquad),
-    durationSeconds: battleStartedAt ? (Date.now() - battleStartedAt) / 1000 : 0
+    playerMembers: createRecordMembers(playerSquad, durationSeconds),
+    monsterMembers: createRecordMembers(enemySquad, durationSeconds),
+    durationSeconds
   };
 }
