@@ -114,6 +114,16 @@ button {
   box-sizing: border-box;
 }
 
+.cast-track {
+  background: #eee;
+  position: relative;
+  height: 16px;
+  overflow: hidden;
+  border: 1px solid #b8b8b8;
+  border-top: 0;
+  box-sizing: border-box;
+}
+
 .hp-fill {
   height: 100%;
   min-width: 0;
@@ -129,6 +139,16 @@ button {
   height: 100%;
   min-width: 0;
   background: #d99a3d;
+}
+
+.cast-fill {
+  height: 100%;
+  min-width: 0;
+  background: #8f7ee7;
+}
+
+.cast-track.casting {
+  background: #e9e5ff;
 }
 
 .hp-label {
@@ -159,13 +179,14 @@ button {
 
 .stat-manager {
   display: grid;
-  grid-template-columns: minmax(180px, 260px) 1fr;
+  grid-template-columns: minmax(180px, 240px) minmax(260px, 1fr) minmax(260px, 340px);
   gap: 12px;
   min-height: 420px;
 }
 
 .stat-character-list,
-.stat-editor {
+.stat-editor,
+.stat-ability-preview {
   border: 1px solid #ccc;
   padding: 10px;
   box-sizing: border-box;
@@ -232,6 +253,23 @@ button {
 .stat-actions {
   margin-top: 14px;
   text-align: right;
+}
+
+.stat-ability-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.stat-ability-table th,
+.stat-ability-table td {
+  border: 1px solid #ddd;
+  padding: 6px 4px;
+  text-align: center;
+}
+
+.stat-ability-table th {
+  font-weight: bold;
 }
 
 @media (max-width: 720px) {

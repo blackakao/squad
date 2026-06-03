@@ -11,6 +11,9 @@
   unit.vx = 0;
   unit.vy = 0;
   unit.attackCooldown = 0;
+  unit.castTimer = 0;
+  unit.castDuration = 0;
+  unit.pendingAction = null;
   unit.stats = createStats();
   unit.effectType = null;
   unit.effectTimer = 0;
@@ -211,6 +214,13 @@ function moveUnit(unit, targets) {
     return;
   }
 
+  if (unit.castTimer > 0) {
+    unit.vx = 0;
+    unit.vy = 0;
+    unit.isMoving = false;
+    return;
+  }
+
   const target = targets.find(candidate => candidate.alive);
   if (!target) {
     return;
@@ -294,21 +304,27 @@ function updateCombat() {
 }
 
 function takeAction(unit, allies, enemies) {
+  if (updateCast(unit)) {
+    return;
+  }
+
   if (unit.attackCooldown > 0) {
     unit.attackCooldown--;
     return;
   }
 
   if (unit.role === "healer") {
+    const target = findHealTarget(unit, allies);
+    if (!target) {
+      return;
+    }
+
     if (!hasEnoughMpForAction(unit)) {
       return;
     }
 
-    if (heal(unit, allies)) {
-      spendMpForAction(unit);
-      markAction(unit);
-      unit.attackCooldown = getAttackCooldown(unit);
-    }
+    spendMpForAction(unit);
+    startCast(unit, { type: "heal", target });
     return;
   }
 
@@ -323,19 +339,67 @@ function takeAction(unit, allies, enemies) {
     }
 
     spendMpForAction(unit);
-    markAction(unit);
-    spawnProjectile(unit, target, "attack");
+    startCast(unit, { type: "attack", target, ranged: true });
   } else {
     if (!hasEnoughStForPhysicalAttack(unit)) {
       return;
     }
 
     spendStForPhysicalAttack(unit);
-    markAction(unit);
-    doAttack(unit, target);
+    startCast(unit, { type: "attack", target, ranged: false });
+  }
+}
+
+function startCast(unit, action) {
+  const castDuration = getCastDuration(unit);
+
+  markAction(unit);
+  if (castDuration <= 0) {
+    resolveCastAction(unit, action);
+    setCooldownAfterCast(unit, castDuration);
+    return;
   }
 
-  unit.attackCooldown = getAttackCooldown(unit);
+  unit.pendingAction = action;
+  unit.castTimer = castDuration;
+  unit.castDuration = castDuration;
+}
+
+function updateCast(unit) {
+  if (unit.castTimer <= 0) {
+    return false;
+  }
+
+  markAction(unit);
+  unit.castTimer--;
+  if (unit.castTimer <= 0) {
+    const action = unit.pendingAction;
+
+    unit.pendingAction = null;
+    unit.castDuration = 0;
+    resolveCastAction(unit, action);
+    setCooldownAfterCast(unit, getCastDuration(unit));
+  }
+
+  return true;
+}
+
+function setCooldownAfterCast(unit, castDuration) {
+  unit.attackCooldown = Math.max(0, getAttackCooldown(unit) - castDuration);
+}
+
+function resolveCastAction(unit, action) {
+  if (!unit.alive || !action?.target?.alive) {
+    return;
+  }
+
+  if (action.type === "heal") {
+    spawnProjectile(unit, action.target, "heal");
+  } else if (action.ranged) {
+    spawnProjectile(unit, action.target, "attack");
+  } else {
+    doAttack(unit, action.target);
+  }
 }
 
 function findTarget(unit, enemies) {
@@ -343,15 +407,9 @@ function findTarget(unit, enemies) {
   return enemies.find(enemy => enemy.alive && distance(unit, enemy) <= attackRange);
 }
 
-function heal(healer, team) {
+function findHealTarget(healer, team) {
   const healRange = getUnitRange(healer);
-  const target = team.find(unit => unit.alive && unit.hp < unit.maxHp && distance(healer, unit) <= healRange);
-  if (!target) {
-    return false;
-  }
-
-  spawnProjectile(healer, target, "heal");
-  return true;
+  return team.find(unit => unit.alive && unit.hp < unit.maxHp && distance(healer, unit) <= healRange);
 }
 
 function applyHeal(healer, target) {

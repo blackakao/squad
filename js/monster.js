@@ -31,6 +31,7 @@ function renderMonsterTable() {
       <td>${monster.magic}</td>
       <td>${monster.speed}</td>
       <td>${monster.attackSpeed}</td>
+      <td>${monster.castSpeed}</td>
       <td>${monster.defense}</td>
       <td>${monster.resistance}</td>
       <td>${monster.attackRange}</td>
@@ -46,13 +47,14 @@ function openMonsterModal(index = "") {
   monsterModalTitleEl.innerText = monster ? "몬스터 수정" : "몬스터 추가";
   monsterEditIndexEl.value = monster ? index : "";
   monsterLabelEl.value = monster?.label ?? "";
-  monsterHpEl.value = monster?.hp ?? 100;
+  monsterHpEl.value = monster?.hp ?? 2000;
   monsterMpEl.value = monster?.mp ?? DEFAULT_RESOURCE_VALUE;
   monsterStEl.value = monster?.st ?? DEFAULT_RESOURCE_VALUE;
   monsterAtkEl.value = monster?.atk ?? 10;
   monsterMagicEl.value = monster?.magic ?? getDefaultAbility(monster?.role ?? "melee", "magic");
   monsterSpeedEl.value = monster?.speed ?? 1;
   monsterAttackSpeedEl.value = monster?.attackSpeed ?? getDefaultAbility(monster?.role ?? "melee", "attackSpeed");
+  monsterCastSpeedEl.value = monster?.castSpeed ?? getDefaultAbility(monster?.role ?? "melee", "castSpeed");
   monsterDefenseEl.value = monster?.defense ?? getDefaultAbility(monster?.role ?? "melee", "defense");
   monsterResistanceEl.value = monster?.resistance ?? getDefaultAbility(monster?.role ?? "melee", "resistance");
   monsterAttackRangeEl.value = monster?.attackRange ?? getDefaultAbility(monster?.role ?? "melee", "attackRange");
@@ -78,6 +80,7 @@ async function saveMonsterFromForm(event) {
     magic: Number(monsterMagicEl.value),
     speed: Number(monsterSpeedEl.value),
     attackSpeed: Number(monsterAttackSpeedEl.value),
+    castSpeed: Number(monsterCastSpeedEl.value),
     defense: Number(monsterDefenseEl.value),
     resistance: Number(monsterResistanceEl.value),
     attackRange: Number(monsterAttackRangeEl.value),
@@ -85,7 +88,7 @@ async function saveMonsterFromForm(event) {
   };
 
   if (!monster.label || monster.hp < 1 || monster.mp < 0 || monster.st < 0 || monster.atk < 1 || monster.magic < 0 || monster.speed <= 0
-    || monster.attackSpeed <= 0 || monster.defense < 0 || monster.defense > 100
+    || monster.attackSpeed <= 0 || monster.castSpeed < 0 || monster.defense < 0 || monster.defense > 100
     || monster.resistance < 0 || monster.resistance > 100 || monster.attackRange < 1) {
     alert("몬스터 정보를 올바르게 입력해주세요.");
     return;
@@ -148,6 +151,7 @@ function createEnemy(monsterIndex) {
     magic: monster.magic,
     speed: monster.speed,
     attackSpeed: monster.attackSpeed,
+    castSpeed: monster.castSpeed,
     defense: monster.defense,
     resistance: monster.resistance,
     attackRange: monster.attackRange,

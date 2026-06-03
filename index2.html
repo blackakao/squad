@@ -81,6 +81,7 @@
           <th>마력</th>
           <th>이동속도</th>
           <th>공격속도</th>
+          <th>시전속도</th>
           <th>방어력</th>
           <th>저항력</th>
           <th>사정거리</th>
@@ -114,6 +115,7 @@
           <th>마력</th>
           <th>이동속도</th>
           <th>공격속도</th>
+          <th>시전속도</th>
           <th>방어력</th>
           <th>저항력</th>
           <th>사정거리</th>
@@ -167,6 +169,10 @@
         <div class="stat-actions">
           <button type="button" onclick="saveSelectedCharacterStats()">적용</button>
         </div>
+      </div>
+      <div class="stat-ability-preview">
+        <h5>적용 능력치</h5>
+        <div id="statAbilityPreview"></div>
       </div>
     </div>
   </div>
@@ -234,6 +240,10 @@
         <input id="monsterAttackSpeed" type="number" min="0.1" step="0.1" required>
       </div>
       <div class="form-row">
+        <label for="monsterCastSpeed">시전속도</label>
+        <input id="monsterCastSpeed" type="number" min="0" step="0.1" required>
+      </div>
+      <div class="form-row">
         <label for="monsterDefense">방어력</label>
         <input id="monsterDefense" type="number" min="0" max="100" step="0.1" required>
       </div>
@@ -264,45 +274,49 @@
         <label for="characterName">이름</label>
         <input id="characterName" required placeholder="tank1">
       </div>
-      <div class="form-row">
+      <div class="form-row character-derived-field hidden">
         <label for="characterHp">HP</label>
-        <input id="characterHp" type="number" min="1" required>
+        <input id="characterHp" type="number" min="1" disabled>
       </div>
-      <div class="form-row">
+      <div class="form-row character-derived-field hidden">
         <label for="characterMp">MP</label>
-        <input id="characterMp" type="number" min="0" step="0.1" required>
+        <input id="characterMp" type="number" min="0" step="0.1" disabled>
       </div>
-      <div class="form-row">
+      <div class="form-row character-derived-field hidden">
         <label for="characterSt">ST</label>
-        <input id="characterSt" type="number" min="0" step="0.1" required>
+        <input id="characterSt" type="number" min="0" step="0.1" disabled>
       </div>
-      <div class="form-row">
+      <div class="form-row character-derived-field hidden">
         <label for="characterAtk">공격력</label>
-        <input id="characterAtk" type="number" min="1" required>
+        <input id="characterAtk" type="number" min="1" disabled>
       </div>
-      <div class="form-row">
+      <div class="form-row character-derived-field hidden">
         <label for="characterMagic">마력</label>
-        <input id="characterMagic" type="number" min="0" step="0.1" required>
+        <input id="characterMagic" type="number" min="0" step="0.1" disabled>
       </div>
-      <div class="form-row">
+      <div class="form-row character-derived-field hidden">
         <label for="characterSpeed">이동속도</label>
-        <input id="characterSpeed" type="number" min="0.1" step="0.1" required>
+        <input id="characterSpeed" type="number" min="0.1" step="0.1" disabled>
       </div>
-      <div class="form-row">
+      <div class="form-row character-derived-field hidden">
         <label for="characterAttackSpeed">공격속도</label>
-        <input id="characterAttackSpeed" type="number" min="0.1" step="0.1" required>
+        <input id="characterAttackSpeed" type="number" min="0.1" step="0.1" disabled>
       </div>
-      <div class="form-row">
+      <div class="form-row character-derived-field hidden">
+        <label for="characterCastSpeed">시전속도</label>
+        <input id="characterCastSpeed" type="number" min="0" step="0.1" disabled>
+      </div>
+      <div class="form-row character-derived-field hidden">
         <label for="characterDefense">방어력</label>
-        <input id="characterDefense" type="number" min="0" max="100" step="0.1" required>
+        <input id="characterDefense" type="number" min="0" max="100" step="0.1" disabled>
       </div>
-      <div class="form-row">
+      <div class="form-row character-derived-field hidden">
         <label for="characterResistance">저항력</label>
-        <input id="characterResistance" type="number" min="0" max="100" step="0.1" required>
+        <input id="characterResistance" type="number" min="0" max="100" step="0.1" disabled>
       </div>
-      <div class="form-row">
+      <div class="form-row character-derived-field hidden">
         <label for="characterAttackRange">사정거리</label>
-        <input id="characterAttackRange" type="number" min="1" step="0.1" required>
+        <input id="characterAttackRange" type="number" min="1" step="0.1" disabled>
       </div>
       <div class="form-row">
         <label for="characterRole">계열</label>

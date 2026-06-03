@@ -30,6 +30,7 @@ function renderCharacterTable() {
       <td>${character.magic}</td>
       <td>${character.speed}</td>
       <td>${character.attackSpeed}</td>
+      <td>${character.castSpeed}</td>
       <td>${character.defense}</td>
       <td>${character.resistance}</td>
       <td>${character.attackRange}</td>
@@ -44,16 +45,6 @@ function openCharacterModal(index = "") {
   characterModalTitleEl.innerText = character ? "캐릭터 수정" : "캐릭터 추가";
   characterEditIndexEl.value = character ? index : "";
   characterNameEl.value = character?.name ?? "";
-  characterHpEl.value = character?.hp ?? 100;
-  characterMpEl.value = character?.mp ?? DEFAULT_RESOURCE_VALUE;
-  characterStEl.value = character?.st ?? DEFAULT_RESOURCE_VALUE;
-  characterAtkEl.value = character?.atk ?? 10;
-  characterMagicEl.value = character?.magic ?? getDefaultAbility(character?.role ?? "melee", "magic");
-  characterSpeedEl.value = character?.speed ?? 1;
-  characterAttackSpeedEl.value = character?.attackSpeed ?? getDefaultAbility(character?.role ?? "melee", "attackSpeed");
-  characterDefenseEl.value = character?.defense ?? getDefaultAbility(character?.role ?? "melee", "defense");
-  characterResistanceEl.value = character?.resistance ?? getDefaultAbility(character?.role ?? "melee", "resistance");
-  characterAttackRangeEl.value = character?.attackRange ?? getDefaultAbility(character?.role ?? "melee", "attackRange");
   characterRoleEl.value = character?.role ?? "melee";
   renderCharacterFactionOptions();
   characterFactionEl.value = character?.faction ?? getDefaultFactionName();
@@ -70,26 +61,14 @@ async function saveCharacterFromForm(event) {
 
   const editIndex = characterEditIndexEl.value;
   const previousAttributes = editIndex !== "" ? characterJson[Number(editIndex)]?.attributes : {};
-  const character = {
+  const character = applyCharacterStatAbilities({
     name: characterNameEl.value.trim(),
-    hp: Number(characterHpEl.value),
-    mp: Number(characterMpEl.value),
-    st: Number(characterStEl.value),
-    atk: Number(characterAtkEl.value),
-    magic: Number(characterMagicEl.value),
-    speed: Number(characterSpeedEl.value),
-    attackSpeed: Number(characterAttackSpeedEl.value),
-    defense: Number(characterDefenseEl.value),
-    resistance: Number(characterResistanceEl.value),
-    attackRange: Number(characterAttackRangeEl.value),
     role: characterRoleEl.value,
     faction: characterFactionEl.value,
     attributes: createCharacterAttributes(previousAttributes)
-  };
+  });
 
-  if (!character.name || !character.faction || character.hp < 1 || character.mp < 0 || character.st < 0 || character.atk < 1 || character.magic < 0 || character.speed <= 0
-    || character.attackSpeed <= 0 || character.defense < 0 || character.defense > 100
-    || character.resistance < 0 || character.resistance > 100 || character.attackRange < 1) {
+  if (!character.name || !character.faction || !ROLES.includes(character.role)) {
     alert("캐릭터 정보를 올바르게 입력해주세요.");
     return;
   }
@@ -131,27 +110,29 @@ async function deleteSelectedCharacters() {
 }
 
 function createCharacter(characterData, index) {
-  const role = characterData.role;
+  const derivedCharacter = applyCharacterStatAbilities(characterData);
+  const role = derivedCharacter.role;
 
   return {
     id: index,
     role,
-    name: characterData.name,
-    hp: characterData.hp,
-    maxHp: characterData.hp,
-    mp: characterData.mp,
-    maxMp: characterData.mp,
-    st: characterData.st,
-    maxSt: characterData.st,
-    atk: characterData.atk,
-    magic: characterData.magic,
-    speed: characterData.speed,
-    attackSpeed: characterData.attackSpeed,
-    defense: characterData.defense,
-    resistance: characterData.resistance,
-    attackRange: characterData.attackRange,
-    attributes: createCharacterAttributes(characterData.attributes),
-    faction: characterData.faction ?? getDefaultFactionName(),
+    name: derivedCharacter.name,
+    hp: derivedCharacter.hp,
+    maxHp: derivedCharacter.hp,
+    mp: derivedCharacter.mp,
+    maxMp: derivedCharacter.mp,
+    st: derivedCharacter.st,
+    maxSt: derivedCharacter.st,
+    atk: derivedCharacter.atk,
+    magic: derivedCharacter.magic,
+    speed: derivedCharacter.speed,
+    attackSpeed: derivedCharacter.attackSpeed,
+    castSpeed: derivedCharacter.castSpeed,
+    defense: derivedCharacter.defense,
+    resistance: derivedCharacter.resistance,
+    attackRange: derivedCharacter.attackRange,
+    attributes: derivedCharacter.attributes,
+    faction: derivedCharacter.faction ?? getDefaultFactionName(),
     x: Math.random() * canvas.width * 0.3,
     y: Math.random() * canvas.height,
     vx: 0,

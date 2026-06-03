@@ -26,6 +26,7 @@ const monsterAtkEl = document.getElementById("monsterAtk");
 const monsterMagicEl = document.getElementById("monsterMagic");
 const monsterSpeedEl = document.getElementById("monsterSpeed");
 const monsterAttackSpeedEl = document.getElementById("monsterAttackSpeed");
+const monsterCastSpeedEl = document.getElementById("monsterCastSpeed");
 const monsterDefenseEl = document.getElementById("monsterDefense");
 const monsterResistanceEl = document.getElementById("monsterResistance");
 const monsterAttackRangeEl = document.getElementById("monsterAttackRange");
@@ -46,6 +47,7 @@ const characterAtkEl = document.getElementById("characterAtk");
 const characterMagicEl = document.getElementById("characterMagic");
 const characterSpeedEl = document.getElementById("characterSpeed");
 const characterAttackSpeedEl = document.getElementById("characterAttackSpeed");
+const characterCastSpeedEl = document.getElementById("characterCastSpeed");
 const characterDefenseEl = document.getElementById("characterDefense");
 const characterResistanceEl = document.getElementById("characterResistance");
 const characterAttackRangeEl = document.getElementById("characterAttackRange");
@@ -55,6 +57,7 @@ const statCharacterButtonsEl = document.getElementById("statCharacterButtons");
 const statSelectedNameEl = document.getElementById("statSelectedName");
 const statPointSummaryEl = document.getElementById("statPointSummary");
 const statRowsEl = document.getElementById("statRows");
+const statAbilityPreviewEl = document.getElementById("statAbilityPreview");
 
 const ROLES = ["tank", "melee", "ranged", "healer", "special"];
 const ROLE_ALIASES = {
@@ -97,17 +100,17 @@ const API_URLS = {
   records: "/api/records"
 };
 const DEFAULT_MONSTER_JSON = [
-  { label: "슬라임", hp: 80, mp: DEFAULT_RESOURCE_VALUE, st: DEFAULT_RESOURCE_VALUE, atk: 8, magic: 10, speed: 1.2, attackSpeed: 1, defense: 0, resistance: 0, attackRange: 1, role: "melee" },
-  { label: "오크", hp: 120, mp: DEFAULT_RESOURCE_VALUE, st: DEFAULT_RESOURCE_VALUE, atk: 12, magic: 10, speed: 1, attackSpeed: 1, defense: 0, resistance: 0, attackRange: 1, role: "ranged" },
-  { label: "드래곤", hp: 200, mp: DEFAULT_RESOURCE_VALUE, st: DEFAULT_RESOURCE_VALUE, atk: 20, magic: 10, speed: 1.2, attackSpeed: 1, defense: 0, resistance: 0, attackRange: 1, role: "melee" }
+  { label: "슬라임", hp: 2000, mp: DEFAULT_RESOURCE_VALUE, st: DEFAULT_RESOURCE_VALUE, atk: 8, magic: 10, speed: 1.2, attackSpeed: 1, castSpeed: 0.5, defense: 0, resistance: 0, attackRange: 1, role: "melee" },
+  { label: "오크", hp: 2000, mp: DEFAULT_RESOURCE_VALUE, st: DEFAULT_RESOURCE_VALUE, atk: 12, magic: 10, speed: 1, attackSpeed: 0.1, castSpeed: 3, defense: 0, resistance: 0, attackRange: 1, role: "ranged" },
+  { label: "드래곤", hp: 2000, mp: DEFAULT_RESOURCE_VALUE, st: DEFAULT_RESOURCE_VALUE, atk: 20, magic: 10, speed: 1.2, attackSpeed: 1, castSpeed: 0.5, defense: 0, resistance: 0, attackRange: 1, role: "melee" }
 ];
 
 const ROLE_STATS = {
-  tank: { hp: 150, mp: DEFAULT_RESOURCE_VALUE, st: DEFAULT_RESOURCE_VALUE, atk: 10, magic: 10, color: "gray", attackRange: 1, attackSpeed: 1, defense: 0, resistance: 0, speedMultiplier: 1.2 },
-  melee: { hp: 100, mp: DEFAULT_RESOURCE_VALUE, st: DEFAULT_RESOURCE_VALUE, atk: 10, magic: 10, color: "yellow", attackRange: 1, attackSpeed: 1, defense: 0, resistance: 0, speedMultiplier: 1.2 },
-  ranged: { hp: 100, mp: DEFAULT_RESOURCE_VALUE, st: DEFAULT_RESOURCE_VALUE, atk: 12, magic: 10, color: "blue", attackRange: 1, attackSpeed: 1, defense: 0, resistance: 0, speedMultiplier: 1 },
-  healer: { hp: 100, mp: DEFAULT_RESOURCE_VALUE, st: DEFAULT_RESOURCE_VALUE, atk: 10, magic: 10, color: "violet", attackRange: 1, attackSpeed: 1, defense: 0, resistance: 0, speedMultiplier: 1 },
-  special: { hp: 100, mp: DEFAULT_RESOURCE_VALUE, st: DEFAULT_RESOURCE_VALUE, atk: 10, magic: 10, color: "orange", attackRange: 1, attackSpeed: 1, defense: 0, resistance: 0, speedMultiplier: 1 }
+  tank: { hp: 2000, mp: DEFAULT_RESOURCE_VALUE, st: DEFAULT_RESOURCE_VALUE, atk: 10, magic: 10, color: "gray", attackRange: 1, attackSpeed: 2, castSpeed: 1, defense: 0, resistance: 0, speedMultiplier: 1.2 },
+  melee: { hp: 2000, mp: DEFAULT_RESOURCE_VALUE, st: DEFAULT_RESOURCE_VALUE, atk: 10, magic: 10, color: "yellow", attackRange: 1, attackSpeed: 1, castSpeed: 0.5, defense: 0, resistance: 0, speedMultiplier: 1.2 },
+  ranged: { hp: 2000, mp: DEFAULT_RESOURCE_VALUE, st: DEFAULT_RESOURCE_VALUE, atk: 12, magic: 10, color: "blue", attackRange: 1, attackSpeed: 0.1, castSpeed: 3, defense: 0, resistance: 0, speedMultiplier: 1 },
+  healer: { hp: 2000, mp: DEFAULT_RESOURCE_VALUE, st: DEFAULT_RESOURCE_VALUE, atk: 10, magic: 10, color: "violet", attackRange: 1, attackSpeed: 0.1, castSpeed: 2, defense: 0, resistance: 0, speedMultiplier: 1 },
+  special: { hp: 2000, mp: DEFAULT_RESOURCE_VALUE, st: DEFAULT_RESOURCE_VALUE, atk: 10, magic: 10, color: "orange", attackRange: 1, attackSpeed: 1, castSpeed: 1, defense: 0, resistance: 0, speedMultiplier: 1 }
 };
 
 const BASE_ATTACK_COOLDOWN = 60;
@@ -173,6 +176,70 @@ function getAttributeTotal(attributes) {
   return CHARACTER_STAT_DEFS.reduce((total, stat) => total + Number(attributes?.[stat.key] ?? 0), 0);
 }
 
+function getBaseCharacterAbilities(role) {
+  const normalizedRole = normalizeRole(role);
+  const roleStat = ROLE_STATS[normalizedRole] ?? ROLE_STATS.melee;
+
+  return {
+    hp: roleStat.hp,
+    mp: roleStat.mp,
+    st: roleStat.st,
+    atk: roleStat.atk,
+    magic: roleStat.magic,
+    speed: roleStat.speedMultiplier,
+    attackSpeed: roleStat.attackSpeed,
+    castSpeed: roleStat.castSpeed,
+    defense: roleStat.defense,
+    resistance: roleStat.resistance,
+    attackRange: roleStat.attackRange
+  };
+}
+
+function getStatAbilityBonus(attributes = {}) {
+  const str = Number(attributes.str) || 0;
+  const vit = Number(attributes.vit) || 0;
+  const agi = Number(attributes.agi) || 0;
+  const focus = Number(attributes.focus) || 0;
+  const int = Number(attributes.int) || 0;
+  const wis = Number(attributes.wis) || 0;
+
+  return {
+    hp: vit * 50,
+    mp: Math.floor(int / 10) * 10 + wis,
+    st: agi,
+    atk: str + Math.floor(focus / 5),
+    magic: int,
+    speed: Math.floor(agi / 5) * 0.1,
+    attackSpeed: Math.floor(agi / 10) * 0.1 + Math.floor(focus / 20) * 0.1,
+    castSpeed: Math.floor(agi / 10) * 0.1 + Math.floor(focus / 5) * 0.1,
+    defense: Math.floor(str / 10) + Math.floor(vit / 5),
+    resistance: Math.floor(vit / 10) + Math.floor(int / 10) + Math.floor(wis / 5),
+    attackRange: 0
+  };
+}
+
+function applyCharacterStatAbilities(character) {
+  const attributes = createCharacterAttributes(character.attributes);
+  const base = getBaseCharacterAbilities(character.role);
+  const bonus = getStatAbilityBonus(attributes);
+
+  return {
+    ...character,
+    attributes,
+    hp: base.hp + bonus.hp,
+    mp: base.mp + bonus.mp,
+    st: base.st + bonus.st,
+    atk: base.atk + bonus.atk,
+    magic: base.magic + bonus.magic,
+    speed: Math.round((base.speed + bonus.speed) * 10) / 10,
+    attackSpeed: Math.max(0.1, Math.round((base.attackSpeed - bonus.attackSpeed) * 100) / 100),
+    castSpeed: Math.max(0, Math.round((base.castSpeed - bonus.castSpeed) * 100) / 100),
+    defense: base.defense + bonus.defense,
+    resistance: base.resistance + bonus.resistance,
+    attackRange: base.attackRange + bonus.attackRange
+  };
+}
+
 function getBattleElapsedSeconds() {
   if (battleStartedAt) {
     return Math.max(0.001, (Date.now() - battleStartedAt) / 1000);
@@ -197,7 +264,12 @@ function getUnitRange(unit) {
 function getAttackCooldown(unit) {
   const attackSpeed = Math.max(0.1, Number(unit.attackSpeed ?? getDefaultAbility(unit.role, "attackSpeed")));
   const exhaustedMultiplier = unit.exhausted ? EXHAUSTED_ATTACK_SPEED_MULTIPLIER : 1;
-  return Math.max(1, Math.round(BASE_ATTACK_COOLDOWN / (attackSpeed * exhaustedMultiplier)));
+  return Math.max(1, Math.round(BASE_ATTACK_COOLDOWN * (attackSpeed / exhaustedMultiplier)));
+}
+
+function getCastDuration(unit) {
+  const castSpeed = Math.max(0, Number(unit.castSpeed ?? getDefaultAbility(unit.role, "castSpeed")));
+  return Math.max(0, Math.round(BASE_ATTACK_COOLDOWN * castSpeed));
 }
 
 function isMagicRole(role) {
@@ -244,6 +316,7 @@ function createDefaultCharacterJson() {
         magic: roleStat.magic,
         speed: roleStat.speedMultiplier,
         attackSpeed: roleStat.attackSpeed,
+        castSpeed: roleStat.castSpeed,
         defense: roleStat.defense,
         resistance: roleStat.resistance,
         attackRange: roleStat.attackRange,
@@ -287,6 +360,7 @@ function normalizeCombatJson(items, defaults, nameKey) {
         magic: normalizeCombatValue(item.magic, getDefaultAbility(role, "magic"), 0),
         speed: normalizeCombatValue(item.speed, getDefaultAbility(role, "speedMultiplier"), 0.1),
         attackSpeed: normalizeCombatValue(item.attackSpeed, getDefaultAbility(role, "attackSpeed"), 0.1),
+        castSpeed: normalizeCombatValue(item.castSpeed, getDefaultAbility(role, "castSpeed"), 0),
         defense: Math.min(100, normalizeCombatValue(item.defense, getDefaultAbility(role, "defense"), 0)),
         resistance: Math.min(100, normalizeCombatValue(item.resistance, getDefaultAbility(role, "resistance"), 0)),
         attackRange: normalizeCombatValue(item.attackRange, getDefaultAbility(role, "attackRange"), 1),
@@ -296,12 +370,13 @@ function normalizeCombatJson(items, defaults, nameKey) {
       if (nameKey === "name") {
         normalizedItem.attributes = createCharacterAttributes(item.attributes);
         normalizedItem.faction = normalizeFactionName(item.faction) || getDefaultFactionName();
+        return applyCharacterStatAbilities(normalizedItem);
       }
 
       return normalizedItem;
     })
     .filter(item => item[nameKey] && item.hp > 0 && item.mp >= 0 && item.st >= 0 && item.atk > 0 && item.magic >= 0 && item.speed > 0
-      && item.attackSpeed > 0 && item.defense >= 0 && item.resistance >= 0 && item.attackRange >= 1 && ROLES.includes(item.role));
+      && item.attackSpeed > 0 && item.castSpeed >= 0 && item.defense >= 0 && item.resistance >= 0 && item.attackRange >= 1 && ROLES.includes(item.role));
 
   return normalized.length > 0 ? normalized : defaults.map(item => ({ ...item }));
 }
@@ -364,6 +439,12 @@ function renderStatus(units, colorResolver) {
     const st = Math.max(0, Number(unit.st ?? maxSt));
     const stRatio = maxSt > 0 ? Math.max(0, Math.min(100, (st / maxSt) * 100)) : 0;
     const stText = `${Math.floor(st)} / ${maxSt}`;
+    const castDuration = Math.max(0, Number(unit.castDuration ?? 0));
+    const castTimer = Math.max(0, Number(unit.castTimer ?? 0));
+    const isCasting = castDuration > 0 && castTimer > 0;
+    const castRatio = isCasting ? Math.max(0, Math.min(100, ((castDuration - castTimer) / castDuration) * 100)) : 0;
+    const castRemainingText = isCasting ? `${(castTimer / BASE_ATTACK_COOLDOWN).toFixed(1)}초` : "-";
+    const castText = isCasting ? `시전 중 ${castRemainingText}` : "시전 대기";
     const exhaustedText = unit.exhausted ? " · 지침" : "";
     const dpsText = `DPS ${getUnitDps(unit).toFixed(1)}`;
 
@@ -381,6 +462,10 @@ function renderStatus(units, colorResolver) {
         <div class="st-track">
           <div class="st-fill" style="width:${stRatio}%;"></div>
           <div class="hp-label">ST ${stText}${exhaustedText}</div>
+        </div>
+        <div class="cast-track${isCasting ? " casting" : ""}">
+          <div class="cast-fill" style="width:${castRatio}%;"></div>
+          <div class="hp-label">${castText}</div>
         </div>
       </div>
     `;
