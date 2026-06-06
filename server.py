@@ -2,6 +2,7 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 import json
 import os
+from datetime import datetime
 
 
 ROOT = Path(__file__).resolve().parent
@@ -10,7 +11,12 @@ DATA_FILES = {
     "/api/characters": ROOT / "data" / "characters.json",
     "/api/factions": ROOT / "data" / "factions.json",
     "/api/records": ROOT / "data" / "battle-records.json",
+    "/api/items": ROOT / "data" / "items.json",
 }
+
+
+def server_log(message):
+    print(f"[{datetime.now().isoformat(timespec='seconds')}] {message}", flush=True)
 
 
 class BattleHandler(SimpleHTTPRequestHandler):
@@ -46,8 +52,10 @@ class BattleHandler(SimpleHTTPRequestHandler):
             if not isinstance(data, list):
                 raise ValueError("JSON root must be an array")
             self.write_json(DATA_FILES[path], data)
+            server_log(f"{self.command} {path} saved {len(data)} records")
             self.send_json({"ok": True})
         except Exception as error:
+            server_log(f"{self.command} {path} failed: {error}")
             self.send_response(400)
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.end_headers()

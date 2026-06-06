@@ -197,6 +197,7 @@ async function saveSelectedCharacterStats() {
     statDraftCharacterIndex = "";
     renderStatsPage();
   } catch (error) {
+    logError("stats", "캐릭터 스탯 저장 처리 중 실패했습니다.", error);
     alert("캐릭터 스탯을 저장하지 못했습니다.");
   }
 }

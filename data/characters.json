@@ -1,6 +1,38 @@
 [
   {
     "name": "전사",
+    "hp": 5130,
+    "mp": 170,
+    "st": 210,
+    "atk": 373,
+    "magic": 29,
+    "speed": 2.4,
+    "attackSpeed": 1.5,
+    "castSpeed": 0.2,
+    "defense": 28,
+    "resistance": 14,
+    "attackRange": 1,
+    "role": "tank",
+    "attributes": {
+      "str": 50,
+      "vit": 50,
+      "agi": 50,
+      "focus": 0,
+      "int": 0,
+      "wis": 0
+    },
+    "equipment": {
+      "mainWeapon": "item_1780756208978",
+      "subWeapon": "sub_weapon_sample1",
+      "top": "top_sample1",
+      "bottom": "bottom_sample1",
+      "accessory": "accessory_sample1",
+      "special": "special_sample1"
+    },
+    "faction": "쥬신"
+  },
+  {
+    "name": "기사",
     "hp": 4500,
     "mp": 100,
     "st": 150,
@@ -21,29 +53,13 @@
       "int": 0,
       "wis": 0
     },
-    "faction": "쥬신"
-  },
-  {
-    "name": "기사",
-    "hp": 4500,
-    "mp": 100,
-    "st": 100,
-    "atk": 70,
-    "magic": 10,
-    "speed": 1.2,
-    "attackSpeed": 1.8,
-    "castSpeed": 0,
-    "defense": 15,
-    "resistance": 5,
-    "attackRange": 1,
-    "role": "tank",
-    "attributes": {
-      "str": 50,
-      "vit": 50,
-      "agi": 0,
-      "focus": 50,
-      "int": 0,
-      "wis": 0
+    "equipment": {
+      "mainWeapon": "",
+      "subWeapon": "",
+      "top": "",
+      "bottom": "",
+      "accessory": "",
+      "special": ""
     },
     "faction": "프라가"
   },
@@ -69,6 +85,14 @@
       "int": 0,
       "wis": 0
     },
+    "equipment": {
+      "mainWeapon": "",
+      "subWeapon": "",
+      "top": "",
+      "bottom": "",
+      "accessory": "",
+      "special": ""
+    },
     "faction": "프라가"
   },
   {
@@ -92,6 +116,14 @@
       "focus": 50,
       "int": 0,
       "wis": 0
+    },
+    "equipment": {
+      "mainWeapon": "",
+      "subWeapon": "",
+      "top": "",
+      "bottom": "",
+      "accessory": "",
+      "special": ""
     },
     "faction": "프라가"
   },
@@ -117,6 +149,14 @@
       "int": 0,
       "wis": 0
     },
+    "equipment": {
+      "mainWeapon": "",
+      "subWeapon": "",
+      "top": "",
+      "bottom": "",
+      "accessory": "",
+      "special": ""
+    },
     "faction": "프라가"
   },
   {
@@ -140,6 +180,14 @@
       "focus": 0,
       "int": 50,
       "wis": 50
+    },
+    "equipment": {
+      "mainWeapon": "",
+      "subWeapon": "",
+      "top": "",
+      "bottom": "",
+      "accessory": "",
+      "special": ""
     },
     "faction": "프라가"
   },
@@ -165,6 +213,14 @@
       "int": 50,
       "wis": 50
     },
+    "equipment": {
+      "mainWeapon": "",
+      "subWeapon": "",
+      "top": "",
+      "bottom": "",
+      "accessory": "",
+      "special": ""
+    },
     "faction": "프라가"
   },
   {
@@ -188,6 +244,14 @@
       "focus": 50,
       "int": 50,
       "wis": 50
+    },
+    "equipment": {
+      "mainWeapon": "",
+      "subWeapon": "",
+      "top": "",
+      "bottom": "",
+      "accessory": "",
+      "special": ""
     },
     "faction": "프라가"
   },
@@ -213,6 +277,14 @@
       "int": 0,
       "wis": 0
     },
+    "equipment": {
+      "mainWeapon": "",
+      "subWeapon": "",
+      "top": "",
+      "bottom": "",
+      "accessory": "",
+      "special": ""
+    },
     "faction": "프라가"
   },
   {
@@ -237,6 +309,14 @@
       "int": 0,
       "wis": 0
     },
+    "equipment": {
+      "mainWeapon": "",
+      "subWeapon": "",
+      "top": "",
+      "bottom": "",
+      "accessory": "",
+      "special": ""
+    },
     "faction": "쥬신"
   },
   {
@@ -260,6 +340,14 @@
       "focus": 0,
       "int": 0,
       "wis": 0
+    },
+    "equipment": {
+      "mainWeapon": "",
+      "subWeapon": "",
+      "top": "",
+      "bottom": "",
+      "accessory": "",
+      "special": ""
     },
     "faction": "쥬신"
   }

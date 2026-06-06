@@ -105,6 +105,7 @@ async function saveMonsterFromForm(event) {
     refreshMonsterUI();
     closeMonsterModal();
   } catch (error) {
+    logError("monster", "몬스터 저장 처리 중 실패했습니다.", error);
     alert("몬스터 데이터를 저장하지 못했습니다.");
   }
 }
@@ -125,6 +126,7 @@ async function deleteSelectedMonsters() {
     refreshMonsterUI();
     updateStatusUI();
   } catch (error) {
+    logError("monster", "몬스터 삭제 처리 중 실패했습니다.", error);
     alert("몬스터 데이터를 저장하지 못했습니다.");
   }
 }

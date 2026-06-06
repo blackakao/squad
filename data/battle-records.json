@@ -1,5 +1,142 @@
 [
   {
+    "battleAt": "2026-06-06T14:35:06.506Z",
+    "result": "승리",
+    "playerMembers": [
+      {
+        "name": "궁사",
+        "role": "melee",
+        "hp": 1992,
+        "maxHp": 2000,
+        "mp": 100,
+        "maxMp": 100,
+        "st": 111,
+        "maxSt": 150,
+        "dps": 537.4280230326295
+      }
+    ],
+    "monsterMembers": [
+      {
+        "name": "슬라임-2",
+        "role": "melee",
+        "hp": 0,
+        "maxHp": 80,
+        "mp": 100,
+        "maxMp": 100,
+        "st": 90,
+        "maxSt": 100,
+        "dps": 14.5873320537428
+      },
+      {
+        "name": "슬라임-1",
+        "role": "melee",
+        "hp": 0,
+        "maxHp": 80,
+        "mp": 100,
+        "maxMp": 100,
+        "st": 89,
+        "maxSt": 100,
+        "dps": 0
+      }
+    ],
+    "durationSeconds": 0.521
+  },
+  {
+    "battleAt": "2026-06-06T14:30:59.721Z",
+    "result": "승리",
+    "playerMembers": [
+      {
+        "name": "전사",
+        "role": "tank",
+        "hp": 4526,
+        "maxHp": 4850,
+        "mp": 120,
+        "maxMp": 120,
+        "st": 37,
+        "maxSt": 150,
+        "dps": 143.37778158898942
+      }
+    ],
+    "monsterMembers": [
+      {
+        "name": "허수아비-2",
+        "role": "tank",
+        "hp": 0,
+        "maxHp": 5000,
+        "mp": 100,
+        "maxMp": 100,
+        "st": 7287,
+        "maxSt": 9999,
+        "dps": 3.0870814217725124
+      },
+      {
+        "name": "허수아비-1",
+        "role": "tank",
+        "hp": 0,
+        "maxHp": 5000,
+        "mp": 100,
+        "maxMp": 100,
+        "st": 8648,
+        "maxSt": 9999,
+        "dps": 1.5321070759907924
+      }
+    ],
+    "durationSeconds": 69.969
+  },
+  {
+    "battleAt": "2026-06-06T13:49:47.825Z",
+    "result": "승리",
+    "playerMembers": [
+      {
+        "name": "전사",
+        "role": "tank",
+        "hp": 4143,
+        "maxHp": 4500,
+        "mp": 120,
+        "maxMp": 120,
+        "st": 139,
+        "maxSt": 150,
+        "dps": 60.18629090040602
+      }
+    ],
+    "monsterMembers": [
+      {
+        "name": "드래곤-3",
+        "role": "melee",
+        "hp": 0,
+        "maxHp": 200,
+        "mp": 100,
+        "maxMp": 100,
+        "st": 37,
+        "maxSt": 100,
+        "dps": 13.533954303001353
+      },
+      {
+        "name": "드래곤-2",
+        "role": "melee",
+        "hp": 0,
+        "maxHp": 200,
+        "mp": 100,
+        "maxMp": 100,
+        "st": 54,
+        "maxSt": 100,
+        "dps": 9.473768012100948
+      },
+      {
+        "name": "드래곤-1",
+        "role": "melee",
+        "hp": 0,
+        "maxHp": 200,
+        "mp": 100,
+        "maxMp": 100,
+        "st": 69,
+        "maxSt": 100,
+        "dps": 5.413581721200542
+      }
+    ],
+    "durationSeconds": 12.561
+  },
+  {
     "battleAt": "2026-06-03T14:33:11.041Z",
     "result": "승리",
     "playerMembers": [

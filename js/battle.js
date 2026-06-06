@@ -19,10 +19,6 @@
   unit.effectTimer = 0;
 }
 
-function log(message) {
-  console.log(message);
-}
-
 function updateResources() {
   const now = Date.now();
   if (!lastResourceUpdateAt) {
@@ -145,6 +141,7 @@ async function finishBattle(result) {
     await saveBattleRecordsJson();
     renderBattleRecords();
   } catch (error) {
+    logError("battle", "전투 종료 기록 저장 처리 중 실패했습니다.", error);
     alert("전투 기록을 저장하지 못했습니다.");
   }
   log(result);

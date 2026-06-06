@@ -15,8 +15,11 @@
   <button onclick="showPage('character')">캐릭터 관리</button>
   <button onclick="showPage('faction')">진영 관리</button>
   <button onclick="showPage('stats')">스탯 관리</button>
+  <button onclick="showPage('equipment')">장비 착용</button>
+  <button onclick="showPage('item')">아이템 관리</button>
   <button onclick="showPage('monster')">몬스터 관리</button>
   <button onclick="showPage('record')">전투 기록</button>
+  <button onclick="showPage('log')">로그</button>
 </div>
 
 <div id="root" class="page">
@@ -202,6 +205,102 @@
   </div>
 </div>
 
+<div id="equipmentPage" class="page hidden">
+  <div class="panel">
+    <h4>장비 착용</h4>
+    <div class="equipment-manager">
+      <div class="stat-character-list">
+        <h5>캐릭터 선택</h5>
+        <div id="equipmentCharacterButtons"></div>
+      </div>
+      <div class="equipment-editor">
+        <h5>장비 착용 UI</h5>
+        <div id="equipmentSlotGrid" class="equipment-slot-grid"></div>
+        <h5>스탯 결과창</h5>
+        <div id="equipmentAbilityPreview"></div>
+        <h5>장비 리스트</h5>
+        <table class="data-table equipment-list-table">
+          <thead>
+            <tr>
+              <th>이름</th>
+              <th>슬롯</th>
+              <th>능력치</th>
+            </tr>
+          </thead>
+          <tbody id="equipmentItemTableBodyUnused"></tbody>
+        </table>
+      </div>
+      <div class="stat-ability-preview">
+        <h5>장비 리스트</h5>
+        <div class="data-toolbar">
+          <select id="equipmentItemSlotFilter" onchange="changeEquipmentItemSlotFilter(this.value)"></select>
+        </div>
+        <table class="data-table equipment-list-table">
+          <thead>
+            <tr>
+              <th>이름</th>
+            </tr>
+          </thead>
+          <tbody id="equipmentItemTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="itemPage" class="page hidden">
+  <div class="panel">
+    <h4>아이템 관리</h4>
+    <div class="data-toolbar">
+      <button onclick="openItemModal()">추가</button>
+      <button onclick="deleteSelectedItems()">선택 삭제</button>
+      <select id="itemSlotFilter" onchange="changeItemSlotFilter(this.value)"></select>
+    </div>
+    <table class="data-table item-table">
+      <thead>
+        <tr>
+          <th>선택</th>
+          <th>이름</th>
+          <th>슬롯</th>
+          <th>HP</th>
+          <th>MP</th>
+          <th>ST</th>
+          <th>공격력</th>
+          <th>마력</th>
+          <th>이동속도</th>
+          <th>공격속도</th>
+          <th>시전속도</th>
+          <th>방어력</th>
+          <th>저항력</th>
+          <th>사정거리</th>
+          <th>수정</th>
+        </tr>
+      </thead>
+      <tbody id="itemTableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<div id="logPage" class="page hidden">
+  <div class="panel">
+    <h4>로그</h4>
+    <div class="data-toolbar">
+      <button onclick="clearAppLogs()">로그 비우기</button>
+    </div>
+    <table class="data-table log-table">
+      <thead>
+        <tr>
+          <th>시간</th>
+          <th>레벨</th>
+          <th>위치</th>
+          <th>내용</th>
+        </tr>
+      </thead>
+      <tbody id="logTableBody"></tbody>
+    </table>
+  </div>
+</div>
+
 <div id="monsterModal" class="modal hidden">
   <div class="modal-content">
     <h4 id="monsterModalTitle">몬스터 추가</h4>
@@ -332,15 +431,47 @@
   </div>
 </div>
 
-<script src="js/ui.js"></script>
-<script src="js/api.js"></script>
-<script src="js/monster.js"></script>
-<script src="js/faction.js"></script>
-<script src="js/character.js"></script>
-<script src="js/stats.js"></script>
-<script src="js/record.js"></script>
-<script src="js/battle.js"></script>
-<script src="js/main.js"></script>
+<div id="itemModal" class="modal hidden">
+  <div class="modal-content">
+    <h4 id="itemModalTitle">아이템 추가</h4>
+    <form id="itemForm" onsubmit="saveItemFromForm(event)">
+      <input type="hidden" id="itemEditIndex">
+      <div class="form-row">
+        <label for="itemName">이름</label>
+        <input id="itemName" required placeholder="장비 이름">
+      </div>
+      <div class="form-row">
+        <label for="itemSlot">슬롯</label>
+        <select id="itemSlot" required></select>
+      </div>
+      <div class="form-row"><label for="itemHp">HP</label><input id="itemHp" type="number" step="0.1" value="0" required></div>
+      <div class="form-row"><label for="itemMp">MP</label><input id="itemMp" type="number" step="0.1" value="0" required></div>
+      <div class="form-row"><label for="itemSt">ST</label><input id="itemSt" type="number" step="0.1" value="0" required></div>
+      <div class="form-row"><label for="itemAtk">공격력</label><input id="itemAtk" type="number" step="0.1" value="0" required></div>
+      <div class="form-row"><label for="itemMagic">마력</label><input id="itemMagic" type="number" step="0.1" value="0" required></div>
+      <div class="form-row"><label for="itemSpeed">이동속도</label><input id="itemSpeed" type="number" step="0.1" value="0" required></div>
+      <div class="form-row"><label for="itemAttackSpeed">공격속도</label><input id="itemAttackSpeed" type="number" step="0.1" value="0" required></div>
+      <div class="form-row"><label for="itemCastSpeed">시전속도</label><input id="itemCastSpeed" type="number" step="0.1" value="0" required></div>
+      <div class="form-row"><label for="itemDefense">방어력</label><input id="itemDefense" type="number" step="0.1" value="0" required></div>
+      <div class="form-row"><label for="itemResistance">저항력</label><input id="itemResistance" type="number" step="0.1" value="0" required></div>
+      <div class="form-row"><label for="itemAttackRange">사정거리</label><input id="itemAttackRange" type="number" step="0.1" value="0" required></div>
+      <button type="submit">저장</button>
+      <button type="button" onclick="closeItemModal()">취소</button>
+    </form>
+  </div>
+</div>
+
+<script src="js/logger.js?v=20260606-logs"></script>
+<script src="js/ui.js?v=20260606-logs"></script>
+<script src="js/api.js?v=20260606-logs"></script>
+<script src="js/equipment.js?v=20260606-logs"></script>
+<script src="js/monster.js?v=20260606-logs"></script>
+<script src="js/faction.js?v=20260606-logs"></script>
+<script src="js/character.js?v=20260606-logs"></script>
+<script src="js/stats.js?v=20260606-logs"></script>
+<script src="js/record.js?v=20260606-logs"></script>
+<script src="js/battle.js?v=20260606-logs"></script>
+<script src="js/main.js?v=20260606-logs"></script>
 
 </body>
 </html>

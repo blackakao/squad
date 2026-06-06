@@ -171,6 +171,9 @@ button {
 #characterPage,
 #factionPage,
 #statsPage,
+#equipmentPage,
+#itemPage,
+#logPage,
 #recordPage {
   box-sizing: border-box;
   height: calc(100vh - 96px);
@@ -184,8 +187,16 @@ button {
   min-height: 420px;
 }
 
+.equipment-manager {
+  display: grid;
+  grid-template-columns: minmax(180px, 240px) minmax(420px, 1fr) minmax(260px, 340px);
+  gap: 12px;
+  min-height: 420px;
+}
+
 .stat-character-list,
 .stat-editor,
+.equipment-editor,
 .stat-ability-preview {
   border: 1px solid #ccc;
   padding: 10px;
@@ -204,6 +215,85 @@ button {
 
 .stat-character-button.selected {
   background: lightblue;
+}
+
+.equipment-slot-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(120px, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.equipment-slot {
+  border: 1px solid #bbb;
+  padding: 8px;
+  min-height: 96px;
+  box-sizing: border-box;
+}
+
+.equipment-slot-title {
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.equipment-slot-item {
+  min-height: 28px;
+  margin-bottom: 8px;
+}
+
+.equipment-slot-item.empty {
+  color: #777;
+}
+
+.equipment-list-table tr[draggable="true"] {
+  cursor: grab;
+}
+
+.equipment-editor .equipment-list-table,
+.equipment-editor h5:nth-of-type(3) {
+  display: none;
+}
+
+.equipment-list-item {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+  padding: 2px 4px;
+  box-sizing: border-box;
+}
+
+.equipment-tooltip {
+  display: none;
+  position: absolute;
+  top: 50%;
+  right: calc(100% + 8px);
+  z-index: 10;
+  width: 220px;
+  border: 1px solid #777;
+  background: #fffef5;
+  padding: 8px;
+  box-sizing: border-box;
+  text-align: left;
+  color: #111;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  transform: translateY(-50%);
+  white-space: normal;
+}
+
+.equipment-list-item:hover .equipment-tooltip,
+.equipment-list-item:focus .equipment-tooltip {
+  display: block;
+}
+
+.equipment-tooltip-title {
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+
+.equipment-tooltip pre {
+  margin: 6px 0 0;
+  font-family: inherit;
+  white-space: pre-wrap;
 }
 
 .stat-editor-header {
@@ -274,6 +364,11 @@ button {
 
 @media (max-width: 720px) {
   .stat-manager {
+    grid-template-columns: 1fr;
+  }
+
+  .equipment-manager,
+  .equipment-slot-grid {
     grid-template-columns: 1fr;
   }
 }
@@ -384,6 +479,45 @@ button {
   border: 1px solid #ddd;
   padding: 4px;
   text-align: center;
+}
+
+.log-table {
+  table-layout: fixed;
+}
+
+.log-table th:nth-child(1),
+.log-table td:nth-child(1) {
+  width: 170px;
+}
+
+.log-table th:nth-child(2),
+.log-table td:nth-child(2) {
+  width: 70px;
+}
+
+.log-table th:nth-child(3),
+.log-table td:nth-child(3) {
+  width: 140px;
+}
+
+.log-table td {
+  text-align: left;
+  vertical-align: top;
+  word-break: break-word;
+}
+
+.log-row.error {
+  background: #fff0f0;
+}
+
+.log-row.warn {
+  background: #fff8e5;
+}
+
+.log-table pre {
+  margin: 6px 0 0;
+  white-space: pre-wrap;
+  font-size: 12px;
 }
 
 .pagination {

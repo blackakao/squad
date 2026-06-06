@@ -155,6 +155,7 @@ async function deleteSelectedBattleRecords() {
     await saveBattleRecordsJson();
     renderBattleRecords();
   } catch (error) {
+    logError("record", "전투 기록 삭제 처리 중 실패했습니다.", error);
     alert("전투 기록을 저장하지 못했습니다.");
   }
 }
@@ -166,6 +167,7 @@ async function clearBattleRecords() {
     await saveBattleRecordsJson();
     renderBattleRecords();
   } catch (error) {
+    logError("record", "전투 기록 전체 삭제 처리 중 실패했습니다.", error);
     alert("전투 기록을 저장하지 못했습니다.");
   }
 }

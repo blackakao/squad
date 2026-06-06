@@ -85,6 +85,7 @@ async function saveCharacterFromForm(event) {
     refreshCharacterUI();
     closeCharacterModal();
   } catch (error) {
+    logError("character", "캐릭터 저장 처리 중 실패했습니다.", error);
     alert("캐릭터 데이터를 저장하지 못했습니다.");
   }
 }
@@ -105,6 +106,7 @@ async function deleteSelectedCharacters() {
     await saveCharacterJson();
     refreshCharacterUI();
   } catch (error) {
+    logError("character", "캐릭터 삭제 처리 중 실패했습니다.", error);
     alert("캐릭터 데이터를 저장하지 못했습니다.");
   }
 }

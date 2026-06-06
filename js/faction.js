@@ -10,6 +10,7 @@ async function loadFactionJson() {
     }
   } catch (error) {
     rawJson = null;
+    logError("faction", "진영 API 데이터를 읽지 못했습니다.", error);
   }
 
   if (!rawJson) {
@@ -17,6 +18,7 @@ async function loadFactionJson() {
       rawJson = JSON.parse(localStorage.getItem(FACTION_STORAGE_KEY) || "null");
     } catch (error) {
       rawJson = null;
+      logError("faction", "브라우저 저장소의 진영 데이터를 읽지 못했습니다.", error);
     }
   }
 
@@ -30,7 +32,7 @@ async function saveFactionJson() {
     await saveJsonFile("factions", factionsJson);
     log("진영 데이터가 저장되었습니다.");
   } catch (error) {
-    log("진영 API 저장에 실패해 브라우저 저장소에만 저장했습니다.");
+    logError("faction", "진영 API 저장에 실패해 브라우저 저장소에만 저장했습니다.", error);
   }
 }
 
@@ -118,6 +120,7 @@ async function addFactionFromInput() {
     renderCharacterFactionOptions();
     renderFactionPage();
   } catch (error) {
+    logError("faction", "진영 추가 처리 중 실패했습니다.", error);
     alert("진영 데이터를 저장하지 못했습니다.");
   }
 }
@@ -153,6 +156,7 @@ async function editFactionName(index) {
     renderCharacterFactionOptions();
     renderFactionPage();
   } catch (error) {
+    logError("faction", "진영 이름 수정 처리 중 실패했습니다.", error);
     alert("진영 이름을 수정하지 못했습니다.");
   }
 }
@@ -190,6 +194,7 @@ async function deleteSelectedFactions() {
     renderCharacterFactionOptions();
     renderFactionPage();
   } catch (error) {
+    logError("faction", "진영 삭제 처리 중 실패했습니다.", error);
     alert("진영 데이터를 저장하지 못했습니다.");
   }
 }
