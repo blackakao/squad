@@ -2,21 +2,32 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 import json
 import os
+import re
 from datetime import datetime
 
 
 ROOT = Path(__file__).resolve().parent
-DATA_FILES = {
-    "/api/monsters": ROOT / "data" / "monsters.json",
-    "/api/characters": ROOT / "data" / "characters.json",
-    "/api/factions": ROOT / "data" / "factions.json",
-    "/api/records": ROOT / "data" / "battle-records.json",
-    "/api/items": ROOT / "data" / "items.json",
+DATA_DIR = ROOT / "data"
+API_NAME_RE = re.compile(r"^[a-zA-Z0-9_-]+$")
+API_FILE_ALIASES = {
+    "records": "battle-records",
 }
 
 
 def server_log(message):
     print(f"[{datetime.now().isoformat(timespec='seconds')}] {message}", flush=True)
+
+
+def get_api_file_path(path):
+    if not path.startswith("/api/"):
+        return None
+
+    api_name = path.removeprefix("/api/").strip("/")
+    if not api_name or "/" in api_name or not API_NAME_RE.fullmatch(api_name):
+        return None
+
+    file_stem = API_FILE_ALIASES.get(api_name, api_name)
+    return DATA_DIR / f"{file_stem}.json"
 
 
 class BattleHandler(SimpleHTTPRequestHandler):
@@ -25,8 +36,10 @@ class BattleHandler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         path = self.path.split("?", 1)[0]
-        if path in DATA_FILES:
-            self.send_json(self.read_json(DATA_FILES[path]))
+        api_file_path = get_api_file_path(path)
+        if api_file_path:
+            server_log(f"GET {path} -> {api_file_path.relative_to(ROOT)}")
+            self.send_json(self.read_json(api_file_path))
             return
 
         if path == "/":
@@ -41,7 +54,8 @@ class BattleHandler(SimpleHTTPRequestHandler):
 
     def handle_api_write(self):
         path = self.path.split("?", 1)[0]
-        if path not in DATA_FILES:
+        api_file_path = get_api_file_path(path)
+        if not api_file_path:
             self.send_error(404, "Not found")
             return
 
@@ -51,7 +65,7 @@ class BattleHandler(SimpleHTTPRequestHandler):
             data = json.loads(payload)
             if not isinstance(data, list):
                 raise ValueError("JSON root must be an array")
-            self.write_json(DATA_FILES[path], data)
+            self.write_json(api_file_path, data)
             server_log(f"{self.command} {path} saved {len(data)} records")
             self.send_json({"ok": True})
         except Exception as error:
@@ -86,4 +100,5 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", "8000"))
     server = ThreadingHTTPServer(("127.0.0.1", port), BattleHandler)
     print(f"Serving http://127.0.0.1:{port}/index2.html")
+    server_log("API mapping enabled: /api/<name> -> data/<name>.json, /api/records -> data/battle-records.json")
     server.serve_forever()

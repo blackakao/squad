@@ -17,9 +17,14 @@ function refreshCharacterUI() {
 }
 
 function renderCharacterTable() {
-  characterTableBodyEl.innerHTML = characterJson.map((character, index) => `
+  const visibleCharacters = characterJson
+    .map((character, index) => ({ character, index }))
+    .filter(({ character }) => selectedCharacterRoleFilter === "all" || normalizeRole(character.role) === selectedCharacterRoleFilter);
+
+  characterTableBodyEl.innerHTML = visibleCharacters.map(({ character, index }) => `
     <tr>
       <td><input type="checkbox" class="character-check" value="${index}"></td>
+      <td>${renderPortraitCell(character.portrait, character.name)}</td>
       <td>${escapeHtml(character.faction ?? getDefaultFactionName())}</td>
       <td>${escapeHtml(getRoleLabel(character.role))}</td>
       <td>${escapeHtml(character.name)}</td>
@@ -39,12 +44,18 @@ function renderCharacterTable() {
   `).join("");
 }
 
+function changeCharacterRoleFilter(role) {
+  selectedCharacterRoleFilter = role;
+  renderCharacterTable();
+}
+
 function openCharacterModal(index = "") {
   const character = characterJson[index];
 
   characterModalTitleEl.innerText = character ? "캐릭터 수정" : "캐릭터 추가";
   characterEditIndexEl.value = character ? index : "";
   characterNameEl.value = character?.name ?? "";
+  resetPortraitDraft("character", character?.portrait ?? "");
   characterRoleEl.value = character?.role ?? "melee";
   renderCharacterFactionOptions();
   characterFactionEl.value = character?.faction ?? getDefaultFactionName();
@@ -54,18 +65,21 @@ function openCharacterModal(index = "") {
 function closeCharacterModal() {
   characterModalEl.classList.add("hidden");
   characterFormEl.reset();
+  resetPortraitDraft("character");
 }
 
 async function saveCharacterFromForm(event) {
   event.preventDefault();
 
   const editIndex = characterEditIndexEl.value;
-  const previousAttributes = editIndex !== "" ? characterJson[Number(editIndex)]?.attributes : {};
+  const previousCharacter = editIndex !== "" ? characterJson[Number(editIndex)] : null;
+  const previousAttributes = previousCharacter?.attributes ?? {};
   const character = applyCharacterStatAbilities({
     name: characterNameEl.value.trim(),
     role: characterRoleEl.value,
     faction: characterFactionEl.value,
-    attributes: createCharacterAttributes(previousAttributes)
+    attributes: createCharacterAttributes(previousAttributes),
+    portrait: await getPortraitForSave("character", previousCharacter?.portrait)
   });
 
   if (!character.name || !character.faction || !ROLES.includes(character.role)) {
@@ -135,6 +149,7 @@ function createCharacter(characterData, index) {
     attackRange: derivedCharacter.attackRange,
     attributes: derivedCharacter.attributes,
     faction: derivedCharacter.faction ?? getDefaultFactionName(),
+    portrait: derivedCharacter.portrait,
     x: Math.random() * canvas.width * 0.3,
     y: Math.random() * canvas.height,
     vx: 0,

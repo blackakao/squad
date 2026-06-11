@@ -5,7 +5,12 @@ let appLogs = [];
 function loadAppLogs() {
   try {
     const parsed = JSON.parse(localStorage.getItem(APP_LOG_STORAGE_KEY) || "[]");
-    appLogs = Array.isArray(parsed) ? parsed.slice(-APP_LOG_LIMIT) : [];
+    appLogs = Array.isArray(parsed)
+      ? parsed
+        .filter(entry => entry?.level === "warn" || entry?.level === "error")
+        .map(entry => ({ ...entry, count: Number(entry.count) || 1 }))
+        .slice(-APP_LOG_LIMIT)
+      : [];
   } catch (error) {
     appLogs = [];
   }
@@ -46,12 +51,39 @@ function escapeLogHtml(value) {
 }
 
 function addAppLog(level, source, message, detail = "") {
+  if (level === "info") {
+    console.log(`[${source}] ${message}`, detail || "");
+    return;
+  }
+
+  const normalizedDetail = typeof detail === "string" ? detail : formatLogError(detail);
+  const existingEntry = appLogs.find(entry =>
+    entry.level === level
+    && entry.source === source
+    && entry.message === message
+    && entry.detail === normalizedDetail
+  );
+
+  if (existingEntry) {
+    existingEntry.at = new Date().toISOString();
+    existingEntry.count = (Number(existingEntry.count) || 1) + 1;
+    saveAppLogs();
+    renderLogPage();
+    if (level === "error") {
+      console.error(`[${source}] ${message}`, detail);
+    } else {
+      console.warn(`[${source}] ${message}`, detail);
+    }
+    return;
+  }
+
   const entry = {
     at: new Date().toISOString(),
     level,
     source,
     message,
-    detail: typeof detail === "string" ? detail : formatLogError(detail)
+    detail: normalizedDetail,
+    count: 1
   };
 
   appLogs.push(entry);
@@ -70,7 +102,7 @@ function addAppLog(level, source, message, detail = "") {
 }
 
 function log(message, source = "app") {
-  addAppLog("info", source, message);
+  console.log(`[${source}] ${message}`);
 }
 
 function logWarn(source, message, detail = "") {
@@ -102,7 +134,7 @@ function renderLogPage() {
       <td>${escapeLogHtml(entry.level)}</td>
       <td>${escapeLogHtml(entry.source)}</td>
       <td>
-        <div>${escapeLogHtml(entry.message)}</div>
+        <div>${escapeLogHtml(entry.message)}${entry.count > 1 ? ` (${entry.count}회)` : ""}</div>
         ${entry.detail ? `<pre>${escapeLogHtml(entry.detail)}</pre>` : ""}
       </td>
     </tr>

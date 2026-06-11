@@ -387,6 +387,22 @@ button {
   font-size: 12px;
 }
 
+.portrait-thumb,
+.portrait-preview {
+  width: 44px;
+  height: 44px;
+  border: 1px solid #bbb;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #f5f5f5;
+}
+
+.portrait-editor {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .data-table {
   width: 100%;
   border-collapse: collapse;

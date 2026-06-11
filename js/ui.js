@@ -34,7 +34,10 @@ const monsterDefenseEl = document.getElementById("monsterDefense");
 const monsterResistanceEl = document.getElementById("monsterResistance");
 const monsterAttackRangeEl = document.getElementById("monsterAttackRange");
 const monsterRoleEl = document.getElementById("monsterRole");
+const monsterPortraitEl = document.getElementById("monsterPortrait");
+const monsterPortraitPreviewEl = document.getElementById("monsterPortraitPreview");
 const characterTableBodyEl = document.getElementById("characterTableBody");
+const characterRoleFilterEl = document.getElementById("characterRoleFilter");
 const factionPageEl = document.getElementById("factionPage");
 const factionNameEl = document.getElementById("factionName");
 const factionTableBodyEl = document.getElementById("factionTableBody");
@@ -56,6 +59,8 @@ const characterResistanceEl = document.getElementById("characterResistance");
 const characterAttackRangeEl = document.getElementById("characterAttackRange");
 const characterRoleEl = document.getElementById("characterRole");
 const characterFactionEl = document.getElementById("characterFaction");
+const characterPortraitEl = document.getElementById("characterPortrait");
+const characterPortraitPreviewEl = document.getElementById("characterPortraitPreview");
 const statCharacterButtonsEl = document.getElementById("statCharacterButtons");
 const statSelectedNameEl = document.getElementById("statSelectedName");
 const statPointSummaryEl = document.getElementById("statPointSummary");
@@ -74,6 +79,8 @@ const itemFormEl = document.getElementById("itemForm");
 const itemEditIndexEl = document.getElementById("itemEditIndex");
 const itemNameEl = document.getElementById("itemName");
 const itemSlotEl = document.getElementById("itemSlot");
+const itemWeaponCategoryEl = document.getElementById("itemWeaponCategory");
+const itemHandTypeEl = document.getElementById("itemHandType");
 const itemHpEl = document.getElementById("itemHp");
 const itemMpEl = document.getElementById("itemMp");
 const itemStEl = document.getElementById("itemSt");
@@ -113,6 +120,20 @@ const EQUIPMENT_SLOTS = [
   { key: "bottom", label: "하의" },
   { key: "accessory", label: "장신구" },
   { key: "special", label: "특수장비" }
+];
+const WEAPON_SLOT_KEYS = ["mainWeapon", "subWeapon"];
+const WEAPON_CATEGORIES = [
+  { key: "oneHandSword", label: "한손검" },
+  { key: "twoHandSword", label: "양손검" },
+  { key: "oneHandMace", label: "한손둔기" },
+  { key: "twoHandMace", label: "양손둔기" },
+  { key: "staff", label: "지팡이" },
+  { key: "bow", label: "활" },
+  { key: "gun", label: "총" }
+];
+const HAND_TYPES = [
+  { key: "oneHand", label: "한손착용" },
+  { key: "twoHand", label: "양손착용" }
 ];
 const ABILITY_ROWS = [
   ["HP", "hp"],
@@ -169,6 +190,8 @@ const UNIT_RADIUS = 5;
 const MAX_PLAYER_SQUAD = 10;
 const PROJECTILE_SPEED = 7;
 const EFFECT_DURATION = 18;
+const PORTRAIT_MAX_SIZE = 256;
+const PORTRAIT_MAX_FILE_SIZE = 5 * 1024 * 1024;
 const EFFECT_COLORS = {
   damage: "#fff18f",
   heal: "#8fffc1"
@@ -194,6 +217,12 @@ let selectedStatCharacterIndex = "";
 let selectedEquipmentCharacterIndex = "";
 let selectedItemSlotFilter = "all";
 let selectedEquipmentItemSlotFilter = "all";
+let selectedCharacterRoleFilter = "all";
+const portraitImageCache = new Map();
+const portraitDrafts = {
+  monster: { dataUrl: "", cleared: false },
+  character: { dataUrl: "", cleared: false }
+};
 
 function createStats() {
   return { damage: 0, taken: 0, heal: 0 };
@@ -395,6 +424,167 @@ function escapeHtml(value) {
   }[char]));
 }
 
+function normalizePortrait(value) {
+  const portrait = String(value ?? "").trim();
+  return portrait.startsWith("data:image/") ? portrait : "";
+}
+
+function getPortraitElements(type) {
+  if (type === "monster") {
+    return { input: monsterPortraitEl, preview: monsterPortraitPreviewEl };
+  }
+
+  return { input: characterPortraitEl, preview: characterPortraitPreviewEl };
+}
+
+function setPortraitPreview(type, dataUrl) {
+  const { preview } = getPortraitElements(type);
+  if (!preview) {
+    return;
+  }
+
+  const portrait = normalizePortrait(dataUrl);
+  preview.src = portrait;
+  preview.classList.toggle("hidden", !portrait);
+}
+
+function resetPortraitDraft(type, dataUrl = "") {
+  const { input } = getPortraitElements(type);
+  if (input) {
+    input.value = "";
+  }
+
+  portraitDrafts[type] = { dataUrl: normalizePortrait(dataUrl), cleared: false };
+  setPortraitPreview(type, dataUrl);
+}
+
+function clearPortrait(type) {
+  const { input } = getPortraitElements(type);
+  if (input) {
+    input.value = "";
+  }
+
+  portraitDrafts[type] = { dataUrl: "", cleared: true };
+  setPortraitPreview(type, "");
+}
+
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result ?? ""));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+}
+
+function loadImage(dataUrl) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = reject;
+    image.src = dataUrl;
+  });
+}
+
+async function resizePortraitDataUrl(dataUrl) {
+  const image = await loadImage(dataUrl);
+  const ratio = Math.min(1, PORTRAIT_MAX_SIZE / Math.max(image.width, image.height));
+  const width = Math.max(1, Math.round(image.width * ratio));
+  const height = Math.max(1, Math.round(image.height * ratio));
+  const buffer = document.createElement("canvas");
+  const bufferCtx = buffer.getContext("2d");
+
+  buffer.width = width;
+  buffer.height = height;
+  bufferCtx.drawImage(image, 0, 0, width, height);
+  return buffer.toDataURL("image/png");
+}
+
+async function previewPortraitFile(type) {
+  const { input } = getPortraitElements(type);
+  const file = input?.files?.[0];
+
+  if (!file) {
+    return;
+  }
+
+  if (!file.type.startsWith("image/")) {
+    alert("이미지 파일을 선택해주세요.");
+    input.value = "";
+    return;
+  }
+
+  if (file.size > PORTRAIT_MAX_FILE_SIZE) {
+    alert("초상화 파일은 5MB 이하로 선택해주세요.");
+    input.value = "";
+    return;
+  }
+
+  try {
+    const dataUrl = await resizePortraitDataUrl(await readFileAsDataUrl(file));
+    portraitDrafts[type] = { dataUrl, cleared: false };
+    setPortraitPreview(type, dataUrl);
+  } catch (error) {
+    logError("portrait", "초상화 파일을 읽는 중 실패했습니다.", error);
+    alert("초상화 파일을 읽지 못했습니다.");
+    input.value = "";
+  }
+}
+
+async function getPortraitForSave(type, previousPortrait = "") {
+  const draft = portraitDrafts[type] ?? { dataUrl: "", cleared: false };
+  const { input } = getPortraitElements(type);
+
+  if (draft.cleared) {
+    return "";
+  }
+
+  if (!draft.dataUrl && input?.files?.[0]) {
+    const file = input.files[0];
+    if (file.type.startsWith("image/") && file.size <= PORTRAIT_MAX_FILE_SIZE) {
+      try {
+        const dataUrl = await resizePortraitDataUrl(await readFileAsDataUrl(file));
+        portraitDrafts[type] = { dataUrl, cleared: false };
+        setPortraitPreview(type, dataUrl);
+        return dataUrl;
+      } catch (error) {
+        logError("portrait", "초상화 파일을 읽는 중 실패했습니다.", error);
+        alert("초상화 파일을 읽지 못했습니다.");
+      }
+    }
+  }
+
+  return normalizePortrait(draft.dataUrl) || normalizePortrait(previousPortrait);
+}
+
+function renderPortraitCell(portrait, label) {
+  const normalizedPortrait = normalizePortrait(portrait);
+
+  if (!normalizedPortrait) {
+    return `<span class="empty-text">없음</span>`;
+  }
+
+  return `<img class="portrait-thumb" src="${normalizedPortrait}" alt="${escapeHtml(label)} 초상화">`;
+}
+
+function getCachedPortraitImage(portrait) {
+  const normalizedPortrait = normalizePortrait(portrait);
+
+  if (!normalizedPortrait) {
+    return null;
+  }
+
+  const cached = portraitImageCache.get(normalizedPortrait);
+  if (cached) {
+    return cached;
+  }
+
+  const image = new Image();
+  image.src = normalizedPortrait;
+  portraitImageCache.set(normalizedPortrait, image);
+  return image;
+}
+
 function normalizeCombatJson(items, defaults, nameKey) {
   if (!Array.isArray(items)) {
     return defaults.map(item => ({ ...item }));
@@ -420,7 +610,8 @@ function normalizeCombatJson(items, defaults, nameKey) {
         defense: Math.min(100, normalizeCombatValue(item.defense, getDefaultAbility(role, "defense"), 0)),
         resistance: Math.min(100, normalizeCombatValue(item.resistance, getDefaultAbility(role, "resistance"), 0)),
         attackRange: normalizeCombatValue(item.attackRange, getDefaultAbility(role, "attackRange"), 1),
-        role
+        role,
+        portrait: normalizePortrait(item.portrait)
       };
 
       if (nameKey === "name") {
@@ -489,7 +680,12 @@ function initRoleOptions() {
   const roleOptions = ROLES.map(role => `<option value="${role}">${getRoleLabel(role)}</option>`).join("");
   monsterRoleEl.innerHTML = roleOptions;
   characterRoleEl.innerHTML = roleOptions;
+  if (characterRoleFilterEl) {
+    characterRoleFilterEl.innerHTML = `<option value="all">전체</option>${roleOptions}`;
+  }
   itemSlotEl.innerHTML = EQUIPMENT_SLOTS.map(slot => `<option value="${slot.key}">${slot.label}</option>`).join("");
+  itemWeaponCategoryEl.innerHTML = WEAPON_CATEGORIES.map(category => `<option value="${category.key}">${category.label}</option>`).join("");
+  itemHandTypeEl.innerHTML = HAND_TYPES.map(type => `<option value="${type.key}">${type.label}</option>`).join("");
   if (itemSlotFilterEl) {
     itemSlotFilterEl.innerHTML = `<option value="all">전체</option>${EQUIPMENT_SLOTS.map(slot => `<option value="${slot.key}">${slot.label}</option>`).join("")}`;
   }

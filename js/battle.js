@@ -492,23 +492,47 @@ function drawUnit(unit, isEnemy) {
 
   const isBlinkFrame = unit.effectTimer > 0 && Math.floor(unit.effectTimer / 3) % 2 === 0;
   const baseColor = isEnemy ? "red" : getRoleColor(unit.role);
+  const portraitImage = getCachedPortraitImage(unit.portrait);
+  const portraitRadius = UNIT_RADIUS * 2.6 * scale;
 
-  ctx.fillStyle = isBlinkFrame ? EFFECT_COLORS[unit.effectType] ?? baseColor : baseColor;
-  ctx.beginPath();
-  ctx.arc(unit.x, unit.y, UNIT_RADIUS * scale, 0, Math.PI * 2);
-  ctx.fill();
+  if (portraitImage?.complete && portraitImage.naturalWidth > 0) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(unit.x, unit.y, portraitRadius, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.drawImage(
+      portraitImage,
+      unit.x - portraitRadius,
+      unit.y - portraitRadius,
+      portraitRadius * 2,
+      portraitRadius * 2
+    );
+    ctx.restore();
+
+    ctx.strokeStyle = isBlinkFrame ? EFFECT_COLORS[unit.effectType] ?? baseColor : baseColor;
+    ctx.lineWidth = Math.max(1, 2 * scale);
+    ctx.beginPath();
+    ctx.arc(unit.x, unit.y, portraitRadius, 0, Math.PI * 2);
+    ctx.stroke();
+  } else {
+    ctx.fillStyle = isBlinkFrame ? EFFECT_COLORS[unit.effectType] ?? baseColor : baseColor;
+    ctx.beginPath();
+    ctx.arc(unit.x, unit.y, UNIT_RADIUS * scale, 0, Math.PI * 2);
+    ctx.fill();
+  }
 
   const hpRatio = unit.hp / unit.maxHp;
+  const statusOffset = portraitImage?.complete && portraitImage.naturalWidth > 0 ? portraitRadius + 7 * scale : 12 * scale;
 
   ctx.fillStyle = "red";
-  ctx.fillRect(unit.x - 10 * scale, unit.y - 12 * scale, 20 * scale, 3 * scale);
+  ctx.fillRect(unit.x - 10 * scale, unit.y - statusOffset, 20 * scale, 3 * scale);
 
   ctx.fillStyle = "green";
-  ctx.fillRect(unit.x - 10 * scale, unit.y - 12 * scale, 20 * scale * hpRatio, 3 * scale);
+  ctx.fillRect(unit.x - 10 * scale, unit.y - statusOffset, 20 * scale * hpRatio, 3 * scale);
 
   ctx.fillStyle = "black";
   ctx.font = `${10 * scale}px Arial`;
-  ctx.fillText(unit.name, unit.x - 12 * scale, unit.y - 16 * scale);
+  ctx.fillText(unit.name, unit.x - 12 * scale, unit.y - statusOffset - 4 * scale);
 }
 
 function drawProjectiles() {

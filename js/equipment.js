@@ -16,13 +16,41 @@ function createEmptyItemStats() {
 
 function createDefaultItemJson() {
   return [
-    { id: "main_weapon_sample1", name: "주무기 샘플1", slot: "mainWeapon", ...createEmptyItemStats(), atk: 18, attackSpeed: -0.1 },
-    { id: "sub_weapon_sample1", name: "보조무기 샘플1", slot: "subWeapon", ...createEmptyItemStats(), mp: 20, atk: 6, magic: 6, castSpeed: -0.1 },
+    { id: "main_weapon_sample1", name: "주무기 샘플1", slot: "mainWeapon", weaponCategory: "oneHandSword", handType: "oneHand", ...createEmptyItemStats(), atk: 18, attackSpeed: -0.1 },
+    { id: "sub_weapon_sample1", name: "보조무기 샘플1", slot: "subWeapon", weaponCategory: "oneHandSword", handType: "oneHand", ...createEmptyItemStats(), mp: 20, atk: 6, magic: 6, castSpeed: -0.1 },
     { id: "top_sample1", name: "상의 샘플1", slot: "top", ...createEmptyItemStats(), hp: 350, defense: 8, resistance: 2 },
     { id: "bottom_sample1", name: "하의 샘플1", slot: "bottom", ...createEmptyItemStats(), hp: 180, st: 30, speed: 0.1, defense: 4, resistance: 1 },
     { id: "accessory_sample1", name: "장신구 샘플1", slot: "accessory", ...createEmptyItemStats(), mp: 40, st: 20, atk: 4, magic: 10, castSpeed: -0.2, resistance: 5 },
     { id: "special_sample1", name: "특수장비 샘플1", slot: "special", ...createEmptyItemStats(), hp: 100, mp: 10, st: 10, atk: 3, magic: 3, speed: 0.1, defense: 1, resistance: 1 }
   ];
+}
+
+function isWeaponSlot(slotKey) {
+  return WEAPON_SLOT_KEYS.includes(slotKey);
+}
+
+function isWeaponItem(item) {
+  return isWeaponSlot(item?.slot);
+}
+
+function getWeaponCategoryLabel(categoryKey) {
+  return WEAPON_CATEGORIES.find(category => category.key === categoryKey)?.label ?? "-";
+}
+
+function getHandTypeLabel(handTypeKey) {
+  return HAND_TYPES.find(type => type.key === handTypeKey)?.label ?? "-";
+}
+
+function getDefaultWeaponCategory(item) {
+  return isWeaponItem(item) || ["주무기 샘플1", "보조무기 샘플1", "강검"].includes(item?.name)
+    ? "oneHandSword"
+    : "";
+}
+
+function getDefaultHandType(item) {
+  return isWeaponItem(item) || ["주무기 샘플1", "보조무기 샘플1", "강검"].includes(item?.name)
+    ? "oneHand"
+    : "";
 }
 
 function normalizeItemJson(items) {
@@ -43,9 +71,22 @@ function normalizeItemJson(items) {
       id: String(item.id ?? `item_${Date.now()}_${index}`),
       name: String(item.name ?? "").trim(),
       slot: String(item.slot ?? ""),
+      weaponCategory: String(item.weaponCategory ?? getDefaultWeaponCategory(item)),
+      handType: String(item.handType ?? getDefaultHandType(item)),
       ...stats
     };
-  }).filter(item => item.name && validSlots.includes(item.slot));
+  }).filter(item => item.name && validSlots.includes(item.slot))
+    .map(item => {
+      if (!isWeaponItem(item)) {
+        return { ...item, weaponCategory: "", handType: "" };
+      }
+
+      return {
+        ...item,
+        weaponCategory: WEAPON_CATEGORIES.some(category => category.key === item.weaponCategory) ? item.weaponCategory : "oneHandSword",
+        handType: HAND_TYPES.some(type => type.key === item.handType) ? item.handType : "oneHand"
+      };
+    });
 
   return normalized.length ? normalized : defaults;
 }
@@ -132,16 +173,32 @@ function normalizeItemFormActions() {
   itemFormEl.dataset.actionsNormalized = "true";
 }
 
+function syncItemWeaponFields() {
+  const isWeapon = isWeaponSlot(itemSlotEl.value);
+  document.querySelectorAll(".item-weapon-field").forEach(row => {
+    row.classList.toggle("hidden", !isWeapon);
+  });
+}
+
 function getItemById(itemId) {
   return itemsJson.find(item => item.id === itemId);
 }
 
 function getCharacterEquipmentBonus(character) {
   const equipment = createEquipmentSlots(character?.equipment);
-  return Object.values(equipment).reduce((bonus, itemId) => {
-    const item = getItemById(itemId);
+  const countedTwoHandIds = new Set();
+
+  return EQUIPMENT_SLOTS.reduce((bonus, slot) => {
+    const item = getItemById(equipment[slot.key]);
     if (!item) {
       return bonus;
+    }
+
+    if (isWeaponItem(item) && item.handType === "twoHand") {
+      if (countedTwoHandIds.has(item.id)) {
+        return bonus;
+      }
+      countedTwoHandIds.add(item.id);
     }
 
     ABILITY_ROWS.forEach(([, key]) => {
@@ -164,16 +221,30 @@ function formatSignedValue(value) {
 }
 
 function getItemStatSummary(item) {
-  return ABILITY_ROWS
+  const weaponSummary = isWeaponItem(item)
+    ? [`무기 카테고리 ${getWeaponCategoryLabel(item.weaponCategory)}`, `착용 방식 ${getHandTypeLabel(item.handType)}`]
+    : [];
+  const statSummary = ABILITY_ROWS
     .map(([label, key]) => Number(item[key]) ? `${label} ${formatSignedValue(item[key])}` : "")
-    .filter(Boolean)
-    .join("\n") || "능력치 없음";
+    .filter(Boolean);
+
+  return [...weaponSummary, ...statSummary].join("\n") || "능력치 없음";
 }
 
 function getFilteredItems(slotFilter) {
   return itemsJson
     .map((item, index) => ({ item, index }))
-    .filter(({ item }) => slotFilter === "all" || item.slot === slotFilter);
+    .filter(({ item }) => {
+      if (slotFilter === "all") {
+        return true;
+      }
+
+      if (isWeaponSlot(slotFilter)) {
+        return isWeaponItem(item);
+      }
+
+      return item.slot === slotFilter;
+    });
 }
 
 function renderAbilityTable(baseCharacter, equippedCharacter) {
@@ -249,6 +320,48 @@ function renderEquipmentSlots() {
   }).join("");
 }
 
+function canEquipItemToSlot(item, slotKey) {
+  if (!item) {
+    return false;
+  }
+
+  if (isWeaponItem(item)) {
+    return isWeaponSlot(slotKey);
+  }
+
+  return item.slot === slotKey;
+}
+
+function clearTwoHandWeaponIfNeeded(equipment, slotKey) {
+  if (!isWeaponSlot(slotKey)) {
+    return;
+  }
+
+  const currentItem = getItemById(equipment[slotKey]);
+  if (isWeaponItem(currentItem) && currentItem.handType === "twoHand") {
+    WEAPON_SLOT_KEYS.forEach(weaponSlot => {
+      if (equipment[weaponSlot] === currentItem.id) {
+        equipment[weaponSlot] = "";
+      }
+    });
+  }
+}
+
+function equipItemToSlot(equipment, item, slotKey) {
+  if (isWeaponItem(item)) {
+    WEAPON_SLOT_KEYS.forEach(weaponSlot => clearTwoHandWeaponIfNeeded(equipment, weaponSlot));
+
+    if (item.handType === "twoHand") {
+      WEAPON_SLOT_KEYS.forEach(weaponSlot => {
+        equipment[weaponSlot] = item.id;
+      });
+      return;
+    }
+  }
+
+  equipment[slotKey] = item.id;
+}
+
 function renderEquipmentItemTable() {
   const filteredItems = getFilteredItems(selectedEquipmentItemSlotFilter);
   equipmentItemTableBodyEl.innerHTML = filteredItems.map(({ item }) => `
@@ -302,13 +415,13 @@ async function dropEquipmentItem(event, slotKey) {
   event.preventDefault();
   const character = characterJson[selectedEquipmentCharacterIndex];
   const item = getItemById(event.dataTransfer.getData("text/plain"));
-  if (!character || !item || item.slot !== slotKey) {
+  if (!character || !canEquipItemToSlot(item, slotKey)) {
     alert("해당 슬롯에 착용할 수 없는 장비입니다.");
     return;
   }
 
   character.equipment = createEquipmentSlots(character.equipment);
-  character.equipment[slotKey] = item.id;
+  equipItemToSlot(character.equipment, item, slotKey);
   characterJson[Number(selectedEquipmentCharacterIndex)] = applyCharacterStatAbilities(character);
   try {
     await saveCharacterJson();
@@ -328,7 +441,16 @@ async function unequipItem(slotKey) {
   }
 
   character.equipment = createEquipmentSlots(character.equipment);
-  character.equipment[slotKey] = "";
+  const currentItem = getItemById(character.equipment[slotKey]);
+  if (isWeaponItem(currentItem) && currentItem.handType === "twoHand") {
+    WEAPON_SLOT_KEYS.forEach(weaponSlot => {
+      if (character.equipment[weaponSlot] === currentItem.id) {
+        character.equipment[weaponSlot] = "";
+      }
+    });
+  } else {
+    character.equipment[slotKey] = "";
+  }
   characterJson[Number(selectedEquipmentCharacterIndex)] = applyCharacterStatAbilities(character);
   try {
     await saveCharacterJson();
@@ -353,6 +475,8 @@ function renderItemPage() {
       <td><input type="checkbox" class="item-check" value="${index}"></td>
       <td>${escapeHtml(item.name)}</td>
       <td>${getSlotLabel(item.slot)}</td>
+      <td>${isWeaponItem(item) ? getWeaponCategoryLabel(item.weaponCategory) : "-"}</td>
+      <td>${isWeaponItem(item) ? getHandTypeLabel(item.handType) : "-"}</td>
       ${ABILITY_ROWS.map(([, key]) => `<td>${item[key]}</td>`).join("")}
       <td><button type="button" onclick="openItemModal(${index})">수정</button></td>
     </tr>
@@ -371,6 +495,9 @@ function openItemModal(index = "") {
   itemEditIndexEl.value = item ? index : "";
   itemNameEl.value = item?.name ?? "";
   itemSlotEl.value = item?.slot ?? EQUIPMENT_SLOTS[0].key;
+  itemWeaponCategoryEl.value = item?.weaponCategory || "oneHandSword";
+  itemHandTypeEl.value = item?.handType || "oneHand";
+  syncItemWeaponFields();
   itemHpEl.value = item?.hp ?? 0;
   itemMpEl.value = item?.mp ?? 0;
   itemStEl.value = item?.st ?? 0;
@@ -397,6 +524,8 @@ async function saveItemFromForm(event) {
     id: editIndex !== "" ? itemsJson[Number(editIndex)].id : `item_${Date.now()}`,
     name: itemNameEl.value.trim(),
     slot: itemSlotEl.value,
+    weaponCategory: isWeaponSlot(itemSlotEl.value) ? itemWeaponCategoryEl.value : "",
+    handType: isWeaponSlot(itemSlotEl.value) ? itemHandTypeEl.value : "",
     hp: Number(itemHpEl.value),
     mp: Number(itemMpEl.value),
     st: Number(itemStEl.value),

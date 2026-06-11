@@ -23,6 +23,7 @@ function renderMonsterTable() {
   monsterTableBodyEl.innerHTML = monsterJson.map((monster, index) => `
     <tr>
       <td><input type="checkbox" class="monster-check" value="${index}"></td>
+      <td>${renderPortraitCell(monster.portrait, monster.label)}</td>
       <td>${escapeHtml(monster.label)}</td>
       <td>${monster.hp}</td>
       <td>${monster.mp}</td>
@@ -47,6 +48,7 @@ function openMonsterModal(index = "") {
   monsterModalTitleEl.innerText = monster ? "몬스터 수정" : "몬스터 추가";
   monsterEditIndexEl.value = monster ? index : "";
   monsterLabelEl.value = monster?.label ?? "";
+  resetPortraitDraft("monster", monster?.portrait ?? "");
   monsterHpEl.value = monster?.hp ?? 2000;
   monsterMpEl.value = monster?.mp ?? DEFAULT_RESOURCE_VALUE;
   monsterStEl.value = monster?.st ?? DEFAULT_RESOURCE_VALUE;
@@ -65,12 +67,14 @@ function openMonsterModal(index = "") {
 function closeMonsterModal() {
   monsterModalEl.classList.add("hidden");
   monsterFormEl.reset();
+  resetPortraitDraft("monster");
 }
 
 async function saveMonsterFromForm(event) {
   event.preventDefault();
 
   const editIndex = monsterEditIndexEl.value;
+  const previousMonster = editIndex !== "" ? monsterJson[Number(editIndex)] : null;
   const monster = {
     label: monsterLabelEl.value.trim(),
     hp: Number(monsterHpEl.value),
@@ -84,7 +88,8 @@ async function saveMonsterFromForm(event) {
     defense: Number(monsterDefenseEl.value),
     resistance: Number(monsterResistanceEl.value),
     attackRange: Number(monsterAttackRangeEl.value),
-    role: monsterRoleEl.value
+    role: monsterRoleEl.value,
+    portrait: await getPortraitForSave("monster", previousMonster?.portrait)
   };
 
   if (!monster.label || monster.hp < 1 || monster.mp < 0 || monster.st < 0 || monster.atk < 1 || monster.magic < 0 || monster.speed <= 0
@@ -157,6 +162,7 @@ function createEnemy(monsterIndex) {
     defense: monster.defense,
     resistance: monster.resistance,
     attackRange: monster.attackRange,
+    portrait: monster.portrait,
     faction: "몬스터",
     x: Math.random() * 100 + 250,
     y: Math.random() * 200 + 50,

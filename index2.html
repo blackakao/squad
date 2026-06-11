@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
@@ -76,6 +76,7 @@
       <thead>
         <tr>
           <th>선택</th>
+          <th>초상화</th>
           <th>이름</th>
           <th>HP</th>
           <th>MP</th>
@@ -103,11 +104,13 @@
     <div class="data-toolbar">
       <button onclick="openCharacterModal()">추가</button>
       <button onclick="deleteSelectedCharacters()">선택 삭제</button>
+      <select id="characterRoleFilter" onchange="changeCharacterRoleFilter(this.value)"></select>
     </div>
     <table class="data-table">
       <thead>
         <tr>
           <th>선택</th>
+          <th>초상화</th>
           <th>진영</th>
           <th>계열</th>
           <th>이름</th>
@@ -262,6 +265,8 @@
           <th>선택</th>
           <th>이름</th>
           <th>슬롯</th>
+          <th>무기 카테고리</th>
+          <th>착용 방식</th>
           <th>HP</th>
           <th>MP</th>
           <th>ST</th>
@@ -309,6 +314,14 @@
       <div class="form-row">
         <label for="monsterLabel">이름</label>
         <input id="monsterLabel" required placeholder="슬라임">
+      </div>
+      <div class="form-row">
+        <label for="monsterPortrait">초상화</label>
+        <input id="monsterPortrait" type="file" accept="image/*" onchange="previewPortraitFile('monster')">
+        <div class="portrait-editor">
+          <img id="monsterPortraitPreview" class="portrait-preview hidden" alt="몬스터 초상화 미리보기">
+          <button type="button" onclick="clearPortrait('monster')">초상화 제거</button>
+        </div>
       </div>
       <div class="form-row">
         <label for="monsterHp">HP</label>
@@ -372,6 +385,14 @@
       <div class="form-row">
         <label for="characterName">이름</label>
         <input id="characterName" required placeholder="tank1">
+      </div>
+      <div class="form-row">
+        <label for="characterPortrait">초상화</label>
+        <input id="characterPortrait" type="file" accept="image/*" onchange="previewPortraitFile('character')">
+        <div class="portrait-editor">
+          <img id="characterPortraitPreview" class="portrait-preview hidden" alt="캐릭터 초상화 미리보기">
+          <button type="button" onclick="clearPortrait('character')">초상화 제거</button>
+        </div>
       </div>
       <div class="form-row character-derived-field hidden">
         <label for="characterHp">HP</label>
@@ -442,7 +463,15 @@
       </div>
       <div class="form-row">
         <label for="itemSlot">슬롯</label>
-        <select id="itemSlot" required></select>
+        <select id="itemSlot" required onchange="syncItemWeaponFields()"></select>
+      </div>
+      <div class="form-row item-weapon-field">
+        <label for="itemWeaponCategory">무기 카테고리</label>
+        <select id="itemWeaponCategory"></select>
+      </div>
+      <div class="form-row item-weapon-field">
+        <label for="itemHandType">착용 방식</label>
+        <select id="itemHandType"></select>
       </div>
       <div class="form-row"><label for="itemHp">HP</label><input id="itemHp" type="number" step="0.1" value="0" required></div>
       <div class="form-row"><label for="itemMp">MP</label><input id="itemMp" type="number" step="0.1" value="0" required></div>
@@ -461,17 +490,17 @@
   </div>
 </div>
 
-<script src="js/logger.js?v=20260606-logs"></script>
-<script src="js/ui.js?v=20260606-logs"></script>
-<script src="js/api.js?v=20260606-logs"></script>
-<script src="js/equipment.js?v=20260606-logs"></script>
-<script src="js/monster.js?v=20260606-logs"></script>
-<script src="js/faction.js?v=20260606-logs"></script>
-<script src="js/character.js?v=20260606-logs"></script>
-<script src="js/stats.js?v=20260606-logs"></script>
-<script src="js/record.js?v=20260606-logs"></script>
-<script src="js/battle.js?v=20260606-logs"></script>
-<script src="js/main.js?v=20260606-logs"></script>
+<script src="js/logger.js?v=20260606-weapons"></script>
+<script src="js/ui.js?v=20260606-weapons"></script>
+<script src="js/api.js?v=20260606-weapons"></script>
+<script src="js/equipment.js?v=20260606-weapons"></script>
+<script src="js/monster.js?v=20260606-weapons"></script>
+<script src="js/faction.js?v=20260606-weapons"></script>
+<script src="js/character.js?v=20260606-weapons"></script>
+<script src="js/stats.js?v=20260606-weapons"></script>
+<script src="js/record.js?v=20260606-weapons"></script>
+<script src="js/battle.js?v=20260606-weapons"></script>
+<script src="js/main.js?v=20260606-weapons"></script>
 
 </body>
 </html>
