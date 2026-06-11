@@ -1,5 +1,47 @@
 [
   {
+    "battleAt": "2026-06-11T07:29:27.646Z",
+    "result": "승리",
+    "playerMembers": [
+      {
+        "name": "궁사",
+        "role": "melee",
+        "hp": 2000,
+        "maxHp": 2000,
+        "mp": 100,
+        "maxMp": 100,
+        "st": 133,
+        "maxSt": 150,
+        "dps": 988.3720930232558
+      }
+    ],
+    "monsterMembers": [
+      {
+        "name": "오크-1",
+        "role": "ranged",
+        "hp": 0,
+        "maxHp": 120,
+        "mp": 95,
+        "maxMp": 100,
+        "st": 100,
+        "maxSt": 100,
+        "dps": 0
+      },
+      {
+        "name": "오크-2",
+        "role": "ranged",
+        "hp": 0,
+        "maxHp": 120,
+        "mp": 95,
+        "maxMp": 100,
+        "st": 100,
+        "maxSt": 100,
+        "dps": 0
+      }
+    ],
+    "durationSeconds": 0.344
+  },
+  {
     "battleAt": "2026-06-11T04:41:52.106Z",
     "result": "승리",
     "playerMembers": [

@@ -17,6 +17,7 @@
   <button onclick="showPage('stats')">스탯 관리</button>
   <button onclick="showPage('equipment')">장비 착용</button>
   <button onclick="showPage('item')">아이템 관리</button>
+  <button onclick="showPage('category')">장비 카테고리 관리</button>
   <button onclick="showPage('monster')">몬스터 관리</button>
   <button onclick="showPage('record')">전투 기록</button>
   <button onclick="showPage('log')">로그</button>
@@ -266,6 +267,7 @@
           <th>이름</th>
           <th>슬롯</th>
           <th>무기 카테고리</th>
+          <th>방어구 카테고리</th>
           <th>착용 방식</th>
           <th>HP</th>
           <th>MP</th>
@@ -283,6 +285,52 @@
       </thead>
       <tbody id="itemTableBody"></tbody>
     </table>
+  </div>
+</div>
+
+<div id="categoryPage" class="page hidden">
+  <div class="panel">
+    <h4>장비 카테고리 관리</h4>
+    <div class="category-manager">
+      <section>
+        <h5>무기 카테고리</h5>
+        <div class="data-toolbar">
+          <button onclick="openWeaponCategoryModal()">추가</button>
+          <button onclick="deleteSelectedWeaponCategories()">선택 삭제</button>
+        </div>
+        <table class="data-table category-table">
+          <thead>
+            <tr>
+              <th>선택</th>
+              <th>이름</th>
+              <th>착용 방식</th>
+              <th>사정거리</th>
+              <th>기본 공격속도</th>
+              <th>착용 가능 슬롯</th>
+              <th>수정</th>
+            </tr>
+          </thead>
+          <tbody id="weaponCategoryTableBody"></tbody>
+        </table>
+      </section>
+      <section>
+        <h5>방어구 카테고리</h5>
+        <div class="data-toolbar">
+          <button onclick="openArmorCategoryModal()">추가</button>
+          <button onclick="deleteSelectedArmorCategories()">선택 삭제</button>
+        </div>
+        <table class="data-table category-table">
+          <thead>
+            <tr>
+              <th>선택</th>
+              <th>이름</th>
+              <th>수정</th>
+            </tr>
+          </thead>
+          <tbody id="armorCategoryTableBody"></tbody>
+        </table>
+      </section>
+    </div>
   </div>
 </div>
 
@@ -467,11 +515,19 @@
       </div>
       <div class="form-row item-weapon-field">
         <label for="itemWeaponCategory">무기 카테고리</label>
-        <select id="itemWeaponCategory"></select>
+        <select id="itemWeaponCategory" onchange="syncItemWeaponFields()"></select>
+      </div>
+      <div class="form-row item-armor-field">
+        <label for="itemArmorCategory">방어구 카테고리</label>
+        <select id="itemArmorCategory"></select>
       </div>
       <div class="form-row item-weapon-field">
         <label for="itemHandType">착용 방식</label>
-        <select id="itemHandType"></select>
+        <input id="itemHandType" disabled>
+      </div>
+      <div class="form-row item-weapon-field">
+        <label for="itemWeaponSlotType">착용 가능 슬롯</label>
+        <input id="itemWeaponSlotType" disabled>
       </div>
       <div class="form-row"><label for="itemHp">HP</label><input id="itemHp" type="number" step="0.1" value="0" required></div>
       <div class="form-row"><label for="itemMp">MP</label><input id="itemMp" type="number" step="0.1" value="0" required></div>
@@ -490,9 +546,56 @@
   </div>
 </div>
 
+<div id="weaponCategoryModal" class="modal hidden">
+  <div class="modal-content">
+    <h4 id="weaponCategoryModalTitle">무기 카테고리 추가</h4>
+    <form id="weaponCategoryForm" onsubmit="saveWeaponCategoryFromForm(event)">
+      <input type="hidden" id="weaponCategoryEditIndex">
+      <div class="form-row">
+        <label for="weaponCategoryName">이름</label>
+        <input id="weaponCategoryName" required placeholder="한손검">
+      </div>
+      <div class="form-row">
+        <label for="weaponCategoryHandType">착용 방식</label>
+        <select id="weaponCategoryHandType" required></select>
+      </div>
+      <div class="form-row">
+        <label for="weaponCategoryAttackRange">사정거리</label>
+        <input id="weaponCategoryAttackRange" type="number" min="1" step="0.1" required>
+      </div>
+      <div class="form-row">
+        <label for="weaponCategoryAttackSpeed">기본 공격속도</label>
+        <input id="weaponCategoryAttackSpeed" type="number" step="0.1" required>
+      </div>
+      <div class="form-row">
+        <label for="weaponCategorySlotType">착용 가능 슬롯</label>
+        <select id="weaponCategorySlotType" required></select>
+      </div>
+      <button type="submit">저장</button>
+      <button type="button" onclick="closeWeaponCategoryModal()">취소</button>
+    </form>
+  </div>
+</div>
+
+<div id="armorCategoryModal" class="modal hidden">
+  <div class="modal-content">
+    <h4 id="armorCategoryModalTitle">방어구 카테고리 추가</h4>
+    <form id="armorCategoryForm" onsubmit="saveArmorCategoryFromForm(event)">
+      <input type="hidden" id="armorCategoryEditIndex">
+      <div class="form-row">
+        <label for="armorCategoryName">이름</label>
+        <input id="armorCategoryName" required placeholder="판금">
+      </div>
+      <button type="submit">저장</button>
+      <button type="button" onclick="closeArmorCategoryModal()">취소</button>
+    </form>
+  </div>
+</div>
+
 <script src="js/logger.js?v=20260606-weapons"></script>
 <script src="js/ui.js?v=20260606-weapons"></script>
 <script src="js/api.js?v=20260606-weapons"></script>
+<script src="js/category.js?v=20260611-categories"></script>
 <script src="js/equipment.js?v=20260606-weapons"></script>
 <script src="js/monster.js?v=20260606-weapons"></script>
 <script src="js/faction.js?v=20260606-weapons"></script>

@@ -173,11 +173,22 @@ button {
 #statsPage,
 #equipmentPage,
 #itemPage,
+#categoryPage,
 #logPage,
 #recordPage {
   box-sizing: border-box;
   height: calc(100vh - 96px);
   padding: 5px 16px 16px;
+}
+
+.category-manager {
+  display: grid;
+  grid-template-columns: minmax(360px, 1fr) minmax(280px, 420px);
+  gap: 12px;
+}
+
+.category-manager section {
+  min-width: 0;
 }
 
 .stat-manager {
@@ -363,7 +374,8 @@ button {
 }
 
 @media (max-width: 720px) {
-  .stat-manager {
+  .stat-manager,
+  .category-manager {
     grid-template-columns: 1fr;
   }
 

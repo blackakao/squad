@@ -1,0 +1,94 @@
+[
+  {
+    "type": "weapon",
+    "key": "oneHandSword",
+    "label": "한손검",
+    "handType": "oneHand",
+    "attackRange": 1,
+    "attackSpeed": 0,
+    "slotType": "both"
+  },
+  {
+    "type": "weapon",
+    "key": "twoHandSword",
+    "label": "양손검",
+    "handType": "twoHand",
+    "attackRange": 1,
+    "attackSpeed": 0,
+    "slotType": "mainOnly"
+  },
+  {
+    "type": "weapon",
+    "key": "oneHandMace",
+    "label": "한손둔기",
+    "handType": "oneHand",
+    "attackRange": 1,
+    "attackSpeed": 0,
+    "slotType": "both"
+  },
+  {
+    "type": "weapon",
+    "key": "twoHandMace",
+    "label": "양손둔기",
+    "handType": "twoHand",
+    "attackRange": 1,
+    "attackSpeed": 0,
+    "slotType": "mainOnly"
+  },
+  {
+    "type": "weapon",
+    "key": "staff",
+    "label": "지팡이",
+    "handType": "twoHand",
+    "attackRange": 3,
+    "attackSpeed": 0,
+    "slotType": "mainOnly"
+  },
+  {
+    "type": "weapon",
+    "key": "bow",
+    "label": "활",
+    "handType": "twoHand",
+    "attackRange": 5,
+    "attackSpeed": 0,
+    "slotType": "mainOnly"
+  },
+  {
+    "type": "weapon",
+    "key": "gun",
+    "label": "총",
+    "handType": "twoHand",
+    "attackRange": 5,
+    "attackSpeed": 0,
+    "slotType": "mainOnly"
+  },
+  {
+    "type": "weapon",
+    "key": "방패",
+    "label": "방패",
+    "handType": "oneHand",
+    "attackRange": 1,
+    "attackSpeed": 0,
+    "slotType": "subOnly"
+  },
+  {
+    "type": "armor",
+    "key": "plate",
+    "label": "판금"
+  },
+  {
+    "type": "armor",
+    "key": "chain",
+    "label": "사슬"
+  },
+  {
+    "type": "armor",
+    "key": "leather",
+    "label": "가죽"
+  },
+  {
+    "type": "armor",
+    "key": "cloth",
+    "label": "천"
+  }
+]

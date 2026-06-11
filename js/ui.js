@@ -13,6 +13,7 @@ const statsPageEl = document.getElementById("statsPage");
 const recordPageEl = document.getElementById("recordPage");
 const equipmentPageEl = document.getElementById("equipmentPage");
 const itemPageEl = document.getElementById("itemPage");
+const categoryPageEl = document.getElementById("categoryPage");
 const logPageEl = document.getElementById("logPage");
 const monsterTableBodyEl = document.getElementById("monsterTableBody");
 const recordTableBodyEl = document.getElementById("recordTableBody");
@@ -80,7 +81,9 @@ const itemEditIndexEl = document.getElementById("itemEditIndex");
 const itemNameEl = document.getElementById("itemName");
 const itemSlotEl = document.getElementById("itemSlot");
 const itemWeaponCategoryEl = document.getElementById("itemWeaponCategory");
+const itemArmorCategoryEl = document.getElementById("itemArmorCategory");
 const itemHandTypeEl = document.getElementById("itemHandType");
+const itemWeaponSlotTypeEl = document.getElementById("itemWeaponSlotType");
 const itemHpEl = document.getElementById("itemHp");
 const itemMpEl = document.getElementById("itemMp");
 const itemStEl = document.getElementById("itemSt");
@@ -92,6 +95,22 @@ const itemCastSpeedEl = document.getElementById("itemCastSpeed");
 const itemDefenseEl = document.getElementById("itemDefense");
 const itemResistanceEl = document.getElementById("itemResistance");
 const itemAttackRangeEl = document.getElementById("itemAttackRange");
+const weaponCategoryTableBodyEl = document.getElementById("weaponCategoryTableBody");
+const armorCategoryTableBodyEl = document.getElementById("armorCategoryTableBody");
+const weaponCategoryModalEl = document.getElementById("weaponCategoryModal");
+const weaponCategoryModalTitleEl = document.getElementById("weaponCategoryModalTitle");
+const weaponCategoryFormEl = document.getElementById("weaponCategoryForm");
+const weaponCategoryEditIndexEl = document.getElementById("weaponCategoryEditIndex");
+const weaponCategoryNameEl = document.getElementById("weaponCategoryName");
+const weaponCategoryHandTypeEl = document.getElementById("weaponCategoryHandType");
+const weaponCategoryAttackRangeEl = document.getElementById("weaponCategoryAttackRange");
+const weaponCategoryAttackSpeedEl = document.getElementById("weaponCategoryAttackSpeed");
+const weaponCategorySlotTypeEl = document.getElementById("weaponCategorySlotType");
+const armorCategoryModalEl = document.getElementById("armorCategoryModal");
+const armorCategoryModalTitleEl = document.getElementById("armorCategoryModalTitle");
+const armorCategoryFormEl = document.getElementById("armorCategoryForm");
+const armorCategoryEditIndexEl = document.getElementById("armorCategoryEditIndex");
+const armorCategoryNameEl = document.getElementById("armorCategoryName");
 
 const ROLES = ["tank", "melee", "ranged", "healer", "special"];
 const ROLE_ALIASES = {
@@ -122,19 +141,33 @@ const EQUIPMENT_SLOTS = [
   { key: "special", label: "특수장비" }
 ];
 const WEAPON_SLOT_KEYS = ["mainWeapon", "subWeapon"];
-const WEAPON_CATEGORIES = [
-  { key: "oneHandSword", label: "한손검" },
-  { key: "twoHandSword", label: "양손검" },
-  { key: "oneHandMace", label: "한손둔기" },
-  { key: "twoHandMace", label: "양손둔기" },
-  { key: "staff", label: "지팡이" },
-  { key: "bow", label: "활" },
-  { key: "gun", label: "총" }
-];
+const ARMOR_SLOT_KEYS = ["top", "bottom"];
 const HAND_TYPES = [
   { key: "oneHand", label: "한손착용" },
   { key: "twoHand", label: "양손착용" }
 ];
+const WEAPON_SLOT_TYPES = [
+  { key: "mainOnly", label: "주무기 자리만" },
+  { key: "subOnly", label: "보조무기 자리만" },
+  { key: "both", label: "양쪽 다 착용 가능" }
+];
+const DEFAULT_CATEGORIES = {
+  weapons: [
+    { key: "oneHandSword", label: "한손검", handType: "oneHand", attackRange: 1, attackSpeed: 0, slotType: "both" },
+    { key: "twoHandSword", label: "양손검", handType: "twoHand", attackRange: 1, attackSpeed: 0, slotType: "mainOnly" },
+    { key: "oneHandMace", label: "한손둔기", handType: "oneHand", attackRange: 1, attackSpeed: 0, slotType: "both" },
+    { key: "twoHandMace", label: "양손둔기", handType: "twoHand", attackRange: 1, attackSpeed: 0, slotType: "mainOnly" },
+    { key: "staff", label: "지팡이", handType: "twoHand", attackRange: 3, attackSpeed: 0, slotType: "mainOnly" },
+    { key: "bow", label: "활", handType: "twoHand", attackRange: 5, attackSpeed: 0, slotType: "mainOnly" },
+    { key: "gun", label: "총", handType: "twoHand", attackRange: 5, attackSpeed: 0, slotType: "mainOnly" }
+  ],
+  armors: [
+    { key: "plate", label: "판금" },
+    { key: "chain", label: "사슬" },
+    { key: "leather", label: "가죽" },
+    { key: "cloth", label: "천" }
+  ]
+};
 const ABILITY_ROWS = [
   ["HP", "hp"],
   ["MP", "mp"],
@@ -167,7 +200,8 @@ const API_URLS = {
   characters: "/api/characters",
   factions: "/api/factions",
   records: "/api/records",
-  items: "/api/items"
+  items: "/api/items",
+  categories: "/api/categories"
 };
 const DEFAULT_MONSTER_JSON = [
   { label: "슬라임", hp: 2000, mp: DEFAULT_RESOURCE_VALUE, st: DEFAULT_RESOURCE_VALUE, atk: 8, magic: 10, speed: 1.2, attackSpeed: 1, castSpeed: 0.5, defense: 0, resistance: 0, attackRange: 1, role: "melee" },
@@ -209,6 +243,10 @@ let characterJson = [];
 let factionsJson = [];
 let battleRecordsJson = [];
 let itemsJson = [];
+let categoriesJson = {
+  weapons: DEFAULT_CATEGORIES.weapons.map(category => ({ ...category })),
+  armors: DEFAULT_CATEGORIES.armors.map(category => ({ ...category }))
+};
 let battleStartedAt = null;
 let battleStartedAtText = "";
 let lastBattleDurationMs = 0;
@@ -638,6 +676,7 @@ async function showPage(pageName) {
   recordPageEl.classList.toggle("hidden", pageName !== "record");
   equipmentPageEl.classList.toggle("hidden", pageName !== "equipment");
   itemPageEl.classList.toggle("hidden", pageName !== "item");
+  categoryPageEl.classList.toggle("hidden", pageName !== "category");
   logPageEl.classList.toggle("hidden", pageName !== "log");
 
   if (pageName === "monster") {
@@ -661,12 +700,18 @@ async function showPage(pageName) {
     await loadBattleRecordsJson();
     renderBattleRecords();
   } else if (pageName === "equipment") {
+    await loadCategoryJson();
     await loadItemJson();
     await loadCharacterJson();
     renderEquipmentPage();
   } else if (pageName === "item") {
+    await loadCategoryJson();
     await loadItemJson();
     renderItemPage();
+  } else if (pageName === "category") {
+    await loadCategoryJson();
+    await loadItemJson();
+    renderCategoryPage();
   } else if (pageName === "log") {
     renderLogPage();
   }
@@ -684,8 +729,7 @@ function initRoleOptions() {
     characterRoleFilterEl.innerHTML = `<option value="all">전체</option>${roleOptions}`;
   }
   itemSlotEl.innerHTML = EQUIPMENT_SLOTS.map(slot => `<option value="${slot.key}">${slot.label}</option>`).join("");
-  itemWeaponCategoryEl.innerHTML = WEAPON_CATEGORIES.map(category => `<option value="${category.key}">${category.label}</option>`).join("");
-  itemHandTypeEl.innerHTML = HAND_TYPES.map(type => `<option value="${type.key}">${type.label}</option>`).join("");
+  renderCategoryOptions();
   if (itemSlotFilterEl) {
     itemSlotFilterEl.innerHTML = `<option value="all">전체</option>${EQUIPMENT_SLOTS.map(slot => `<option value="${slot.key}">${slot.label}</option>`).join("")}`;
   }

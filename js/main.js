@@ -8,8 +8,9 @@ async function initApp() {
       loadMonsterJson(),
       loadFactionJson(),
       loadBattleRecordsJson(),
-      loadItemJson()
+      loadCategoryJson()
     ]);
+    await loadItemJson();
     await loadCharacterJson();
 
     initRoleOptions();
