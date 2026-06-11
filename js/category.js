@@ -33,15 +33,19 @@ function normalizeWeaponCategory(category, index) {
   const fallback = DEFAULT_CATEGORIES.weapons[index] ?? DEFAULT_CATEGORIES.weapons[0];
   const handType = HAND_TYPES.some(type => type.key === category?.handType) ? category.handType : fallback.handType;
   const slotType = WEAPON_SLOT_TYPES.some(type => type.key === category?.slotType) ? category.slotType : fallback.slotType;
+  const attackType = WEAPON_ATTACK_TYPES.some(type => type.key === category?.attackType) ? category.attackType : fallback.attackType ?? BARE_HAND_ATTACK_TYPE;
   const attackRange = Number(category?.attackRange);
   const attackSpeed = Number(category?.attackSpeed);
+  const castSpeed = Number(category?.castSpeed);
 
   return {
     key: String(category?.key ?? fallback.key ?? `weapon_${index}`).trim(),
     label: String(category?.label ?? fallback.label ?? "").trim(),
     handType,
     attackRange: Number.isFinite(attackRange) && attackRange >= 1 ? attackRange : fallback.attackRange,
-    attackSpeed: Number.isFinite(attackSpeed) ? attackSpeed : fallback.attackSpeed ?? 0,
+    attackSpeed: Number.isFinite(attackSpeed) && attackSpeed > 0 ? attackSpeed : fallback.attackSpeed ?? BARE_HAND_ATTACK_SPEED,
+    castSpeed: Number.isFinite(castSpeed) && castSpeed >= 0 ? castSpeed : fallback.castSpeed ?? BARE_HAND_CAST_SPEED,
+    attackType,
     slotType
   };
 }
@@ -112,6 +116,10 @@ function getWeaponSlotTypeLabel(slotTypeKey) {
   return WEAPON_SLOT_TYPES.find(type => type.key === slotTypeKey)?.label ?? "-";
 }
 
+function getWeaponAttackTypeLabel(attackTypeKey) {
+  return WEAPON_ATTACK_TYPES.find(type => type.key === attackTypeKey)?.label ?? "-";
+}
+
 function isArmorSlot(slotKey) {
   return ARMOR_SLOT_KEYS.includes(slotKey);
 }
@@ -140,6 +148,12 @@ function renderCategoryOptions() {
       .map(type => `<option value="${type.key}">${type.label}</option>`)
       .join("");
   }
+
+  if (weaponCategoryAttackTypeEl) {
+    weaponCategoryAttackTypeEl.innerHTML = WEAPON_ATTACK_TYPES
+      .map(type => `<option value="${type.key}">${type.label}</option>`)
+      .join("");
+  }
 }
 
 function renderCategoryPage() {
@@ -156,6 +170,8 @@ function renderWeaponCategoryTable() {
       <td>${getHandTypeLabel(category.handType)}</td>
       <td>${category.attackRange}</td>
       <td>${category.attackSpeed}</td>
+      <td>${category.castSpeed}</td>
+      <td>${getWeaponAttackTypeLabel(category.attackType)}</td>
       <td>${getWeaponSlotTypeLabel(category.slotType)}</td>
       <td><button type="button" onclick="openWeaponCategoryModal(${index})">수정</button></td>
     </tr>
@@ -180,7 +196,9 @@ function openWeaponCategoryModal(index = "") {
   weaponCategoryNameEl.value = category?.label ?? "";
   weaponCategoryHandTypeEl.value = category?.handType ?? "oneHand";
   weaponCategoryAttackRangeEl.value = category?.attackRange ?? 1;
-  weaponCategoryAttackSpeedEl.value = category?.attackSpeed ?? 0;
+  weaponCategoryAttackSpeedEl.value = category?.attackSpeed ?? BARE_HAND_ATTACK_SPEED;
+  weaponCategoryCastSpeedEl.value = category?.castSpeed ?? BARE_HAND_CAST_SPEED;
+  weaponCategoryAttackTypeEl.value = category?.attackType ?? BARE_HAND_ATTACK_TYPE;
   weaponCategorySlotTypeEl.value = category?.slotType ?? "both";
   weaponCategoryModalEl.classList.remove("hidden");
 }
@@ -201,10 +219,16 @@ async function saveWeaponCategoryFromForm(event) {
     handType: weaponCategoryHandTypeEl.value,
     attackRange: Number(weaponCategoryAttackRangeEl.value),
     attackSpeed: Number(weaponCategoryAttackSpeedEl.value),
+    castSpeed: Number(weaponCategoryCastSpeedEl.value),
+    attackType: weaponCategoryAttackTypeEl.value,
     slotType: weaponCategorySlotTypeEl.value
   };
 
-  if (!category.label || !Number.isFinite(category.attackRange) || category.attackRange < 1 || !Number.isFinite(category.attackSpeed)) {
+  if (!category.label
+    || !Number.isFinite(category.attackRange) || category.attackRange < 1
+    || !Number.isFinite(category.attackSpeed) || category.attackSpeed <= 0
+    || !Number.isFinite(category.castSpeed) || category.castSpeed < 0
+    || !WEAPON_ATTACK_TYPES.some(type => type.key === category.attackType)) {
     alert("무기 카테고리 정보를 올바르게 입력하세요.");
     return;
   }

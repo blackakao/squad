@@ -1,5 +1,193 @@
 [
   {
+    "battleAt": "2026-06-11T15:18:48.420Z",
+    "result": "패배",
+    "playerMembers": [
+      {
+        "name": "궁사",
+        "role": "melee",
+        "hp": 0,
+        "maxHp": 2000,
+        "mp": 100,
+        "maxMp": 100,
+        "st": 33,
+        "maxSt": 150,
+        "dps": 157.89473684210526
+      }
+    ],
+    "monsterMembers": [
+      {
+        "name": "오크-1",
+        "role": "ranged",
+        "hp": 3680,
+        "maxHp": 5000,
+        "mp": 52,
+        "maxMp": 100,
+        "st": 99,
+        "maxSt": 100,
+        "dps": 239.23444976076556
+      }
+    ],
+    "durationSeconds": 8.36
+  },
+  {
+    "battleAt": "2026-06-11T14:05:11.427Z",
+    "result": "승리",
+    "playerMembers": [
+      {
+        "name": "기사",
+        "role": "tank",
+        "hp": 730,
+        "maxHp": 4500,
+        "mp": 100,
+        "maxMp": 100,
+        "st": 24,
+        "maxSt": 100,
+        "dps": 151.5470427278468
+      },
+      {
+        "name": "승려",
+        "role": "healer",
+        "hp": 2000,
+        "maxHp": 2000,
+        "mp": 100,
+        "maxMp": 100,
+        "st": 150,
+        "maxSt": 150,
+        "dps": 0
+      }
+    ],
+    "monsterMembers": [
+      {
+        "name": "오크-1",
+        "role": "ranged",
+        "hp": 0,
+        "maxHp": 5000,
+        "mp": 3,
+        "maxMp": 100,
+        "st": 88,
+        "maxSt": 100,
+        "dps": 148.54015695943713
+      }
+    ],
+    "durationSeconds": 33.257
+  },
+  {
+    "battleAt": "2026-06-11T14:01:04.538Z",
+    "result": "패배",
+    "playerMembers": [
+      {
+        "name": "마법사",
+        "role": "ranged",
+        "hp": 0,
+        "maxHp": 2000,
+        "mp": 174,
+        "maxMp": 200,
+        "st": 98,
+        "maxSt": 100,
+        "dps": 184.71687740516765
+      },
+      {
+        "name": "궁사",
+        "role": "melee",
+        "hp": 0,
+        "maxHp": 2000,
+        "mp": 100,
+        "maxMp": 100,
+        "st": 101,
+        "maxSt": 150,
+        "dps": 102.80373831775701
+      }
+    ],
+    "monsterMembers": [
+      {
+        "name": "오크-2",
+        "role": "ranged",
+        "hp": 4830,
+        "maxHp": 5000,
+        "mp": 48,
+        "maxMp": 100,
+        "st": 99,
+        "maxSt": 100,
+        "dps": 122.04507971412863
+      },
+      {
+        "name": "오크-1",
+        "role": "ranged",
+        "hp": 0,
+        "maxHp": 5000,
+        "mp": 56,
+        "maxMp": 100,
+        "st": 99,
+        "maxSt": 100,
+        "dps": 100.05497526113248
+      }
+    ],
+    "durationSeconds": 18.19
+  },
+  {
+    "battleAt": "2026-06-11T13:58:18.350Z",
+    "result": "패배",
+    "playerMembers": [
+      {
+        "name": "마법사",
+        "role": "ranged",
+        "hp": 0,
+        "maxHp": 2000,
+        "mp": 178,
+        "maxMp": 200,
+        "st": 99,
+        "maxSt": 100,
+        "dps": 526.0685767966181
+      }
+    ],
+    "monsterMembers": [
+      {
+        "name": "오크-1",
+        "role": "ranged",
+        "hp": 2760,
+        "maxHp": 5000,
+        "mp": 73,
+        "maxMp": 100,
+        "st": 99,
+        "maxSt": 100,
+        "dps": 499.06059182714887
+      }
+    ],
+    "durationSeconds": 4.258
+  },
+  {
+    "battleAt": "2026-06-11T13:55:39.603Z",
+    "result": "승리",
+    "playerMembers": [
+      {
+        "name": "마법사",
+        "role": "ranged",
+        "hp": 1975,
+        "maxHp": 2000,
+        "mp": 156,
+        "maxMp": 200,
+        "st": 98,
+        "maxSt": 100,
+        "dps": 639.1883322764743
+      }
+    ],
+    "monsterMembers": [
+      {
+        "name": "허수아비-1",
+        "role": "tank",
+        "hp": 0,
+        "maxHp": 5000,
+        "mp": 100,
+        "maxMp": 100,
+        "st": 9737,
+        "maxSt": 9999,
+        "dps": 3.170577045022194
+      }
+    ],
+    "durationSeconds": 7.885
+  },
+  {
     "battleAt": "2026-06-11T07:29:27.646Z",
     "result": "승리",
     "playerMembers": [

@@ -66,11 +66,11 @@ function updateResources() {
 }
 
 function hasEnoughMpForAction(unit) {
-  return !isMagicRole(unit.role) || (Number(unit.mp) || 0) >= MP_ACTION_COST;
+  return !isMagicAttackUnit(unit) || (Number(unit.mp) || 0) >= MP_ACTION_COST;
 }
 
 function spendMpForAction(unit) {
-  if (!isMagicRole(unit.role)) {
+  if (!isMagicAttackUnit(unit)) {
     return;
   }
 
@@ -82,7 +82,7 @@ function markAction(unit) {
 }
 
 function hasEnoughStForPhysicalAttack(unit) {
-  if (!isPhysicalAttackRole(unit.role)) {
+  if (!isPhysicalAttackUnit(unit)) {
     return true;
   }
 
@@ -95,7 +95,7 @@ function hasEnoughStForPhysicalAttack(unit) {
 }
 
 function spendStForPhysicalAttack(unit) {
-  if (!isPhysicalAttackRole(unit.role)) {
+  if (!isPhysicalAttackUnit(unit)) {
     return;
   }
 
@@ -330,20 +330,20 @@ function takeAction(unit, allies, enemies) {
     return;
   }
 
-  if (unit.role === "ranged") {
+  if (isMagicAttackUnit(unit)) {
     if (!hasEnoughMpForAction(unit)) {
       return;
     }
 
     spendMpForAction(unit);
-    startCast(unit, { type: "attack", target, ranged: true });
+    startCast(unit, { type: "attack", target, ranged: getUnitRange(unit) > ATTACK_RANGE_UNIT });
   } else {
     if (!hasEnoughStForPhysicalAttack(unit)) {
       return;
     }
 
     spendStForPhysicalAttack(unit);
-    startCast(unit, { type: "attack", target, ranged: false });
+    startCast(unit, { type: "attack", target, ranged: getUnitRange(unit) > ATTACK_RANGE_UNIT });
   }
 }
 

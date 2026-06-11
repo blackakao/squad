@@ -105,6 +105,8 @@ const weaponCategoryNameEl = document.getElementById("weaponCategoryName");
 const weaponCategoryHandTypeEl = document.getElementById("weaponCategoryHandType");
 const weaponCategoryAttackRangeEl = document.getElementById("weaponCategoryAttackRange");
 const weaponCategoryAttackSpeedEl = document.getElementById("weaponCategoryAttackSpeed");
+const weaponCategoryCastSpeedEl = document.getElementById("weaponCategoryCastSpeed");
+const weaponCategoryAttackTypeEl = document.getElementById("weaponCategoryAttackType");
 const weaponCategorySlotTypeEl = document.getElementById("weaponCategorySlotType");
 const armorCategoryModalEl = document.getElementById("armorCategoryModal");
 const armorCategoryModalTitleEl = document.getElementById("armorCategoryModalTitle");
@@ -151,15 +153,22 @@ const WEAPON_SLOT_TYPES = [
   { key: "subOnly", label: "보조무기 자리만" },
   { key: "both", label: "양쪽 다 착용 가능" }
 ];
+const WEAPON_ATTACK_TYPES = [
+  { key: "physical", label: "물리" },
+  { key: "magic", label: "마법" }
+];
+const BARE_HAND_ATTACK_SPEED = 1;
+const BARE_HAND_CAST_SPEED = 0.5;
+const BARE_HAND_ATTACK_TYPE = "physical";
 const DEFAULT_CATEGORIES = {
   weapons: [
-    { key: "oneHandSword", label: "한손검", handType: "oneHand", attackRange: 1, attackSpeed: 0, slotType: "both" },
-    { key: "twoHandSword", label: "양손검", handType: "twoHand", attackRange: 1, attackSpeed: 0, slotType: "mainOnly" },
-    { key: "oneHandMace", label: "한손둔기", handType: "oneHand", attackRange: 1, attackSpeed: 0, slotType: "both" },
-    { key: "twoHandMace", label: "양손둔기", handType: "twoHand", attackRange: 1, attackSpeed: 0, slotType: "mainOnly" },
-    { key: "staff", label: "지팡이", handType: "twoHand", attackRange: 3, attackSpeed: 0, slotType: "mainOnly" },
-    { key: "bow", label: "활", handType: "twoHand", attackRange: 5, attackSpeed: 0, slotType: "mainOnly" },
-    { key: "gun", label: "총", handType: "twoHand", attackRange: 5, attackSpeed: 0, slotType: "mainOnly" }
+    { key: "oneHandSword", label: "한손검", handType: "oneHand", attackRange: 1, attackSpeed: 1, castSpeed: 0.5, attackType: "physical", slotType: "both" },
+    { key: "twoHandSword", label: "양손검", handType: "twoHand", attackRange: 1, attackSpeed: 1.2, castSpeed: 0.5, attackType: "physical", slotType: "mainOnly" },
+    { key: "oneHandMace", label: "한손둔기", handType: "oneHand", attackRange: 1, attackSpeed: 1.1, castSpeed: 0.5, attackType: "physical", slotType: "both" },
+    { key: "twoHandMace", label: "양손둔기", handType: "twoHand", attackRange: 1, attackSpeed: 1.3, castSpeed: 0.5, attackType: "physical", slotType: "mainOnly" },
+    { key: "staff", label: "지팡이", handType: "twoHand", attackRange: 3, attackSpeed: 1, castSpeed: 1, attackType: "magic", slotType: "mainOnly" },
+    { key: "bow", label: "활", handType: "twoHand", attackRange: 5, attackSpeed: 1, castSpeed: 0.5, attackType: "physical", slotType: "mainOnly" },
+    { key: "gun", label: "총", handType: "twoHand", attackRange: 5, attackSpeed: 0.8, castSpeed: 0.5, attackType: "physical", slotType: "mainOnly" }
   ],
   armors: [
     { key: "plate", label: "판금" },
@@ -330,11 +339,44 @@ function getStatAbilityBonus(attributes = {}) {
     atk: str + Math.floor(focus / 5),
     magic: int,
     speed: Math.floor(agi / 5) * 0.1,
-    attackSpeed: Math.floor(agi / 10) * 0.1 + Math.floor(focus / 20) * 0.1,
-    castSpeed: Math.floor(agi / 10) * 0.1 + Math.floor(focus / 5) * 0.1,
+    attackSpeed: Math.floor(agi / 10) * -0.1,
+    castSpeed: Math.floor(focus / 10) * -0.1,
     defense: Math.floor(str / 10) + Math.floor(vit / 5),
     resistance: Math.floor(vit / 10) + Math.floor(int / 10) + Math.floor(wis / 5),
     attackRange: 0
+  };
+}
+
+function getEquippedWeaponItemForCombat(character) {
+  const equipment = createEquipmentSlots(character?.equipment);
+  const mainWeapon = getItemById(equipment.mainWeapon);
+
+  if (isWeaponItem(mainWeapon)) {
+    return mainWeapon;
+  }
+
+  const subWeapon = getItemById(equipment.subWeapon);
+  return isWeaponItem(subWeapon) ? subWeapon : null;
+}
+
+function getWeaponCombatSettings(character) {
+  const weapon = getEquippedWeaponItemForCombat(character);
+  const category = getWeaponCategory(weapon?.weaponCategory);
+  const categoryAttackSpeed = Number(category?.attackSpeed);
+  const categoryCastSpeed = Number(category?.castSpeed);
+
+  if (!category) {
+    return {
+      attackSpeed: BARE_HAND_ATTACK_SPEED,
+      castSpeed: BARE_HAND_CAST_SPEED,
+      attackType: BARE_HAND_ATTACK_TYPE
+    };
+  }
+
+  return {
+    attackSpeed: Number.isFinite(categoryAttackSpeed) && categoryAttackSpeed > 0 ? categoryAttackSpeed : BARE_HAND_ATTACK_SPEED,
+    castSpeed: Math.max(0, Number.isFinite(categoryCastSpeed) ? categoryCastSpeed : BARE_HAND_CAST_SPEED),
+    attackType: WEAPON_ATTACK_TYPES.some(type => type.key === category.attackType) ? category.attackType : BARE_HAND_ATTACK_TYPE
   };
 }
 
@@ -344,6 +386,7 @@ function applyCharacterStatAbilities(character) {
   const bonus = getStatAbilityBonus(attributes);
   const equipment = createEquipmentSlots(character.equipment);
   const equipmentBonus = getCharacterEquipmentBonus({ equipment });
+  const weaponCombat = getWeaponCombatSettings({ ...character, equipment });
 
   return {
     ...character,
@@ -355,8 +398,9 @@ function applyCharacterStatAbilities(character) {
     atk: base.atk + bonus.atk + equipmentBonus.atk,
     magic: base.magic + bonus.magic + equipmentBonus.magic,
     speed: Math.round((base.speed + bonus.speed + equipmentBonus.speed) * 10) / 10,
-    attackSpeed: Math.max(0.1, Math.round((base.attackSpeed - bonus.attackSpeed + equipmentBonus.attackSpeed) * 100) / 100),
-    castSpeed: Math.max(0, Math.round((base.castSpeed - bonus.castSpeed + equipmentBonus.castSpeed) * 100) / 100),
+    attackSpeed: Math.max(0.1, Math.round((weaponCombat.attackSpeed + bonus.attackSpeed) * 100) / 100),
+    castSpeed: Math.max(0, Math.round((weaponCombat.castSpeed + bonus.castSpeed) * 100) / 100),
+    attackType: weaponCombat.attackType,
     defense: base.defense + bonus.defense + equipmentBonus.defense,
     resistance: base.resistance + bonus.resistance + equipmentBonus.resistance,
     attackRange: Math.max(1, base.attackRange + bonus.attackRange + equipmentBonus.attackRange)
@@ -399,13 +443,29 @@ function isMagicRole(role) {
   return normalizeRole(role) === "ranged" || normalizeRole(role) === "healer";
 }
 
+function getUnitAttackType(unit) {
+  if (WEAPON_ATTACK_TYPES.some(type => type.key === unit?.attackType)) {
+    return unit.attackType;
+  }
+
+  return isMagicRole(unit?.role) ? "magic" : "physical";
+}
+
+function isMagicAttackUnit(unit) {
+  return getUnitAttackType(unit) === "magic";
+}
+
 function isPhysicalAttackRole(role) {
   const normalizedRole = normalizeRole(role);
   return normalizedRole === "tank" || normalizedRole === "melee";
 }
 
+function isPhysicalAttackUnit(unit) {
+  return getUnitAttackType(unit) === "physical";
+}
+
 function getReducedDamage(attacker, target) {
-  const isMagicDamage = isMagicRole(attacker.role);
+  const isMagicDamage = isMagicAttackUnit(attacker);
   const rawDamage = Number(isMagicDamage ? attacker.magic : attacker.atk) || 0;
   const mitigation = Math.max(0, Math.min(100, Number(isMagicDamage ? target.resistance : target.defense) || 0));
   return Math.max(0, Math.round(rawDamage * (1 - mitigation / 100) * 10) / 10);

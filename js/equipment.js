@@ -74,7 +74,9 @@ function applyWeaponCategoryStats(item) {
     weaponCategory: category.key,
     handType: category.handType,
     attackRange: category.attackRange,
-    attackSpeed: category.attackSpeed
+    attackSpeed: category.attackSpeed,
+    castSpeed: category.castSpeed,
+    attackType: category.attackType
   };
 }
 
@@ -98,6 +100,7 @@ function normalizeItemJson(items) {
       slot: String(item.slot ?? ""),
       weaponCategory: String(item.weaponCategory ?? getDefaultWeaponCategory(item)),
       handType: String(item.handType ?? getDefaultHandType(item)),
+      attackType: String(item.attackType ?? ""),
       armorCategory: String(item.armorCategory ?? getDefaultArmorCategory(item)),
       ...stats
     };
@@ -115,6 +118,7 @@ function normalizeItemJson(items) {
           ...item,
           weaponCategory: "",
           handType: "",
+          attackType: "",
           armorCategory: getArmorCategories().some(category => category.key === item.armorCategory) ? item.armorCategory : getArmorCategories()[0]?.key
         };
       }
@@ -123,7 +127,8 @@ function normalizeItemJson(items) {
         ...item,
         armorCategory: "",
         weaponCategory: "",
-        handType: ""
+        handType: "",
+        attackType: ""
       };
     })
     .filter(item => !isWeaponItem(item) || item.weaponCategory);
@@ -228,13 +233,16 @@ function syncItemWeaponFields() {
     itemWeaponSlotTypeEl.value = getWeaponSlotTypeLabel(weaponCategory.slotType);
     itemAttackRangeEl.value = weaponCategory.attackRange;
     itemAttackSpeedEl.value = weaponCategory.attackSpeed;
+    itemCastSpeedEl.value = weaponCategory.castSpeed;
     itemAttackRangeEl.disabled = true;
     itemAttackSpeedEl.disabled = true;
+    itemCastSpeedEl.disabled = true;
   } else {
     itemHandTypeEl.value = "";
     itemWeaponSlotTypeEl.value = "";
     itemAttackRangeEl.disabled = false;
     itemAttackSpeedEl.disabled = false;
+    itemCastSpeedEl.disabled = false;
   }
 }
 
@@ -260,6 +268,9 @@ function getCharacterEquipmentBonus(character) {
     }
 
     ABILITY_ROWS.forEach(([, key]) => {
+      if (isWeaponItem(item) && (key === "attackSpeed" || key === "castSpeed")) {
+        return;
+      }
       bonus[key] += Number(item[key]) || 0;
     });
     return bonus;
@@ -280,7 +291,7 @@ function formatSignedValue(value) {
 
 function getItemStatSummary(item) {
   const weaponSummary = isWeaponItem(item)
-    ? [`무기 카테고리 ${getWeaponCategoryLabel(item.weaponCategory)}`, `착용 방식 ${getHandTypeLabel(item.handType)}`, `착용 가능 슬롯 ${getWeaponSlotTypeLabel(getWeaponCategory(item.weaponCategory)?.slotType)}`]
+    ? [`무기 카테고리 ${getWeaponCategoryLabel(item.weaponCategory)}`, `착용 방식 ${getHandTypeLabel(item.handType)}`, `착용 가능 슬롯 ${getWeaponSlotTypeLabel(getWeaponCategory(item.weaponCategory)?.slotType)}`, `공격 타입 ${getWeaponAttackTypeLabel(getWeaponCategory(item.weaponCategory)?.attackType)}`]
     : [];
   const armorSummary = isArmorSlot(item.slot)
     ? [`방어구 카테고리 ${getArmorCategoryLabel(item.armorCategory)}`]
@@ -604,6 +615,7 @@ async function saveItemFromForm(event) {
     slot: itemSlotEl.value,
     weaponCategory: isWeapon ? weaponCategory?.key ?? "" : "",
     handType: isWeapon ? weaponCategory?.handType ?? "" : "",
+    attackType: isWeapon ? weaponCategory?.attackType ?? BARE_HAND_ATTACK_TYPE : "",
     armorCategory: isArmorSlot(itemSlotEl.value) ? itemArmorCategoryEl.value : "",
     hp: Number(itemHpEl.value),
     mp: Number(itemMpEl.value),
@@ -612,7 +624,7 @@ async function saveItemFromForm(event) {
     magic: Number(itemMagicEl.value),
     speed: Number(itemSpeedEl.value),
     attackSpeed: isWeapon ? Number(weaponCategory?.attackSpeed ?? 0) : Number(itemAttackSpeedEl.value),
-    castSpeed: Number(itemCastSpeedEl.value),
+    castSpeed: isWeapon ? Number(weaponCategory?.castSpeed ?? BARE_HAND_CAST_SPEED) : Number(itemCastSpeedEl.value),
     defense: Number(itemDefenseEl.value),
     resistance: Number(itemResistanceEl.value),
     attackRange: isWeapon ? Number(weaponCategory?.attackRange ?? 1) : Number(itemAttackRangeEl.value)

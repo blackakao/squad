@@ -5,7 +5,9 @@
     "label": "한손검",
     "handType": "oneHand",
     "attackRange": 1,
-    "attackSpeed": 0,
+    "attackSpeed": 2,
+    "castSpeed": 0.5,
+    "attackType": "physical",
     "slotType": "both"
   },
   {
@@ -14,7 +16,9 @@
     "label": "양손검",
     "handType": "twoHand",
     "attackRange": 1,
-    "attackSpeed": 0,
+    "attackSpeed": 3.5,
+    "castSpeed": 1,
+    "attackType": "physical",
     "slotType": "mainOnly"
   },
   {
@@ -23,7 +27,9 @@
     "label": "한손둔기",
     "handType": "oneHand",
     "attackRange": 1,
-    "attackSpeed": 0,
+    "attackSpeed": 2.5,
+    "castSpeed": 1.5,
+    "attackType": "physical",
     "slotType": "both"
   },
   {
@@ -32,7 +38,9 @@
     "label": "양손둔기",
     "handType": "twoHand",
     "attackRange": 1,
-    "attackSpeed": 0,
+    "attackSpeed": 4,
+    "castSpeed": 1.5,
+    "attackType": "physical",
     "slotType": "mainOnly"
   },
   {
@@ -41,7 +49,9 @@
     "label": "지팡이",
     "handType": "twoHand",
     "attackRange": 3,
-    "attackSpeed": 0,
+    "attackSpeed": 1,
+    "castSpeed": 3,
+    "attackType": "magic",
     "slotType": "mainOnly"
   },
   {
@@ -50,17 +60,21 @@
     "label": "활",
     "handType": "twoHand",
     "attackRange": 5,
-    "attackSpeed": 0,
+    "attackSpeed": 3,
+    "castSpeed": 2,
+    "attackType": "physical",
     "slotType": "mainOnly"
   },
   {
     "type": "weapon",
     "key": "gun",
     "label": "총",
-    "handType": "twoHand",
+    "handType": "oneHand",
     "attackRange": 5,
-    "attackSpeed": 0,
-    "slotType": "mainOnly"
+    "attackSpeed": 1.5,
+    "castSpeed": 0.5,
+    "attackType": "physical",
+    "slotType": "both"
   },
   {
     "type": "weapon",
@@ -68,7 +82,9 @@
     "label": "방패",
     "handType": "oneHand",
     "attackRange": 1,
-    "attackSpeed": 0,
+    "attackSpeed": 1,
+    "castSpeed": 0.5,
+    "attackType": "physical",
     "slotType": "subOnly"
   },
   {

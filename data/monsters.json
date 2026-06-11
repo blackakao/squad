@@ -17,11 +17,11 @@
   },
   {
     "label": "오크",
-    "hp": 120,
+    "hp": 5000,
     "mp": 100,
     "st": 100,
     "atk": 12,
-    "magic": 10,
+    "magic": 200,
     "speed": 1,
     "attackSpeed": 1,
     "castSpeed": 3,

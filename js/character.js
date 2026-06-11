@@ -144,6 +144,7 @@ function createCharacter(characterData, index) {
     speed: derivedCharacter.speed,
     attackSpeed: derivedCharacter.attackSpeed,
     castSpeed: derivedCharacter.castSpeed,
+    attackType: derivedCharacter.attackType,
     defense: derivedCharacter.defense,
     resistance: derivedCharacter.resistance,
     attackRange: derivedCharacter.attackRange,
