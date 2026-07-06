@@ -6,9 +6,14 @@ const playerStatusEl = document.getElementById("playerStatus");
 const enemyStatusEl = document.getElementById("enemyStatus");
 const battleBtnEl = document.getElementById("battleBtn");
 const enemyButtonsEl = document.getElementById("enemyButtons");
+const battleTeamButtonsEl = document.getElementById("battleTeamButtons");
+const battleSelectionSummaryEl = document.getElementById("battleSelectionSummary");
+const enemyControlTitleEl = document.getElementById("enemyControlTitle");
+const enemyStatusTitleEl = document.getElementById("enemyStatusTitle");
 const battlePageEl = document.getElementById("root");
 const monsterPageEl = document.getElementById("monsterPage");
 const characterPageEl = document.getElementById("characterPage");
+const teamPageEl = document.getElementById("teamPage");
 const statsPageEl = document.getElementById("statsPage");
 const recordPageEl = document.getElementById("recordPage");
 const equipmentPageEl = document.getElementById("equipmentPage");
@@ -113,6 +118,13 @@ const armorCategoryModalTitleEl = document.getElementById("armorCategoryModalTit
 const armorCategoryFormEl = document.getElementById("armorCategoryForm");
 const armorCategoryEditIndexEl = document.getElementById("armorCategoryEditIndex");
 const armorCategoryNameEl = document.getElementById("armorCategoryName");
+const teamNameEl = document.getElementById("teamName");
+const teamListEl = document.getElementById("teamList");
+const teamSelectedNameEl = document.getElementById("teamSelectedName");
+const teamMemberSummaryEl = document.getElementById("teamMemberSummary");
+const teamMemberListEl = document.getElementById("teamMemberList");
+const teamCharacterListEl = document.getElementById("teamCharacterList");
+const battleScreenModalEl = document.getElementById("battleScreenModal");
 
 const ROLES = ["tank", "melee", "ranged", "healer", "special"];
 const ROLE_ALIASES = {
@@ -208,6 +220,7 @@ const API_URLS = {
   monsters: "/api/monsters",
   characters: "/api/characters",
   factions: "/api/factions",
+  teams: "/api/teams",
   records: "/api/records",
   items: "/api/items",
   categories: "/api/categories"
@@ -250,6 +263,7 @@ let scale = 1;
 let monsterJson = [];
 let characterJson = [];
 let factionsJson = [];
+let teamsJson = [];
 let battleRecordsJson = [];
 let itemsJson = [];
 let categoriesJson = {
@@ -265,6 +279,12 @@ let selectedEquipmentCharacterIndex = "";
 let selectedItemSlotFilter = "all";
 let selectedEquipmentItemSlotFilter = "all";
 let selectedCharacterRoleFilter = "all";
+let selectedTeamIndex = "";
+let selectedTeamMemberIds = [];
+let selectedBattleTeamIds = new Set();
+let selectedBattleCharacterIds = new Set();
+let selectedEnemyTeamIndex = "";
+let battleMode = "monster";
 const portraitImageCache = new Map();
 const portraitDrafts = {
   monster: { dataUrl: "", cleared: false },
@@ -731,6 +751,7 @@ async function showPage(pageName) {
   battlePageEl.classList.toggle("hidden", pageName !== "battle");
   monsterPageEl.classList.toggle("hidden", pageName !== "monster");
   characterPageEl.classList.toggle("hidden", pageName !== "character");
+  teamPageEl.classList.toggle("hidden", pageName !== "team");
   factionPageEl.classList.toggle("hidden", pageName !== "faction");
   statsPageEl.classList.toggle("hidden", pageName !== "stats");
   recordPageEl.classList.toggle("hidden", pageName !== "record");
@@ -748,7 +769,13 @@ async function showPage(pageName) {
     await loadFactionJson();
     await loadCharacterJson();
     playerSquad = [];
+    selectedBattleTeamIds.clear();
+    selectedBattleCharacterIds.clear();
     refreshCharacterUI();
+  } else if (pageName === "team") {
+    await loadCharacterJson();
+    await loadTeamJson();
+    renderTeamPage();
   } else if (pageName === "faction") {
     await loadFactionJson();
     await loadCharacterJson();
@@ -777,6 +804,9 @@ async function showPage(pageName) {
   }
 
   if (pageName === "battle") {
+    await loadTeamJson();
+    renderBattleTeamButtons();
+    renderBattleEnemyControls();
     resizeCanvas();
   }
 }
@@ -854,8 +884,22 @@ function updateStatusUI() {
 }
 
 function resizeCanvas() {
+  if (!canvas?.parentElement) {
+    return;
+  }
+
   const rect = canvas.parentElement.getBoundingClientRect();
   canvas.width = rect.width;
   canvas.height = rect.height;
   scale = canvas.width / 400;
+}
+
+function openBattleScreenModal() {
+  battleScreenModalEl.classList.remove("hidden");
+  resizeCanvas();
+  updateStatusUI();
+}
+
+function closeBattleScreenModal() {
+  battleScreenModalEl.classList.add("hidden");
 }

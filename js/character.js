@@ -116,18 +116,37 @@ async function deleteSelectedCharacters() {
 
   checkedIndexes.forEach(index => characterJson.splice(index, 1));
   playerSquad = [];
+  enemySquad = [];
+  selectedEnemyTeamIndex = "";
+  selectedBattleCharacterIds.clear();
+  selectedBattleTeamIds.clear();
+  if (typeof syncTeamsAfterCharacterDeletion === "function") {
+    syncTeamsAfterCharacterDeletion(checkedIndexes);
+  }
   try {
     await saveCharacterJson();
+    if (typeof saveTeamJson === "function") {
+      await saveTeamJson();
+    }
     refreshCharacterUI();
+    if (typeof renderBattleTeamButtons === "function") {
+      renderBattleTeamButtons();
+      renderBattleEnemyControls();
+    }
   } catch (error) {
     logError("character", "캐릭터 삭제 처리 중 실패했습니다.", error);
     alert("캐릭터 데이터를 저장하지 못했습니다.");
   }
 }
 
-function createCharacter(characterData, index) {
+function createCharacter(characterData, index, side = "player") {
   const derivedCharacter = applyCharacterStatAbilities(characterData);
   const role = derivedCharacter.role;
+  const fieldWidth = canvas.width || 400;
+  const fieldHeight = canvas.height || 300;
+  const x = side === "enemy"
+    ? fieldWidth * (0.7 + Math.random() * 0.25)
+    : fieldWidth * (Math.random() * 0.3);
 
   return {
     id: index,
@@ -151,8 +170,8 @@ function createCharacter(characterData, index) {
     attributes: derivedCharacter.attributes,
     faction: derivedCharacter.faction ?? getDefaultFactionName(),
     portrait: derivedCharacter.portrait,
-    x: Math.random() * canvas.width * 0.3,
-    y: Math.random() * canvas.height,
+    x,
+    y: Math.random() * fieldHeight,
     vx: 0,
     vy: 0,
     attackCooldown: 0,
@@ -173,20 +192,27 @@ function initCharacters() {
 
     allCharacters.push(character);
     button.innerText = character.name;
-    button.onclick = () => toggleSelect(character, button);
+    button.onclick = () => toggleSelect(character.id);
+    button.style.background = selectedBattleCharacterIds.has(character.id) ? "lightblue" : "";
 
     charactersEl.appendChild(button);
   });
 }
 
-function toggleSelect(character, button) {
-  if (playerSquad.includes(character)) {
-    playerSquad = playerSquad.filter(unit => unit !== character);
-    button.style.background = "";
-  } else if (playerSquad.length < MAX_PLAYER_SQUAD) {
-    playerSquad.push(character);
-    button.style.background = "lightblue";
+function toggleSelect(characterId) {
+  if (selectedBattleCharacterIds.has(characterId)) {
+    selectedBattleCharacterIds.delete(characterId);
+  } else {
+    const nextIds = getSelectedBattleCharacterIds();
+    if (!nextIds.includes(characterId) && nextIds.length >= MAX_PLAYER_SQUAD) {
+      alert(`아군은 최대 ${MAX_PLAYER_SQUAD}명까지 선택할 수 있습니다.`);
+      return;
+    }
+    selectedBattleCharacterIds.add(characterId);
   }
 
+  rebuildPlayerSquadFromSelection();
+  initCharacters();
+  renderBattleSelectionSummary();
   updateStatusUI();
 }

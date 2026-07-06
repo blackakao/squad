@@ -9,7 +9,11 @@ async function saveMonsterJson() {
 }
 
 function refreshMonsterUI() {
-  renderEnemyButtons();
+  if (battleMode === "team") {
+    renderBattleEnemyControls();
+  } else {
+    renderEnemyButtons();
+  }
   renderMonsterTable();
 }
 
@@ -17,6 +21,7 @@ function renderEnemyButtons() {
   enemyButtonsEl.innerHTML = monsterJson.map((monster, index) => (
     `<button onclick="selectEnemy(${index})">${escapeHtml(monster.label)}</button>`
   )).join("");
+  renderBattleSelectionSummary();
 }
 
 function renderMonsterTable() {
@@ -130,6 +135,7 @@ async function deleteSelectedMonsters() {
     await saveMonsterJson();
     refreshMonsterUI();
     updateStatusUI();
+    renderBattleSelectionSummary();
   } catch (error) {
     logError("monster", "몬스터 삭제 처리 중 실패했습니다.", error);
     alert("몬스터 데이터를 저장하지 못했습니다.");
@@ -143,6 +149,8 @@ function createEnemy(monsterIndex) {
   }
 
   const role = monster.role;
+  const fieldWidth = canvas.width || 400;
+  const fieldHeight = canvas.height || 300;
 
   return {
     id: enemySquad.length,
@@ -164,8 +172,8 @@ function createEnemy(monsterIndex) {
     attackRange: monster.attackRange,
     portrait: monster.portrait,
     faction: "몬스터",
-    x: Math.random() * 100 + 250,
-    y: Math.random() * 200 + 50,
+    x: fieldWidth * (0.7 + Math.random() * 0.25),
+    y: fieldHeight * (0.15 + Math.random() * 0.7),
     vx: 0,
     vy: 0,
     attackCooldown: 0,
@@ -177,6 +185,10 @@ function createEnemy(monsterIndex) {
 }
 
 function selectEnemy(monsterIndex) {
+  if (battleMode === "team") {
+    return;
+  }
+
   const enemy = createEnemy(monsterIndex);
   if (!enemy) {
     alert("존재하지 않는 몬스터입니다.");
@@ -185,5 +197,6 @@ function selectEnemy(monsterIndex) {
 
   enemySquad.push(enemy);
   updateStatusUI();
+  renderBattleSelectionSummary();
   log(`${enemy.name} 추가됨`);
 }

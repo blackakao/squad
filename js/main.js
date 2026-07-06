@@ -12,10 +12,13 @@ async function initApp() {
     ]);
     await loadItemJson();
     await loadCharacterJson();
+    await loadTeamJson();
 
     initRoleOptions();
     refreshMonsterUI();
     refreshCharacterUI();
+    renderBattleTeamButtons();
+    renderBattleSelectionSummary();
     renderBattleRecords();
     renderItemPage();
     updateBattleButton();

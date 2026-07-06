@@ -128,6 +128,19 @@ function triggerEffect(unit, effectType) {
   unit.effectTimer = EFFECT_DURATION;
 }
 
+function placeSquadForBattle(units, side) {
+  const fieldWidth = canvas.width || 400;
+  const fieldHeight = canvas.height || 300;
+
+  units.forEach(unit => {
+    unit.x = side === "enemy"
+      ? fieldWidth * (0.7 + Math.random() * 0.25)
+      : fieldWidth * (0.05 + Math.random() * 0.25);
+    unit.y = fieldHeight * (0.08 + Math.random() * 0.84);
+    clampPosition(unit);
+  });
+}
+
 async function finishBattle(result) {
   updateResources();
   lastBattleDurationMs = battleStartedAt ? Date.now() - battleStartedAt : lastBattleDurationMs;
@@ -152,6 +165,11 @@ async function finishBattle(result) {
 }
 
 function startBattle() {
+  rebuildPlayerSquadFromSelection();
+  if (battleMode === "team" && selectedEnemyTeamIndex !== "") {
+    enemySquad = createSquadFromCharacterIds(getTeamCharacterIds(teamsJson[Number(selectedEnemyTeamIndex)]), "enemy");
+  }
+
   if (playerSquad.length < 1) {
     alert("최소 1명 필요");
     return;
@@ -162,8 +180,11 @@ function startBattle() {
     return;
   }
 
+  openBattleScreenModal();
   playerSquad.forEach(resetUnitForBattle);
   enemySquad.forEach(resetUnitForBattle);
+  placeSquadForBattle(playerSquad, "player");
+  placeSquadForBattle(enemySquad, "enemy");
 
   lastBattleDurationMs = 0;
   battleStartedAt = Date.now();
@@ -556,6 +577,9 @@ function resetGame() {
   gameSpeed = 1;
   playerSquad = [];
   enemySquad = [];
+  selectedBattleTeamIds.clear();
+  selectedBattleCharacterIds.clear();
+  selectedEnemyTeamIndex = "";
   projectiles = [];
   battleStartedAt = null;
   battleStartedAtText = "";
@@ -563,6 +587,9 @@ function resetGame() {
   lastBattleDurationMs = 0;
 
   initCharacters();
+  renderBattleTeamButtons();
+  renderBattleEnemyControls();
+  renderBattleSelectionSummary();
   updateBattleButton();
   updateStatusUI();
   ctx.clearRect(0, 0, canvas.width, canvas.height);

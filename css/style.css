@@ -50,8 +50,13 @@ h2 {
 
 .char-panel,
 .enemy-control {
-  height: 40%;
+  flex: 1;
   overflow-y: auto;
+}
+
+.battle-mode-panel label {
+  display: block;
+  margin: 6px 0;
 }
 
 .status-panel {
@@ -67,7 +72,12 @@ h2 {
 }
 
 .control-panel {
-  height: 50%;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.battle-selection-panel {
+  flex: 2;
   overflow-y: auto;
 }
 
@@ -79,6 +89,11 @@ h2 {
 
 button {
   margin: 3px;
+}
+
+button.selected,
+#battleTeamButtons button.selected {
+  background: lightblue;
 }
 
 .unit-status {
@@ -169,6 +184,7 @@ button {
 
 #monsterPage,
 #characterPage,
+#teamPage,
 #factionPage,
 #statsPage,
 #equipmentPage,
@@ -179,6 +195,107 @@ button {
   box-sizing: border-box;
   height: calc(100vh - 96px);
   padding: 5px 16px 16px;
+}
+
+.team-manager {
+  display: grid;
+  grid-template-columns: minmax(200px, 280px) minmax(280px, 1fr) minmax(220px, 320px);
+  gap: 12px;
+  min-height: 520px;
+}
+
+.team-list-panel,
+.team-editor-panel,
+.team-character-panel {
+  border: 1px solid #ccc;
+  padding: 10px;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+.team-list-button,
+.team-character-button {
+  display: block;
+  width: 100%;
+  text-align: left;
+}
+
+.team-list-button.selected,
+.team-character-button.selected {
+  background: lightblue;
+}
+
+.team-editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.team-member-list {
+  display: grid;
+  gap: 6px;
+}
+
+.team-member-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #ddd;
+  padding: 6px;
+  box-sizing: border-box;
+}
+
+.battle-selection-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.battle-selection-section {
+  border: 1px solid #ddd;
+  padding: 8px;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.battle-selection-section-title {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+
+.battle-selection-meta {
+  display: grid;
+  gap: 4px;
+  font-size: 12px;
+  color: #333;
+  word-break: break-word;
+}
+
+.battle-selection-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 12px;
+}
+
+.battle-selection-table th,
+.battle-selection-table td {
+  border: 1px solid #ddd;
+  padding: 4px;
+  text-align: center;
+  word-break: break-word;
+}
+
+.battle-selection-table th:first-child,
+.battle-selection-table td:first-child {
+  width: 30%;
 }
 
 .category-manager {
@@ -375,12 +492,14 @@ button {
 
 @media (max-width: 720px) {
   .stat-manager,
-  .category-manager {
+  .category-manager,
+  .team-manager {
     grid-template-columns: 1fr;
   }
 
   .equipment-manager,
-  .equipment-slot-grid {
+  .equipment-slot-grid,
+  .battle-selection-grid {
     grid-template-columns: 1fr;
   }
 }
@@ -573,6 +692,75 @@ button {
   background: #fff;
   padding: 16px;
   box-sizing: border-box;
+}
+
+.battle-screen-modal-content {
+  width: min(1280px, calc(100vw - 24px));
+  height: min(820px, calc(100vh - 24px));
+  border: 1px solid #999;
+  background: #fff;
+  padding: 12px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+.battle-screen-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.battle-screen-header h4 {
+  margin: 0;
+}
+
+.battle-screen-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.battle-speed-label {
+  font-size: 12px;
+  color: #555;
+  margin-right: 2px;
+}
+
+.battle-screen-layout {
+  display: grid;
+  grid-template-columns: 20% 60% 20%;
+  gap: 8px;
+  min-height: 0;
+  flex: 1;
+}
+
+.battle-side-panel,
+.battle-field-panel {
+  border: 1px solid #ccc;
+  padding: 8px;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.battle-side-panel {
+  overflow-y: auto;
+}
+
+.battle-field-panel {
+  display: flex;
+  min-height: 0;
+}
+
+@media (max-width: 820px) {
+  .battle-screen-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(120px, 20%) minmax(280px, 1fr) minmax(120px, 20%);
+  }
 }
 
 .form-row {

@@ -13,6 +13,7 @@
 <div class="nav">
   <button onclick="showPage('battle')">전투</button>
   <button onclick="showPage('character')">캐릭터 관리</button>
+  <button onclick="showPage('team')">팀 편성</button>
   <button onclick="showPage('faction')">진영 관리</button>
   <button onclick="showPage('stats')">스탯 관리</button>
   <button onclick="showPage('equipment')">장비 착용</button>
@@ -25,43 +26,67 @@
 
 <div id="root" class="page">
   <div class="col left">
+    <div class="panel battle-mode-panel">
+      <h4>전투 방식</h4>
+      <label><input type="radio" name="battleMode" value="monster" checked onchange="changeBattleMode(this.value)"> 팀 vs 몬스터</label>
+      <label><input type="radio" name="battleMode" value="team" onchange="changeBattleMode(this.value)"> 팀 vs 팀</label>
+    </div>
     <div class="panel char-panel">
+      <h4>아군 팀</h4>
+      <div id="battleTeamButtons"></div>
       <h4>내 캐릭터</h4>
       <div id="characters"></div>
-    </div>
-
-    <div class="panel status-panel">
-      <h4>아군 상태</h4>
-      <div id="playerStatus"></div>
     </div>
   </div>
 
   <div class="col center">
-    <div class="panel battle-panel">
-      <canvas id="battleCanvas"></canvas>
+    <div class="panel battle-selection-panel">
+      <h4>선택 현황</h4>
+      <div id="battleSelectionSummary"></div>
     </div>
 
     <div class="panel control-panel">
       <h4>조작</h4>
       <button id="battleBtn" onclick="toggleBattle()">전투 시작</button>
+      <button onclick="openBattleScreenModal()">전투 화면 보기</button>
       <button onclick="resetGame()">초기화</button>
-
-      <h4>배속</h4>
-      <button onclick="setSpeed(1)">x1</button>
-      <button onclick="setSpeed(2)">x2</button>
-      <button onclick="setSpeed(4)">x4</button>
     </div>
   </div>
 
   <div class="col right">
     <div class="panel enemy-control">
-      <h4>적 추가</h4>
+      <h4 id="enemyControlTitle">적 추가</h4>
       <div id="enemyButtons"></div>
     </div>
+  </div>
+</div>
 
-    <div class="panel status-panel">
-      <h4>적 상태</h4>
-      <div id="enemyStatus"></div>
+<div id="teamPage" class="page hidden">
+  <div class="panel">
+    <h4>팀 편성</h4>
+    <div class="team-manager">
+      <div class="team-list-panel">
+        <div class="data-toolbar">
+          <input id="teamName" placeholder="팀 이름">
+          <button onclick="addTeamFromInput()">팀 추가</button>
+          <button onclick="deleteSelectedTeam()">팀 삭제</button>
+        </div>
+        <div id="teamList"></div>
+      </div>
+      <div class="team-editor-panel">
+        <div class="team-editor-header">
+          <div>
+            <div id="teamSelectedName" class="stat-selected-name">팀을 선택하세요</div>
+            <div id="teamMemberSummary" class="stat-point-summary">0 / 10</div>
+          </div>
+          <button onclick="saveSelectedTeam()">저장</button>
+        </div>
+        <div id="teamMemberList" class="team-member-list"></div>
+      </div>
+      <div class="team-character-panel">
+        <h5>캐릭터 목록</h5>
+        <div id="teamCharacterList"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -548,6 +573,34 @@
   </div>
 </div>
 
+<div id="battleScreenModal" class="modal hidden">
+  <div class="battle-screen-modal-content">
+    <div class="battle-screen-header">
+      <h4>전투 화면</h4>
+      <div class="battle-screen-actions">
+        <span class="battle-speed-label">배속</span>
+        <button onclick="setSpeed(1)">x1</button>
+        <button onclick="setSpeed(2)">x2</button>
+        <button onclick="setSpeed(4)">x4</button>
+        <button type="button" onclick="closeBattleScreenModal()">닫기</button>
+      </div>
+    </div>
+    <div class="battle-screen-layout">
+      <div class="battle-side-panel">
+        <h4>아군 상태</h4>
+        <div id="playerStatus"></div>
+      </div>
+      <div class="battle-field-panel">
+        <canvas id="battleCanvas"></canvas>
+      </div>
+      <div class="battle-side-panel">
+        <h4 id="enemyStatusTitle">적 상태</h4>
+        <div id="enemyStatus"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="weaponCategoryModal" class="modal hidden">
   <div class="modal-content">
     <h4 id="weaponCategoryModalTitle">무기 카테고리 추가</h4>
@@ -610,6 +663,7 @@
 <script src="js/monster.js?v=20260606-weapons"></script>
 <script src="js/faction.js?v=20260606-weapons"></script>
 <script src="js/character.js?v=20260606-weapons"></script>
+<script src="js/team.js?v=20260615-teams"></script>
 <script src="js/stats.js?v=20260606-weapons"></script>
 <script src="js/record.js?v=20260606-weapons"></script>
 <script src="js/battle.js?v=20260606-weapons"></script>
