@@ -1,5 +1,188 @@
 [
   {
+    "battleAt": "2026-07-28T04:56:03.068Z",
+    "result": "승리",
+    "playerMembers": [
+      {
+        "name": "마법사",
+        "role": "ranged",
+        "hp": 2000,
+        "maxHp": 2000,
+        "mp": 142,
+        "maxMp": 200,
+        "st": 94,
+        "maxSt": 100,
+        "dps": 466.3840096910963
+      },
+      {
+        "name": "갑사",
+        "role": "melee",
+        "hp": 2000,
+        "maxHp": 2000,
+        "mp": 100,
+        "maxMp": 100,
+        "st": 20,
+        "maxSt": 150,
+        "dps": 111.2961841308298
+      },
+      {
+        "name": "궁사",
+        "role": "melee",
+        "hp": 2000,
+        "maxHp": 2000,
+        "mp": 100,
+        "maxMp": 100,
+        "st": 32,
+        "maxSt": 150,
+        "dps": 108.26771653543307
+      },
+      {
+        "name": "기사",
+        "role": "tank",
+        "hp": 0,
+        "maxHp": 4500,
+        "mp": 100,
+        "maxMp": 100,
+        "st": 23,
+        "maxSt": 100,
+        "dps": 49.969715324046035
+      },
+      {
+        "name": "검의무희",
+        "role": "tank",
+        "hp": 0,
+        "maxHp": 4500,
+        "mp": 100,
+        "maxMp": 100,
+        "st": 103,
+        "maxSt": 150,
+        "dps": 31.798909751665658
+      },
+      {
+        "name": "승려",
+        "role": "healer",
+        "hp": 795,
+        "maxHp": 2000,
+        "mp": 100,
+        "maxMp": 100,
+        "st": 150,
+        "maxSt": 150,
+        "dps": 0
+      },
+      {
+        "name": "사제",
+        "role": "healer",
+        "hp": 4500,
+        "maxHp": 4500,
+        "mp": 200,
+        "maxMp": 200,
+        "st": 100,
+        "maxSt": 100,
+        "dps": 0
+      }
+    ],
+    "monsterMembers": [
+      {
+        "name": "보스급 몬스터-2",
+        "role": "tank",
+        "hp": 0,
+        "maxHp": 5000,
+        "mp": 100,
+        "maxMp": 100,
+        "st": 16,
+        "maxSt": 100,
+        "dps": 450.8631132646881
+      },
+      {
+        "name": "보스급 몬스터-1",
+        "role": "tank",
+        "hp": 0,
+        "maxHp": 5000,
+        "mp": 100,
+        "maxMp": 100,
+        "st": 15,
+        "maxSt": 100,
+        "dps": 409.9788007268322
+      }
+    ],
+    "durationSeconds": 13.208
+  },
+  {
+    "battleAt": "2026-07-28T04:54:57.687Z",
+    "result": "승리",
+    "playerMembers": [
+      {
+        "name": "기사",
+        "role": "tank",
+        "hp": 4352,
+        "maxHp": 4500,
+        "mp": 100,
+        "maxMp": 100,
+        "st": 40,
+        "maxSt": 100,
+        "dps": 67.74876499647142
+      },
+      {
+        "name": "승려",
+        "role": "healer",
+        "hp": 2000,
+        "maxHp": 2000,
+        "mp": 100,
+        "maxMp": 100,
+        "st": 150,
+        "maxSt": 150,
+        "dps": 0
+      }
+    ],
+    "monsterMembers": [
+      {
+        "name": "슬라임-4",
+        "role": "melee",
+        "hp": 0,
+        "maxHp": 80,
+        "mp": 100,
+        "maxMp": 100,
+        "st": 10,
+        "maxSt": 100,
+        "dps": 12.477064220183482
+      },
+      {
+        "name": "슬라임-3",
+        "role": "melee",
+        "hp": 0,
+        "maxHp": 80,
+        "mp": 100,
+        "maxMp": 100,
+        "st": 6,
+        "maxSt": 100,
+        "dps": 9.59774170783345
+      },
+      {
+        "name": "슬라임-2",
+        "role": "melee",
+        "hp": 0,
+        "maxHp": 80,
+        "mp": 100,
+        "maxMp": 100,
+        "st": 24,
+        "maxSt": 100,
+        "dps": 6.831333803810867
+      },
+      {
+        "name": "슬라임-1",
+        "role": "melee",
+        "hp": 0,
+        "maxHp": 80,
+        "mp": 100,
+        "maxMp": 100,
+        "st": 40,
+        "maxSt": 100,
+        "dps": 5.0247000705716305
+      }
+    ],
+    "durationSeconds": 7.085
+  },
+  {
     "battleAt": "2026-06-15T13:55:21.963Z",
     "result": "패배",
     "playerMembers": [
