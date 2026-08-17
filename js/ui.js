@@ -67,6 +67,7 @@ const characterResistanceEl = document.getElementById("characterResistance");
 const characterAttackRangeEl = document.getElementById("characterAttackRange");
 const characterRoleEl = document.getElementById("characterRole");
 const characterFactionEl = document.getElementById("characterFaction");
+const characterSkillsEl = document.getElementById("characterSkills");
 const characterPortraitEl = document.getElementById("characterPortrait");
 const characterPortraitPreviewEl = document.getElementById("characterPortraitPreview");
 const statCharacterButtonsEl = document.getElementById("statCharacterButtons");
@@ -110,6 +111,8 @@ const skillFormEl = document.getElementById("skillForm");
 const skillEditIndexEl = document.getElementById("skillEditIndex");
 const skillNameEl = document.getElementById("skillName");
 const skillSlotEl = document.getElementById("skillSlot");
+const skillCooldownEl = document.getElementById("skillCooldown");
+const skillResourceCostsEl = document.getElementById("skillResourceCosts");
 const skillActionsEl = document.getElementById("skillActions");
 const layoutPageFilterEl = document.getElementById("layoutPageFilter");
 const layoutControlRowsEl = document.getElementById("layoutControlRows");
@@ -760,6 +763,9 @@ function normalizeCombatJson(items, defaults, nameKey) {
       };
 
       if (nameKey === "name") {
+        normalizedItem.skillIds = Array.isArray(item.skillIds)
+          ? item.skillIds.map(id => String(id)).filter(Boolean)
+          : [];
         normalizedItem.attributes = createCharacterAttributes(item.attributes);
         normalizedItem.equipment = createEquipmentSlots(item.equipment);
         normalizedItem.faction = normalizeFactionName(item.faction) || getDefaultFactionName();
@@ -796,6 +802,7 @@ async function showPage(pageName) {
     updateStatusUI();
   } else if (pageName === "character") {
     await loadFactionJson();
+    await loadSkillJson();
     await loadCharacterJson();
     playerSquad = [];
     selectedBattleTeamIds.clear();

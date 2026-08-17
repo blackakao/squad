@@ -59,6 +59,9 @@ function openCharacterModal(index = "") {
   characterRoleEl.value = character?.role ?? "melee";
   renderCharacterFactionOptions();
   characterFactionEl.value = character?.faction ?? getDefaultFactionName();
+  characterSkillsEl.innerHTML = typeof getCharacterSkillOptionsHtml === "function"
+    ? getCharacterSkillOptionsHtml(character?.skillIds ?? [])
+    : "";
   characterModalEl.classList.remove("hidden");
 }
 
@@ -78,6 +81,7 @@ async function saveCharacterFromForm(event) {
     name: characterNameEl.value.trim(),
     role: characterRoleEl.value,
     faction: characterFactionEl.value,
+    skillIds: [...characterSkillsEl.selectedOptions].map(option => option.value),
     attributes: createCharacterAttributes(previousAttributes),
     portrait: await getPortraitForSave("character", previousCharacter?.portrait)
   });
@@ -169,6 +173,8 @@ function createCharacter(characterData, index, side = "player") {
     castSpeed: derivedCharacter.castSpeed,
     attackType: derivedCharacter.attackType,
     attackSkillId: equippedWeapon?.attackSkillId ?? "",
+    skillIds: Array.isArray(derivedCharacter.skillIds) ? derivedCharacter.skillIds : [],
+    skillCooldowns: {},
     defense: derivedCharacter.defense,
     resistance: derivedCharacter.resistance,
     attackRange: derivedCharacter.attackRange,

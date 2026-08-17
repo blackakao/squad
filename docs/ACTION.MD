@@ -22,6 +22,19 @@
 - 액티브: 사용 조건이나 선택 입력을 통해 실행될 수 있는 능동 스킬
 - 패시브: 직접 시전하지 않고 조건에 따라 적용될 지속 효과 스킬
 
+## 캐릭터 장착 스킬
+
+- 캐릭터 수정 창에서 등록된 스킬을 여러 개 선택해 장착할 수 있다.
+- 전투 중 캐릭터에게 장착 스킬이 있으면 재사용대기시간과 자원 소모를 확인한 뒤, 사용 가능한 스킬을 바로 사용한다.
+- 장착 스킬을 사용할 수 없으면 기존 기본 공격 또는 기본 회복 흐름을 사용한다.
+
+## 재사용대기시간
+
+- 스킬은 `cooldown` 값을 가진다.
+- 재사용대기시간은 스킬을 사용하고 나서 다시 사용하기 위해 기다려야 하는 최소 대기시간이다.
+- 전투에서는 스킬별 쿨타임을 따로 관리한다.
+- 쿨타임이 0이고 자원 소모값을 지불할 수 있으면 해당 스킬은 즉시 사용 가능하다.
+
 ## 액션 입력 구조
 
 ### 거리
@@ -68,8 +81,8 @@
 
 ### 자원 소모
 
-액션의 자원값에는 자원 종류와 소모치가 함께 있어야 한다. UI에서는 계수 아래쪽에 자원 소모 입력 공간을 둔다.
-한 액션은 자원 소모값을 2개 이상 가질 수 있다.
+자원 소모는 액션이 아니라 스킬 단위에서 한 번만 관리한다. 스킬이 여러 액션으로 구성되어도 자원 소모값은 스킬 하나에 묶이며, 시전 시점에 한 번 지불한다.
+한 스킬은 자원 소모값을 2개 이상 가질 수 있다.
 
 자원 종류는 현재 다음 값으로 준비한다.
 
@@ -86,9 +99,9 @@
 
 데이터 필드는 다음과 같다.
 
-- `resourceCosts[].resource`: 자원 종류
-- `resourceCosts[].mode`: `fixed`, `maxPercent`, `currentPercent`
-- `resourceCosts[].value`: 소모 수치 또는 비율
+- `skill.resourceCosts[].resource`: 자원 종류
+- `skill.resourceCosts[].mode`: `fixed`, `maxPercent`, `currentPercent`
+- `skill.resourceCosts[].value`: 소모 수치 또는 비율
 
 ### 회복대상값
 
@@ -110,14 +123,14 @@
 - 코드: `deal_damage`
 - UI 표시명: 피해
 - 설명: 대상에게 피해를 입힌다.
-- 주요 필드: `target`, `rangeMode`, `rangeValue`, `coefficients`, `damageType`, `area`, `critical`, `penetration`, `resourceCosts`
+- 주요 필드: `target`, `rangeMode`, `rangeValue`, `coefficients`, `damageType`, `area`, `critical`, `penetration`
 - UI 숨김 필드: `moveType`, `distance`, `fieldRadius`
 
 ### 회복
 
 - 코드: `heal`
 - 설명: 대상의 회복대상값을 계수만큼 회복한다. 회복대상값이 BP이면 보호막을 부여한다.
-- 주요 필드: `target`, `rangeMode`, `rangeValue`, `coefficients`, `healResource`, `area`, `resourceCosts`
+- 주요 필드: `target`, `rangeMode`, `rangeValue`, `coefficients`, `healResource`, `area`
 - UI 숨김 필드: `damageType`, `moveType`, `distance`, `fieldRadius`
 
 ### 이동
@@ -125,7 +138,7 @@
 - 코드: `move`
 - 설명: 시전자가 선택 대상 방향으로 이동한다.
 - 대상: `아군`, `적군`만 선택할 수 있다.
-- 주요 필드: `target`, `moveType`, `distance`, `moveSpeed`, `resourceCosts`
+- 주요 필드: `target`, `moveType`, `distance`, `moveSpeed`
 - 이동 방식: `Dash`, `Teleport`
 - 돌진(`Dash`): 현재 위치에서 대상까지 빠른 속도로 이동한다. `moveSpeed`로 증가한 이동속도를 입력한다.
 - 순간이동(`Teleport`): 현재 위치에서 대상 방향의 지정 거리 위치에 즉시 등장한다.
@@ -136,13 +149,13 @@
 
 - 코드: `transform`
 - 설명: 대상의 형태를 변경한다.
-- 주요 필드: `target`, `duration`, `resourceCosts`
+- 주요 필드: `target`, `duration`
 
 ### 상태 추가
 
 - 코드: `add_state`
 - 설명: 대상에게 상태이상을 추가한다.
-- 주요 필드: `target`, `duration`, `resourceCosts`
+- 주요 필드: `target`, `duration`
 
 예시 상태는 기절, 은신, 침묵, 탑승 등이 있다.
 
@@ -150,31 +163,31 @@
 
 - 코드: `delete_state`
 - 설명: 대상의 상태이상을 제거한다.
-- 주요 필드: `target`, `resourceCosts`
+- 주요 필드: `target`
 
 ### 버프 추가
 
 - 코드: `add_buff`
 - 설명: 대상에게 지속 효과를 추가한다.
-- 주요 필드: `target`, `duration`, `resourceCosts`
+- 주요 필드: `target`, `duration`
 
 ### 버프 제거
 
 - 코드: `delete_buff`
 - 설명: 대상의 버프를 제거한다.
-- 주요 필드: `target`, `resourceCosts`
+- 주요 필드: `target`
 
 ### 소환
 
 - 코드: `summon_entity`
 - 설명: 전투 필드에 개체를 소환한다.
-- 주요 필드: `target`, `duration`, `resourceCosts`
+- 주요 필드: `target`, `duration`
 
 ### 필드 생성
 
 - 코드: `create_field`
 - 설명: 특정 지역에 액션이 이루어지는 필드를 생성한다. 필드 안에서 피해, 회복, 버프, 상태이상 등의 동작이 이루어진다.
-- 주요 필드: `target`, `rangeMode`, `rangeValue`, `fieldShape`, `fieldRadius`, `duration`, `coefficients`, `resourceCosts`
+- 주요 필드: `target`, `rangeMode`, `rangeValue`, `fieldShape`, `fieldRadius`, `duration`, `coefficients`
 
 ## UI 목록 처리
 

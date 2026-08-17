@@ -14,12 +14,15 @@
   unit.vx = 0;
   unit.vy = 0;
   unit.attackCooldown = 0;
+  unit.skillCooldowns = {};
   unit.castTimer = 0;
   unit.castDuration = 0;
   unit.pendingAction = null;
   unit.stats = createStats();
   unit.effectType = null;
   unit.effectTimer = 0;
+  unit.skillBubbleText = "";
+  unit.skillBubbleTimer = 0;
 }
 
 function updateResources() {
@@ -325,7 +328,12 @@ function updateCombat() {
 }
 
 function takeAction(unit, allies, enemies) {
+  tickSkillCooldowns(unit);
   if (updateCast(unit)) {
+    return;
+  }
+
+  if (tryUseReadySkill(unit, allies, enemies)) {
     return;
   }
 
@@ -371,13 +379,62 @@ function takeAction(unit, allies, enemies) {
   }
 }
 
+function tickSkillCooldowns(unit) {
+  Object.keys(unit.skillCooldowns ?? {}).forEach(skillId => {
+    unit.skillCooldowns[skillId] = Math.max(0, (Number(unit.skillCooldowns[skillId]) || 0) - 1);
+  });
+}
+
+function tryUseReadySkill(unit, allies, enemies) {
+  const skill = getEquippedSkills(unit).find(candidate => {
+    const cooldownLeft = Number(unit.skillCooldowns?.[candidate.id]) || 0;
+    return cooldownLeft <= 0 && canPaySkillResourceCosts(unit, candidate) && resolveSkillTarget(unit, candidate, allies, enemies);
+  });
+
+  if (!skill) {
+    return false;
+  }
+
+  const target = resolveSkillTarget(unit, skill, allies, enemies);
+  spendSkillResourceCosts(unit, skill);
+  showSkillBubble(unit, skill.name);
+  startCast(unit, { type: "skill", target, skill, ranged: distance(unit, target) > ATTACK_RANGE_UNIT });
+  return true;
+}
+
+function showSkillBubble(unit, text) {
+  unit.skillBubbleText = String(text ?? "");
+  unit.skillBubbleTimer = 90;
+}
+
+function resolveSkillTarget(unit, skill, allies, enemies) {
+  const targetType = getSkillPrimaryTargetType(skill);
+  if (targetType === "self") {
+    return unit;
+  }
+
+  const range = getSkillRangePixels(unit, skill);
+  if (targetType === "ally") {
+    const healAction = skill.actions.find(action => action.type === "heal" && action.healResource === "HP");
+    const candidates = allies.filter(ally => ally.alive && distance(unit, ally) <= range);
+    if (healAction) {
+      return candidates.find(ally => ally.hp < ally.maxHp) ?? null;
+    }
+    return candidates[0] ?? null;
+  }
+
+  return enemies.find(enemy => enemy.alive && distance(unit, enemy) <= range) ?? null;
+}
+
 function startCast(unit, action) {
   const castDuration = getCastDuration(unit);
 
   markAction(unit);
   if (castDuration <= 0) {
     resolveCastAction(unit, action);
-    setCooldownAfterCast(unit, castDuration);
+    if (action.type !== "skill") {
+      setCooldownAfterCast(unit, castDuration);
+    }
     return;
   }
 
@@ -399,7 +456,9 @@ function updateCast(unit) {
     unit.pendingAction = null;
     unit.castDuration = 0;
     resolveCastAction(unit, action);
-    setCooldownAfterCast(unit, getCastDuration(unit));
+    if (action.type !== "skill") {
+      setCooldownAfterCast(unit, getCastDuration(unit));
+    }
   }
 
   return true;
@@ -414,12 +473,28 @@ function resolveCastAction(unit, action) {
     return;
   }
 
-  if (action.type === "heal") {
+  if (action.type === "skill") {
+    resolveSkillCast(unit, action);
+  } else if (action.type === "heal") {
     spawnProjectile(unit, action.target, "heal", getUnitSkill(unit, DEFAULT_HEAL_SKILL_ID));
   } else if (action.ranged) {
     spawnProjectile(unit, action.target, "attack", getUnitSkill(unit, DEFAULT_ATTACK_SKILL_ID));
   } else {
     doAttack(unit, action.target, getUnitSkill(unit, DEFAULT_ATTACK_SKILL_ID));
+  }
+}
+
+function resolveSkillCast(unit, action) {
+  const skill = action.skill;
+  if (!skill) {
+    return;
+  }
+
+  unit.skillCooldowns[skill.id] = getSkillCooldownTicks(skill);
+  if (action.ranged) {
+    spawnProjectile(unit, action.target, "skill", skill);
+  } else {
+    applySkill(unit, action.target, skill);
   }
 }
 
@@ -473,6 +548,8 @@ function updateProjectiles() {
     if (dist <= PROJECTILE_SPEED || dist === 0) {
       if (type === "heal") {
         applyHeal(source, target, skill);
+      } else if (type === "skill") {
+        applySkill(source, target, skill);
       } else {
         doAttack(source, target, skill);
       }
@@ -495,7 +572,55 @@ function updateEffects() {
         unit.effectType = null;
       }
     }
+    if (unit.skillBubbleTimer > 0) {
+      unit.skillBubbleTimer--;
+      if (unit.skillBubbleTimer === 0) {
+        unit.skillBubbleText = "";
+      }
+    }
   });
+}
+
+function drawSkillBubble(unit, statusOffset) {
+  if (!unit.skillBubbleText || unit.skillBubbleTimer <= 0) {
+    return;
+  }
+
+  const text = unit.skillBubbleText;
+  ctx.save();
+  ctx.font = `${11 * scale}px Arial`;
+  const paddingX = 8 * scale;
+  const width = Math.max(42 * scale, ctx.measureText(text).width + paddingX * 2);
+  const height = 22 * scale;
+  const x = unit.x - width / 2;
+  const y = unit.y - statusOffset - 34 * scale;
+  const radius = 8 * scale;
+
+  ctx.fillStyle = "rgba(255, 255, 255, 0.94)";
+  ctx.strokeStyle = "#0d6efd";
+  ctx.lineWidth = Math.max(1, 1.5 * scale);
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.lineTo(x + width - radius, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+  ctx.lineTo(x + width, y + height - radius);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+  ctx.lineTo(unit.x + 5 * scale, y + height);
+  ctx.lineTo(unit.x, y + height + 6 * scale);
+  ctx.lineTo(unit.x - 5 * scale, y + height);
+  ctx.lineTo(x + radius, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+  ctx.lineTo(x, y + radius);
+  ctx.quadraticCurveTo(x, y, x + radius, y);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = "#111827";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(text, unit.x, y + height / 2);
+  ctx.restore();
 }
 
 function drawUnit(unit, isEnemy) {
@@ -546,6 +671,8 @@ function drawUnit(unit, isEnemy) {
   ctx.fillStyle = "black";
   ctx.font = `${10 * scale}px Arial`;
   ctx.fillText(unit.name, unit.x - 12 * scale, unit.y - statusOffset - 4 * scale);
+
+  drawSkillBubble(unit, statusOffset);
 }
 
 function drawProjectiles() {

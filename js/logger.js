@@ -149,10 +149,41 @@ function clearAppLogs() {
 
 loadAppLogs();
 
+function attachSkillSaveClickLogger() {
+  const button = document.getElementById("skillSaveButton");
+  if (!button || button.dataset.logClickBound === "true") {
+    return;
+  }
+
+  button.addEventListener("click", () => {
+    logWarn("skill", "스킬 저장 버튼 클릭 이벤트를 감지했습니다.", JSON.stringify({
+      saveSkillFromFormType: typeof window.saveSkillFromForm,
+      formNoValidate: Boolean(document.getElementById("skillForm")?.noValidate),
+      skillName: document.getElementById("skillName")?.value ?? "",
+      actionRows: document.querySelectorAll("#skillActions .skill-action-row").length,
+      resourceCostRows: document.querySelectorAll("#skillResourceCosts .skill-resource-cost-row").length
+    }, null, 2));
+  }, { capture: true });
+
+  button.dataset.logClickBound = "true";
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", attachSkillSaveClickLogger);
+} else {
+  attachSkillSaveClickLogger();
+}
+
 window.addEventListener("error", event => {
-  logError("window", event.message, event.error || `${event.filename}:${event.lineno}:${event.colno}`);
+  logError("runtime", "브라우저 스크립트 오류가 발생했습니다.", {
+    message: event.message,
+    filename: event.filename,
+    lineno: event.lineno,
+    colno: event.colno,
+    error: event.error ? formatLogError(event.error) : ""
+  });
 });
 
 window.addEventListener("unhandledrejection", event => {
-  logError("promise", "처리되지 않은 비동기 오류가 발생했습니다.", event.reason);
+  logError("runtime", "처리되지 않은 비동기 오류가 발생했습니다.", event.reason);
 });

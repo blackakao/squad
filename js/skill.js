@@ -120,7 +120,6 @@ function createDefaultAction(type = "deal_damage") {
     rangeMode: "mainWeapon",
     rangeValue: 1,
     coefficients: [coefficient],
-    resourceCosts: createDefaultResourceCosts(),
     healResource: "HP",
     damageType: type === "heal" ? "magic" : "physical",
     area: 0,
@@ -137,9 +136,14 @@ function createDefaultAction(type = "deal_damage") {
 
 function createDefaultSkillJson() {
   return [
-    { id: DEFAULT_ATTACK_SKILL_ID, name: "기본 무기 공격", slot: "basic", actions: [createDefaultAction("deal_damage")] },
-    { id: DEFAULT_HEAL_SKILL_ID, name: "기본 회복", slot: "basic", actions: [createDefaultAction("heal")] }
+    { id: DEFAULT_ATTACK_SKILL_ID, name: "기본 무기 공격", slot: "basic", cooldown: 0, resourceCosts: [{ resource: "ST", mode: "fixed", value: 5 }], actions: [createDefaultAction("deal_damage")] },
+    { id: DEFAULT_HEAL_SKILL_ID, name: "기본 회복", slot: "basic", cooldown: 0, resourceCosts: [{ resource: "MP", mode: "fixed", value: 5 }], actions: [createDefaultAction("heal")] }
   ];
+}
+
+function normalizeSkillCooldown(value) {
+  const cooldown = Number(value);
+  return Number.isFinite(cooldown) && cooldown >= 0 ? cooldown : 0;
 }
 
 function normalizeSkillSlot(slot) {
@@ -249,6 +253,36 @@ function normalizeResourceCosts(action = {}) {
   return [normalizeResourceCost(action.resourceCost ?? action.resource_cost ?? { resource: action.resource })];
 }
 
+function normalizeSkillResourceCosts(skill = {}) {
+  const rawCosts = skill.resourceCosts ?? skill.resource_costs;
+  if (Array.isArray(rawCosts) && rawCosts.length) {
+    return rawCosts.map(normalizeResourceCost);
+  }
+
+  const legacyCosts = Array.isArray(skill.actions)
+    ? skill.actions.flatMap(action => {
+      const actionCosts = action?.resourceCosts ?? action?.resource_costs;
+      return Array.isArray(actionCosts) ? actionCosts : [];
+    })
+    : [];
+
+  if (legacyCosts.length) {
+    const seen = new Set();
+    return legacyCosts
+      .map(normalizeResourceCost)
+      .filter(cost => {
+        const key = `${cost.resource}:${cost.mode}:${cost.value}`;
+        if (seen.has(key)) {
+          return false;
+        }
+        seen.add(key);
+        return true;
+      });
+  }
+
+  return createDefaultResourceCosts();
+}
+
 function normalizeSkillAction(action = {}) {
   const type = normalizeActionType(action.type);
   const damageTypeValue = action.damageType ?? action.damage_type;
@@ -264,7 +298,6 @@ function normalizeSkillAction(action = {}) {
     rangeMode: range.rangeMode,
     rangeValue: range.rangeValue,
     coefficients: normalizeActionCoefficients({ ...action, type }),
-    resourceCosts: normalizeResourceCosts(action),
     healResource: HEAL_RESOURCES.includes(healResourceValue) ? healResourceValue : "HP",
     damageType: ACTION_DAMAGE_TYPES.includes(damageTypeValue) ? damageTypeValue : "physical",
     area: Number(action.area) || 0,
@@ -290,6 +323,8 @@ function normalizeSkillJson(skills) {
       id: String(skill?.id ?? `skill_${Date.now()}_${index}`),
       name: String(skill?.name ?? "").trim(),
       slot: normalizeSkillSlot(String(skill?.slot ?? "active").trim()),
+      cooldown: normalizeSkillCooldown(skill?.cooldown ?? skill?.reuseCooldown ?? skill?.reuse_cooldown),
+      resourceCosts: normalizeSkillResourceCosts(skill),
       actions: Array.isArray(skill?.actions) && skill.actions.length ? skill.actions.map(normalizeSkillAction) : [createDefaultAction()]
     }))
     .filter(skill => skill.id && skill.name);
@@ -304,20 +339,131 @@ function normalizeSkillJson(skills) {
 }
 
 async function loadSkillJson() {
-  const rawJson = await loadJsonFile("skills", createDefaultSkillJson());
-  skillsJson = normalizeSkillJson(rawJson);
+  let rawJson = null;
+
+  try {
+    const response = await fetch(API_URLS.skills, { cache: "no-store" });
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    rawJson = await response.json();
+    localStorage.setItem(SKILL_STORAGE_KEY, JSON.stringify(rawJson));
+    log("스킬 데이터를 불러왔습니다.", "skill");
+  } catch (error) {
+    logError("skill", "스킬 API 데이터를 읽지 못했습니다. 브라우저 저장소를 확인합니다.", error);
+  }
+
+  if (!rawJson) {
+    try {
+      rawJson = JSON.parse(localStorage.getItem(SKILL_STORAGE_KEY) || "null");
+      if (rawJson) {
+        logWarn("skill", "스킬 API 대신 브라우저 저장소 데이터를 사용합니다.");
+      }
+    } catch (error) {
+      logError("skill", "브라우저 저장소의 스킬 데이터를 읽지 못했습니다.", error);
+      rawJson = null;
+    }
+  }
+
+  skillsJson = normalizeSkillJson(rawJson || createDefaultSkillJson());
   localStorage.setItem(SKILL_STORAGE_KEY, JSON.stringify(skillsJson));
 }
 
 async function saveSkillJson() {
   skillsJson = normalizeSkillJson(skillsJson);
   localStorage.setItem(SKILL_STORAGE_KEY, JSON.stringify(skillsJson));
-  await saveJsonFile("skills", skillsJson);
-  log("스킬 데이터가 저장되었습니다.", "skill");
+
+  try {
+    await saveJsonFile("skills", skillsJson);
+    log("스킬 데이터가 API와 브라우저 저장소에 저장되었습니다.", "skill");
+  } catch (error) {
+    logError("skill", "스킬 API 저장에 실패해 브라우저 저장소에만 저장했습니다.", error);
+  }
 }
 
 function getSkillById(skillId) {
   return skillsJson.find(skill => skill.id === skillId);
+}
+
+function getSkillCooldownTicks(skill) {
+  return Math.max(0, Math.round(normalizeSkillCooldown(skill?.cooldown) * BASE_ATTACK_COOLDOWN));
+}
+
+function getEquippedSkills(unit) {
+  return (Array.isArray(unit?.skillIds) ? unit.skillIds : [])
+    .map(getSkillById)
+    .filter(skill => skill && !isDefaultSkill(skill.id) && skill.slot !== "passive");
+}
+
+function getActionRangePixels(source, action) {
+  if (action.rangeMode === "custom") {
+    return Math.max(1, Number(action.rangeValue) || 1) * ATTACK_RANGE_UNIT;
+  }
+  return getUnitRange(source);
+}
+
+function getSkillRangePixels(source, skill) {
+  const ranges = skill.actions
+    .map(action => getActionRangePixels(source, action))
+    .filter(value => Number.isFinite(value) && value > 0);
+  return ranges.length ? Math.max(...ranges) : getUnitRange(source);
+}
+
+function getSkillPrimaryTargetType(skill) {
+  const targetAction = skill.actions.find(action => action.target && action.target !== "self");
+  return targetAction?.target ?? "self";
+}
+
+function getResourceField(resource) {
+  const normalized = String(resource ?? "").toUpperCase();
+  if (normalized === "HP") return { current: "hp", max: "maxHp" };
+  if (normalized === "MP") return { current: "mp", max: "maxMp" };
+  if (normalized === "ST") return { current: "st", max: "maxSt" };
+  if (normalized === "BP") return { current: "bp", max: "maxBp" };
+  return null;
+}
+
+function getResourceCostAmount(unit, cost) {
+  const field = getResourceField(cost.resource);
+  if (!field) {
+    return 0;
+  }
+
+  const value = Math.max(0, Number(cost.value) || 0);
+  if (cost.mode === "maxPercent") {
+    return (Math.max(0, Number(unit[field.max]) || 0) * value) / 100;
+  }
+  if (cost.mode === "currentPercent") {
+    return (Math.max(0, Number(unit[field.current]) || 0) * value) / 100;
+  }
+  return value;
+}
+
+function getSkillResourceCosts(skill) {
+  return normalizeSkillResourceCosts(skill);
+}
+
+function canPaySkillResourceCosts(unit, skill) {
+  const totals = {};
+  getSkillResourceCosts(skill).forEach(cost => {
+    const field = getResourceField(cost.resource);
+    if (!field) {
+      return;
+    }
+    totals[field.current] = (totals[field.current] ?? 0) + getResourceCostAmount(unit, cost);
+  });
+
+  return Object.entries(totals).every(([currentKey, amount]) => (Number(unit[currentKey]) || 0) >= amount);
+}
+
+function spendSkillResourceCosts(unit, skill) {
+  getSkillResourceCosts(skill).forEach(cost => {
+    const field = getResourceField(cost.resource);
+    if (!field) {
+      return;
+    }
+    unit[field.current] = Math.max(0, (Number(unit[field.current]) || 0) - getResourceCostAmount(unit, cost));
+  });
 }
 
 function getSkillOptionsHtml(selectedSkillId = "") {
@@ -325,6 +471,14 @@ function getSkillOptionsHtml(selectedSkillId = "") {
     `<option value="">기본 공격</option>`,
     ...skillsJson.map(skill => `<option value="${skill.id}" ${skill.id === selectedSkillId ? "selected" : ""}>${escapeHtml(skill.name)}</option>`)
   ].join("");
+}
+
+function getCharacterSkillOptionsHtml(selectedSkillIds = []) {
+  const selectedSet = new Set(selectedSkillIds);
+  return skillsJson
+    .filter(skill => !isDefaultSkill(skill.id))
+    .map(skill => `<option value="${skill.id}" ${selectedSet.has(skill.id) ? "selected" : ""}>${escapeHtml(skill.name)} (${getSkillSlotLabel(skill.slot)})</option>`)
+    .join("");
 }
 
 function isDefaultSkill(skillId) {
@@ -351,7 +505,7 @@ function formatResourceCostSummary(resourceCost) {
 }
 
 function formatResourceCostsSummary(resourceCosts) {
-  return resourceCosts.map(formatResourceCostSummary).join(" + ");
+  return normalizeResourceCosts({ resourceCosts }).map(formatResourceCostSummary).join(" + ");
 }
 
 function formatRangeSummary(action) {
@@ -360,14 +514,13 @@ function formatRangeSummary(action) {
 
 function formatActionSummary(action) {
   const coefficientText = action.coefficients.map(formatCoefficientSummary).join(" + ");
-  const costText = formatResourceCostsSummary(action.resourceCosts);
   const rangeText = formatRangeSummary(action);
 
   if (action.type === "deal_damage") {
-    return `피해 / ${ACTION_TARGET_LABELS[action.target]} / ${ACTION_DAMAGE_TYPE_LABELS[action.damageType]} / ${rangeText} / ${coefficientText} / 소모 ${costText}`;
+    return `피해 / ${ACTION_TARGET_LABELS[action.target]} / ${ACTION_DAMAGE_TYPE_LABELS[action.damageType]} / ${rangeText} / ${coefficientText}`;
   }
   if (action.type === "heal") {
-    return `회복 / ${ACTION_TARGET_LABELS[action.target]} / ${action.healResource} / ${rangeText} / ${coefficientText} / 소모 ${costText}`;
+    return `회복 / ${ACTION_TARGET_LABELS[action.target]} / ${action.healResource} / ${rangeText} / ${coefficientText}`;
   }
   if (action.type === "move") {
     const speedText = action.moveType === "Dash" ? ` / 이동속도 +${action.moveSpeed}` : "";
@@ -389,7 +542,8 @@ function renderSkillPage() {
       <td><input type="checkbox" class="skill-check" value="${index}" ${isDefaultSkill(skill.id) ? "disabled" : ""}></td>
       <td>${escapeHtml(skill.name)}</td>
       <td>${escapeHtml(getSkillSlotLabel(skill.slot))}</td>
-      <td>${skill.actions.map(action => escapeHtml(formatActionSummary(action))).join("<br>")}</td>
+      <td>${skill.cooldown}</td>
+      <td>${escapeHtml(`소모 ${formatResourceCostsSummary(skill.resourceCosts)}`)}<br>${skill.actions.map(action => escapeHtml(formatActionSummary(action))).join("<br>")}</td>
       <td><button type="button" onclick="openSkillModal(${index})">수정</button></td>
     </tr>
   `).join("");
@@ -401,6 +555,8 @@ function openSkillModal(index = "") {
   skillEditIndexEl.value = skill ? index : "";
   skillNameEl.value = skill?.name ?? "";
   skillSlotEl.value = skill?.slot ?? "active";
+  skillCooldownEl.value = skill?.cooldown ?? 0;
+  renderSkillResourceCostsToForm(skill?.resourceCosts ?? normalizeSkillResourceCosts(skill));
   renderSkillActionRows(skill?.actions ?? [createDefaultAction()]);
   skillModalEl.classList.remove("hidden");
 }
@@ -408,6 +564,7 @@ function openSkillModal(index = "") {
 function closeSkillModal() {
   skillModalEl.classList.add("hidden");
   skillFormEl.reset();
+  skillResourceCostsEl.innerHTML = "";
   skillActionsEl.innerHTML = "";
 }
 
@@ -489,15 +646,6 @@ function renderSkillActionRow(action, index) {
           ${action.coefficients.map(coefficient => renderSkillCoefficientRow(coefficient)).join("")}
         </div>
       </div>
-      <div class="skill-resource-cost">
-        <div class="skill-coefficient-header">
-          <span>자원 소모</span>
-          <button type="button" onclick="addSkillResourceCostRow(this)">자원 소모 추가</button>
-        </div>
-        <div class="skill-resource-cost-list">
-          ${renderSkillResourceCosts(action.resourceCosts)}
-        </div>
-      </div>
       <button type="button" onclick="removeSkillActionRow(this)">삭제</button>
     </div>
   `;
@@ -530,6 +678,10 @@ function renderSkillCoefficientRow(coefficient) {
 
 function renderSkillResourceCosts(resourceCosts) {
   return normalizeResourceCosts({ resourceCosts }).map(renderSkillResourceCostRow).join("");
+}
+
+function renderSkillResourceCostsToForm(resourceCosts) {
+  skillResourceCostsEl.innerHTML = renderSkillResourceCosts(resourceCosts);
 }
 
 function renderSkillResourceCostRow(resourceCost) {
@@ -667,28 +819,34 @@ function removeSkillCoefficientRow(button) {
 }
 
 function readSkillCoefficientsFromRow(row) {
-  return [...row.querySelectorAll(".skill-coefficient-row")].map(coefficientRow => normalizeCoefficient({
-    type: coefficientRow.querySelector(".skill-coefficient-type").value,
+  const coefficients = [...row.querySelectorAll(".skill-coefficient-row")].map(coefficientRow => normalizeCoefficient({
+    type: coefficientRow.querySelector(".skill-coefficient-type")?.value,
     field: coefficientRow.querySelector(".skill-coefficient-field")?.value,
     calc: coefficientRow.querySelector(".skill-coefficient-calc")?.value,
-    value: Number(coefficientRow.querySelector(".skill-coefficient-value").value)
+    value: Number(coefficientRow.querySelector(".skill-coefficient-value")?.value)
   }));
+  return coefficients.length ? coefficients : [createDefaultCoefficient()];
 }
 
-function readSkillResourceCostsFromRow(row) {
-  const costs = [...row.querySelectorAll(".skill-resource-cost-row")].map(costRow => normalizeResourceCost({
-    resource: costRow.querySelector(".skill-resource-cost-resource").value,
-    mode: costRow.querySelector(".skill-resource-cost-mode").value,
-    value: Number(costRow.querySelector(".skill-resource-cost-value").value)
+function readSkillResourceCostsFromList(list) {
+  const costs = [...(list?.querySelectorAll(".skill-resource-cost-row") ?? [])].map(costRow => normalizeResourceCost({
+    resource: costRow.querySelector(".skill-resource-cost-resource")?.value,
+    mode: costRow.querySelector(".skill-resource-cost-mode")?.value,
+    value: Number(costRow.querySelector(".skill-resource-cost-value")?.value)
   }));
   return costs.length ? costs : createDefaultResourceCosts();
 }
 
+function readSkillResourceCostsFromForm() {
+  return readSkillResourceCostsFromList(skillResourceCostsEl);
+}
+
 function readSkillRangeFromRow(row) {
   const checked = row.querySelector(".skill-range-mode:checked");
+  const rangeValueInput = row.querySelector(".skill-range-value");
   return normalizeRange({
     rangeMode: checked?.value ?? "mainWeapon",
-    rangeValue: Number(row.querySelector(".skill-range-value").value)
+    rangeValue: Number(rangeValueInput?.value ?? 1)
   });
 }
 
@@ -698,11 +856,10 @@ function readSkillActionsFromForm() {
     const range = readSkillRangeFromRow(row);
     return normalizeSkillAction({
       type,
-      target: row.querySelector(".skill-action-target").value,
+      target: row.querySelector(".skill-action-target")?.value,
       rangeMode: range.rangeMode,
       rangeValue: range.rangeValue,
       coefficients: type === "move" ? [] : readSkillCoefficientsFromRow(row),
-      resourceCosts: readSkillResourceCostsFromRow(row),
       healResource: row.querySelector(".skill-action-heal-resource")?.value ?? "HP",
       damageType: row.querySelector(".skill-action-damage-type")?.value ?? "physical",
       moveType: row.querySelector(".skill-action-move-type")?.value ?? "Walk",
@@ -714,17 +871,51 @@ function readSkillActionsFromForm() {
 }
 
 async function saveSkillFromForm(event) {
-  event.preventDefault();
-  const editIndex = skillEditIndexEl.value;
-  const previous = editIndex !== "" ? skillsJson[Number(editIndex)] : null;
-  const skill = {
-    id: previous?.id ?? `skill_${Date.now()}`,
-    name: skillNameEl.value.trim(),
-    slot: normalizeSkillSlot(skillSlotEl.value),
-    actions: readSkillActionsFromForm()
-  };
+  event?.preventDefault?.();
+  logWarn("skill", "스킬 저장 버튼 동작이 시작되었습니다.", JSON.stringify({
+    eventType: event?.type ?? "manual",
+    skillName: skillNameEl?.value ?? "",
+    actionRows: skillActionsEl?.querySelectorAll(".skill-action-row").length ?? 0,
+    resourceCostRows: skillResourceCostsEl?.querySelectorAll(".skill-resource-cost-row").length ?? 0
+  }, null, 2));
+
+  let editIndex = "";
+  let skill = null;
+
+  try {
+    editIndex = skillEditIndexEl.value;
+    const previous = editIndex !== "" ? skillsJson[Number(editIndex)] : null;
+    const actions = readSkillActionsFromForm();
+    const resourceCosts = readSkillResourceCostsFromForm();
+    skill = {
+      id: previous?.id ?? `skill_${Date.now()}`,
+      name: skillNameEl.value.trim(),
+      slot: normalizeSkillSlot(skillSlotEl.value),
+      cooldown: normalizeSkillCooldown(skillCooldownEl.value),
+      resourceCosts,
+      actions
+    };
+
+    logWarn("skill", "스킬 저장 폼을 읽었습니다.", JSON.stringify({
+      editIndex,
+      id: skill.id,
+      name: skill.name,
+      slot: skill.slot,
+      cooldown: skill.cooldown,
+      resourceCosts: skill.resourceCosts,
+      actionTypes: skill.actions.map(action => action.type)
+    }, null, 2));
+  } catch (error) {
+    logError("skill", "스킬 저장 폼을 읽는 중 실패했습니다.", error);
+    alert("스킬 입력값을 읽는 중 문제가 발생했습니다. 로그를 확인하세요.");
+    return;
+  }
 
   if (!skill.name || !skill.actions.length) {
+    logError("skill", "스킬 저장 검증에 실패했습니다.", JSON.stringify({
+      hasName: Boolean(skill.name),
+      actionCount: skill.actions.length
+    }, null, 2));
     alert("스킬 이름과 액션을 입력하세요.");
     return;
   }
@@ -737,12 +928,24 @@ async function saveSkillFromForm(event) {
 
   try {
     await saveSkillJson();
+    logWarn("skill", "스킬 저장 데이터 반영이 완료되었습니다.", JSON.stringify({
+      id: skill.id,
+      name: skill.name,
+      totalSkills: skillsJson.length
+    }, null, 2));
+  } catch (error) {
+    logError("skill", "스킬 저장 요청이 실패했습니다.", error);
+    alert("스킬 데이터를 저장하지 못했습니다. 로그를 확인하세요.");
+    return;
+  }
+
+  try {
     renderSkillPage();
     renderItemPage();
     closeSkillModal();
   } catch (error) {
-    logError("skill", "스킬 저장 처리 중 실패했습니다.", error);
-    alert("스킬 데이터를 저장하지 못했습니다.");
+    logError("skill", "스킬은 저장됐지만 화면 갱신 중 실패했습니다.", error);
+    alert("스킬은 저장됐지만 화면 갱신 중 문제가 발생했습니다. 로그를 확인하세요.");
   }
 }
 
@@ -763,9 +966,17 @@ async function deleteSelectedSkills() {
       item.attackSkillId = "";
     }
   });
+  characterJson.forEach(character => {
+    if (Array.isArray(character.skillIds)) {
+      character.skillIds = character.skillIds.filter(skillId => !deletedIds.includes(skillId));
+    }
+  });
 
   try {
     await saveSkillJson();
+    if (typeof saveCharacterJson === "function") {
+      await saveCharacterJson();
+    }
     await saveItemJson();
     renderSkillPage();
     renderItemPage();

@@ -3,6 +3,14 @@
     "id": "skill_basic_weapon_attack",
     "name": "기본 무기 공격",
     "slot": "basic",
+    "cooldown": 0,
+    "resourceCosts": [
+      {
+        "resource": "ST",
+        "mode": "fixed",
+        "value": 5
+      }
+    ],
     "actions": [
       {
         "type": "deal_damage",
@@ -15,13 +23,6 @@
             "field": "atk",
             "calc": "percent",
             "value": 100
-          }
-        ],
-        "resourceCosts": [
-          {
-            "resource": "ST",
-            "mode": "fixed",
-            "value": 5
           }
         ],
         "healResource": "HP",
@@ -42,6 +43,14 @@
     "id": "skill_basic_heal",
     "name": "기본 회복",
     "slot": "basic",
+    "cooldown": 0,
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 5
+      }
+    ],
     "actions": [
       {
         "type": "heal",
@@ -54,13 +63,6 @@
             "field": "magic",
             "calc": "percent",
             "value": 100
-          }
-        ],
-        "resourceCosts": [
-          {
-            "resource": "MP",
-            "mode": "fixed",
-            "value": 5
           }
         ],
         "healResource": "HP",
@@ -81,6 +83,14 @@
     "id": "skill_1786977113991",
     "name": "돌진",
     "slot": "active",
+    "cooldown": 5,
+    "resourceCosts": [
+      {
+        "resource": "ST",
+        "mode": "fixed",
+        "value": 10
+      }
+    ],
     "actions": [
       {
         "type": "move",
@@ -88,13 +98,6 @@
         "rangeMode": "mainWeapon",
         "rangeValue": 1,
         "coefficients": [],
-        "resourceCosts": [
-          {
-            "resource": "ST",
-            "mode": "fixed",
-            "value": 10
-          }
-        ],
         "healResource": "HP",
         "damageType": "physical",
         "area": 0,
@@ -103,6 +106,31 @@
         "moveType": "Dash",
         "moveSpeed": 3,
         "distance": 10,
+        "duration": 0,
+        "fieldShape": "circle",
+        "fieldRadius": 0
+      },
+      {
+        "type": "deal_damage",
+        "target": "enemy",
+        "rangeMode": "mainWeapon",
+        "rangeValue": 1,
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "atk",
+            "calc": "percent",
+            "value": 150
+          }
+        ],
+        "healResource": "HP",
+        "damageType": "physical",
+        "area": 0,
+        "critical": 0,
+        "penetration": 0,
+        "moveType": "Dash",
+        "moveSpeed": 1,
+        "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
         "fieldRadius": 0

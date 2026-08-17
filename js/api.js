@@ -16,6 +16,12 @@ async function loadJsonFile(kind, defaults = []) {
 
 async function saveJsonFile(kind, data) {
   try {
+    logWarn("api", `${kind} 저장 API 요청`, JSON.stringify({
+      url: API_URLS[kind],
+      method: "PUT",
+      records: Array.isArray(data) ? data.length : null
+    }, null, 2));
+
     const response = await fetch(API_URLS[kind], {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -23,6 +29,12 @@ async function saveJsonFile(kind, data) {
     });
 
     const responseText = await response.text();
+    logWarn("api", `${kind} 저장 API 응답`, JSON.stringify({
+      status: response.status,
+      ok: response.ok,
+      body: responseText
+    }, null, 2));
+
     if (!response.ok) {
       throw new Error(`${kind} 저장 실패: HTTP ${response.status} ${responseText}`);
     }

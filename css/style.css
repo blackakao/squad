@@ -70,15 +70,23 @@ html {
 
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
+  font-family: var(--bs-font-sans-serif, Arial, sans-serif);
+  color: var(--bs-body-color);
+  background: var(--bs-tertiary-bg);
 }
 
 h2 {
   margin: 16px;
+  color: var(--bs-emphasis-color);
 }
 
 .nav {
-  margin: 0 16px 8px;
+  margin: 0 16px 12px;
+  padding: 10px;
+  background: var(--bs-body-bg);
+  border: 1px solid var(--bs-border-color);
+  border-radius: var(--bs-border-radius);
+  box-shadow: var(--bs-box-shadow-sm);
 }
 
 .page {
@@ -112,7 +120,9 @@ h2 {
 .col.right { width: var(--battle-right-width); }
 
 .panel {
-  border: 1px solid #ccc;
+  border: 1px solid var(--bs-border-color);
+  border-radius: var(--bs-border-radius);
+  background: var(--bs-body-bg);
   padding: var(--panel-padding);
   margin-bottom: var(--panel-margin-bottom);
   box-sizing: border-box;
@@ -158,12 +168,14 @@ h2 {
 }
 
 button {
-  margin: 3px;
+  margin: 0;
 }
 
 button.selected,
 #battleTeamButtons button.selected {
-  background: lightblue;
+  color: var(--bs-primary-text-emphasis);
+  background: var(--bs-primary-bg-subtle);
+  border-color: var(--bs-primary-border-subtle);
 }
 
 .unit-status {
@@ -651,8 +663,8 @@ button.selected,
   align-items: end;
 }
 
-.skill-table th:nth-child(4),
-.skill-table td:nth-child(4) {
+.skill-table th:nth-child(5),
+.skill-table td:nth-child(5) {
   text-align: left;
   word-break: break-word;
 }
@@ -779,16 +791,22 @@ button.selected,
 
 .data-table {
   width: 100%;
-  border-collapse: collapse;
   table-layout: fixed;
+  background: var(--bs-body-bg);
 }
 
 .data-table th,
 .data-table td {
-  border: 1px solid #ccc;
   padding: var(--data-table-cell-padding);
   text-align: center;
   vertical-align: middle;
+  word-break: keep-all;
+}
+
+.data-table thead th {
+  color: var(--bs-secondary-color);
+  background: var(--bs-tertiary-bg);
+  font-weight: 700;
 }
 
 .data-table th:first-child,
@@ -1072,15 +1090,17 @@ button.selected,
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(15, 23, 42, 0.45);
+  z-index: 1055;
+  padding: 16px;
 }
 
 .modal-content {
   width: min(var(--modal-width), calc(100vw - 32px));
   max-height: var(--modal-max-height);
   overflow-y: auto;
-  border: 1px solid #999;
-  background: #fff;
+  border: 1px solid var(--bs-border-color);
+  background: var(--bs-body-bg);
   padding: var(--modal-padding);
   box-sizing: border-box;
 }
@@ -1092,8 +1112,9 @@ button.selected,
 .battle-screen-modal-content {
   width: min(var(--battle-modal-width), calc(100vw - 24px));
   height: min(var(--battle-modal-height), calc(100vh - 24px));
-  border: 1px solid #999;
-  background: #fff;
+  border: 1px solid var(--bs-border-color);
+  border-radius: var(--bs-border-radius-lg);
+  background: var(--bs-body-bg);
   padding: var(--battle-modal-padding);
   box-sizing: border-box;
   display: flex;
@@ -1136,7 +1157,9 @@ button.selected,
 
 .battle-side-panel,
 .battle-field-panel {
-  border: 1px solid #ccc;
+  border: 1px solid var(--bs-border-color);
+  border-radius: var(--bs-border-radius);
+  background: var(--bs-body-bg);
   padding: 8px;
   box-sizing: border-box;
   min-width: 0;
@@ -1167,6 +1190,5 @@ button.selected,
 
 .form-row input,
 .form-row select {
-  padding: 6px;
   box-sizing: border-box;
 }
