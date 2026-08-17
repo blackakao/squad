@@ -4,6 +4,9 @@
   unit.mp = unit.maxMp;
   unit.maxSt = Math.max(0, Number(unit.maxSt ?? DEFAULT_RESOURCE_VALUE));
   unit.st = unit.maxSt;
+  unit.baseBp = Math.max(0, Number(unit.baseBp ?? unit.bp ?? 0));
+  unit.maxBp = unit.baseBp;
+  unit.bp = unit.baseBp;
   unit.exhausted = false;
   unit.isMoving = false;
   unit.didAct = false;
@@ -412,11 +415,11 @@ function resolveCastAction(unit, action) {
   }
 
   if (action.type === "heal") {
-    spawnProjectile(unit, action.target, "heal");
+    spawnProjectile(unit, action.target, "heal", getUnitSkill(unit, DEFAULT_HEAL_SKILL_ID));
   } else if (action.ranged) {
-    spawnProjectile(unit, action.target, "attack");
+    spawnProjectile(unit, action.target, "attack", getUnitSkill(unit, DEFAULT_ATTACK_SKILL_ID));
   } else {
-    doAttack(unit, action.target);
+    doAttack(unit, action.target, getUnitSkill(unit, DEFAULT_ATTACK_SKILL_ID));
   }
 }
 
@@ -430,35 +433,24 @@ function findHealTarget(healer, team) {
   return team.find(unit => unit.alive && unit.hp < unit.maxHp && distance(healer, unit) <= healRange);
 }
 
-function applyHeal(healer, target) {
+function applyHeal(healer, target, skill = getUnitSkill(healer, DEFAULT_HEAL_SKILL_ID)) {
   if (!target.alive || target.hp <= 0) {
     return;
   }
 
-  const amount = getHealAmount(healer);
-  const previousHp = target.hp;
-
-  target.hp = Math.min(target.maxHp, target.hp + amount);
-  healer.stats.heal += target.hp - previousHp;
-  triggerEffect(target, "heal");
+  applySkill(healer, target, skill);
 }
 
-function doAttack(attacker, target) {
-  const damage = getReducedDamage(attacker, target);
-
-  target.hp -= damage;
-  target.stats.taken += damage;
-  attacker.stats.damage += damage;
-
-  syncAliveState(target);
-  triggerEffect(target, "damage");
+function doAttack(attacker, target, skill = getUnitSkill(attacker, DEFAULT_ATTACK_SKILL_ID)) {
+  applySkill(attacker, target, skill);
 }
 
-function spawnProjectile(source, target, type) {
+function spawnProjectile(source, target, type, skill) {
   projectiles.push({
     source,
     target,
     type,
+    skill,
     x: source.x,
     y: source.y
   });
@@ -468,7 +460,7 @@ function updateProjectiles() {
   const activeProjectiles = [];
 
   projectiles.forEach(projectile => {
-    const { source, target, type } = projectile;
+    const { source, target, type, skill } = projectile;
 
     if (!target.alive || !source.alive) {
       return;
@@ -480,9 +472,9 @@ function updateProjectiles() {
 
     if (dist <= PROJECTILE_SPEED || dist === 0) {
       if (type === "heal") {
-        applyHeal(source, target);
+        applyHeal(source, target, skill);
       } else {
-        doAttack(source, target);
+        doAttack(source, target, skill);
       }
       return;
     }

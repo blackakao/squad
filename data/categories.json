@@ -88,6 +88,17 @@
     "slotType": "subOnly"
   },
   {
+    "type": "weapon",
+    "key": "치유서",
+    "label": "치유서",
+    "handType": "oneHand",
+    "attackRange": 5,
+    "attackSpeed": 2,
+    "castSpeed": 0.5,
+    "attackType": "magic",
+    "slotType": "mainOnly"
+  },
+  {
     "type": "armor",
     "key": "plate",
     "label": "판금"

@@ -19,6 +19,8 @@ const recordPageEl = document.getElementById("recordPage");
 const equipmentPageEl = document.getElementById("equipmentPage");
 const itemPageEl = document.getElementById("itemPage");
 const categoryPageEl = document.getElementById("categoryPage");
+const skillPageEl = document.getElementById("skillPage");
+const layoutPageEl = document.getElementById("layoutPage");
 const logPageEl = document.getElementById("logPage");
 const monsterTableBodyEl = document.getElementById("monsterTableBody");
 const recordTableBodyEl = document.getElementById("recordTableBody");
@@ -100,6 +102,21 @@ const itemCastSpeedEl = document.getElementById("itemCastSpeed");
 const itemDefenseEl = document.getElementById("itemDefense");
 const itemResistanceEl = document.getElementById("itemResistance");
 const itemAttackRangeEl = document.getElementById("itemAttackRange");
+const itemAttackSkillEl = document.getElementById("itemAttackSkill");
+const skillTableBodyEl = document.getElementById("skillTableBody");
+const skillModalEl = document.getElementById("skillModal");
+const skillModalTitleEl = document.getElementById("skillModalTitle");
+const skillFormEl = document.getElementById("skillForm");
+const skillEditIndexEl = document.getElementById("skillEditIndex");
+const skillNameEl = document.getElementById("skillName");
+const skillSlotEl = document.getElementById("skillSlot");
+const skillActionsEl = document.getElementById("skillActions");
+const layoutPageFilterEl = document.getElementById("layoutPageFilter");
+const layoutControlRowsEl = document.getElementById("layoutControlRows");
+const layoutFrameEl = document.getElementById("layoutFrame");
+const layoutSelectionTitleEl = document.getElementById("layoutSelectionTitle");
+const layoutSelectionHintEl = document.getElementById("layoutSelectionHint");
+const layoutSelectedControlsEl = document.getElementById("layoutSelectedControls");
 const weaponCategoryTableBodyEl = document.getElementById("weaponCategoryTableBody");
 const armorCategoryTableBodyEl = document.getElementById("armorCategoryTableBody");
 const weaponCategoryModalEl = document.getElementById("weaponCategoryModal");
@@ -223,20 +240,21 @@ const API_URLS = {
   teams: "/api/teams",
   records: "/api/records",
   items: "/api/items",
-  categories: "/api/categories"
+  categories: "/api/categories",
+  skills: "/api/skills"
 };
 const DEFAULT_MONSTER_JSON = [
-  { label: "슬라임", hp: 2000, mp: DEFAULT_RESOURCE_VALUE, st: DEFAULT_RESOURCE_VALUE, atk: 8, magic: 10, speed: 1.2, attackSpeed: 1, castSpeed: 0.5, defense: 0, resistance: 0, attackRange: 1, role: "melee" },
-  { label: "오크", hp: 2000, mp: DEFAULT_RESOURCE_VALUE, st: DEFAULT_RESOURCE_VALUE, atk: 12, magic: 10, speed: 1, attackSpeed: 0.1, castSpeed: 3, defense: 0, resistance: 0, attackRange: 1, role: "ranged" },
-  { label: "드래곤", hp: 2000, mp: DEFAULT_RESOURCE_VALUE, st: DEFAULT_RESOURCE_VALUE, atk: 20, magic: 10, speed: 1.2, attackSpeed: 1, castSpeed: 0.5, defense: 0, resistance: 0, attackRange: 1, role: "melee" }
+  { label: "슬라임", hp: 2000, mp: DEFAULT_RESOURCE_VALUE, st: DEFAULT_RESOURCE_VALUE, bp: 0, atk: 8, magic: 10, speed: 1.2, attackSpeed: 1, castSpeed: 0.5, defense: 0, resistance: 0, attackRange: 1, role: "melee" },
+  { label: "오크", hp: 2000, mp: DEFAULT_RESOURCE_VALUE, st: DEFAULT_RESOURCE_VALUE, bp: 0, atk: 12, magic: 10, speed: 1, attackSpeed: 0.1, castSpeed: 3, defense: 0, resistance: 0, attackRange: 1, role: "ranged" },
+  { label: "드래곤", hp: 2000, mp: DEFAULT_RESOURCE_VALUE, st: DEFAULT_RESOURCE_VALUE, bp: 0, atk: 20, magic: 10, speed: 1.2, attackSpeed: 1, castSpeed: 0.5, defense: 0, resistance: 0, attackRange: 1, role: "melee" }
 ];
 
 const ROLE_STATS = {
-  tank: { hp: 2000, mp: DEFAULT_RESOURCE_VALUE, st: DEFAULT_RESOURCE_VALUE, atk: 10, magic: 10, color: "gray", attackRange: 1, attackSpeed: 2, castSpeed: 1, defense: 0, resistance: 0, speedMultiplier: 1.2 },
-  melee: { hp: 2000, mp: DEFAULT_RESOURCE_VALUE, st: DEFAULT_RESOURCE_VALUE, atk: 10, magic: 10, color: "yellow", attackRange: 1, attackSpeed: 1, castSpeed: 0.5, defense: 0, resistance: 0, speedMultiplier: 1.2 },
-  ranged: { hp: 2000, mp: DEFAULT_RESOURCE_VALUE, st: DEFAULT_RESOURCE_VALUE, atk: 12, magic: 10, color: "blue", attackRange: 1, attackSpeed: 0.1, castSpeed: 3, defense: 0, resistance: 0, speedMultiplier: 1 },
-  healer: { hp: 2000, mp: DEFAULT_RESOURCE_VALUE, st: DEFAULT_RESOURCE_VALUE, atk: 10, magic: 10, color: "violet", attackRange: 1, attackSpeed: 0.1, castSpeed: 2, defense: 0, resistance: 0, speedMultiplier: 1 },
-  special: { hp: 2000, mp: DEFAULT_RESOURCE_VALUE, st: DEFAULT_RESOURCE_VALUE, atk: 10, magic: 10, color: "orange", attackRange: 1, attackSpeed: 1, castSpeed: 1, defense: 0, resistance: 0, speedMultiplier: 1 }
+  tank: { hp: 2000, mp: DEFAULT_RESOURCE_VALUE, st: DEFAULT_RESOURCE_VALUE, bp: 0, atk: 10, magic: 10, color: "gray", attackRange: 1, attackSpeed: 2, castSpeed: 1, defense: 0, resistance: 0, speedMultiplier: 1.2 },
+  melee: { hp: 2000, mp: DEFAULT_RESOURCE_VALUE, st: DEFAULT_RESOURCE_VALUE, bp: 0, atk: 10, magic: 10, color: "yellow", attackRange: 1, attackSpeed: 1, castSpeed: 0.5, defense: 0, resistance: 0, speedMultiplier: 1.2 },
+  ranged: { hp: 2000, mp: DEFAULT_RESOURCE_VALUE, st: DEFAULT_RESOURCE_VALUE, bp: 0, atk: 12, magic: 10, color: "blue", attackRange: 1, attackSpeed: 0.1, castSpeed: 3, defense: 0, resistance: 0, speedMultiplier: 1 },
+  healer: { hp: 2000, mp: DEFAULT_RESOURCE_VALUE, st: DEFAULT_RESOURCE_VALUE, bp: 0, atk: 10, magic: 10, color: "violet", attackRange: 1, attackSpeed: 0.1, castSpeed: 2, defense: 0, resistance: 0, speedMultiplier: 1 },
+  special: { hp: 2000, mp: DEFAULT_RESOURCE_VALUE, st: DEFAULT_RESOURCE_VALUE, bp: 0, atk: 10, magic: 10, color: "orange", attackRange: 1, attackSpeed: 1, castSpeed: 1, defense: 0, resistance: 0, speedMultiplier: 1 }
 };
 
 const BASE_ATTACK_COOLDOWN = 60;
@@ -266,6 +284,7 @@ let factionsJson = [];
 let teamsJson = [];
 let battleRecordsJson = [];
 let itemsJson = [];
+let skillsJson = [];
 let categoriesJson = {
   weapons: DEFAULT_CATEGORIES.weapons.map(category => ({ ...category })),
   armors: DEFAULT_CATEGORIES.armors.map(category => ({ ...category }))
@@ -333,6 +352,7 @@ function getBaseCharacterAbilities(role) {
     hp: roleStat.hp,
     mp: roleStat.mp,
     st: roleStat.st,
+    bp: roleStat.bp,
     atk: roleStat.atk,
     magic: roleStat.magic,
     speed: roleStat.speedMultiplier,
@@ -356,6 +376,7 @@ function getStatAbilityBonus(attributes = {}) {
     hp: vit * 50,
     mp: Math.floor(int / 10) * 10 + wis,
     st: agi,
+    bp: 0,
     atk: str + Math.floor(focus / 5),
     magic: int,
     speed: Math.floor(agi / 5) * 0.1,
@@ -415,6 +436,7 @@ function applyCharacterStatAbilities(character) {
     hp: base.hp + bonus.hp + equipmentBonus.hp,
     mp: base.mp + bonus.mp + equipmentBonus.mp,
     st: base.st + bonus.st + equipmentBonus.st,
+    bp: Math.max(0, Number(character.bp ?? base.bp + bonus.bp) || 0),
     atk: base.atk + bonus.atk + equipmentBonus.atk,
     magic: base.magic + bonus.magic + equipmentBonus.magic,
     speed: Math.round((base.speed + bonus.speed + equipmentBonus.speed) * 10) / 10,
@@ -484,9 +506,13 @@ function isPhysicalAttackUnit(unit) {
   return getUnitAttackType(unit) === "physical";
 }
 
-function getReducedDamage(attacker, target) {
-  const isMagicDamage = isMagicAttackUnit(attacker);
-  const rawDamage = Number(isMagicDamage ? attacker.magic : attacker.atk) || 0;
+function getReducedDamage(attacker, target, damageType = getUnitAttackType(attacker), rawDamageValue = null) {
+  const rawDamage = Number(rawDamageValue ?? (damageType === "magic" ? attacker.magic : attacker.atk)) || 0;
+  if (damageType === "fixed") {
+    return Math.max(0, Math.round(rawDamage * 10) / 10);
+  }
+
+  const isMagicDamage = damageType === "magic";
   const mitigation = Math.max(0, Math.min(100, Number(isMagicDamage ? target.resistance : target.defense) || 0));
   return Math.max(0, Math.round(rawDamage * (1 - mitigation / 100) * 10) / 10);
 }
@@ -720,6 +746,7 @@ function normalizeCombatJson(items, defaults, nameKey) {
         hp: Number(item.hp),
         mp: normalizeCombatValue(item.mp, getDefaultAbility(role, "mp"), 0),
         st: normalizeCombatValue(item.st, getDefaultAbility(role, "st"), 0),
+        bp: normalizeCombatValue(item.bp, getDefaultAbility(role, "bp") ?? 0, 0),
         atk: Number(item.atk),
         magic: normalizeCombatValue(item.magic, getDefaultAbility(role, "magic"), 0),
         speed: normalizeCombatValue(item.speed, getDefaultAbility(role, "speedMultiplier"), 0.1),
@@ -741,7 +768,7 @@ function normalizeCombatJson(items, defaults, nameKey) {
 
       return normalizedItem;
     })
-    .filter(item => item[nameKey] && item.hp > 0 && item.mp >= 0 && item.st >= 0 && item.atk > 0 && item.magic >= 0 && item.speed > 0
+    .filter(item => item[nameKey] && item.hp > 0 && item.mp >= 0 && item.st >= 0 && item.bp >= 0 && item.atk > 0 && item.magic >= 0 && item.speed > 0
       && item.attackSpeed > 0 && item.castSpeed >= 0 && item.defense >= 0 && item.resistance >= 0 && item.attackRange >= 1 && ROLES.includes(item.role));
 
   return normalized.length > 0 ? normalized : defaults.map(item => ({ ...item }));
@@ -758,6 +785,8 @@ async function showPage(pageName) {
   equipmentPageEl.classList.toggle("hidden", pageName !== "equipment");
   itemPageEl.classList.toggle("hidden", pageName !== "item");
   categoryPageEl.classList.toggle("hidden", pageName !== "category");
+  skillPageEl.classList.toggle("hidden", pageName !== "skill");
+  layoutPageEl.classList.toggle("hidden", pageName !== "layout");
   logPageEl.classList.toggle("hidden", pageName !== "log");
 
   if (pageName === "monster") {
@@ -788,17 +817,26 @@ async function showPage(pageName) {
     renderBattleRecords();
   } else if (pageName === "equipment") {
     await loadCategoryJson();
+    await loadSkillJson();
     await loadItemJson();
     await loadCharacterJson();
     renderEquipmentPage();
   } else if (pageName === "item") {
     await loadCategoryJson();
+    await loadSkillJson();
     await loadItemJson();
     renderItemPage();
   } else if (pageName === "category") {
     await loadCategoryJson();
+    await loadSkillJson();
     await loadItemJson();
     renderCategoryPage();
+  } else if (pageName === "skill") {
+    await loadSkillJson();
+    await loadItemJson();
+    renderSkillPage();
+  } else if (pageName === "layout") {
+    renderLayoutSettingsPage();
   } else if (pageName === "log") {
     renderLogPage();
   }
@@ -845,6 +883,10 @@ function renderStatus(units, colorResolver) {
     const st = Math.max(0, Number(unit.st ?? maxSt));
     const stRatio = maxSt > 0 ? Math.max(0, Math.min(100, (st / maxSt) * 100)) : 0;
     const stText = `${Math.floor(st)} / ${maxSt}`;
+    const bp = Math.max(0, Number(unit.bp) || 0);
+    const maxBp = Math.max(bp, Number(unit.maxBp) || 0);
+    const bpRatio = maxBp > 0 ? Math.max(0, Math.min(100, (bp / maxBp) * 100)) : 0;
+    const bpText = maxBp > 0 ? `${Math.floor(bp)} / ${maxBp}` : `${Math.floor(bp)}`;
     const castDuration = Math.max(0, Number(unit.castDuration ?? 0));
     const castTimer = Math.max(0, Number(unit.castTimer ?? 0));
     const isCasting = castDuration > 0 && castTimer > 0;
@@ -868,6 +910,10 @@ function renderStatus(units, colorResolver) {
         <div class="st-track">
           <div class="st-fill" style="width:${stRatio}%;"></div>
           <div class="hp-label">ST ${stText}${exhaustedText}</div>
+        </div>
+        <div class="bp-track">
+          <div class="bp-fill" style="width:${bpRatio}%;"></div>
+          <div class="hp-label">BP ${bpText}</div>
         </div>
         <div class="cast-track${isCasting ? " casting" : ""}">
           <div class="cast-fill" style="width:${castRatio}%;"></div>

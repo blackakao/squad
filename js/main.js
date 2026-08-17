@@ -3,6 +3,7 @@ window.addEventListener("resize", resizeCanvas);
 
 async function initApp() {
   try {
+    loadLayoutSettings();
     log("앱 초기화를 시작합니다.", "main");
     await Promise.all([
       loadMonsterJson(),
@@ -11,6 +12,7 @@ async function initApp() {
       loadCategoryJson()
     ]);
     await loadItemJson();
+    await loadSkillJson();
     await loadCharacterJson();
     await loadTeamJson();
 
@@ -21,6 +23,7 @@ async function initApp() {
     renderBattleSelectionSummary();
     renderBattleRecords();
     renderItemPage();
+    renderSkillPage();
     updateBattleButton();
     updateStatusUI();
     gameLoop();

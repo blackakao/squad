@@ -167,6 +167,8 @@ function createEnemy(monsterIndex) {
     speed: monster.speed,
     attackSpeed: monster.attackSpeed,
     castSpeed: monster.castSpeed,
+    attackType: monster.attackType,
+    attackSkillId: monster.attackSkillId ?? "",
     defense: monster.defense,
     resistance: monster.resistance,
     attackRange: monster.attackRange,

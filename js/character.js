@@ -141,6 +141,7 @@ async function deleteSelectedCharacters() {
 
 function createCharacter(characterData, index, side = "player") {
   const derivedCharacter = applyCharacterStatAbilities(characterData);
+  const equippedWeapon = getEquippedWeaponItemForCombat(derivedCharacter);
   const role = derivedCharacter.role;
   const fieldWidth = canvas.width || 400;
   const fieldHeight = canvas.height || 300;
@@ -158,12 +159,16 @@ function createCharacter(characterData, index, side = "player") {
     maxMp: derivedCharacter.mp,
     st: derivedCharacter.st,
     maxSt: derivedCharacter.st,
+    bp: Math.max(0, Number(derivedCharacter.bp) || 0),
+    baseBp: Math.max(0, Number(derivedCharacter.bp) || 0),
+    maxBp: Math.max(0, Number(derivedCharacter.bp) || 0),
     atk: derivedCharacter.atk,
     magic: derivedCharacter.magic,
     speed: derivedCharacter.speed,
     attackSpeed: derivedCharacter.attackSpeed,
     castSpeed: derivedCharacter.castSpeed,
     attackType: derivedCharacter.attackType,
+    attackSkillId: equippedWeapon?.attackSkillId ?? "",
     defense: derivedCharacter.defense,
     resistance: derivedCharacter.resistance,
     attackRange: derivedCharacter.attackRange,

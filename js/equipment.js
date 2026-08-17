@@ -76,7 +76,8 @@ function applyWeaponCategoryStats(item) {
     attackRange: category.attackRange,
     attackSpeed: category.attackSpeed,
     castSpeed: category.castSpeed,
-    attackType: category.attackType
+    attackType: category.attackType,
+    attackSkillId: item.attackSkillId ?? ""
   };
 }
 
@@ -101,6 +102,7 @@ function normalizeItemJson(items) {
       weaponCategory: String(item.weaponCategory ?? getDefaultWeaponCategory(item)),
       handType: String(item.handType ?? getDefaultHandType(item)),
       attackType: String(item.attackType ?? ""),
+      attackSkillId: String(item.attackSkillId ?? ""),
       armorCategory: String(item.armorCategory ?? getDefaultArmorCategory(item)),
       ...stats
     };
@@ -119,6 +121,7 @@ function normalizeItemJson(items) {
           weaponCategory: "",
           handType: "",
           attackType: "",
+          attackSkillId: "",
           armorCategory: getArmorCategories().some(category => category.key === item.armorCategory) ? item.armorCategory : getArmorCategories()[0]?.key
         };
       }
@@ -128,7 +131,8 @@ function normalizeItemJson(items) {
         armorCategory: "",
         weaponCategory: "",
         handType: "",
-        attackType: ""
+        attackType: "",
+        attackSkillId: ""
       };
     })
     .filter(item => !isWeaponItem(item) || item.weaponCategory);
@@ -237,12 +241,19 @@ function syncItemWeaponFields() {
     itemAttackRangeEl.disabled = true;
     itemAttackSpeedEl.disabled = true;
     itemCastSpeedEl.disabled = true;
+    if (itemAttackSkillEl) {
+      itemAttackSkillEl.disabled = false;
+    }
   } else {
     itemHandTypeEl.value = "";
     itemWeaponSlotTypeEl.value = "";
     itemAttackRangeEl.disabled = false;
     itemAttackSpeedEl.disabled = false;
     itemCastSpeedEl.disabled = false;
+    if (itemAttackSkillEl) {
+      itemAttackSkillEl.value = "";
+      itemAttackSkillEl.disabled = true;
+    }
   }
 }
 
@@ -291,7 +302,7 @@ function formatSignedValue(value) {
 
 function getItemStatSummary(item) {
   const weaponSummary = isWeaponItem(item)
-    ? [`무기 카테고리 ${getWeaponCategoryLabel(item.weaponCategory)}`, `착용 방식 ${getHandTypeLabel(item.handType)}`, `착용 가능 슬롯 ${getWeaponSlotTypeLabel(getWeaponCategory(item.weaponCategory)?.slotType)}`, `공격 타입 ${getWeaponAttackTypeLabel(getWeaponCategory(item.weaponCategory)?.attackType)}`]
+    ? [`무기 카테고리 ${getWeaponCategoryLabel(item.weaponCategory)}`, `착용 방식 ${getHandTypeLabel(item.handType)}`, `착용 가능 슬롯 ${getWeaponSlotTypeLabel(getWeaponCategory(item.weaponCategory)?.slotType)}`, `공격 타입 ${getWeaponAttackTypeLabel(getWeaponCategory(item.weaponCategory)?.attackType)}`, `공격 스킬 ${getSkillById(item.attackSkillId)?.name ?? "기본 공격"}`]
     : [];
   const armorSummary = isArmorSlot(item.slot)
     ? [`방어구 카테고리 ${getArmorCategoryLabel(item.armorCategory)}`]
@@ -561,6 +572,7 @@ function renderItemPage() {
       <td>${escapeHtml(item.name)}</td>
       <td>${getSlotLabel(item.slot)}</td>
       <td>${isWeaponItem(item) ? getWeaponCategoryLabel(item.weaponCategory) : "-"}</td>
+      <td>${isWeaponItem(item) ? escapeHtml(getSkillById(item.attackSkillId)?.name ?? "기본 공격") : "-"}</td>
       <td>${isArmorSlot(item.slot) ? getArmorCategoryLabel(item.armorCategory) : "-"}</td>
       <td>${isWeaponItem(item) ? getHandTypeLabel(item.handType) : "-"}</td>
       ${ABILITY_ROWS.map(([, key]) => `<td>${item[key]}</td>`).join("")}
@@ -583,6 +595,10 @@ function openItemModal(index = "") {
   itemSlotEl.value = item?.slot ?? EQUIPMENT_SLOTS[0].key;
   renderCategoryOptions();
   itemWeaponCategoryEl.value = item?.weaponCategory || getWeaponCategories()[0]?.key || "";
+  if (itemAttackSkillEl) {
+    itemAttackSkillEl.innerHTML = getSkillOptionsHtml(item?.attackSkillId ?? "");
+    itemAttackSkillEl.value = item?.attackSkillId ?? "";
+  }
   itemArmorCategoryEl.value = item?.armorCategory || getArmorCategories()[0]?.key || "";
   itemHpEl.value = item?.hp ?? 0;
   itemMpEl.value = item?.mp ?? 0;
@@ -616,6 +632,7 @@ async function saveItemFromForm(event) {
     weaponCategory: isWeapon ? weaponCategory?.key ?? "" : "",
     handType: isWeapon ? weaponCategory?.handType ?? "" : "",
     attackType: isWeapon ? weaponCategory?.attackType ?? BARE_HAND_ATTACK_TYPE : "",
+    attackSkillId: isWeapon ? itemAttackSkillEl?.value ?? "" : "",
     armorCategory: isArmorSlot(itemSlotEl.value) ? itemArmorCategoryEl.value : "",
     hp: Number(itemHpEl.value),
     mp: Number(itemMpEl.value),
