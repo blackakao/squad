@@ -1147,6 +1147,34 @@ button.selected,
   margin-right: 2px;
 }
 
+.battle-screen-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--bs-border-color);
+}
+
+.battle-screen-tabs button {
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  padding: 6px 12px;
+  color: var(--bs-secondary-color);
+}
+
+.battle-screen-tabs button.active {
+  border-bottom-color: var(--bs-primary);
+  color: var(--bs-body-color);
+  font-weight: 700;
+}
+
+.battle-screen-tab-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+}
+
 .battle-screen-layout {
   display: grid;
   grid-template-columns: var(--battle-side-width) var(--battle-field-width) var(--battle-side-width);
@@ -1172,6 +1200,49 @@ button.selected,
 .battle-field-panel {
   display: flex;
   min-height: 0;
+}
+
+.battle-log-panel {
+  border: 1px solid var(--bs-border-color);
+  border-radius: var(--bs-border-radius);
+  background: var(--bs-body-bg);
+  padding: 8px;
+  overflow: hidden;
+}
+
+.battle-event-log-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.battle-event-log-row {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 8px;
+  border: 1px solid #b6e3f4;
+  border-radius: 6px;
+  background: #e8f7fd;
+  padding: 7px 8px;
+  font-size: 13px;
+}
+
+.battle-event-log-row.enemy {
+  border-color: #f1b9b9;
+  background: #fdeaea;
+}
+
+.battle-event-log-time {
+  color: var(--bs-secondary-color);
+  font-variant-numeric: tabular-nums;
+}
+
+.battle-event-log-empty {
+  color: var(--bs-secondary-color);
+  padding: 12px;
+  text-align: center;
 }
 
 @media (max-width: 820px) {

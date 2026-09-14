@@ -147,9 +147,13 @@ function placeSquadForBattle(units, side) {
   });
 }
 
+let isImmediateBattleResolving = false;
+let lastResolvedBattleResult = "";
+
 async function finishBattle(result) {
   updateResources();
   lastBattleDurationMs = battleStartedAt ? Date.now() - battleStartedAt : lastBattleDurationMs;
+  lastResolvedBattleResult = result;
   isBattleRunning = false;
   updateBattleButton();
 
@@ -168,9 +172,10 @@ async function finishBattle(result) {
   battleStartedAt = null;
   battleStartedAtText = "";
   lastResourceUpdateAt = null;
+  clearBattleEventLogs();
 }
 
-function startBattle() {
+function prepareBattleSession({ openScreen = true } = {}) {
   rebuildPlayerSquadFromSelection();
   if (battleMode === "team" && selectedEnemyTeamIndex !== "") {
     enemySquad = createSquadFromCharacterIds(getTeamCharacterIds(teamsJson[Number(selectedEnemyTeamIndex)]), "enemy");
@@ -178,15 +183,20 @@ function startBattle() {
 
   if (playerSquad.length < 1) {
     alert("최소 1명 필요");
-    return;
+    return false;
   }
 
   if (enemySquad.length < 1) {
     alert("적을 1명 이상 추가해주세요");
-    return;
+    return false;
   }
 
-  openBattleScreenModal();
+  if (openScreen) {
+    openBattleScreenModal();
+    showBattleScreenTab("status");
+  }
+
+  clearBattleEventLogs();
   playerSquad.forEach(resetUnitForBattle);
   enemySquad.forEach(resetUnitForBattle);
   placeSquadForBattle(playerSquad, "player");
@@ -198,22 +208,39 @@ function startBattle() {
   lastResourceUpdateAt = battleStartedAt;
   isBattleRunning = true;
   updateBattleButton();
+  return true;
+}
+
+function startBattle() {
+  if (isBattleRunning) {
+    return;
+  }
+
+  if (!prepareBattleSession({ openScreen: true })) {
+    return;
+  }
+
   log("전투 시작!");
 }
 
-function stopBattle() {
+function abortBattle() {
+  if (!isBattleRunning) {
+    return;
+  }
+
   lastBattleDurationMs = battleStartedAt ? Date.now() - battleStartedAt : lastBattleDurationMs;
   isBattleRunning = false;
   battleStartedAt = null;
   battleStartedAtText = "";
   lastResourceUpdateAt = null;
   updateBattleButton();
-  log("전투 중지");
+  clearBattleEventLogs();
+  log("전투 중단");
 }
 
 function toggleBattle() {
   if (isBattleRunning) {
-    stopBattle();
+    abortBattle();
   } else {
     startBattle();
   }
@@ -225,8 +252,62 @@ function setSpeed(speed) {
 }
 
 function updateBattleButton() {
-  battleBtnEl.innerText = isBattleRunning ? "전투 중지" : "전투 시작";
+  battleBtnEl.innerText = "전투 시작";
+  battleBtnEl.disabled = isBattleRunning || isImmediateBattleResolving;
+  if (abortBattleBtnEl) {
+    abortBattleBtnEl.disabled = !isBattleRunning || isImmediateBattleResolving;
+  }
+  if (quickBattleResultBtnEl) {
+    quickBattleResultBtnEl.disabled = isImmediateBattleResolving;
+  }
 }
+
+async function showImmediateBattleResult() {
+  if (isImmediateBattleResolving) {
+    return;
+  }
+
+  if (!isBattleRunning && !prepareBattleSession({ openScreen: false })) {
+    return;
+  }
+
+  isImmediateBattleResolving = true;
+  updateBattleButton();
+  const maxTicks = 60 * 60 * 10;
+  let ticks = 0;
+  log("전투 결과를 바로 계산합니다.");
+
+  try {
+    while (isBattleRunning && ticks < maxTicks) {
+      runBattleTick();
+      ticks++;
+
+      if (ticks % 1000 === 0) {
+        await new Promise(resolve => setTimeout(resolve, 0));
+      }
+    }
+
+    draw();
+    updateStatusUI();
+
+    if (isBattleRunning) {
+      isImmediateBattleResolving = false;
+      abortBattle();
+      alert("제한 시간 안에 승패가 나지 않아 전투를 중단했습니다.");
+      return;
+    }
+
+    log(`전투 결과 계산 완료 (${ticks}틱)`);
+    alert(`전투 결과: ${lastResolvedBattleResult}`);
+  } finally {
+    isImmediateBattleResolving = false;
+    updateBattleButton();
+  }
+}
+
+window.startBattle = startBattle;
+window.abortBattle = abortBattle;
+window.showImmediateBattleResult = showImmediateBattleResult;
 
 function updateMovement() {
   playerSquad.forEach(unit => moveUnit(unit, enemySquad));
@@ -696,6 +777,7 @@ function resetGame() {
   gameSpeed = 1;
   playerSquad = [];
   enemySquad = [];
+  clearBattleEventLogs();
   selectedBattleTeamIds.clear();
   selectedBattleCharacterIds.clear();
   selectedEnemyTeamIndex = "";
@@ -716,7 +798,9 @@ function resetGame() {
   log("게임 초기화 완료");
 }
 
-function gameLoop() {
+let lastGameLoopAt = performance.now();
+
+function runBattleTick() {
   if (isBattleRunning) {
     updateResources();
 
@@ -734,10 +818,24 @@ function gameLoop() {
   } else {
     updateEffects();
   }
+}
+
+function gameLoop() {
+  const now = performance.now();
+  const elapsed = Math.max(0, now - lastGameLoopAt);
+  lastGameLoopAt = now;
+  const tickCount = Math.max(1, Math.min(MAX_BATTLE_TICKS_PER_LOOP, Math.floor(elapsed / BATTLE_FRAME_MS) || 1));
+
+  for (let tick = 0; tick < tickCount; tick++) {
+    runBattleTick();
+    if (!isBattleRunning) {
+      break;
+    }
+  }
 
   draw();
   updateStatusUI();
-  requestAnimationFrame(gameLoop);
+  window.setTimeout(gameLoop, BATTLE_FRAME_MS);
 }
 
 

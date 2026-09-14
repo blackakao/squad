@@ -94,7 +94,7 @@ async function saveMonsterFromForm(event) {
     resistance: Number(monsterResistanceEl.value),
     attackRange: Number(monsterAttackRangeEl.value),
     role: monsterRoleEl.value,
-    portrait: await getPortraitForSave("monster", previousMonster?.portrait)
+    portrait: await getPortraitForSave("monster", previousMonster?.portrait, monsterLabelEl.value.trim())
   };
 
   if (!monster.label || monster.hp < 1 || monster.mp < 0 || monster.st < 0 || monster.atk < 1 || monster.magic < 0 || monster.speed <= 0
@@ -154,6 +154,7 @@ function createEnemy(monsterIndex) {
 
   return {
     id: enemySquad.length,
+    side: "enemy",
     role,
     name: `${monster.label}-${enemySquad.length + 1}`,
     hp: monster.hp,

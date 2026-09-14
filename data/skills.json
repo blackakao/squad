@@ -113,8 +113,8 @@
       {
         "type": "deal_damage",
         "target": "enemy",
-        "rangeMode": "mainWeapon",
-        "rangeValue": 1,
+        "rangeMode": "custom",
+        "rangeValue": 10,
         "coefficients": [
           {
             "type": "calculated",

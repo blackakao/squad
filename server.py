@@ -3,12 +3,21 @@ from pathlib import Path
 import json
 import os
 import re
+import base64
 from datetime import datetime
 
 
 ROOT = Path(__file__).resolve().parent
 DATA_DIR = ROOT / "data"
+ASSET_IMAGE_DIRS = {
+    "portraits": ROOT / "assets" / "images" / "portraits",
+    "skills": ROOT / "assets" / "images" / "skills",
+    "items": ROOT / "assets" / "images" / "items",
+    "icons": ROOT / "assets" / "images" / "icons",
+}
 API_NAME_RE = re.compile(r"^[a-zA-Z0-9_-]+$")
+ASSET_NAME_RE = re.compile(r"[^a-zA-Z0-9_-]+")
+DATA_URL_RE = re.compile(r"^data:image/(?P<ext>png|jpeg|jpg|webp|gif);base64,(?P<data>.+)$", re.DOTALL)
 API_FILE_ALIASES = {
     "records": "battle-records",
 }
@@ -30,6 +39,11 @@ def get_api_file_path(path):
     return DATA_DIR / f"{file_stem}.json"
 
 
+def slugify_asset_name(value):
+    slug = ASSET_NAME_RE.sub("-", str(value or "image").strip()).strip("-").lower()
+    return slug or "image"
+
+
 class BattleHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(ROOT), **kwargs)
@@ -43,14 +57,55 @@ class BattleHandler(SimpleHTTPRequestHandler):
             return
 
         if path == "/":
-            self.path = "/index2.html"
+            self.path = "/index.html"
         super().do_GET()
 
     def do_PUT(self):
         self.handle_api_write()
 
     def do_POST(self):
+        path = self.path.split("?", 1)[0]
+        if path.startswith("/api/assets/"):
+            self.handle_asset_upload(path)
+            return
+
         self.handle_api_write()
+
+    def handle_asset_upload(self, path):
+        asset_kind = path.removeprefix("/api/assets/").strip("/")
+        target_dir = ASSET_IMAGE_DIRS.get(asset_kind)
+        if not target_dir:
+            self.send_error(404, "Unknown asset kind")
+            return
+
+        try:
+            content_length = int(self.headers.get("Content-Length", 0))
+            payload = self.rfile.read(content_length).decode("utf-8")
+            body = json.loads(payload)
+            match = DATA_URL_RE.fullmatch(str(body.get("dataUrl", "")))
+            if not match:
+                raise ValueError("dataUrl must be a supported image data URL")
+
+            ext = "jpg" if match.group("ext") == "jpeg" else match.group("ext")
+            image_bytes = base64.b64decode(match.group("data"), validate=True)
+            if not image_bytes:
+                raise ValueError("image payload is empty")
+
+            target_dir.mkdir(parents=True, exist_ok=True)
+            stem = slugify_asset_name(body.get("name"))
+            timestamp = datetime.now().strftime("%Y%m%d%H%M%S%f")
+            file_path = target_dir / f"{stem}-{timestamp}.{ext}"
+            file_path.write_bytes(image_bytes)
+
+            relative_path = file_path.relative_to(ROOT).as_posix()
+            server_log(f"POST {path} saved {relative_path}")
+            self.send_json({"ok": True, "path": relative_path})
+        except Exception as error:
+            server_log(f"POST {path} failed: {error}")
+            self.send_response(400)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.end_headers()
+            self.wfile.write(json.dumps({"ok": False, "error": str(error)}, ensure_ascii=False).encode("utf-8"))
 
     def handle_api_write(self):
         path = self.path.split("?", 1)[0]
@@ -99,6 +154,6 @@ class BattleHandler(SimpleHTTPRequestHandler):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", "8000"))
     server = ThreadingHTTPServer(("127.0.0.1", port), BattleHandler)
-    print(f"Serving http://127.0.0.1:{port}/index2.html")
+    print(f"Serving http://127.0.0.1:{port}/index.html")
     server_log("API mapping enabled: /api/<name> -> data/<name>.json, /api/records -> data/battle-records.json")
     server.serve_forever()

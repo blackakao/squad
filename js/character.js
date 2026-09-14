@@ -83,7 +83,7 @@ async function saveCharacterFromForm(event) {
     faction: characterFactionEl.value,
     skillIds: [...characterSkillsEl.selectedOptions].map(option => option.value),
     attributes: createCharacterAttributes(previousAttributes),
-    portrait: await getPortraitForSave("character", previousCharacter?.portrait)
+    portrait: await getPortraitForSave("character", previousCharacter?.portrait, characterNameEl.value.trim())
   });
 
   if (!character.name || !character.faction || !ROLES.includes(character.role)) {
@@ -155,6 +155,7 @@ function createCharacter(characterData, index, side = "player") {
 
   return {
     id: index,
+    side,
     role,
     name: derivedCharacter.name,
     hp: derivedCharacter.hp,

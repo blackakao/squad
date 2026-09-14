@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Squad Auto Battle Prototype</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/style.css?v=20260914-battle-log">
 </head>
 <body>
 
@@ -50,7 +50,7 @@
 
     <div class="panel control-panel">
       <h4>조작</h4>
-      <button id="battleBtn" onclick="toggleBattle()">전투 시작</button>
+      <button id="battleBtn" onclick="startBattle()">전투 시작</button>
       <button onclick="openBattleScreenModal()">전투 화면 보기</button>
       <button onclick="resetGame()">초기화</button>
     </div>
@@ -672,6 +672,8 @@
     <div class="battle-screen-header">
       <h4>전투 화면</h4>
       <div class="battle-screen-actions">
+        <button id="abortBattleBtn" type="button" onclick="abortBattle()" disabled>전투 중단</button>
+        <button id="quickBattleResultBtn" type="button" onclick="showImmediateBattleResult()">결과 바로 보기</button>
         <span class="battle-speed-label">배속</span>
         <button onclick="setSpeed(1)">x1</button>
         <button onclick="setSpeed(2)">x2</button>
@@ -679,18 +681,27 @@
         <button type="button" onclick="closeBattleScreenModal()">닫기</button>
       </div>
     </div>
-    <div class="battle-screen-layout">
-      <div class="battle-side-panel">
-        <h4>아군 상태</h4>
-        <div id="playerStatus"></div>
+    <div class="battle-screen-tabs" role="tablist" aria-label="전투 화면 탭">
+      <button id="battleStatusTabBtn" type="button" class="active" onclick="showBattleScreenTab('status')">전투 화면</button>
+      <button id="battleLogTabBtn" type="button" onclick="showBattleScreenTab('log')">전투 로그</button>
+    </div>
+    <div id="battleStatusPanel" class="battle-screen-tab-panel">
+      <div class="battle-screen-layout">
+        <div class="battle-side-panel">
+          <h4>아군 상태</h4>
+          <div id="playerStatus"></div>
+        </div>
+        <div class="battle-field-panel">
+          <canvas id="battleCanvas"></canvas>
+        </div>
+        <div class="battle-side-panel">
+          <h4 id="enemyStatusTitle">적 상태</h4>
+          <div id="enemyStatus"></div>
+        </div>
       </div>
-      <div class="battle-field-panel">
-        <canvas id="battleCanvas"></canvas>
-      </div>
-      <div class="battle-side-panel">
-        <h4 id="enemyStatusTitle">적 상태</h4>
-        <div id="enemyStatus"></div>
-      </div>
+    </div>
+    <div id="battleLogPanel" class="battle-screen-tab-panel battle-log-panel hidden">
+      <div id="battleEventLogList" class="battle-event-log-list"></div>
     </div>
   </div>
 </div>
@@ -750,19 +761,19 @@
 </div>
 
 <script src="js/logger.js?v=20260818-save-click2"></script>
-<script src="js/ui.js?v=20260606-weapons"></script>
-<script src="js/api.js?v=20260818-save-click2"></script>
+<script src="js/ui.js?v=20260914-image-assets"></script>
+<script src="js/api.js?v=20260914-image-assets"></script>
 <script src="js/category.js?v=20260611-categories"></script>
-<script src="js/skill.js?v=20260818-save-click2"></script>
+<script src="js/skill.js?v=20260914-battle-log"></script>
 <script src="js/layout.js?v=20260817-layout"></script>
 <script src="js/equipment.js?v=20260606-weapons"></script>
-<script src="js/monster.js?v=20260606-weapons"></script>
+<script src="js/monster.js?v=20260914-image-assets"></script>
 <script src="js/faction.js?v=20260606-weapons"></script>
-<script src="js/character.js?v=20260606-weapons"></script>
+<script src="js/character.js?v=20260914-image-assets"></script>
 <script src="js/team.js?v=20260615-teams"></script>
 <script src="js/stats.js?v=20260606-weapons"></script>
 <script src="js/record.js?v=20260606-weapons"></script>
-<script src="js/battle.js?v=20260606-weapons"></script>
+<script src="js/battle.js?v=20260914-battle-controls2"></script>
 <script src="js/main.js?v=20260606-weapons"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="js/bootstrap-ui.js?v=20260817-bootstrap"></script>

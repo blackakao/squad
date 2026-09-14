@@ -5,6 +5,8 @@ const charactersEl = document.getElementById("characters");
 const playerStatusEl = document.getElementById("playerStatus");
 const enemyStatusEl = document.getElementById("enemyStatus");
 const battleBtnEl = document.getElementById("battleBtn");
+const abortBattleBtnEl = document.getElementById("abortBattleBtn");
+const quickBattleResultBtnEl = document.getElementById("quickBattleResultBtn");
 const enemyButtonsEl = document.getElementById("enemyButtons");
 const battleTeamButtonsEl = document.getElementById("battleTeamButtons");
 const battleSelectionSummaryEl = document.getElementById("battleSelectionSummary");
@@ -145,6 +147,11 @@ const teamMemberSummaryEl = document.getElementById("teamMemberSummary");
 const teamMemberListEl = document.getElementById("teamMemberList");
 const teamCharacterListEl = document.getElementById("teamCharacterList");
 const battleScreenModalEl = document.getElementById("battleScreenModal");
+const battleStatusTabBtnEl = document.getElementById("battleStatusTabBtn");
+const battleLogTabBtnEl = document.getElementById("battleLogTabBtn");
+const battleStatusPanelEl = document.getElementById("battleStatusPanel");
+const battleLogPanelEl = document.getElementById("battleLogPanel");
+const battleEventLogListEl = document.getElementById("battleEventLogList");
 
 const ROLES = ["tank", "melee", "ranged", "healer", "special"];
 const ROLE_ALIASES = {
@@ -261,6 +268,8 @@ const ROLE_STATS = {
 };
 
 const BASE_ATTACK_COOLDOWN = 60;
+const BATTLE_FRAME_MS = 1000 / 60;
+const MAX_BATTLE_TICKS_PER_LOOP = 600;
 const ATTACK_RANGE_UNIT = 30;
 const COLLISION_DISTANCE = 10;
 const UNIT_RADIUS = 5;
@@ -269,6 +278,7 @@ const PROJECTILE_SPEED = 7;
 const EFFECT_DURATION = 18;
 const PORTRAIT_MAX_SIZE = 256;
 const PORTRAIT_MAX_FILE_SIZE = 5 * 1024 * 1024;
+const BATTLE_EVENT_LOG_LIMIT = 300;
 const EFFECT_COLORS = {
   damage: "#fff18f",
   heal: "#8fffc1"
@@ -307,6 +317,8 @@ let selectedBattleTeamIds = new Set();
 let selectedBattleCharacterIds = new Set();
 let selectedEnemyTeamIndex = "";
 let battleMode = "monster";
+let selectedBattleScreenTab = "status";
+let battleEventLogs = [];
 const portraitImageCache = new Map();
 const portraitDrafts = {
   monster: { dataUrl: "", cleared: false },
@@ -573,7 +585,15 @@ function escapeHtml(value) {
 
 function normalizePortrait(value) {
   const portrait = String(value ?? "").trim();
-  return portrait.startsWith("data:image/") ? portrait : "";
+  if (portrait.startsWith("data:image/")) {
+    return portrait;
+  }
+
+  if (portrait.startsWith("assets/images/portraits/")) {
+    return portrait;
+  }
+
+  return "";
 }
 
 function getPortraitElements(type) {
@@ -678,7 +698,7 @@ async function previewPortraitFile(type) {
   }
 }
 
-async function getPortraitForSave(type, previousPortrait = "") {
+async function getPortraitForSave(type, previousPortrait = "", assetName = "") {
   const draft = portraitDrafts[type] ?? { dataUrl: "", cleared: false };
   const { input } = getPortraitElements(type);
 
@@ -693,12 +713,16 @@ async function getPortraitForSave(type, previousPortrait = "") {
         const dataUrl = await resizePortraitDataUrl(await readFileAsDataUrl(file));
         portraitDrafts[type] = { dataUrl, cleared: false };
         setPortraitPreview(type, dataUrl);
-        return dataUrl;
+        return await uploadImageAsset("portraits", dataUrl, assetName || type);
       } catch (error) {
         logError("portrait", "초상화 파일을 읽는 중 실패했습니다.", error);
         alert("초상화 파일을 읽지 못했습니다.");
       }
     }
+  }
+
+  if (normalizePortrait(draft.dataUrl).startsWith("data:image/")) {
+    return await uploadImageAsset("portraits", draft.dataUrl, assetName || type);
   }
 
   return normalizePortrait(draft.dataUrl) || normalizePortrait(previousPortrait);
@@ -936,6 +960,76 @@ function updateStatusUI() {
   enemyStatusEl.innerHTML = renderStatus(enemySquad, () => "red");
 }
 
+function getBattleUnitSide(unit) {
+  if (unit?.side === "player" || playerSquad.includes(unit)) {
+    return "player";
+  }
+
+  if (unit?.side === "enemy" || enemySquad.includes(unit)) {
+    return "enemy";
+  }
+
+  return "neutral";
+}
+
+function formatBattleEventValue(value) {
+  const number = Number(value) || 0;
+  return Number.isInteger(number) ? String(number) : number.toFixed(1);
+}
+
+function addBattleEventLog(source, message) {
+  battleEventLogs.push({
+    side: getBattleUnitSide(source),
+    time: getBattleElapsedSeconds(),
+    message: String(message ?? "")
+  });
+
+  if (battleEventLogs.length > BATTLE_EVENT_LOG_LIMIT) {
+    battleEventLogs = battleEventLogs.slice(-BATTLE_EVENT_LOG_LIMIT);
+  }
+
+  renderBattleEventLogs();
+}
+
+function clearBattleEventLogs() {
+  battleEventLogs = [];
+  renderBattleEventLogs();
+}
+
+function renderBattleEventLogs() {
+  if (!battleEventLogListEl) {
+    return;
+  }
+
+  if (!battleEventLogs.length) {
+    battleEventLogListEl.innerHTML = `<div class="battle-event-log-empty">전투 이벤트가 없습니다.</div>`;
+    return;
+  }
+
+  battleEventLogListEl.innerHTML = battleEventLogs.slice().reverse().map(entry => `
+    <div class="battle-event-log-row ${entry.side === "enemy" ? "enemy" : "player"}">
+      <span class="battle-event-log-time">${formatBattleEventValue(entry.time)}s</span>
+      <span>${escapeHtml(entry.message)}</span>
+    </div>
+  `).join("");
+}
+
+function showBattleScreenTab(tabName) {
+  selectedBattleScreenTab = tabName === "log" ? "log" : "status";
+  battleStatusTabBtnEl?.classList.toggle("active", selectedBattleScreenTab === "status");
+  battleLogTabBtnEl?.classList.toggle("active", selectedBattleScreenTab === "log");
+  battleStatusPanelEl?.classList.toggle("hidden", selectedBattleScreenTab !== "status");
+  battleLogPanelEl?.classList.toggle("hidden", selectedBattleScreenTab !== "log");
+
+  if (selectedBattleScreenTab === "status") {
+    resizeCanvas();
+  } else {
+    renderBattleEventLogs();
+  }
+}
+
+window.showBattleScreenTab = showBattleScreenTab;
+
 function resizeCanvas() {
   if (!canvas?.parentElement) {
     return;
@@ -949,8 +1043,10 @@ function resizeCanvas() {
 
 function openBattleScreenModal() {
   battleScreenModalEl.classList.remove("hidden");
+  showBattleScreenTab(selectedBattleScreenTab);
   resizeCanvas();
   updateStatusUI();
+  renderBattleEventLogs();
 }
 
 function closeBattleScreenModal() {

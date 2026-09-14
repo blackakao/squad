@@ -1022,19 +1022,19 @@ function applySkill(source, target, skill) {
   if (!source?.alive || !skill?.actions?.length) {
     return;
   }
-  skill.actions.forEach(action => applySkillAction(source, target, action));
+  skill.actions.forEach(action => applySkillAction(source, target, action, skill));
 }
 
-function applySkillAction(source, target, action) {
+function applySkillAction(source, target, action, skill = null) {
   const resolvedTarget = getActionTarget(action, { source, target });
   if (!resolvedTarget?.alive) {
     return;
   }
 
   if (action.type === "deal_damage") {
-    applyActionDamage(source, resolvedTarget, action);
+    applyActionDamage(source, resolvedTarget, action, skill);
   } else if (action.type === "heal") {
-    applyActionHeal(source, resolvedTarget, action);
+    applyActionHeal(source, resolvedTarget, action, skill);
   } else if (action.type === "move") {
     applyActionMove(source, resolvedTarget, action);
   } else if (action.type === "create_field") {
@@ -1042,13 +1042,14 @@ function applySkillAction(source, target, action) {
   }
 }
 
-function applyActionDamage(source, target, action) {
+function applyActionDamage(source, target, action, skill = null) {
   const rawDamage = getActionCoefficientValue(action, source);
   const damage = applyBarrierOrHpDamage(source, target, action, rawDamage);
   target.stats.taken += damage;
   source.stats.damage += damage;
   syncAliveState(target);
   triggerEffect(target, "damage");
+  addBattleEventLog(source, `${source.name}가 ${target.name}에게 ${skill?.name ?? "공격"} 행동을 하여 ${formatBattleEventValue(damage)} 피해 발생`);
 }
 
 function applyBarrierOrHpDamage(source, target, action, rawDamage) {
@@ -1066,7 +1067,7 @@ function applyBarrierOrHpDamage(source, target, action, rawDamage) {
   return damage;
 }
 
-function applyActionHeal(source, target, action) {
+function applyActionHeal(source, target, action, skill = null) {
   if (target.hp <= 0) {
     return;
   }
@@ -1076,13 +1077,16 @@ function applyActionHeal(source, target, action) {
   if (resourceResult.applied) {
     source.stats.heal += resourceResult.gained;
     triggerEffect(target, "heal");
+    addBattleEventLog(source, `${source.name}가 ${target.name}에게 ${skill?.name ?? "회복"} 행동을 하여 ${formatBattleEventValue(resourceResult.gained)} ${String(action.healResource ?? "HP").toUpperCase()} 회복 발생`);
     return;
   }
 
   const previousHp = target.hp;
   target.hp = Math.min(target.maxHp, target.hp + amount);
-  source.stats.heal += target.hp - previousHp;
+  const gained = target.hp - previousHp;
+  source.stats.heal += gained;
   triggerEffect(target, "heal");
+  addBattleEventLog(source, `${source.name}가 ${target.name}에게 ${skill?.name ?? "회복"} 행동을 하여 ${formatBattleEventValue(gained)} HP 회복 발생`);
 }
 
 function applyResourceGain(target, resource, amount) {
