@@ -1,0 +1,12 @@
+{
+  "assetName": "",
+  "stylePreset": "gamePortrait",
+  "stylePrompt": "아이콘\n상징물이 모여서 그려지게\n상징물에는 색이 있어야함",
+  "provider": "puter",
+  "model": "",
+  "width": 768,
+  "height": 768,
+  "seed": 0,
+  "finalPrompt": "치유사 아이콘\n지팡이와 치유마법, 아이콘\n상징물이 모여서 그려지게\n상징물에는 색이 있어야함",
+  "updatedAt": "2026-09-15T00:28:13"
+}

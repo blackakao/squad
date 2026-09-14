@@ -161,3 +161,19 @@ python server.py
 
 - 기능, 실행 방법, 파일 구조, API, 데이터 스키마, 전투 규칙처럼 개발적으로 의미 있는 변경사항이 생기면 반드시 이 `README.MD`도 함께 갱신합니다.
 - 구현과 문서가 어긋나지 않도록 변경 작업을 마무리하기 전에 README의 관련 섹션을 확인합니다.
+
+## 이미지 생성 설정
+
+이미지 생성 페이지는 기본값으로 Puter.js의 브라우저 기반 이미지 생성을 사용합니다. 앱 개발자용 API 키 없이 사용할 수 있으며, 사용자가 Puter 계정으로 인증해 쓰는 방식입니다. 생성된 이미지는 화면에서 확인한 뒤 저장 이름을 지정하고 `이미지 폴더에 저장`을 누르면 `assets/images/generated/` 폴더에 저장됩니다.
+
+생성에 성공하면 마지막 스타일 프리셋, 스타일 문장, AI 제공자, 모델, 이미지 크기, 시드, 최종 프롬프트가 `data/image-generator-settings.json`에 저장됩니다. 서버를 다시 켜도 이미지 생성 페이지를 열면 이 설정을 다시 불러옵니다.
+
+Puter를 사용할 때는 이미지 생성 페이지의 `Puter 사용량` 영역에서 `puter.auth.getMonthlyUsage()` 기준 남은 월 사용량을 퍼센트 막대로 확인할 수 있습니다. 저장 버튼 옆의 `폴더 열기` 버튼으로 `assets/images/generated/` 폴더를 바로 열 수 있습니다.
+
+Hugging Face Inference API를 쓰려면 실행 전에 `HF_TOKEN` 환경변수를 설정하고, 화면의 AI 선택을 `Hugging Face`로 바꾸면 됩니다. 모델 입력칸을 비우면 `HF_IMAGE_MODEL` 환경변수 또는 기본 Stable Diffusion XL 모델을 사용합니다.
+
+```powershell
+$env:HF_TOKEN = "your_huggingface_token"
+$env:HF_IMAGE_MODEL = "stabilityai/stable-diffusion-xl-base-1.0"
+python server.py
+```

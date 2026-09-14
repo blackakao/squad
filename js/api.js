@@ -65,3 +65,23 @@ async function uploadImageAsset(kind, dataUrl, name = "image") {
 
   return result.path;
 }
+
+async function uploadImageAssetFromUrl(kind, imageUrl, name = "image") {
+  const response = await fetch(`/api/assets-url/${kind}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ imageUrl, name })
+  });
+  const responseText = await response.text();
+
+  if (!response.ok) {
+    throw new Error(`이미지 URL 저장 실패: HTTP ${response.status} ${responseText}`);
+  }
+
+  const result = JSON.parse(responseText);
+  if (!result?.path) {
+    throw new Error("이미지 URL 저장 응답에 path가 없습니다.");
+  }
+
+  return result.path;
+}

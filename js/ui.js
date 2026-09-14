@@ -22,6 +22,7 @@ const equipmentPageEl = document.getElementById("equipmentPage");
 const itemPageEl = document.getElementById("itemPage");
 const categoryPageEl = document.getElementById("categoryPage");
 const skillPageEl = document.getElementById("skillPage");
+const imagePageEl = document.getElementById("imagePage");
 const layoutPageEl = document.getElementById("layoutPage");
 const logPageEl = document.getElementById("logPage");
 const monsterTableBodyEl = document.getElementById("monsterTableBody");
@@ -816,6 +817,7 @@ async function showPage(pageName) {
   itemPageEl.classList.toggle("hidden", pageName !== "item");
   categoryPageEl.classList.toggle("hidden", pageName !== "category");
   skillPageEl.classList.toggle("hidden", pageName !== "skill");
+  imagePageEl.classList.toggle("hidden", pageName !== "image");
   layoutPageEl.classList.toggle("hidden", pageName !== "layout");
   logPageEl.classList.toggle("hidden", pageName !== "log");
 
@@ -866,6 +868,8 @@ async function showPage(pageName) {
     await loadSkillJson();
     await loadItemJson();
     renderSkillPage();
+  } else if (pageName === "image") {
+    renderImageGeneratorPage();
   } else if (pageName === "layout") {
     renderLayoutSettingsPage();
   } else if (pageName === "log") {
