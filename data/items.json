@@ -103,5 +103,26 @@
     "defense": 0,
     "resistance": 0,
     "attackRange": 5
+  },
+  {
+    "id": "item_1790432044932",
+    "name": "권투장비 샘플",
+    "slot": "mainWeapon",
+    "weaponCategory": "주먹구",
+    "handType": "oneHand",
+    "attackType": "physical",
+    "attackSkillId": "",
+    "armorCategory": "",
+    "hp": 0,
+    "mp": 0,
+    "st": 0,
+    "atk": 50,
+    "magic": 0,
+    "speed": 0,
+    "attackSpeed": 1,
+    "castSpeed": 0.5,
+    "defense": 0,
+    "resistance": 0,
+    "attackRange": 1
   }
 ]

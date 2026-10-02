@@ -1,0 +1,24 @@
+{
+  "entityId": "legacy_bbbcdbbdb4595aa3",
+  "name": "치유 정령",
+  "role": "healer",
+  "description": "",
+  "icon": "",
+  "tags": [
+    "summon"
+  ],
+  "ai": "healer",
+  "stats": {
+    "hp": 100,
+    "mp": 100,
+    "st": 100,
+    "atk": 10,
+    "magic": 10,
+    "defense": 0,
+    "resistance": 0,
+    "speed": 1,
+    "attackSpeed": 1,
+    "castTime": 0,
+    "attackRange": 1
+  }
+}

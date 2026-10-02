@@ -1,0 +1,24 @@
+{
+  "entityId": "legacy_7485c24755d256a5",
+  "name": "노포",
+  "role": "ranged",
+  "description": "",
+  "icon": "",
+  "tags": [
+    "summon"
+  ],
+  "ai": "stationary",
+  "stats": {
+    "hp": 100,
+    "mp": 100,
+    "st": 100,
+    "atk": 10,
+    "magic": 10,
+    "defense": 0,
+    "resistance": 0,
+    "speed": 0,
+    "attackSpeed": 1,
+    "castTime": 0,
+    "attackRange": 5
+  }
+}

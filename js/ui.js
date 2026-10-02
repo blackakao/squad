@@ -45,6 +45,8 @@ const monsterDefenseEl = document.getElementById("monsterDefense");
 const monsterResistanceEl = document.getElementById("monsterResistance");
 const monsterAttackRangeEl = document.getElementById("monsterAttackRange");
 const monsterRoleEl = document.getElementById("monsterRole");
+const monsterSkillsEl = document.getElementById("monsterSkills");
+const monsterCustomResourcesEl = document.getElementById("monsterCustomResources");
 const monsterPortraitEl = document.getElementById("monsterPortrait");
 const monsterPortraitPreviewEl = document.getElementById("monsterPortraitPreview");
 const characterTableBodyEl = document.getElementById("characterTableBody");
@@ -71,6 +73,18 @@ const characterAttackRangeEl = document.getElementById("characterAttackRange");
 const characterRoleEl = document.getElementById("characterRole");
 const characterFactionEl = document.getElementById("characterFaction");
 const characterSkillsEl = document.getElementById("characterSkills");
+const characterCustomResourcesEl = document.getElementById("characterCustomResources");
+const characterExtraWeaponSlotsEl = document.getElementById("characterExtraWeaponSlots");
+const characterTwoHandSingleSlotEl = document.getElementById("characterTwoHandSingleSlot");
+const characterSameTargetWeaponPenaltyEl = document.getElementById("characterSameTargetWeaponPenalty");
+const characterEntryDelayEl = document.getElementById("characterEntryDelay");
+const characterReviveCountEl = document.getElementById("characterReviveCount");
+const characterReviveDelayEl = document.getElementById("characterReviveDelay");
+const characterReviveHpPercentEl = document.getElementById("characterReviveHpPercent");
+const characterReviveMpPercentEl = document.getElementById("characterReviveMpPercent");
+const characterReviveStPercentEl = document.getElementById("characterReviveStPercent");
+const characterReviveInvulnerableEl = document.getElementById("characterReviveInvulnerable");
+const characterRevivePositionEl = document.getElementById("characterRevivePosition");
 const characterPortraitEl = document.getElementById("characterPortrait");
 const characterPortraitPreviewEl = document.getElementById("characterPortraitPreview");
 const statCharacterButtonsEl = document.getElementById("statCharacterButtons");
@@ -80,6 +94,7 @@ const statRowsEl = document.getElementById("statRows");
 const statAbilityPreviewEl = document.getElementById("statAbilityPreview");
 const equipmentCharacterButtonsEl = document.getElementById("equipmentCharacterButtons");
 const equipmentSlotGridEl = document.getElementById("equipmentSlotGrid");
+const equipmentSetControlsEl = document.getElementById("equipmentSetControls");
 const equipmentItemTableBodyEl = document.getElementById("equipmentItemTableBody");
 const equipmentAbilityPreviewEl = document.getElementById("equipmentAbilityPreview");
 const equipmentItemSlotFilterEl = document.getElementById("equipmentItemSlotFilter");
@@ -115,6 +130,8 @@ const skillEditIndexEl = document.getElementById("skillEditIndex");
 const skillNameEl = document.getElementById("skillName");
 const skillSlotEl = document.getElementById("skillSlot");
 const skillCooldownEl = document.getElementById("skillCooldown");
+const skillDescriptionEl = document.getElementById("skillDescription");
+const skillCastTimeEl = document.getElementById("skillCastTime");
 const skillResourceCostsEl = document.getElementById("skillResourceCosts");
 const skillActionsEl = document.getElementById("skillActions");
 const layoutPageFilterEl = document.getElementById("layoutPageFilter");
@@ -146,7 +163,15 @@ const teamListEl = document.getElementById("teamList");
 const teamSelectedNameEl = document.getElementById("teamSelectedName");
 const teamMemberSummaryEl = document.getElementById("teamMemberSummary");
 const teamMemberListEl = document.getElementById("teamMemberList");
+const teamActiveMemberCountEl = document.getElementById("teamActiveMemberCount");
 const teamCharacterListEl = document.getElementById("teamCharacterList");
+const teamBattleRulesEl = document.getElementById("teamBattleRules");
+const teamDamagePercentEl = document.getElementById("teamDamagePercent");
+const teamSynergyRulesEl = document.getElementById("teamSynergyRules");
+const teamSynergyRuleListEl = document.getElementById("teamSynergyRuleList");
+const teamHealingPercentEl = document.getElementById("teamHealingPercent");
+const teamResourceCostPercentEl = document.getElementById("teamResourceCostPercent");
+const teamCooldownPercentEl = document.getElementById("teamCooldownPercent");
 const battleScreenModalEl = document.getElementById("battleScreenModal");
 const battleStatusTabBtnEl = document.getElementById("battleStatusTabBtn");
 const battleLogTabBtnEl = document.getElementById("battleLogTabBtn");
@@ -314,6 +339,7 @@ let selectedEquipmentItemSlotFilter = "all";
 let selectedCharacterRoleFilter = "all";
 let selectedTeamIndex = "";
 let selectedTeamMemberIds = [];
+let selectedTeamSynergyRules = [];
 let selectedBattleTeamIds = new Set();
 let selectedBattleCharacterIds = new Set();
 let selectedEnemyTeamIndex = "";
@@ -342,6 +368,19 @@ function getRoleLabel(role) {
 function normalizeCombatValue(value, fallback, min = 0) {
   const number = Number(value);
   return Number.isFinite(number) && number >= min ? number : fallback;
+}
+
+function normalizeBattleRules(rules = {}) {
+  return {
+    entryDelay: Math.max(0, Number(rules?.entryDelay) || 0),
+    reviveCount: Math.max(0, Math.min(10, Math.floor(Number(rules?.reviveCount) || 0))),
+    reviveDelay: Math.max(0, Number(rules?.reviveDelay) || 0),
+    reviveHpPercent: Math.max(1, Math.min(100, Number(rules?.reviveHpPercent) || 50)),
+    reviveMpPercent: Math.max(0, Math.min(100, Number(rules?.reviveMpPercent ?? 100))),
+    reviveStPercent: Math.max(0, Math.min(100, Number(rules?.reviveStPercent ?? 100))),
+    reviveInvulnerable: Math.max(0, Number(rules?.reviveInvulnerable) || 0),
+    revivePosition: rules?.revivePosition === "start" ? "start" : "death"
+  };
 }
 
 function getDefaultAbility(role, key) {
@@ -405,7 +444,7 @@ function getStatAbilityBonus(attributes = {}) {
 }
 
 function getEquippedWeaponItemForCombat(character) {
-  const equipment = createEquipmentSlots(character?.equipment);
+  const equipment = createEquipmentSlots(character?.equipment, character);
   const mainWeapon = getItemById(equipment.mainWeapon);
 
   if (isWeaponItem(mainWeapon)) {
@@ -414,6 +453,27 @@ function getEquippedWeaponItemForCombat(character) {
 
   const subWeapon = getItemById(equipment.subWeapon);
   return isWeaponItem(subWeapon) ? subWeapon : null;
+}
+
+function getCharacterWeaponAttacks(character) {
+  const equipment=createEquipmentSlots(character?.equipment,character);
+  const rules=normalizeEquipmentRules(character?.equipmentRules);
+  const countedStandardTwoHand=new Set();
+  return getCharacterEquipmentSlots(character).flatMap(slot=>{
+    if (!isCharacterWeaponSlot(character,slot.key)) return [];
+    const item=getItemById(equipment[slot.key]);
+    if (!isWeaponItem(item)) return [];
+    if (item.handType === "twoHand" && !rules.twoHandSingleSlot) {
+      if (countedStandardTwoHand.has(item.id)) return [];
+      countedStandardTwoHand.add(item.id);
+    }
+    const category=getWeaponCategory(item.weaponCategory);
+    if (!category) return [];
+    return [{slot:slot.key,itemId:item.id,name:item.name,attackSkillId:item.attackSkillId ?? "",
+      attackType:category.attackType,attackRange:Math.max(1,Number(category.attackRange)||1),
+      attackSpeed:Math.max(0.1,Number(category.attackSpeed)||BARE_HAND_ATTACK_SPEED),
+      castSpeed:Math.max(0,Number(category.castSpeed)||0)}];
+  });
 }
 
 function getWeaponCombatSettings(character) {
@@ -441,12 +501,14 @@ function applyCharacterStatAbilities(character) {
   const attributes = createCharacterAttributes(character.attributes);
   const base = getBaseCharacterAbilities(character.role);
   const bonus = getStatAbilityBonus(attributes);
-  const equipment = createEquipmentSlots(character.equipment);
-  const equipmentBonus = getCharacterEquipmentBonus({ equipment });
+  const equipmentRules = normalizeEquipmentRules(character.equipmentRules);
+  const equipment = createEquipmentSlots(character.equipment, { ...character, equipmentRules });
+  const equipmentBonus = getCharacterEquipmentBonus({ ...character, equipmentRules, equipment });
   const weaponCombat = getWeaponCombatSettings({ ...character, equipment });
 
   return {
     ...character,
+    equipmentRules,
     attributes,
     equipment,
     hp: base.hp + bonus.hp + equipmentBonus.hp,
@@ -627,6 +689,7 @@ function resetPortraitDraft(type, dataUrl = "") {
 }
 
 function clearPortrait(type) {
+  if (type === "character") resetPortraitAppearance();
   const { input } = getPortraitElements(type);
   if (input) {
     input.value = "";
@@ -690,6 +753,7 @@ async function previewPortraitFile(type) {
 
   try {
     const dataUrl = await resizePortraitDataUrl(await readFileAsDataUrl(file));
+    if (type === "character") resetPortraitAppearance();
     portraitDrafts[type] = { dataUrl, cleared: false };
     setPortraitPreview(type, dataUrl);
   } catch (error) {
@@ -784,15 +848,20 @@ function normalizeCombatJson(items, defaults, nameKey) {
         resistance: Math.min(100, normalizeCombatValue(item.resistance, getDefaultAbility(role, "resistance"), 0)),
         attackRange: normalizeCombatValue(item.attackRange, getDefaultAbility(role, "attackRange"), 1),
         role,
+        skillIds: Array.isArray(item.skillIds) ? [...new Set(item.skillIds.map(String).filter(Boolean))] : [],
         portrait: normalizePortrait(item.portrait)
       };
 
       if (nameKey === "name") {
-        normalizedItem.skillIds = Array.isArray(item.skillIds)
-          ? item.skillIds.map(id => String(id)).filter(Boolean)
-          : [];
+        const appearance = PortraitCatalog.normalize(item.appearance);
+        if (appearance) normalizedItem.appearance = appearance;
         normalizedItem.attributes = createCharacterAttributes(item.attributes);
-        normalizedItem.equipment = createEquipmentSlots(item.equipment);
+        normalizedItem.equipmentRules = normalizeEquipmentRules(item.equipmentRules);
+        normalizedItem.battleRules = normalizeBattleRules(item.battleRules);
+        const equipmentCharacter = normalizeCharacterEquipmentSets({...normalizedItem, equipment:item.equipment, equipmentSets:item.equipmentSets, activeEquipmentSet:item.activeEquipmentSet});
+        normalizedItem.equipment = equipmentCharacter.equipment;
+        normalizedItem.equipmentSets = equipmentCharacter.equipmentSets;
+        normalizedItem.activeEquipmentSet = equipmentCharacter.activeEquipmentSet;
         normalizedItem.faction = normalizeFactionName(item.faction) || getDefaultFactionName();
         return applyCharacterStatAbilities(normalizedItem);
       }
@@ -922,18 +991,22 @@ function renderStatus(units, colorResolver) {
     const maxBp = Math.max(bp, Number(unit.maxBp) || 0);
     const bpRatio = maxBp > 0 ? Math.max(0, Math.min(100, (bp / maxBp) * 100)) : 0;
     const bpText = maxBp > 0 ? `${Math.floor(bp)} / ${maxBp}` : `${Math.floor(bp)}`;
-    const castDuration = Math.max(0, Number(unit.castDuration ?? 0));
-    const castTimer = Math.max(0, Number(unit.castTimer ?? 0));
+    const isChanneling = Boolean(unit.channelAction);
+    const castDuration = Math.max(0, Number(isChanneling ? unit.channelDuration : unit.castDuration ?? 0));
+    const castTimer = Math.max(0, Number(isChanneling ? unit.channelTimer : unit.castTimer ?? 0));
     const isCasting = castDuration > 0 && castTimer > 0;
     const castRatio = isCasting ? Math.max(0, Math.min(100, ((castDuration - castTimer) / castDuration) * 100)) : 0;
     const castRemainingText = isCasting ? `${(castTimer / BASE_ATTACK_COOLDOWN).toFixed(1)}초` : "-";
-    const castText = isCasting ? `시전 중 ${castRemainingText}` : "시전 대기";
+    const waitingTicks = Math.max(0, Number(unit.entryTicks || unit.reviveTicks) || 0);
+    const waitingLabel = unit.isReserve ? "예비대 대기" : unit.entryTicks > 0 ? "진입 대기" : unit.reviveTicks > 0 ? "부활 대기" : "";
+    const castText = unit.isReserve ? waitingLabel : waitingLabel ? `${waitingLabel} ${(waitingTicks / BASE_ATTACK_COOLDOWN).toFixed(1)}초` : isCasting ? `${isChanneling ? "채널링 중" : "시전 중"} ${castRemainingText}` : "시전 대기";
     const exhaustedText = unit.exhausted ? " · 지침" : "";
     const dpsText = `DPS ${getUnitDps(unit).toFixed(1)}`;
+    const reviveProtectionText = unit.reviveInvulnerableTicks > 0 ? ` · 부활 무적 ${(unit.reviveInvulnerableTicks / BASE_ATTACK_COOLDOWN).toFixed(1)}초` : "";
 
     return `
       <div class="unit-status">
-        <div>${unit.name} (${getRoleLabel(unit.role)})</div>
+        <div>${unit.name} (${getRoleLabel(unit.role)})${reviveProtectionText}</div>
         <div class="hp-track">
           <div class="hp-fill" style="width:${hpRatio}%; background:${colorResolver(unit)};"></div>
           <div class="hp-label">HP ${hpText} · ${dpsText}</div>
@@ -982,6 +1055,7 @@ function formatBattleEventValue(value) {
 }
 
 function addBattleEventLog(source, message) {
+  if (source?.isEntityPreview) return;
   battleEventLogs.push({
     side: getBattleUnitSide(source),
     time: getBattleElapsedSeconds(),

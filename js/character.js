@@ -56,12 +56,27 @@ function openCharacterModal(index = "") {
   characterEditIndexEl.value = character ? index : "";
   characterNameEl.value = character?.name ?? "";
   resetPortraitDraft("character", character?.portrait ?? "");
+  resetPortraitAppearance(character?.appearance);
   characterRoleEl.value = character?.role ?? "melee";
   renderCharacterFactionOptions();
   characterFactionEl.value = character?.faction ?? getDefaultFactionName();
   characterSkillsEl.innerHTML = typeof getCharacterSkillOptionsHtml === "function"
     ? getCharacterSkillOptionsHtml(character?.skillIds ?? [])
     : "";
+  const equipmentRules = normalizeEquipmentRules(character?.equipmentRules);
+  characterExtraWeaponSlotsEl.value = equipmentRules.extraWeaponSlots;
+  characterTwoHandSingleSlotEl.checked = equipmentRules.twoHandSingleSlot;
+  characterSameTargetWeaponPenaltyEl.value = equipmentRules.sameTargetWeaponPenaltyPercent;
+  const battleRules = normalizeBattleRules(character?.battleRules);
+  characterEntryDelayEl.value = battleRules.entryDelay;
+  characterReviveCountEl.value = battleRules.reviveCount;
+  characterReviveDelayEl.value = battleRules.reviveDelay;
+  characterReviveHpPercentEl.value = battleRules.reviveHpPercent;
+  characterReviveMpPercentEl.value = battleRules.reviveMpPercent;
+  characterReviveStPercentEl.value = battleRules.reviveStPercent;
+  characterReviveInvulnerableEl.value = battleRules.reviveInvulnerable;
+  characterRevivePositionEl.value = battleRules.revivePosition;
+  renderCustomResourceEditor(characterCustomResourcesEl, character?.customResources);
   characterModalEl.classList.remove("hidden");
 }
 
@@ -69,6 +84,7 @@ function closeCharacterModal() {
   characterModalEl.classList.add("hidden");
   characterFormEl.reset();
   resetPortraitDraft("character");
+  resetPortraitAppearance();
 }
 
 async function saveCharacterFromForm(event) {
@@ -82,8 +98,28 @@ async function saveCharacterFromForm(event) {
     role: characterRoleEl.value,
     faction: characterFactionEl.value,
     skillIds: [...characterSkillsEl.selectedOptions].map(option => option.value),
+    equipmentRules: normalizeEquipmentRules({
+      extraWeaponSlots: characterExtraWeaponSlotsEl.value,
+      twoHandSingleSlot: characterTwoHandSingleSlotEl.checked,
+      sameTargetWeaponPenaltyPercent: characterSameTargetWeaponPenaltyEl.value
+    }),
+    battleRules: normalizeBattleRules({
+      entryDelay: characterEntryDelayEl.value,
+      reviveCount: characterReviveCountEl.value,
+      reviveDelay: characterReviveDelayEl.value,
+      reviveHpPercent: characterReviveHpPercentEl.value,
+      reviveMpPercent: characterReviveMpPercentEl.value,
+      reviveStPercent: characterReviveStPercentEl.value,
+      reviveInvulnerable: characterReviveInvulnerableEl.value,
+      revivePosition: characterRevivePositionEl.value
+    }),
+    customResources: readCustomResourcesFromEditor(characterCustomResourcesEl),
     attributes: createCharacterAttributes(previousAttributes),
-    portrait: await getPortraitForSave("character", previousCharacter?.portrait, characterNameEl.value.trim())
+    equipment: previousCharacter?.equipment,
+    equipmentSets: previousCharacter?.equipmentSets,
+    activeEquipmentSet: previousCharacter?.activeEquipmentSet,
+    portrait: await getPortraitForSave("character", previousCharacter?.portrait, characterNameEl.value.trim()),
+    ...(portraitAppearanceDraft ? { appearance: { ...portraitAppearanceDraft } } : {})
   });
 
   if (!character.name || !character.faction || !ROLES.includes(character.role)) {
@@ -145,6 +181,20 @@ async function deleteSelectedCharacters() {
 
 function createCharacter(characterData, index, side = "player") {
   const derivedCharacter = applyCharacterStatAbilities(characterData);
+  const unequippedCharacter = applyCharacterStatAbilities({...characterData,equipment:{}});
+  const equipmentLoadouts = normalizeEquipmentSets(derivedCharacter).map(set => {
+    const equipped = applyCharacterStatAbilities({...derivedCharacter,equipment:set.equipment});
+    const weapon = getEquippedWeaponItemForCombat(equipped);
+    return {name:set.name,maxHp:equipped.hp,maxMp:equipped.mp,maxSt:equipped.st,baseBp:Math.max(0,Number(equipped.bp)||0),
+      atk:equipped.atk,magic:equipped.magic,speed:equipped.speed,attackSpeed:equipped.attackSpeed,castSpeed:equipped.castSpeed,
+      defense:equipped.defense,resistance:equipped.resistance,attackRange:equipped.attackRange,attackType:equipped.attackType,
+      attackSkillId:weapon?.attackSkillId ?? "",weaponAttacks:getCharacterWeaponAttacks(equipped),
+      sameTargetWeaponPenaltyPercent:equipped.equipmentRules.sameTargetWeaponPenaltyPercent,
+      withoutEquipment:{name:`${set.name} (장비 효과 무효)`,maxHp:unequippedCharacter.hp,maxMp:unequippedCharacter.mp,maxSt:unequippedCharacter.st,baseBp:Math.max(0,Number(unequippedCharacter.bp)||0),
+        atk:unequippedCharacter.atk,magic:unequippedCharacter.magic,speed:unequippedCharacter.speed,attackSpeed:unequippedCharacter.attackSpeed,castSpeed:unequippedCharacter.castSpeed,
+        defense:unequippedCharacter.defense,resistance:unequippedCharacter.resistance,attackRange:unequippedCharacter.attackRange,attackType:unequippedCharacter.attackType,
+        attackSkillId:"",weaponAttacks:[],sameTargetWeaponPenaltyPercent:0}};
+  });
   const equippedWeapon = getEquippedWeaponItemForCombat(derivedCharacter);
   const role = derivedCharacter.role;
   const fieldWidth = canvas.width || 400;
@@ -167,6 +217,8 @@ function createCharacter(characterData, index, side = "player") {
     bp: Math.max(0, Number(derivedCharacter.bp) || 0),
     baseBp: Math.max(0, Number(derivedCharacter.bp) || 0),
     maxBp: Math.max(0, Number(derivedCharacter.bp) || 0),
+    customResources: createBattleCustomResources(derivedCharacter.customResources),
+    battleRules: normalizeBattleRules(derivedCharacter.battleRules),
     atk: derivedCharacter.atk,
     magic: derivedCharacter.magic,
     speed: derivedCharacter.speed,
@@ -174,6 +226,10 @@ function createCharacter(characterData, index, side = "player") {
     castSpeed: derivedCharacter.castSpeed,
     attackType: derivedCharacter.attackType,
     attackSkillId: equippedWeapon?.attackSkillId ?? "",
+    weaponAttacks: getCharacterWeaponAttacks(derivedCharacter),
+    sameTargetWeaponPenaltyPercent: derivedCharacter.equipmentRules.sameTargetWeaponPenaltyPercent,
+    equipmentLoadouts,
+    activeEquipmentSet: derivedCharacter.activeEquipmentSet ?? 0,
     skillIds: Array.isArray(derivedCharacter.skillIds) ? derivedCharacter.skillIds : [],
     skillCooldowns: {},
     defense: derivedCharacter.defense,

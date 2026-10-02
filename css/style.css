@@ -551,6 +551,35 @@ button.selected,
   box-sizing: border-box;
 }
 
+.entity-action-panel {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+}
+
+.entity-action-panel label,
+[data-action-field="area"] label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.skill-description { max-width: 480px; overflow-wrap: anywhere; }
+.skill-support-warning { color: #9a3412; background: #fff7ed; border: 1px solid #fdba74; padding: 8px; border-radius: 4px; overflow-wrap: anywhere; }
+.entity-action-panel { display: flex; flex-direction: column; align-items: stretch; }
+.entity-toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0; }
+.entity-preview-info dl { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px 12px; }
+.entity-preview-info dt, .entity-preview-info dd { margin: 0; overflow-wrap: anywhere; }
+.entity-icon { width: 48px; height: 48px; object-fit: contain; }
+.entity-usages { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.entity-stat-grid, .entity-summon-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+.entity-editor-modal { z-index: 1065; }
+.modal-content.entity-editor-content { width: min(850px, calc(100vw - 32px)); }
+.entity-editor-content label { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
+#entityEditorError { color: #b91c1c; white-space: pre-line; }
+#entityPreviewCanvas { width: 100%; background: #f8fafc; border: 1px solid #94a3b8; }
+
 .skill-action-field {
   display: grid;
   gap: 4px;
@@ -625,6 +654,16 @@ button.selected,
   grid-template-columns: minmax(var(--skill-coefficient-type-width), 1fr) minmax(var(--skill-coefficient-field-width), 1fr) minmax(var(--skill-coefficient-calc-width), 1fr) minmax(var(--skill-coefficient-value-width), 1fr) auto;
   gap: 6px;
   align-items: center;
+}
+
+.skill-coefficient-effect-id {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 90px minmax(120px, 1fr);
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #555;
 }
 
 .skill-coefficient-row input,
@@ -869,6 +908,18 @@ button.selected,
 .record-table td:nth-child(5) {
   padding: var(--record-member-padding);
 }
+
+.record-table th:nth-child(7),
+.record-table td:nth-child(7) {
+  min-width: 260px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.record-events summary { cursor: pointer; white-space: nowrap; }
+.record-event-list { max-height: 260px; overflow: auto; margin-top: 6px; font-size: 12px; line-height: 1.5; }
+.record-event-list > div { padding: 3px 0; border-bottom: 1px solid var(--bs-border-color); }
+.record-event-list time { display: inline-block; min-width: 42px; color: var(--bs-secondary-color); }
 
 .faction-table th:first-child,
 .faction-table td:first-child {
@@ -1395,4 +1446,71 @@ button.selected,
 .form-row input,
 .form-row select {
   box-sizing: border-box;
+}
+
+.custom-resource-list {
+  display: grid;
+  gap: 8px;
+}
+
+.custom-resource-row {
+  display: grid;
+  grid-template-columns: minmax(90px, 1fr) minmax(110px, 1.4fr) minmax(80px, .8fr) minmax(80px, .8fr) auto;
+  gap: 6px;
+  align-items: end;
+}
+
+.custom-resource-row label {
+  display: grid;
+  gap: 3px;
+  font-size: .82rem;
+}
+
+.equipment-rule-summary {
+  grid-column: 1 / -1;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: #eef2ff;
+  color: #3730a3;
+  font-size: .9rem;
+}
+
+.battle-rule-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(100px, 1fr));
+}
+
+.battle-rule-grid label { display: grid; gap: 3px; }
+.battle-rule-grid small { grid-column: 1 / -1; }
+
+.team-battle-rules {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(120px, 1fr));
+  gap: 8px;
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+}
+
+.team-battle-rules h5,
+.team-battle-rules small { grid-column: 1 / -1; margin: 0; }
+.team-battle-rules label { display: grid; gap: 3px; }
+
+.team-synergy-rules { margin-top: 14px; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; }
+.team-synergy-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.team-synergy-header h5, .team-synergy-rules small { margin: 0; }
+.team-synergy-rule { display: grid; grid-template-columns: repeat(4, minmax(90px, 1fr)); gap: 7px; margin: 10px 0; padding: 9px; background: #f8fafc; border-radius: 7px; }
+.team-synergy-rule label { display: grid; gap: 3px; font-size: 12px; }
+.team-synergy-rule .team-synergy-remove { align-self: end; }
+
+.equipment-set-controls { display: flex; flex-wrap: wrap; gap: 7px; align-items: center; margin-bottom: 10px; padding: 9px; background: #f8fafc; border-radius: 7px; }
+.equipment-set-controls button.selected { background: #2563eb; color: white; }
+
+@media (max-width: 700px) {
+  .custom-resource-row { grid-template-columns: 1fr 1fr; }
+  .battle-rule-grid { grid-template-columns: 1fr 1fr; }
+  .team-battle-rules { grid-template-columns: 1fr; }
+  .team-battle-rules h5, .team-battle-rules small { grid-column: 1; }
+  .team-synergy-rule { grid-template-columns: 1fr 1fr; }
 }

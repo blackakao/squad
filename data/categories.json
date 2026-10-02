@@ -99,6 +99,17 @@
     "slotType": "mainOnly"
   },
   {
+    "type": "weapon",
+    "key": "주먹구",
+    "label": "주먹구",
+    "handType": "oneHand",
+    "attackRange": 1,
+    "attackSpeed": 1,
+    "castSpeed": 0.5,
+    "attackType": "physical",
+    "slotType": "both"
+  },
+  {
     "type": "armor",
     "key": "plate",
     "label": "판금"

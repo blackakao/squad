@@ -14,8 +14,11 @@
     "resistance": 5,
     "attackRange": 1,
     "role": "tank",
+    "skillIds": [
+      "skill_class_dancer_scatter",
+      "skill_class_dancer_focus"
+    ],
     "portrait": "assets/images/portraits/character-001.png",
-    "skillIds": [],
     "attributes": {
       "str": 50,
       "vit": 50,
@@ -23,6 +26,21 @@
       "focus": 0,
       "int": 0,
       "wis": 0
+    },
+    "equipmentRules": {
+      "extraWeaponSlots": 0,
+      "twoHandSingleSlot": false,
+      "sameTargetWeaponPenaltyPercent": 0
+    },
+    "battleRules": {
+      "entryDelay": 0,
+      "reviveCount": 0,
+      "reviveDelay": 0,
+      "reviveHpPercent": 50,
+      "reviveMpPercent": 100,
+      "reviveStPercent": 100,
+      "reviveInvulnerable": 0,
+      "revivePosition": "death"
     },
     "equipment": {
       "mainWeapon": "",
@@ -32,6 +50,20 @@
       "accessory": "",
       "special": ""
     },
+    "equipmentSets": [
+      {
+        "name": "세트 1",
+        "equipment": {
+          "mainWeapon": "",
+          "subWeapon": "",
+          "top": "",
+          "bottom": "",
+          "accessory": "",
+          "special": ""
+        }
+      }
+    ],
+    "activeEquipmentSet": 0,
     "faction": "쥬신",
     "attackType": "physical"
   },
@@ -50,10 +82,10 @@
     "resistance": 10,
     "attackRange": 1,
     "role": "tank",
-    "portrait": "assets/images/portraits/character-002.png",
     "skillIds": [
       "skill_1786977113991"
     ],
+    "portrait": "assets/images/portraits/character-002.png",
     "attributes": {
       "str": 50,
       "vit": 50,
@@ -61,6 +93,21 @@
       "focus": 0,
       "int": 50,
       "wis": 0
+    },
+    "equipmentRules": {
+      "extraWeaponSlots": 0,
+      "twoHandSingleSlot": false,
+      "sameTargetWeaponPenaltyPercent": 0
+    },
+    "battleRules": {
+      "entryDelay": 0,
+      "reviveCount": 0,
+      "reviveDelay": 0,
+      "reviveHpPercent": 50,
+      "reviveMpPercent": 100,
+      "reviveStPercent": 100,
+      "reviveInvulnerable": 0,
+      "revivePosition": "death"
     },
     "equipment": {
       "mainWeapon": "",
@@ -70,26 +117,47 @@
       "accessory": "",
       "special": ""
     },
+    "equipmentSets": [
+      {
+        "name": "세트 1",
+        "equipment": {
+          "mainWeapon": "",
+          "subWeapon": "",
+          "top": "",
+          "bottom": "",
+          "accessory": "",
+          "special": ""
+        }
+      }
+    ],
+    "activeEquipmentSet": 0,
     "faction": "프라가",
     "attackType": "physical"
   },
   {
     "name": "승려",
-    "hp": 2000,
-    "mp": 100,
-    "st": 150,
-    "bp": 0,
-    "atk": 70,
-    "magic": 10,
-    "speed": 2,
-    "attackSpeed": 1.5,
-    "castSpeed": 0,
-    "defense": 5,
-    "resistance": 0,
-    "attackRange": 1,
     "role": "healer",
-    "portrait": "assets/images/portraits/character-003.png",
-    "skillIds": [],
+    "faction": "쥬신",
+    "skillIds": [
+      "skill_class_monk_combo",
+      "skill_class_monk_area_heal"
+    ],
+    "equipmentRules": {
+      "extraWeaponSlots": 0,
+      "twoHandSingleSlot": false,
+      "sameTargetWeaponPenaltyPercent": 0
+    },
+    "battleRules": {
+      "entryDelay": 0,
+      "reviveCount": 0,
+      "reviveDelay": 0,
+      "reviveHpPercent": 50,
+      "reviveMpPercent": 100,
+      "reviveStPercent": 100,
+      "reviveInvulnerable": 0,
+      "revivePosition": "death"
+    },
+    "customResources": [],
     "attributes": {
       "str": 50,
       "vit": 0,
@@ -99,15 +167,41 @@
       "wis": 0
     },
     "equipment": {
-      "mainWeapon": "",
-      "subWeapon": "",
+      "mainWeapon": "item_1790432044932",
+      "subWeapon": "item_1790432044932",
       "top": "",
       "bottom": "",
       "accessory": "",
       "special": ""
     },
-    "faction": "쥬신",
-    "attackType": "physical"
+    "equipmentSets": [
+      {
+        "name": "세트 1",
+        "equipment": {
+          "mainWeapon": "item_1790432044932",
+          "subWeapon": "item_1790432044932",
+          "top": "",
+          "bottom": "",
+          "accessory": "",
+          "special": ""
+        }
+      }
+    ],
+    "activeEquipmentSet": 0,
+    "portrait": "assets/images/portraits/character-003.png",
+    "hp": 2000,
+    "mp": 100,
+    "st": 150,
+    "bp": 0,
+    "atk": 170,
+    "magic": 10,
+    "speed": 2,
+    "attackSpeed": 0.5,
+    "castSpeed": 0,
+    "attackType": "physical",
+    "defense": 5,
+    "resistance": 0,
+    "attackRange": 3
   },
   {
     "name": "사제",
@@ -124,8 +218,8 @@
     "resistance": 20,
     "attackRange": 6,
     "role": "healer",
-    "portrait": "assets/images/portraits/character-004.png",
     "skillIds": [],
+    "portrait": "assets/images/portraits/character-004.png",
     "attributes": {
       "str": 0,
       "vit": 50,
@@ -133,6 +227,21 @@
       "focus": 0,
       "int": 50,
       "wis": 50
+    },
+    "equipmentRules": {
+      "extraWeaponSlots": 0,
+      "twoHandSingleSlot": false,
+      "sameTargetWeaponPenaltyPercent": 0
+    },
+    "battleRules": {
+      "entryDelay": 0,
+      "reviveCount": 0,
+      "reviveDelay": 0,
+      "reviveHpPercent": 50,
+      "reviveMpPercent": 100,
+      "reviveStPercent": 100,
+      "reviveInvulnerable": 0,
+      "revivePosition": "death"
     },
     "equipment": {
       "mainWeapon": "item_1786972173219",
@@ -142,6 +251,20 @@
       "accessory": "",
       "special": ""
     },
+    "equipmentSets": [
+      {
+        "name": "세트 1",
+        "equipment": {
+          "mainWeapon": "item_1786972173219",
+          "subWeapon": "",
+          "top": "",
+          "bottom": "",
+          "accessory": "",
+          "special": ""
+        }
+      }
+    ],
+    "activeEquipmentSet": 0,
     "faction": "신성교단",
     "attackType": "magic"
   },
@@ -160,8 +283,12 @@
     "resistance": 15,
     "attackRange": 4,
     "role": "ranged",
+    "skillIds": [
+      "skill_class_mage_arrow",
+      "skill_class_mage_barrier",
+      "skill_class_mage_quick"
+    ],
     "portrait": "assets/images/portraits/character-005.png",
-    "skillIds": [],
     "attributes": {
       "str": 0,
       "vit": 0,
@@ -169,6 +296,21 @@
       "focus": 50,
       "int": 50,
       "wis": 50
+    },
+    "equipmentRules": {
+      "extraWeaponSlots": 0,
+      "twoHandSingleSlot": false,
+      "sameTargetWeaponPenaltyPercent": 0
+    },
+    "battleRules": {
+      "entryDelay": 0,
+      "reviveCount": 0,
+      "reviveDelay": 0,
+      "reviveHpPercent": 50,
+      "reviveMpPercent": 100,
+      "reviveStPercent": 100,
+      "reviveInvulnerable": 0,
+      "revivePosition": "death"
     },
     "equipment": {
       "mainWeapon": "item_1781186124129",
@@ -178,6 +320,20 @@
       "accessory": "",
       "special": ""
     },
+    "equipmentSets": [
+      {
+        "name": "세트 1",
+        "equipment": {
+          "mainWeapon": "item_1781186124129",
+          "subWeapon": "item_1781186124129",
+          "top": "",
+          "bottom": "",
+          "accessory": "",
+          "special": ""
+        }
+      }
+    ],
+    "activeEquipmentSet": 0,
     "faction": "프라가",
     "attackType": "magic"
   },
@@ -196,8 +352,8 @@
     "resistance": 0,
     "attackRange": 6,
     "role": "melee",
-    "portrait": "assets/images/portraits/character-006.png",
     "skillIds": [],
+    "portrait": "assets/images/portraits/character-006.png",
     "attributes": {
       "str": 0,
       "vit": 0,
@@ -205,6 +361,21 @@
       "focus": 0,
       "int": 0,
       "wis": 0
+    },
+    "equipmentRules": {
+      "extraWeaponSlots": 0,
+      "twoHandSingleSlot": false,
+      "sameTargetWeaponPenaltyPercent": 0
+    },
+    "battleRules": {
+      "entryDelay": 0,
+      "reviveCount": 0,
+      "reviveDelay": 0,
+      "reviveHpPercent": 50,
+      "reviveMpPercent": 100,
+      "reviveStPercent": 100,
+      "reviveInvulnerable": 0,
+      "revivePosition": "death"
     },
     "equipment": {
       "mainWeapon": "item_1781162923001",
@@ -214,6 +385,20 @@
       "accessory": "",
       "special": ""
     },
+    "equipmentSets": [
+      {
+        "name": "세트 1",
+        "equipment": {
+          "mainWeapon": "item_1781162923001",
+          "subWeapon": "item_1781162923001",
+          "top": "",
+          "bottom": "",
+          "accessory": "",
+          "special": ""
+        }
+      }
+    ],
+    "activeEquipmentSet": 0,
     "faction": "프라가",
     "attackType": "physical"
   },
@@ -223,17 +408,19 @@
     "mp": 100,
     "st": 150,
     "bp": 0,
-    "atk": 70,
+    "atk": 221,
     "magic": 10,
     "speed": 2.2,
-    "attackSpeed": 1.5,
-    "castSpeed": 0,
+    "attackSpeed": 2.5,
+    "castSpeed": 1.5,
     "defense": 5,
     "resistance": 0,
-    "attackRange": 1,
+    "attackRange": 6,
     "role": "melee",
+    "skillIds": [
+      "skill_class_engineer_ballista"
+    ],
     "portrait": "assets/images/portraits/character-007.png",
-    "skillIds": [],
     "attributes": {
       "str": 50,
       "vit": 0,
@@ -242,14 +429,43 @@
       "int": 0,
       "wis": 0
     },
+    "equipmentRules": {
+      "extraWeaponSlots": 0,
+      "twoHandSingleSlot": false,
+      "sameTargetWeaponPenaltyPercent": 0
+    },
+    "battleRules": {
+      "entryDelay": 0,
+      "reviveCount": 0,
+      "reviveDelay": 0,
+      "reviveHpPercent": 50,
+      "reviveMpPercent": 100,
+      "reviveStPercent": 100,
+      "reviveInvulnerable": 0,
+      "revivePosition": "death"
+    },
     "equipment": {
-      "mainWeapon": "",
-      "subWeapon": "",
+      "mainWeapon": "item_1781162923001",
+      "subWeapon": "item_1781162923001",
       "top": "",
       "bottom": "",
       "accessory": "",
       "special": ""
     },
+    "equipmentSets": [
+      {
+        "name": "세트 1",
+        "equipment": {
+          "mainWeapon": "item_1781162923001",
+          "subWeapon": "item_1781162923001",
+          "top": "",
+          "bottom": "",
+          "accessory": "",
+          "special": ""
+        }
+      }
+    ],
+    "activeEquipmentSet": 0,
     "faction": "쥬신",
     "attackType": "physical"
   },
@@ -260,16 +476,19 @@
     "st": 150,
     "bp": 0,
     "atk": 10,
-    "magic": 160,
+    "magic": 60,
     "speed": 2,
     "attackSpeed": 1.5,
     "castSpeed": 0.5,
     "defense": 0,
     "resistance": 15,
-    "attackRange": 6,
+    "attackRange": 1,
     "role": "healer",
+    "skillIds": [
+      "skill_class_fiend_armageddon",
+      "skill_class_spirit_summon"
+    ],
     "portrait": "assets/images/portraits/character-008.png",
-    "skillIds": [],
     "attributes": {
       "str": 0,
       "vit": 0,
@@ -278,31 +497,21 @@
       "int": 50,
       "wis": 50
     },
-    "equipment": {
-      "mainWeapon": "item_1786972173219",
-      "subWeapon": "",
-      "top": "",
-      "bottom": "",
-      "accessory": "",
-      "special": ""
+    "equipmentRules": {
+      "extraWeaponSlots": 0,
+      "twoHandSingleSlot": false,
+      "sameTargetWeaponPenaltyPercent": 0
     },
-    "faction": "누레아",
-    "attackType": "magic"
-  },
-  {
-    "name": "흑마법사",
-    "role": "ranged",
-    "faction": "철엘프",
-    "skillIds": [],
-    "attributes": {
-      "str": 0,
-      "vit": 0,
-      "agi": 0,
-      "focus": 0,
-      "int": 0,
-      "wis": 0
+    "battleRules": {
+      "entryDelay": 0,
+      "reviveCount": 0,
+      "reviveDelay": 0,
+      "reviveHpPercent": 50,
+      "reviveMpPercent": 100,
+      "reviveStPercent": 100,
+      "reviveInvulnerable": 0,
+      "revivePosition": "death"
     },
-    "portrait": "assets/images/portraits/character-009.png",
     "equipment": {
       "mainWeapon": "",
       "subWeapon": "",
@@ -311,6 +520,25 @@
       "accessory": "",
       "special": ""
     },
+    "equipmentSets": [
+      {
+        "name": "세트 1",
+        "equipment": {
+          "mainWeapon": "",
+          "subWeapon": "",
+          "top": "",
+          "bottom": "",
+          "accessory": "",
+          "special": ""
+        }
+      }
+    ],
+    "activeEquipmentSet": 0,
+    "faction": "누레아",
+    "attackType": "physical"
+  },
+  {
+    "name": "흑마법사",
     "hp": 2000,
     "mp": 100,
     "st": 100,
@@ -320,9 +548,58 @@
     "speed": 1,
     "attackSpeed": 2,
     "castSpeed": 0.5,
-    "attackType": "physical",
     "defense": 0,
     "resistance": 0,
-    "attackRange": 1
+    "attackRange": 1,
+    "role": "ranged",
+    "skillIds": [],
+    "portrait": "assets/images/portraits/character-009.png",
+    "attributes": {
+      "str": 0,
+      "vit": 0,
+      "agi": 0,
+      "focus": 0,
+      "int": 0,
+      "wis": 0
+    },
+    "equipmentRules": {
+      "extraWeaponSlots": 0,
+      "twoHandSingleSlot": false,
+      "sameTargetWeaponPenaltyPercent": 0
+    },
+    "battleRules": {
+      "entryDelay": 0,
+      "reviveCount": 0,
+      "reviveDelay": 0,
+      "reviveHpPercent": 50,
+      "reviveMpPercent": 100,
+      "reviveStPercent": 100,
+      "reviveInvulnerable": 0,
+      "revivePosition": "death"
+    },
+    "equipment": {
+      "mainWeapon": "",
+      "subWeapon": "",
+      "top": "",
+      "bottom": "",
+      "accessory": "",
+      "special": ""
+    },
+    "equipmentSets": [
+      {
+        "name": "세트 1",
+        "equipment": {
+          "mainWeapon": "",
+          "subWeapon": "",
+          "top": "",
+          "bottom": "",
+          "accessory": "",
+          "special": ""
+        }
+      }
+    ],
+    "activeEquipmentSet": 0,
+    "faction": "철엘프",
+    "attackType": "physical"
   }
 ]

@@ -1,19 +1,44 @@
 [
   {
     "name": "팀1",
+    "battleRules": {
+      "damagePercent": 100,
+      "healingPercent": 100,
+      "resourceCostPercent": 100,
+      "cooldownPercent": 100
+    },
+    "synergyRules": [
+      {
+        "type": "faction",
+        "value": "쥬신",
+        "requiredCount": 2,
+        "damagePercent": 100,
+        "healingPercent": 100,
+        "resourceCostPercent": 100,
+        "cooldownPercent": 100
+      }
+    ],
     "memberIds": [
       0,
       1,
-      3,
-      7
-    ]
+      6
+    ],
+    "activeMemberCount": 3
   },
   {
     "name": "팀2",
+    "battleRules": {
+      "damagePercent": 100,
+      "healingPercent": 100,
+      "resourceCostPercent": 100,
+      "cooldownPercent": 100
+    },
+    "synergyRules": [],
     "memberIds": [
-      4,
+      2,
       5,
-      6
-    ]
+      4
+    ],
+    "activeMemberCount": 3
   }
 ]

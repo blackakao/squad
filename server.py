@@ -10,10 +10,12 @@ import urllib.parse
 import urllib.request
 import subprocess
 from datetime import datetime
+from entity_store import EntityStore, EntityError
 
 
 ROOT = Path(__file__).resolve().parent
 DATA_DIR = ROOT / "data"
+ENTITY_STORE = EntityStore(DATA_DIR)
 IMAGE_SETTINGS_PATH = DATA_DIR / "image-generator-settings.json"
 ASSET_IMAGE_DIRS = {
     "portraits": ROOT / "assets" / "images" / "portraits",
@@ -64,6 +66,11 @@ class BattleHandler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         path = self.path.split("?", 1)[0]
+        if path.rstrip("/") == "/api/entities" or path.startswith("/api/entities/"):
+            self.handle_entities(path)
+            return
+        if path.rstrip("/") == "/api/skills":
+            ENTITY_STORE.migrate()
         if path == "/api/image-settings":
             server_log(f"GET {path} -> {IMAGE_SETTINGS_PATH.relative_to(ROOT)}")
             self.send_json(self.read_json_object(IMAGE_SETTINGS_PATH))
@@ -81,6 +88,9 @@ class BattleHandler(SimpleHTTPRequestHandler):
 
     def do_PUT(self):
         path = self.path.split("?", 1)[0]
+        if path.rstrip("/") == "/api/entities" or path.startswith("/api/entities/"):
+            self.handle_entities(path)
+            return
         if path == "/api/image-settings":
             self.handle_image_settings_write()
             return
@@ -89,6 +99,9 @@ class BattleHandler(SimpleHTTPRequestHandler):
 
     def do_POST(self):
         path = self.path.split("?", 1)[0]
+        if path.rstrip("/") == "/api/entities" or path.startswith("/api/entities/"):
+            self.handle_entities(path)
+            return
         if path.startswith("/api/open-folder/"):
             self.handle_open_folder(path)
             return
@@ -106,6 +119,43 @@ class BattleHandler(SimpleHTTPRequestHandler):
             return
 
         self.handle_api_write()
+
+    def do_DELETE(self):
+        self.handle_entities(self.path.split("?", 1)[0])
+
+    def handle_entities(self, path):
+        try:
+            if path.rstrip("/") != "/api/entities" and not path.startswith("/api/entities/"):
+                raise EntityError("Unknown API", 404)
+            parts = path.removeprefix("/api/entities").strip("/").split("/")
+            entity_id = parts[0].removesuffix(".json")
+            with ENTITY_STORE.lock:
+                ENTITY_STORE.migrate()
+                if self.command == "GET":
+                    if not entity_id:
+                        result = ENTITY_STORE.list()
+                    elif len(parts) == 2 and parts[1] == "usages":
+                        ENTITY_STORE.get(entity_id)
+                        result = ENTITY_STORE.usages(entity_id)
+                    elif len(parts) == 1:
+                        result = ENTITY_STORE.get(entity_id)
+                    else:
+                        raise EntityError("Unknown Entity API", 404)
+                elif self.command in {"POST", "PUT"}:
+                    if len(parts) != 1 or (self.command == "POST" and entity_id) or (self.command == "PUT" and not entity_id):
+                        raise EntityError("POST /api/entities/ 또는 PUT /api/entities/<id>를 사용하세요.")
+                    body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))).decode("utf-8"))
+                    if self.command == "PUT" and body.get("entityId") != entity_id:
+                        raise EntityError("수정 시 Entity ID를 변경할 수 없습니다. 새 Entity로 저장하세요.")
+                    result = ENTITY_STORE.save(body, create=self.command == "POST")
+                elif self.command == "DELETE" and entity_id and len(parts) == 1:
+                    ENTITY_STORE.delete(entity_id)
+                    result = {"ok": True}
+                else:
+                    raise EntityError("Unknown Entity API", 404)
+                self.send_json(result)
+        except Exception as error:
+            self.send_json_error(getattr(error, "status", 400), str(error))
 
     def handle_open_folder(self, path):
         asset_kind = path.removeprefix("/api/open-folder/").strip("/")
@@ -334,7 +384,10 @@ class BattleHandler(SimpleHTTPRequestHandler):
             data = json.loads(payload)
             if not isinstance(data, list):
                 raise ValueError("JSON root must be an array")
-            self.write_json(api_file_path, data)
+            if api_file_path == DATA_DIR / "skills.json":
+                ENTITY_STORE.save_skills(data)
+            else:
+                self.write_json(api_file_path, data)
             server_log(f"{self.command} {path} saved {len(data)} records")
             self.send_json({"ok": True})
         except Exception as error:

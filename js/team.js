@@ -1,3 +1,81 @@
+function normalizeTeamBattleRules(rules = {}) {
+  const percent = value => {
+    const number = Number(value);
+    return Number.isFinite(number) ? Math.max(0, number) : 100;
+  };
+  return {
+    damagePercent: percent(rules.damagePercent ?? 100),
+    healingPercent: percent(rules.healingPercent ?? 100),
+    resourceCostPercent: percent(rules.resourceCostPercent ?? 100),
+    cooldownPercent: percent(rules.cooldownPercent ?? 100)
+  };
+}
+
+function normalizeTeamSynergyRule(rule = {}) {
+  const type = rule.type === "role" ? "role" : "faction";
+  const percent = value => {
+    const number = Number(value);
+    return Number.isFinite(number) ? Math.max(0, number) : 100;
+  };
+  return {
+    type,
+    value: String(rule.value ?? "").trim(),
+    requiredCount: Math.max(1, Math.min(MAX_PLAYER_SQUAD, Math.floor(Number(rule.requiredCount) || 2))),
+    damagePercent: percent(rule.damagePercent ?? 100),
+    healingPercent: percent(rule.healingPercent ?? 100),
+    resourceCostPercent: percent(rule.resourceCostPercent ?? 100),
+    cooldownPercent: percent(rule.cooldownPercent ?? 100)
+  };
+}
+
+function normalizeTeamSynergyRules(rules) {
+  return (Array.isArray(rules) ? rules : []).map(normalizeTeamSynergyRule).filter(rule => rule.value);
+}
+
+function getActiveTeamSynergies(team) {
+  const members = getTeamCharacterIds(team).map(id => characterJson[id]).filter(Boolean);
+  return normalizeTeamSynergyRules(team?.synergyRules).filter(rule => members.filter(character =>
+    rule.type === "role" ? normalizeRole(character.role) === rule.value : character.faction === rule.value
+  ).length >= rule.requiredCount);
+}
+
+function getTeamRulesWithSynergies(team) {
+  return getActiveTeamSynergies(team).reduce((rules, synergy) => ({
+    damagePercent: rules.damagePercent * synergy.damagePercent / 100,
+    healingPercent: rules.healingPercent * synergy.healingPercent / 100,
+    resourceCostPercent: rules.resourceCostPercent * synergy.resourceCostPercent / 100,
+    cooldownPercent: rules.cooldownPercent * synergy.cooldownPercent / 100
+  }), normalizeTeamBattleRules(team?.battleRules));
+}
+
+let activeBattleSideBaseRules = { player: normalizeTeamBattleRules(), enemy: normalizeTeamBattleRules() };
+let activeBattleSideRules = { player: normalizeTeamBattleRules(), enemy: normalizeTeamBattleRules() };
+
+function getUnitTeamBattleRules(unit) {
+  const synergiesDisabled=(unit?.runtimeRuleOverrides ?? []).some(override=>override.disableTeamSynergies);
+  const base=(synergiesDisabled ? activeBattleSideBaseRules : activeBattleSideRules)[unit?.side] ?? normalizeTeamBattleRules();
+  return (unit?.runtimeRuleOverrides ?? []).reduce((rules,override)=>({
+    damagePercent:rules.damagePercent * override.damagePercent / 100,
+    healingPercent:rules.healingPercent * override.healingPercent / 100,
+    resourceCostPercent:rules.resourceCostPercent * override.resourceCostPercent / 100,
+    cooldownPercent:rules.cooldownPercent * override.cooldownPercent / 100
+  }),{...base});
+}
+
+function snapshotActiveBattleSideRules() {
+  const playerTeamIndexes = [...selectedBattleTeamIds];
+  const pureSingleTeam = playerTeamIndexes.length === 1 && selectedBattleCharacterIds.size === 0;
+  activeBattleSideBaseRules = {
+    player: pureSingleTeam ? normalizeTeamBattleRules(teamsJson[playerTeamIndexes[0]]?.battleRules) : normalizeTeamBattleRules(),
+    enemy: battleMode === "team" && selectedEnemyTeamIndex !== "" ? normalizeTeamBattleRules(teamsJson[Number(selectedEnemyTeamIndex)]?.battleRules) : normalizeTeamBattleRules()
+  };
+  activeBattleSideRules = {
+    player: pureSingleTeam ? getTeamRulesWithSynergies(teamsJson[playerTeamIndexes[0]]) : normalizeTeamBattleRules(),
+    enemy: battleMode === "team" && selectedEnemyTeamIndex !== "" ? getTeamRulesWithSynergies(teamsJson[Number(selectedEnemyTeamIndex)]) : normalizeTeamBattleRules()
+  };
+  return structuredClone(activeBattleSideRules);
+}
+
 function normalizeTeamJson(teams) {
   if (!Array.isArray(teams)) {
     return [];
@@ -9,9 +87,13 @@ function normalizeTeamJson(teams) {
 
       return {
         name: String(team.name ?? "").trim(),
+        battleRules: normalizeTeamBattleRules(team.battleRules),
+        synergyRules: normalizeTeamSynergyRules(team.synergyRules),
         memberIds: [...new Set(memberIds.map(id => Number(id)))]
           .filter(id => Number.isInteger(id) && characterJson[id])
-          .slice(0, MAX_PLAYER_SQUAD)
+          .slice(0, MAX_PLAYER_SQUAD),
+        activeMemberCount: Math.max(1, Math.min(memberIds.length || 1,
+          Math.floor(Number(team.activeMemberCount) || memberIds.length || 1)))
       };
     })
     .filter(team => team.name);
@@ -60,6 +142,7 @@ function renderTeamPage() {
   if (selectedTeamIndex !== "" && !teamsJson[Number(selectedTeamIndex)]) {
     selectedTeamIndex = "";
     selectedTeamMemberIds = [];
+    selectedTeamSynergyRules = [];
   }
 
   renderTeamList();
@@ -83,6 +166,11 @@ function renderTeamEditor() {
     teamSelectedNameEl.innerText = "팀을 선택하세요";
     teamMemberSummaryEl.innerText = `0 / ${MAX_PLAYER_SQUAD}`;
     teamMemberListEl.innerHTML = "";
+    teamBattleRulesEl.querySelectorAll("input").forEach(input => { input.value = 100; input.disabled = true; });
+    teamActiveMemberCountEl.value = 1;
+    teamActiveMemberCountEl.disabled = true;
+    teamSynergyRulesEl.querySelectorAll("button").forEach(button => { button.disabled = true; });
+    teamSynergyRuleListEl.innerHTML = '<span class="empty-text">팀을 선택해주세요.</span>';
     teamCharacterListEl.innerHTML = characterJson.map((character, index) => `
       <button class="team-character-button" onclick="alert('먼저 팀을 선택해주세요.')">
         ${escapeHtml(character.name)} (${escapeHtml(getRoleLabel(character.role))})
@@ -92,6 +180,17 @@ function renderTeamEditor() {
   }
 
   const selectedIds = new Set(selectedTeamMemberIds);
+  const rules = normalizeTeamBattleRules(team.battleRules);
+  teamActiveMemberCountEl.disabled = false;
+  teamActiveMemberCountEl.max = Math.max(1, selectedTeamMemberIds.length);
+  teamActiveMemberCountEl.value = Math.max(1, Math.min(selectedTeamMemberIds.length || 1, Number(team.activeMemberCount) || selectedTeamMemberIds.length || 1));
+  teamDamagePercentEl.value = rules.damagePercent;
+  teamHealingPercentEl.value = rules.healingPercent;
+  teamResourceCostPercentEl.value = rules.resourceCostPercent;
+  teamCooldownPercentEl.value = rules.cooldownPercent;
+  teamBattleRulesEl.querySelectorAll("input").forEach(input => { input.disabled = false; });
+  teamSynergyRulesEl.querySelectorAll("button").forEach(button => { button.disabled = false; });
+  renderSelectedTeamSynergies();
   teamSelectedNameEl.innerText = team.name;
   teamMemberSummaryEl.innerText = `${selectedTeamMemberIds.length} / ${MAX_PLAYER_SQUAD}`;
   teamMemberListEl.innerHTML = selectedTeamMemberIds.length
@@ -116,6 +215,7 @@ function renderTeamEditor() {
 function selectTeamForEdit(index) {
   selectedTeamIndex = index;
   selectedTeamMemberIds = getTeamCharacterIds(teamsJson[index]);
+  selectedTeamSynergyRules = normalizeTeamSynergyRules(teamsJson[index].synergyRules);
   renderTeamPage();
 }
 
@@ -127,9 +227,10 @@ async function addTeamFromInput() {
     return;
   }
 
-  teamsJson.push({ name, memberIds: [] });
+  teamsJson.push({ name, memberIds: [], activeMemberCount: 1, battleRules: normalizeTeamBattleRules(), synergyRules: [] });
   selectedTeamIndex = teamsJson.length - 1;
   selectedTeamMemberIds = [];
+  selectedTeamSynergyRules = [];
   teamNameEl.value = "";
 
   try {
@@ -154,6 +255,7 @@ async function deleteSelectedTeam() {
   teamsJson.splice(Number(selectedTeamIndex), 1);
   selectedTeamIndex = "";
   selectedTeamMemberIds = [];
+  selectedTeamSynergyRules = [];
   selectedBattleTeamIds.clear();
   selectedEnemyTeamIndex = "";
   rebuildPlayerSquadFromSelection();
@@ -175,6 +277,7 @@ function toggleCharacterInSelectedTeam(characterId) {
     return;
   }
 
+  selectedTeamSynergyRules = collectSelectedTeamSynergies();
   if (selectedTeamMemberIds.includes(characterId)) {
     selectedTeamMemberIds = selectedTeamMemberIds.filter(id => id !== characterId);
   } else if (selectedTeamMemberIds.length < MAX_PLAYER_SQUAD) {
@@ -187,8 +290,58 @@ function toggleCharacterInSelectedTeam(characterId) {
 }
 
 function removeCharacterFromSelectedTeam(characterId) {
+  selectedTeamSynergyRules = collectSelectedTeamSynergies();
   selectedTeamMemberIds = selectedTeamMemberIds.filter(id => id !== characterId);
   renderTeamEditor();
+}
+
+function renderSelectedTeamSynergies() {
+  if (!selectedTeamSynergyRules.length) {
+    teamSynergyRuleListEl.innerHTML = '<span class="empty-text">설정된 시너지 없음</span>';
+    return;
+  }
+  const factionOptions = factionsJson.map(value => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`).join("");
+  const roleOptions = ROLES.map(value => `<option value="${value}">${escapeHtml(getRoleLabel(value))}</option>`).join("");
+  teamSynergyRuleListEl.innerHTML = selectedTeamSynergyRules.map((rule, index) => `
+    <div class="team-synergy-rule" data-index="${index}">
+      <label>기준<select data-field="type" onchange="changeSelectedTeamSynergyType(${index}, this.value)"><option value="faction" ${rule.type === "faction" ? "selected" : ""}>진영</option><option value="role" ${rule.type === "role" ? "selected" : ""}>계열</option></select></label>
+      <label>값<select data-field="value">${rule.type === "role" ? roleOptions : factionOptions}</select></label>
+      <label>필요 인원<input data-field="requiredCount" type="number" min="1" max="10" value="${rule.requiredCount}"></label>
+      <label>피해(%)<input data-field="damagePercent" type="number" min="0" value="${rule.damagePercent}"></label>
+      <label>치유(%)<input data-field="healingPercent" type="number" min="0" value="${rule.healingPercent}"></label>
+      <label>비용(%)<input data-field="resourceCostPercent" type="number" min="0" value="${rule.resourceCostPercent}"></label>
+      <label>쿨타임(%)<input data-field="cooldownPercent" type="number" min="0" value="${rule.cooldownPercent}"></label>
+      <button type="button" class="team-synergy-remove" onclick="removeSelectedTeamSynergy(${index})">삭제</button>
+    </div>`).join("");
+  selectedTeamSynergyRules.forEach((rule, index) => {
+    const select = teamSynergyRuleListEl.querySelector(`[data-index="${index}"] [data-field="value"]`);
+    if (select) select.value = rule.value;
+  });
+}
+
+function collectSelectedTeamSynergies() {
+  return [...teamSynergyRuleListEl.querySelectorAll(".team-synergy-rule")].map(row => {
+    const value = field => row.querySelector(`[data-field="${field}"]`)?.value;
+    return normalizeTeamSynergyRule({type:value("type"), value:value("value"), requiredCount:value("requiredCount"), damagePercent:value("damagePercent"), healingPercent:value("healingPercent"), resourceCostPercent:value("resourceCostPercent"), cooldownPercent:value("cooldownPercent")});
+  }).filter(rule => rule.value);
+}
+
+function addSelectedTeamSynergy() {
+  if (!getSelectedTeam()) return;
+  selectedTeamSynergyRules = collectSelectedTeamSynergies();
+  selectedTeamSynergyRules.push(normalizeTeamSynergyRule({value:factionsJson[0] ?? "기본 진영"}));
+  renderSelectedTeamSynergies();
+}
+
+function removeSelectedTeamSynergy(index) {
+  selectedTeamSynergyRules = collectSelectedTeamSynergies().filter((_, ruleIndex) => ruleIndex !== index);
+  renderSelectedTeamSynergies();
+}
+
+function changeSelectedTeamSynergyType(index, type) {
+  selectedTeamSynergyRules = collectSelectedTeamSynergies();
+  selectedTeamSynergyRules[index] = normalizeTeamSynergyRule({...selectedTeamSynergyRules[index], type, value:type === "role" ? ROLES[0] : factionsJson[0]});
+  renderSelectedTeamSynergies();
 }
 
 async function saveSelectedTeam() {
@@ -200,6 +353,14 @@ async function saveSelectedTeam() {
   }
 
   team.memberIds = [...new Set(selectedTeamMemberIds)].slice(0, MAX_PLAYER_SQUAD);
+  team.activeMemberCount = Math.max(1, Math.min(team.memberIds.length || 1, Math.floor(Number(teamActiveMemberCountEl.value) || team.memberIds.length || 1)));
+  team.battleRules = normalizeTeamBattleRules({
+    damagePercent: teamDamagePercentEl.value,
+    healingPercent: teamHealingPercentEl.value,
+    resourceCostPercent: teamResourceCostPercentEl.value,
+    cooldownPercent: teamCooldownPercentEl.value
+  });
+  team.synergyRules = collectSelectedTeamSynergies();
 
   try {
     await saveTeamJson();
@@ -212,11 +373,16 @@ async function saveSelectedTeam() {
   }
 }
 
-function createSquadFromCharacterIds(ids, side = "player") {
-  return [...new Set(ids)]
-    .filter(id => characterJson[id])
-    .slice(0, MAX_PLAYER_SQUAD)
-    .map(id => createCharacter(characterJson[id], id, side));
+function createSquadFromCharacterIds(ids, side = "player", activeMemberCount = null) {
+  const uniqueIds = [...new Set(ids)].filter(id => characterJson[id]).slice(0, MAX_PLAYER_SQUAD);
+  const activeLimit = Math.max(1, Math.min(uniqueIds.length || 1, Math.floor(Number(activeMemberCount) || uniqueIds.length || 1)));
+  return uniqueIds.map((id, index) => {
+    const unit = createCharacter(characterJson[id], id, side);
+    unit.startsInReserve = index >= activeLimit;
+    unit.squadActiveLimit = activeLimit;
+    unit.reserveOrder = index;
+    return unit;
+  });
 }
 
 function getSelectedBattleCharacterIds() {
@@ -231,7 +397,9 @@ function getSelectedBattleCharacterIds() {
 }
 
 function rebuildPlayerSquadFromSelection() {
-  playerSquad = createSquadFromCharacterIds(getSelectedBattleCharacterIds(), "player");
+  const teamIndexes = [...selectedBattleTeamIds];
+  const pureTeam = teamIndexes.length === 1 && selectedBattleCharacterIds.size === 0 ? teamsJson[teamIndexes[0]] : null;
+  playerSquad = createSquadFromCharacterIds(getSelectedBattleCharacterIds(), "player", pureTeam?.activeMemberCount);
 }
 
 function renderBattleMemberList(title, members, emptyText = "선택 없음") {
@@ -404,7 +572,7 @@ function renderBattleEnemyControls() {
 
 function selectEnemyTeam(index) {
   selectedEnemyTeamIndex = index;
-  enemySquad = createSquadFromCharacterIds(getTeamCharacterIds(teamsJson[index]), "enemy");
+  enemySquad = createSquadFromCharacterIds(getTeamCharacterIds(teamsJson[index]), "enemy", teamsJson[index]?.activeMemberCount);
   renderBattleEnemyControls();
   renderBattleSelectionSummary();
   updateStatusUI();

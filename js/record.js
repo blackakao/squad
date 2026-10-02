@@ -1,6 +1,19 @@
 const RECORDS_PER_PAGE = 10;
 let recordPage = 1;
 
+function normalizeRecordEvents(events) {
+  if (!Array.isArray(events)) return [];
+  const unit=entry=>entry ? {id:Number(entry.id) || 0,name:String(entry.name ?? ""),side:String(entry.side ?? ""),isSummon:Boolean(entry.isSummon)} : null;
+  return events.slice(-1000).map(event=>({
+    id:Number(event?.id) || 0,tick:Math.max(0,Number(event?.tick) || 0),type:String(event?.type ?? ""),
+    source:unit(event?.source),target:unit(event?.target),skillId:event?.skillId == null ? null : String(event.skillId),skillName:String(event?.skillName ?? ""),
+    amount:Number(event?.amount) || 0,hpDamage:Number(event?.hpDamage) || 0,barrierDamage:Number(event?.barrierDamage) || 0,
+    damageType:event?.damageType == null ? null : String(event.damageType),resource:event?.resource == null ? null : String(event.resource),
+    moveType:event?.moveType == null ? null : String(event.moveType),periodic:Boolean(event?.periodic),triggered:Boolean(event?.triggered),
+    reason:event?.reason == null ? null : String(event.reason),depth:Math.max(0,Number(event?.depth) || 0)
+  })).filter(event=>event.type);
+}
+
 function normalizeRecordJson(records) {
   if (!Array.isArray(records)) {
     return [];
@@ -30,7 +43,8 @@ function normalizeRecordJson(records) {
       result: String(record.result ?? "").trim(),
       playerMembers: Array.isArray(record.playerMembers) ? record.playerMembers.map(normalizeMember) : [],
       monsterMembers: Array.isArray(record.monsterMembers) ? record.monsterMembers.map(normalizeMember) : [],
-      durationSeconds: Number(record.durationSeconds) || 0
+      durationSeconds: Number(record.durationSeconds) || 0,
+      events: normalizeRecordEvents(record.events)
     }))
     .filter(record => record.battleAt && record.result);
 }
@@ -118,11 +132,21 @@ function renderBattleRecords() {
       <td>${renderMemberTable(record.playerMembers)}</td>
       <td>${renderMemberTable(record.monsterMembers)}</td>
       <td>${record.durationSeconds.toFixed(1)}초</td>
+      <td>${renderRecordEvents(record.events)}</td>
     </tr>
     `;
   }).join("");
 
   renderRecordPagination(pageCount);
+}
+
+function renderRecordEvents(events = []) {
+  if (!events.length) return "-";
+  return `<details class="record-events"><summary>${events.length}건 보기</summary><div class="record-event-list">${events.map(event => {
+    const label=BATTLE_EVENT_LABELS[event.type] ?? event.type;
+    const amount=["hit","damaged","heal","resource_drain","damage_redirect","forced_move"].includes(event.type) ? ` · ${event.amount.toFixed(1)}${event.resource ? ` ${escapeHtml(event.resource)}` : ""}` : "";
+    return `<div><time>${(event.tick/60).toFixed(2)}s</time> ${escapeHtml(label)} · ${escapeHtml(event.source?.name || "환경")} → ${escapeHtml(event.target?.name || "-")}${event.skillName ? ` · ${escapeHtml(event.skillName)}` : ""}${amount}${event.reason ? ` · ${escapeHtml(event.reason)}` : ""}</div>`;
+  }).join("")}</div></details>`;
 }
 
 function renderRecordPagination(pageCount = getRecordPageCount()) {
@@ -199,6 +223,7 @@ function createBattleRecord(result) {
     result,
     playerMembers: createRecordMembers(playerSquad, durationSeconds),
     monsterMembers: createRecordMembers(enemySquad, durationSeconds),
-    durationSeconds
+    durationSeconds,
+    events:normalizeRecordEvents(getBattleEvents())
   };
 }

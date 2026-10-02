@@ -1,10 +1,64 @@
 ﻿const ITEM_STORAGE_KEY = "squad-auto-battle-items";
 
-function createEquipmentSlots(source = {}) {
-  return EQUIPMENT_SLOTS.reduce((equipment, slot) => {
+function normalizeEquipmentRules(rules = {}) {
+  return {
+    extraWeaponSlots: Math.max(0, Math.min(5, Math.floor(Number(rules?.extraWeaponSlots) || 0))),
+    twoHandSingleSlot: rules?.twoHandSingleSlot === true,
+    sameTargetWeaponPenaltyPercent: Math.max(0, Math.min(100, Number(rules?.sameTargetWeaponPenaltyPercent) || 0))
+  };
+}
+
+function getCharacterEquipmentSlots(character = {}) {
+  const rules = normalizeEquipmentRules(character?.equipmentRules);
+  return [
+    ...EQUIPMENT_SLOTS,
+    ...Array.from({ length: rules.extraWeaponSlots }, (_, index) => ({
+      key: `extraWeapon${index + 1}`,
+      label: `추가 무기 ${index + 1}`,
+      weaponOnly: true
+    }))
+  ];
+}
+
+function createEquipmentSlots(source = {}, character = {}) {
+  return getCharacterEquipmentSlots(character).reduce((equipment, slot) => {
     equipment[slot.key] = typeof source?.[slot.key] === "string" ? source[slot.key] : "";
     return equipment;
   }, {});
+}
+
+function normalizeEquipmentSets(character = {}) {
+  const rawSets = Array.isArray(character.equipmentSets) && character.equipmentSets.length
+    ? character.equipmentSets.slice(0, 3)
+    : [{ name: "세트 1", equipment: character.equipment }];
+  return rawSets.map((set, index) => ({
+    name: String(set?.name ?? `세트 ${index + 1}`).trim() || `세트 ${index + 1}`,
+    equipment: createEquipmentSlots(set?.equipment, character)
+  }));
+}
+
+function normalizeCharacterEquipmentSets(character = {}) {
+  const equipmentSets = normalizeEquipmentSets(character);
+  const activeEquipmentSet = Math.max(0, Math.min(equipmentSets.length - 1, Math.floor(Number(character.activeEquipmentSet) || 0)));
+  return {
+    ...character,
+    equipmentSets,
+    activeEquipmentSet,
+    equipment: createEquipmentSlots(equipmentSets[activeEquipmentSet].equipment, character)
+  };
+}
+
+function syncActiveEquipmentSet(character) {
+  const normalized = normalizeCharacterEquipmentSets(character);
+  normalized.equipmentSets[normalized.activeEquipmentSet].equipment = createEquipmentSlots(character.equipment, normalized);
+  character.equipmentSets = normalized.equipmentSets;
+  character.activeEquipmentSet = normalized.activeEquipmentSet;
+  character.equipment = createEquipmentSlots(normalized.equipmentSets[normalized.activeEquipmentSet].equipment, normalized);
+  return character;
+}
+
+function isCharacterWeaponSlot(character, slotKey) {
+  return isWeaponSlot(slotKey) || getCharacterEquipmentSlots(character).some(slot => slot.key === slotKey && slot.weaponOnly);
 }
 
 function createEmptyItemStats() {
@@ -262,10 +316,10 @@ function getItemById(itemId) {
 }
 
 function getCharacterEquipmentBonus(character) {
-  const equipment = createEquipmentSlots(character?.equipment);
+  const equipment = createEquipmentSlots(character?.equipment, character);
   const countedTwoHandIds = new Set();
 
-  return EQUIPMENT_SLOTS.reduce((bonus, slot) => {
+  return getCharacterEquipmentSlots(character).reduce((bonus, slot) => {
     const item = getItemById(equipment[slot.key]);
     if (!item) {
       return bonus;
@@ -291,7 +345,7 @@ function getCharacterEquipmentBonus(character) {
 function getCharacterBaseWithoutEquipment(character) {
   return applyCharacterStatAbilities({
     ...character,
-    equipment: createEquipmentSlots()
+    equipment: createEquipmentSlots({}, character)
   });
 }
 
@@ -315,6 +369,7 @@ function getItemStatSummary(item) {
 }
 
 function getFilteredItems(slotFilter) {
+  const equipmentCharacter = characterJson?.[selectedEquipmentCharacterIndex] ?? null;
   return itemsJson
     .map((item, index) => ({ item, index }))
     .filter(({ item }) => {
@@ -323,7 +378,7 @@ function getFilteredItems(slotFilter) {
       }
 
       if (isWeaponSlot(slotFilter)) {
-        return isWeaponItem(item) && canEquipItemToSlot(item, slotFilter);
+        return isWeaponItem(item) && canEquipItemToSlot(item, slotFilter, equipmentCharacter);
       }
 
       return item.slot === slotFilter;
@@ -363,6 +418,7 @@ function renderEquipmentPage() {
   }
 
   renderEquipmentCharacterButtons();
+  renderEquipmentSetControls();
   renderEquipmentSlots();
   initEquipmentFilters();
   renderEquipmentItemTable();
@@ -388,8 +444,9 @@ function renderEquipmentSlots() {
     return;
   }
 
-  const equipment = createEquipmentSlots(character.equipment);
-  equipmentSlotGridEl.innerHTML = EQUIPMENT_SLOTS.map(slot => {
+  const equipment = createEquipmentSlots(character.equipment, character);
+  const rules = normalizeEquipmentRules(character.equipmentRules);
+  equipmentSlotGridEl.innerHTML = `<div class="equipment-rule-summary">추가 무기 ${rules.extraWeaponSlots}칸 · 양손 무기 ${rules.twoHandSingleSlot ? "단일 슬롯" : "두 슬롯 점유"} · 집중 감산 ${rules.sameTargetWeaponPenaltyPercent}%</div>` + getCharacterEquipmentSlots(character).map(slot => {
     const item = getItemById(equipment[slot.key]);
     return `
       <div class="equipment-slot" ondragover="allowEquipmentDrop(event)" ondrop="dropEquipmentItem(event, '${slot.key}')">
@@ -403,16 +460,90 @@ function renderEquipmentSlots() {
   }).join("");
 }
 
-function canEquipItemToSlot(item, slotKey) {
+function renderEquipmentSetControls() {
+  const character = characterJson[selectedEquipmentCharacterIndex];
+  if (!character) {
+    equipmentSetControlsEl.innerHTML = "";
+    return;
+  }
+  const normalized = normalizeCharacterEquipmentSets(character);
+  character.equipmentSets = normalized.equipmentSets;
+  character.activeEquipmentSet = normalized.activeEquipmentSet;
+  equipmentSetControlsEl.innerHTML = normalized.equipmentSets.map((set, index) => `
+    <button type="button" class="${index === normalized.activeEquipmentSet ? "selected" : ""}" onclick="activateEquipmentSet(${index})">${escapeHtml(set.name)}</button>
+  `).join("") + `<button type="button" onclick="copyActiveEquipmentSet()" ${normalized.equipmentSets.length >= 3 ? "disabled" : ""}>현재 세트 복제</button><button type="button" onclick="deleteActiveEquipmentSet()" ${normalized.equipmentSets.length <= 1 ? "disabled" : ""}>현재 세트 삭제</button>`;
+}
+
+async function saveEquipmentSetChange(character) {
+  characterJson[Number(selectedEquipmentCharacterIndex)] = applyCharacterStatAbilities(syncActiveEquipmentSet(character));
+  await saveCharacterJson();
+  playerSquad = [];
+  refreshCharacterUI();
+  renderEquipmentPage();
+}
+
+async function activateEquipmentSet(index) {
+  const character = characterJson[selectedEquipmentCharacterIndex];
+  if (!character) return;
+  syncActiveEquipmentSet(character);
+  const target = Math.max(0, Math.min(character.equipmentSets.length - 1, Number(index) || 0));
+  character.activeEquipmentSet = target;
+  character.equipment = createEquipmentSlots(character.equipmentSets[target].equipment, character);
+  try {
+    await saveEquipmentSetChange(character);
+  } catch (error) {
+    logError("equipment", "장비 세트 전환 저장 처리 중 실패했습니다.", error);
+    alert("장비 세트를 전환하지 못했습니다.");
+  }
+}
+
+async function copyActiveEquipmentSet() {
+  const character = characterJson[selectedEquipmentCharacterIndex];
+  if (!character) return;
+  syncActiveEquipmentSet(character);
+  if (character.equipmentSets.length >= 3) return;
+  const source = character.equipmentSets[character.activeEquipmentSet];
+  character.equipmentSets.push({name:`세트 ${character.equipmentSets.length + 1}`, equipment:createEquipmentSlots(source.equipment, character)});
+  character.activeEquipmentSet = character.equipmentSets.length - 1;
+  character.equipment = createEquipmentSlots(character.equipmentSets[character.activeEquipmentSet].equipment, character);
+  try {
+    await saveEquipmentSetChange(character);
+  } catch (error) {
+    logError("equipment", "장비 세트 복제 저장 처리 중 실패했습니다.", error);
+    alert("장비 세트를 복제하지 못했습니다.");
+  }
+}
+
+async function deleteActiveEquipmentSet() {
+  const character = characterJson[selectedEquipmentCharacterIndex];
+  if (!character) return;
+  syncActiveEquipmentSet(character);
+  if (character.equipmentSets.length <= 1) return;
+  character.equipmentSets.splice(character.activeEquipmentSet, 1);
+  character.activeEquipmentSet = Math.min(character.activeEquipmentSet, character.equipmentSets.length - 1);
+  character.equipment = createEquipmentSlots(character.equipmentSets[character.activeEquipmentSet].equipment, character);
+  try {
+    await saveEquipmentSetChange(character);
+  } catch (error) {
+    logError("equipment", "장비 세트 삭제 저장 처리 중 실패했습니다.", error);
+    alert("장비 세트를 삭제하지 못했습니다.");
+  }
+}
+
+function canEquipItemToSlot(item, slotKey, character = null) {
   if (!item) {
     return false;
   }
 
   if (isWeaponItem(item)) {
     const category = getWeaponCategory(item.weaponCategory);
-    if (!isWeaponSlot(slotKey) || !category) {
+    if (!(character ? isCharacterWeaponSlot(character, slotKey) : isWeaponSlot(slotKey)) || !category) {
       return false;
     }
+
+    const rules = normalizeEquipmentRules(character?.equipmentRules);
+    if (slotKey.startsWith("extraWeapon")) return category.handType === "oneHand" || rules.twoHandSingleSlot;
+    if (category.handType === "twoHand" && rules.twoHandSingleSlot) return true;
 
     if (category.slotType === "mainOnly") {
       return slotKey === "mainWeapon";
@@ -428,14 +559,15 @@ function canEquipItemToSlot(item, slotKey) {
   return item.slot === slotKey;
 }
 
-function clearTwoHandWeaponIfNeeded(equipment, slotKey) {
-  if (!isWeaponSlot(slotKey)) {
+function clearTwoHandWeaponIfNeeded(equipment, slotKey, character = null) {
+  if (!(character ? isCharacterWeaponSlot(character, slotKey) : isWeaponSlot(slotKey))) {
     return;
   }
 
   const currentItem = getItemById(equipment[slotKey]);
   if (isWeaponItem(currentItem) && currentItem.handType === "twoHand") {
-    WEAPON_SLOT_KEYS.forEach(weaponSlot => {
+    if (normalizeEquipmentRules(character?.equipmentRules).twoHandSingleSlot) return;
+    getCharacterEquipmentSlots(character ?? {}).filter(slot => isCharacterWeaponSlot(character ?? {}, slot.key)).forEach(({ key: weaponSlot }) => {
       if (equipment[weaponSlot] === currentItem.id) {
         equipment[weaponSlot] = "";
       }
@@ -443,11 +575,14 @@ function clearTwoHandWeaponIfNeeded(equipment, slotKey) {
   }
 }
 
-function equipItemToSlot(equipment, item, slotKey) {
+function equipItemToSlot(equipment, item, slotKey, character = null) {
   if (isWeaponItem(item)) {
-    WEAPON_SLOT_KEYS.forEach(weaponSlot => clearTwoHandWeaponIfNeeded(equipment, weaponSlot));
+    const rules = normalizeEquipmentRules(character?.equipmentRules);
+    if (isWeaponSlot(slotKey)) {
+      WEAPON_SLOT_KEYS.forEach(key => clearTwoHandWeaponIfNeeded(equipment, key, character));
+    }
 
-    if (getWeaponCategory(item.weaponCategory)?.handType === "twoHand") {
+    if (getWeaponCategory(item.weaponCategory)?.handType === "twoHand" && !rules.twoHandSingleSlot) {
       WEAPON_SLOT_KEYS.forEach(weaponSlot => {
         equipment[weaponSlot] = item.id;
       });
@@ -511,13 +646,14 @@ async function dropEquipmentItem(event, slotKey) {
   event.preventDefault();
   const character = characterJson[selectedEquipmentCharacterIndex];
   const item = getItemById(event.dataTransfer.getData("text/plain"));
-  if (!character || !canEquipItemToSlot(item, slotKey)) {
+  if (!character || !canEquipItemToSlot(item, slotKey, character)) {
     alert("해당 슬롯에 착용할 수 없는 장비입니다.");
     return;
   }
 
-  character.equipment = createEquipmentSlots(character.equipment);
-  equipItemToSlot(character.equipment, item, slotKey);
+  character.equipment = createEquipmentSlots(character.equipment, character);
+  equipItemToSlot(character.equipment, item, slotKey, character);
+  syncActiveEquipmentSet(character);
   characterJson[Number(selectedEquipmentCharacterIndex)] = applyCharacterStatAbilities(character);
   try {
     await saveCharacterJson();
@@ -536,9 +672,9 @@ async function unequipItem(slotKey) {
     return;
   }
 
-  character.equipment = createEquipmentSlots(character.equipment);
+  character.equipment = createEquipmentSlots(character.equipment, character);
   const currentItem = getItemById(character.equipment[slotKey]);
-  if (isWeaponItem(currentItem) && currentItem.handType === "twoHand") {
+  if (isWeaponItem(currentItem) && currentItem.handType === "twoHand" && !normalizeEquipmentRules(character.equipmentRules).twoHandSingleSlot) {
     WEAPON_SLOT_KEYS.forEach(weaponSlot => {
       if (character.equipment[weaponSlot] === currentItem.id) {
         character.equipment[weaponSlot] = "";
@@ -547,6 +683,7 @@ async function unequipItem(slotKey) {
   } else {
     character.equipment[slotKey] = "";
   }
+  syncActiveEquipmentSet(character);
   characterJson[Number(selectedEquipmentCharacterIndex)] = applyCharacterStatAbilities(character);
   try {
     await saveCharacterJson();
@@ -692,12 +829,12 @@ async function deleteSelectedItems() {
   const deletedIds = checkedIndexes.map(index => itemsJson[index]?.id).filter(Boolean);
   checkedIndexes.forEach(index => itemsJson.splice(index, 1));
   characterJson.forEach(character => {
-    character.equipment = createEquipmentSlots(character.equipment);
-    EQUIPMENT_SLOTS.forEach(slot => {
-      if (deletedIds.includes(character.equipment[slot.key])) {
-        character.equipment[slot.key] = "";
-      }
-    });
+    const normalized = normalizeCharacterEquipmentSets(character);
+    normalized.equipmentSets.forEach(set => getCharacterEquipmentSlots(normalized).forEach(slot => {
+      if (deletedIds.includes(set.equipment[slot.key])) set.equipment[slot.key] = "";
+    }));
+    Object.assign(character, normalized);
+    character.equipment = createEquipmentSlots(character.equipmentSets[character.activeEquipmentSet].equipment, character);
   });
   characterJson = characterJson.map(character => applyCharacterStatAbilities(character));
 

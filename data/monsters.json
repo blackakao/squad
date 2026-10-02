@@ -4,6 +4,7 @@
     "hp": 80,
     "mp": 100,
     "st": 100,
+    "bp": 0,
     "atk": 8,
     "magic": 10,
     "speed": 1.2,
@@ -13,6 +14,7 @@
     "resistance": 0,
     "attackRange": 1,
     "role": "melee",
+    "skillIds": [],
     "portrait": "assets/images/portraits/monster-001.png"
   },
   {
@@ -20,6 +22,7 @@
     "hp": 5000,
     "mp": 100,
     "st": 100,
+    "bp": 0,
     "atk": 12,
     "magic": 200,
     "speed": 1,
@@ -29,6 +32,7 @@
     "resistance": 0,
     "attackRange": 5,
     "role": "ranged",
+    "skillIds": [],
     "portrait": "assets/images/portraits/monster-002.png"
   },
   {
@@ -36,6 +40,7 @@
     "hp": 200,
     "mp": 100,
     "st": 100,
+    "bp": 0,
     "atk": 20,
     "magic": 10,
     "speed": 1.2,
@@ -45,6 +50,9 @@
     "resistance": 0,
     "attackRange": 1,
     "role": "melee",
+    "skillIds": [
+      "skill_class_fiend_armageddon"
+    ],
     "portrait": "assets/images/portraits/monster-003.png"
   },
   {
@@ -52,6 +60,7 @@
     "hp": 5000,
     "mp": 100,
     "st": 100,
+    "bp": 0,
     "atk": 300,
     "magic": 10,
     "speed": 1,
@@ -61,6 +70,7 @@
     "resistance": 0,
     "attackRange": 1,
     "role": "tank",
+    "skillIds": [],
     "portrait": ""
   },
   {
@@ -68,6 +78,7 @@
     "hp": 1000,
     "mp": 500,
     "st": 100,
+    "bp": 0,
     "atk": 50,
     "magic": 2000,
     "speed": 1,
@@ -77,6 +88,7 @@
     "resistance": 50,
     "attackRange": 5,
     "role": "ranged",
+    "skillIds": [],
     "portrait": ""
   },
   {
@@ -84,6 +96,7 @@
     "hp": 5000,
     "mp": 100,
     "st": 9999,
+    "bp": 0,
     "atk": 1,
     "magic": 10,
     "speed": 1,
@@ -93,6 +106,7 @@
     "resistance": 0,
     "attackRange": 1,
     "role": "tank",
+    "skillIds": [],
     "portrait": "assets/images/portraits/monster-006.png"
   }
 ]

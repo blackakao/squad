@@ -1,4 +1,9 @@
 ﻿function resetUnitForBattle(unit) {
+  clearBattleEffects(unit);
+  clearBattleChannel(unit);
+  Object.values(unit.customResources ?? {}).forEach(resource => {
+    resource.current = Math.min(Math.max(0, Number(resource.max) || 0), Math.max(0, Number(resource.initial) || 0));
+  });
   unit.hp = unit.maxHp;
   unit.maxMp = Math.max(0, Number(unit.maxMp ?? DEFAULT_RESOURCE_VALUE));
   unit.mp = unit.maxMp;
@@ -11,18 +16,108 @@
   unit.isMoving = false;
   unit.didAct = false;
   unit.alive = true;
+  unit.battleRules = normalizeBattleRules(unit.battleRules);
+  unit.revivesRemaining = unit.isSummon ? 0 : unit.battleRules.reviveCount;
+  unit.reviveTicks = 0;
+  unit.reviveInvulnerableTicks = 0;
+  unit.entryTicks = unit.isSummon ? 0 : Math.max(0, Math.ceil(unit.battleRules.entryDelay * BASE_ATTACK_COOLDOWN));
+  unit.isReserve = !unit.isSummon && Boolean(unit.startsInReserve);
+  unit.isWaiting = unit.isReserve || unit.entryTicks > 0;
+  if (unit.isWaiting) unit.alive = false;
   unit.vx = 0;
   unit.vy = 0;
   unit.attackCooldown = 0;
+  unit.weaponAttackStates = (unit.weaponAttacks ?? []).map(weapon=>({weapon,cooldown:0,castTimer:0,target:null}));
   unit.skillCooldowns = {};
+  unit.runtimeCopiedSkills = [];
+  unit.runtimeRuleOverrides = [];
+  unit.temporaryReserveTicks = null;
+  unit.temporaryReturnUnit = null;
+  unit.reservedForTemporarySwap = false;
+  actionTargetCooldowns.delete(unit);
+  unit.passiveLastTriggerTick = {};
   unit.castTimer = 0;
   unit.castDuration = 0;
   unit.pendingAction = null;
   unit.stats = createStats();
+  unit.actualDamageTotal = 0;
+  unit.moveDistanceTotal = 0;
   unit.effectType = null;
   unit.effectTimer = 0;
   unit.skillBubbleText = "";
   unit.skillBubbleTimer = 0;
+}
+
+let nextSummonId = 1;
+let skillAreaImpacts = [];
+let skillChainImpacts = [];
+let battleFields = [];
+const SKILL_AREA_IMPACT_MS = 400;
+const MAX_ACTIVE_SUMMONS_PER_SIDE = 40;
+
+function getSummonSquad(source) {
+  return source.side === "enemy" ? enemySquad : playerSquad;
+}
+
+function canSummonBattleUnit(source, action, skill) {
+  const squad = getSummonSquad(source);
+  const config = getSummonConfiguration(source, action);
+  if (!config) return false;
+  const living = squad.filter(unit => unit.alive && unit.isSummon);
+  return living.length < MAX_ACTIVE_SUMMONS_PER_SIDE && living.filter(unit => unit.summoner === source && unit.summonSkillId === skill?.id).length < config.limit;
+}
+
+function summonBattleUnits(source, action, skill, target = source) {
+  if (!source.alive) return;
+  const config = getSummonConfiguration(source, action);
+  if (!config) return;
+  const squad = getSummonSquad(source);
+  for (let i = 0; i < config.count && canSummonBattleUnit(source, action, skill); i++) {
+    const unit = createSummonedBattleUnit(source, {...config,spawnCenter:config.summonCenter === "target" ? target : source});
+    unit.summonSkillId = skill?.id;
+    unit.summonTicks = config.lifetime > 0 ? Math.max(1, Math.round(config.lifetime * BASE_ATTACK_COOLDOWN)) : null;
+    squad.push(unit);
+    addBattleEventLog(source, `${source.name}: ${config.name} 소환`);
+  }
+}
+
+function createSummonedBattleUnit(source, config) {
+    const angle = (nextSummonId * 2.4) % (Math.PI * 2);
+    const center=config.spawnCenter ?? source;
+    const unit = {
+      id: `summon_${nextSummonId++}`, side: source.side, isSummon: true,
+      summoner: source, entityId: config.entityId, role: config.role, ai: config.ai,
+      summonBaseAi:config.ai,summonBaseSpeed:config.speed,
+      isEntityPreview: Boolean(source.isEntityPreview),
+      previewBounds: source.isEntityPreview ? source.previewBounds : undefined,
+      name: `${config.name} (${source.name})`, faction: source.faction, portrait: safeEntityIcon(config.icon),
+      maxHp: config.hp, maxMp: config.mp, maxSt: config.st, baseBp: 0,
+      atk: config.atk, magic: config.magic, defense: config.defense, resistance: config.resistance,
+      speed: config.speed, attackSpeed: config.attackSpeed, castSpeed: config.castTime,
+      attackRange: config.attackRange, attackType: config.ai === "healer" ? "magic" : "physical",
+      protectOwnerPercent:config.protectOwnerPercent,protectOwnerScope:config.protectOwnerScope,protectOwnerPriority:config.protectOwnerPriority,
+      transferStateScope:config.transferStateScope,transferStatePriority:config.transferStatePriority,
+      attributes: {}, skillIds: [], attackSkillId: "",
+      x: center.x + Math.cos(angle) * COLLISION_DISTANCE,
+      y: center.y + Math.sin(angle) * COLLISION_DISTANCE
+    };
+    resetUnitForBattle(unit);
+    clampPosition(unit);
+    return unit;
+}
+
+function updateSummonLifetimes() {
+  [...playerSquad, ...enemySquad].forEach(unit => {
+    if (!unit.isSummon || !unit.alive || unit.summonTicks == null) return;
+    unit.summonTicks--;
+    if (unit.summonTicks <= 0) {
+      unit.hp = 0;
+      syncAliveState(unit,{reason:"소환 수명 종료"});
+      unit.pendingAction = null;
+      unit.castTimer = 0;
+      addBattleEventLog(unit, `${unit.name}: 소환 시간 종료`);
+    }
+  });
 }
 
 function updateResources() {
@@ -117,16 +212,192 @@ function distance(a, b) {
 
 function clampPosition(unit) {
   const margin = UNIT_RADIUS;
-
-  unit.x = Math.max(margin, Math.min(canvas.width - margin, unit.x));
-  unit.y = Math.max(margin, Math.min(canvas.height - margin, unit.y));
+  const bounds = unit.isEntityPreview ? unit.previewBounds ?? canvas : canvas;
+  unit.x = Math.max(margin, Math.min(bounds.width - margin, unit.x));
+  unit.y = Math.max(margin, Math.min(bounds.height - margin, unit.y));
 }
 
-function syncAliveState(unit) {
+function syncAliveState(unit, context = {}) {
+  const events = [];
   if (unit.hp <= 0) {
+    const wasAlive = unit.alive;
     unit.hp = 0;
     unit.alive = false;
+    if (wasAlive) {
+      if (unit.pendingAction) events.push({type:"cast_interrupt",source:unit,target:unit.pendingAction.target,skill:unit.pendingAction.skill,reason:"사망"});
+      if (unit.channelAction) events.push(...finishBattleChannel(unit,"사망",{deferEvents:true}));
+      unit.pendingAction=null;unit.castTimer=0;unit.castDuration=0;
+      unit.isWaiting = false;
+      if (!unit.isSummon && unit.revivesRemaining > 0) {
+        unit.revivesRemaining--;
+        unit.reviveTicks = Math.max(1, Math.ceil(normalizeBattleRules(unit.battleRules).reviveDelay * BASE_ATTACK_COOLDOWN));
+        unit.isWaiting = true;
+        addBattleEventLog(unit, `${unit.name}: 부활 대기 (${(unit.reviveTicks / BASE_ATTACK_COOLDOWN).toFixed(1)}초)`);
+      }
+      events.push({type:"death",source:context.source ?? null,target:unit,skill:context.skill,periodic:context.periodic,reason:context.reason ?? "HP 소진"});
+    }
   }
+  if (!context.deferEvents) publishBattleEvents(events);
+  return events;
+}
+
+function activateWaitingUnit(unit, type) {
+  const rules = normalizeBattleRules(unit.battleRules);
+  const preserveState = type === "reserve" || type === "swap";
+  unit.alive = true;
+  unit.isWaiting = false;
+  unit.isReserve = false;
+  unit.entryTicks = 0;
+  unit.reviveTicks = 0;
+  unit.hp = type === "revive" ? Math.max(1, unit.maxHp * rules.reviveHpPercent / 100) : preserveState ? Math.max(1, unit.hp) : unit.maxHp;
+  if (type === "revive") {
+    unit.mp = unit.maxMp * rules.reviveMpPercent / 100;
+    unit.st = unit.maxSt * rules.reviveStPercent / 100;
+    unit.exhausted = unit.st <= 0;
+    unit.reviveInvulnerableTicks = Math.max(0, Math.ceil(rules.reviveInvulnerable * BASE_ATTACK_COOLDOWN));
+    if (rules.revivePosition === "start" && Number.isFinite(unit.battleStartX) && Number.isFinite(unit.battleStartY)) {
+      unit.x = unit.battleStartX;
+      unit.y = unit.battleStartY;
+      clampPosition(unit);
+    }
+  }
+  unit.bp = type === "revive" ? 0 : preserveState ? unit.bp : unit.baseBp;
+  unit.vx = 0;
+  unit.vy = 0;
+  if (!preserveState) unit.attackCooldown = 0;
+  unit.pendingAction = null;
+  unit.skillBubbleText = "";
+  publishBattleEvents([{type:type === "revive" ? "revive" : "battle_entry",source:unit,target:unit}]);
+  addBattleEventLog(unit, `${unit.name}: ${type === "revive" ? "부활" : preserveState ? "예비대 투입" : "전투 진입"}`);
+}
+
+function getReserveCandidates(source) {
+  const squad = source.side === "enemy" ? enemySquad : playerSquad;
+  return squad.filter(unit => !unit.isSummon && unit.isReserve && unit.isWaiting && !unit.reservedForTemporarySwap)
+    .sort((a,b) => (a.reserveOrder ?? 0) - (b.reserveOrder ?? 0));
+}
+
+function swapBattleUnitWithReserve(source, target, action) {
+  if (!source?.alive || !target?.alive || target.isSummon || source.side !== target.side) return null;
+  const reserve = getReserveCandidates(source)[Math.max(1, Number(action.reserveIndex) || 1) - 1];
+  if (!reserve) return null;
+  const position = {x:target.x,y:target.y};
+  clearBattleEffects(target);
+  clearBattleChannel(target);
+  target.pendingAction = null;
+  target.castTimer = 0;
+  target.castDuration = 0;
+  target.alive = false;
+  target.isReserve = true;
+  target.isWaiting = true;
+  target.entryTicks = 0;
+  target.reviveTicks = 0;
+  reserve.x = position.x;
+  reserve.y = position.y;
+  activateWaitingUnit(reserve,"swap");
+  if (Number(action.duration) > 0) {
+    target.reservedForTemporarySwap=true;
+    reserve.temporaryReturnUnit=target;
+    reserve.temporaryReserveTicks=Math.max(1,Math.ceil(action.duration*BASE_ATTACK_COOLDOWN));
+  }
+  publishBattleEvents([{type:"reserve_swap",source,target,reserve}]);
+  addBattleEventLog(source,`${target.name} 퇴장 · ${reserve.name} 투입`);
+  return reserve;
+}
+
+function reviveBattleUnitWithSkill(source,target,action,skill) {
+  if (!source?.alive || !target || target.alive || target.isSummon || target.isWaiting || target.isReserve || target.side !== source.side || target.hp > 0) return false;
+  clearBattleEffects(target);clearBattleChannel(target);
+  target.alive=true;target.isWaiting=false;target.isReserve=false;target.entryTicks=0;target.reviveTicks=0;
+  target.hp=Math.max(1,target.maxHp*Math.max(1,Math.min(100,Number(action.reviveHpPercent)||50))/100);
+  target.mp=target.maxMp*Math.max(0,Math.min(100,Number(action.reviveMpPercent ?? 100)))/100;
+  target.st=target.maxSt*Math.max(0,Math.min(100,Number(action.reviveStPercent ?? 100)))/100;
+  target.bp=0;target.exhausted=target.st<=0;target.vx=0;target.vy=0;target.pendingAction=null;target.castTimer=0;target.castDuration=0;
+  target.reviveInvulnerableTicks=Math.max(0,Math.ceil((Number(action.reviveInvulnerable)||0)*BASE_ATTACK_COOLDOWN));
+  if (action.revivePosition === "start" && Number.isFinite(target.battleStartX) && Number.isFinite(target.battleStartY)) {
+    target.x=target.battleStartX;target.y=target.battleStartY;clampPosition(target);
+  }
+  publishBattleEvents([{type:"revive",source,target,skill}]);
+  addBattleEventLog(source,`${source.name}: ${target.name} 부활`);
+  return true;
+}
+
+function deployReserveWithSkill(source,action,skill) {
+  if (!source?.alive) return null;
+  const reserve=getReserveCandidates(source)[Math.max(1,Number(action.reserveIndex)||1)-1];
+  if (!reserve) return null;
+  reserve.x=source.x;reserve.y=source.y;activateWaitingUnit(reserve,"swap");
+  if (Number(action.duration) > 0) reserve.temporaryReserveTicks=Math.max(1,Math.ceil(action.duration*BASE_ATTACK_COOLDOWN));
+  publishBattleEvents([{type:"reserve_deploy",source,target:reserve,skill}]);
+  addBattleEventLog(source,`${reserve.name} 예비대 증원`);
+  return reserve;
+}
+
+function returnTemporaryReserveUnit(unit) {
+  const returning=unit.temporaryReturnUnit;
+  unit.temporaryReserveTicks=null;unit.temporaryReturnUnit=null;
+  if (unit.alive) {
+    clearBattleEffects(unit);clearBattleChannel(unit);unit.pendingAction=null;unit.castTimer=0;unit.castDuration=0;
+    unit.alive=false;unit.isReserve=true;unit.isWaiting=true;unit.entryTicks=0;unit.reviveTicks=0;
+  }
+  if (returning?.reservedForTemporarySwap) {
+    returning.reservedForTemporarySwap=false;
+    if (returning.isReserve && returning.isWaiting && returning.hp > 0) {
+      returning.x=unit.x;returning.y=unit.y;activateWaitingUnit(returning,"swap");
+      addBattleEventLog(returning,`${returning.name}: 시간제 교대 복귀`);
+    }
+  }
+}
+
+function updateTemporaryReserveDeployments() {
+  [...playerSquad,...enemySquad].forEach(unit=>{
+    if (unit.temporaryReserveTicks == null) return;
+    if (!unit.alive || --unit.temporaryReserveTicks <= 0) returnTemporaryReserveUnit(unit);
+  });
+}
+
+function deployReserveReinforcements(squad) {
+  const regularUnits = squad.filter(unit => !unit.isSummon);
+  const activeLimit = Math.max(1, Number(regularUnits[0]?.squadActiveLimit) || regularUnits.length || 1);
+  const occupied = regularUnits.filter(unit => !unit.isReserve
+    && (unit.alive || (unit.isWaiting && (unit.entryTicks > 0 || unit.reviveTicks > 0)))).length;
+  let vacancies = Math.max(0, activeLimit - occupied);
+  const reserves = regularUnits.filter(unit => unit.isReserve && unit.isWaiting)
+    .sort((a,b) => (a.reserveOrder ?? 0) - (b.reserveOrder ?? 0));
+  while (vacancies > 0 && reserves.length) {
+    const reserve = reserves.shift();
+    activateWaitingUnit(reserve, "reserve");
+    vacancies--;
+  }
+}
+
+function updateBattleReentries() {
+  updateTemporaryReserveDeployments();
+  [...playerSquad, ...enemySquad].forEach(unit => {
+    if (unit.reviveInvulnerableTicks > 0) unit.reviveInvulnerableTicks--;
+  });
+  [...playerSquad, ...enemySquad].forEach(unit => {
+    if (unit.alive || !unit.isWaiting) return;
+    if (unit.entryTicks > 0 && --unit.entryTicks <= 0) activateWaitingUnit(unit, "entry");
+    else if (unit.reviveTicks > 0 && --unit.reviveTicks <= 0) activateWaitingUnit(unit, "revive");
+  });
+  deployReserveReinforcements(playerSquad);
+  deployReserveReinforcements(enemySquad);
+}
+
+function updateRuntimeRuleOverrides() {
+  [...playerSquad,...enemySquad].forEach(unit => {
+    const equipmentWasDisabled=(unit.runtimeRuleOverrides ?? []).some(rule=>rule.disableEquipmentEffects);
+    if (!unit.alive) { unit.runtimeRuleOverrides=[]; return; }
+    unit.runtimeRuleOverrides=(unit.runtimeRuleOverrides ?? []).filter(rule=>rule.remainingTicks === null || --rule.remainingTicks > 0);
+    const equipmentIsDisabled=unit.runtimeRuleOverrides.some(rule=>rule.disableEquipmentEffects);
+    if (equipmentWasDisabled !== equipmentIsDisabled) refreshBattleEquipmentRuleState(unit);
+  });
+}
+
+function canSquadContinueBattle(squad) {
+  return squad.some(unit => unit.alive || (!unit.isSummon && unit.isWaiting
+    && (unit.isReserve || unit.entryTicks > 0 || unit.reviveTicks > 0)));
 }
 
 function triggerEffect(unit, effectType) {
@@ -144,6 +415,8 @@ function placeSquadForBattle(units, side) {
       : fieldWidth * (0.05 + Math.random() * 0.25);
     unit.y = fieldHeight * (0.08 + Math.random() * 0.84);
     clampPosition(unit);
+    unit.battleStartX = unit.x;
+    unit.battleStartY = unit.y;
   });
 }
 
@@ -158,6 +431,8 @@ async function finishBattle(result) {
   updateBattleButton();
 
   const record = createBattleRecord(result);
+  [...playerSquad, ...enemySquad].forEach(clearBattleEffects);
+  battleFields = [];
   battleRecordsJson.unshift(record);
   recordPage = 1;
   try {
@@ -176,9 +451,17 @@ async function finishBattle(result) {
 }
 
 function prepareBattleSession({ openScreen = true } = {}) {
+  resetBattleEvents();
+  skillAreaImpacts = [];
+  skillChainImpacts = [];
+  battleFields = [];
+  playerSquad = playerSquad.filter(unit => !unit.isSummon);
+  enemySquad = enemySquad.filter(unit => !unit.isSummon);
+  projectiles = [];
   rebuildPlayerSquadFromSelection();
   if (battleMode === "team" && selectedEnemyTeamIndex !== "") {
-    enemySquad = createSquadFromCharacterIds(getTeamCharacterIds(teamsJson[Number(selectedEnemyTeamIndex)]), "enemy");
+    const enemyTeam = teamsJson[Number(selectedEnemyTeamIndex)];
+    enemySquad = createSquadFromCharacterIds(getTeamCharacterIds(enemyTeam), "enemy", enemyTeam?.activeMemberCount);
   }
 
   if (playerSquad.length < 1) {
@@ -190,6 +473,13 @@ function prepareBattleSession({ openScreen = true } = {}) {
     alert("적을 1명 이상 추가해주세요");
     return false;
   }
+
+  snapshotActiveBattleSideRules();
+
+  const missingEntity = [...playerSquad, ...enemySquad].flatMap(unit => getEquippedSkills(unit))
+    .flatMap(skill => skill.actions).find(action => action.type === 'summon_entity' && !getEntityById(action.entityId));
+  if (missingEntity) { alert(`소환 Entity를 찾을 수 없습니다: ${missingEntity.entityId}`); return false; }
+  battleEntitySnapshot = structuredClone(entitiesJson);
 
   if (openScreen) {
     openBattleScreenModal();
@@ -224,6 +514,10 @@ function startBattle() {
 }
 
 function abortBattle() {
+  [...playerSquad, ...enemySquad].forEach(clearBattleEffects);
+  skillAreaImpacts = [];
+  skillChainImpacts = [];
+  battleFields = [];
   if (!isBattleRunning) {
     return;
   }
@@ -319,13 +613,16 @@ function moveUnit(unit, targets) {
     return;
   }
 
-  if (unit.castTimer > 0) {
+  if (unit.castTimer > 0 || unit.channelAction || hasBattleState(unit,"stun") || hasBattleState(unit,"root")) {
     unit.vx = 0;
     unit.vy = 0;
     unit.isMoving = false;
     return;
   }
 
+  if (unit.isSummon && unit.ai === "healer") {
+    targets = getSummonSquad(unit).filter(candidate => candidate !== unit && candidate.alive && candidate.hp < candidate.maxHp);
+  }
   const target = targets.find(candidate => candidate.alive);
   if (!target) {
     return;
@@ -345,7 +642,7 @@ function moveUnit(unit, targets) {
   if (dist > desiredRange) {
     unit.vx = (dx / dist) * speed;
     unit.vy = (dy / dist) * speed;
-  } else if (dist < desiredRange - 5 && (unit.role === "ranged" || unit.role === "healer")) {
+  } else if (dist < desiredRange - 5 && ["ranged", "healer"].includes(unit.ai ?? unit.role)) {
     unit.vx = -(dx / dist) * speed;
     unit.vy = -(dy / dist) * speed;
   } else {
@@ -355,9 +652,11 @@ function moveUnit(unit, targets) {
 
   unit.isMoving = Math.hypot(unit.vx, unit.vy) > 0;
 
+  const startX = unit.x, startY = unit.y;
   unit.x += unit.vx;
   unit.y += unit.vy;
   clampPosition(unit);
+  unit.moveDistanceTotal = (unit.moveDistanceTotal ?? 0) + Math.hypot(unit.x-startX, unit.y-startY) / ATTACK_RANGE_UNIT;
 }
 
 function resolveCollision() {
@@ -399,8 +698,10 @@ function updateCombat() {
   const alivePlayers = playerSquad.filter(unit => unit.alive);
   const aliveEnemies = enemySquad.filter(unit => unit.alive);
 
-  if (alivePlayers.length === 0 || aliveEnemies.length === 0) {
-    finishBattle(alivePlayers.length > 0 ? "승리" : "패배");
+  const playersContinue = canSquadContinueBattle(playerSquad);
+  const enemiesContinue = canSquadContinueBattle(enemySquad);
+  if (!playersContinue || !enemiesContinue) {
+    finishBattle(playersContinue === enemiesContinue ? "무승부" : playersContinue ? "승리" : "패배");
     return;
   }
 
@@ -409,7 +710,12 @@ function updateCombat() {
 }
 
 function takeAction(unit, allies, enemies) {
+  if (!unit.alive) return;
   tickSkillCooldowns(unit);
+  if (hasBattleState(unit,"stun")) return;
+  const hasIndependentWeapons=(unit.weaponAttackStates?.length ?? 0)>1;
+  if (hasIndependentWeapons) updateIndependentWeaponAttacks(unit,enemies);
+  if (updateBattleChannel(unit)) return;
   if (updateCast(unit)) {
     return;
   }
@@ -418,12 +724,14 @@ function takeAction(unit, allies, enemies) {
     return;
   }
 
+  if (hasIndependentWeapons) return;
+
   if (unit.attackCooldown > 0) {
     unit.attackCooldown--;
     return;
   }
 
-  if (unit.role === "healer") {
+  if ((unit.ai ?? unit.role) === "healer") {
     const target = findHealTarget(unit, allies);
     if (!target) {
       return;
@@ -467,9 +775,11 @@ function tickSkillCooldowns(unit) {
 }
 
 function tryUseReadySkill(unit, allies, enemies) {
+  if (hasBattleState(unit,"stun") || hasBattleState(unit,"silence")) return false;
+  const nextSkillModifier=getNextSkillModifier(unit);
   const skill = getEquippedSkills(unit).find(candidate => {
     const cooldownLeft = Number(unit.skillCooldowns?.[candidate.id]) || 0;
-    return cooldownLeft <= 0 && canPaySkillResourceCosts(unit, candidate) && resolveSkillTarget(unit, candidate, allies, enemies);
+    return cooldownLeft <= 0 && canPaySkillResourceCosts(unit, candidate, nextSkillModifier.resourceCostPercent) && resolveSkillTarget(unit, candidate, allies, enemies);
   });
 
   if (!skill) {
@@ -477,9 +787,10 @@ function tryUseReadySkill(unit, allies, enemies) {
   }
 
   const target = resolveSkillTarget(unit, skill, allies, enemies);
-  spendSkillResourceCosts(unit, skill);
+  const resourceSpent=spendSkillResourceCosts(unit, skill, nextSkillModifier.resourceCostPercent);
+  consumeNextSkillModifier(unit,nextSkillModifier);
   showSkillBubble(unit, skill.name);
-  startCast(unit, { type: "skill", target, skill, ranged: distance(unit, target) > ATTACK_RANGE_UNIT });
+  startCast(unit, { type: "skill", target, skill, resourceSpent, skillModifier:nextSkillModifier, ranged: distance(unit, target) > ATTACK_RANGE_UNIT });
   return true;
 }
 
@@ -489,39 +800,38 @@ function showSkillBubble(unit, text) {
 }
 
 function resolveSkillTarget(unit, skill, allies, enemies) {
-  const targetType = getSkillPrimaryTargetType(skill);
-  if (targetType === "self") {
-    return unit;
+  if (!isSkillExecutable(skill)) return null;
+  for (const action of skill.actions) {
+    const target = resolveSkillActionTarget(unit, action, null, skill);
+    if (target) return target;
   }
-
-  const range = getSkillRangePixels(unit, skill);
-  if (targetType === "ally") {
-    const healAction = skill.actions.find(action => action.type === "heal" && action.healResource === "HP");
-    const candidates = allies.filter(ally => ally.alive && distance(unit, ally) <= range);
-    if (healAction) {
-      return candidates.find(ally => ally.hp < ally.maxHp) ?? null;
-    }
-    return candidates[0] ?? null;
-  }
-
-  return enemies.find(enemy => enemy.alive && distance(unit, enemy) <= range) ?? null;
+  return null;
 }
 
 function startCast(unit, action) {
-  const castDuration = getCastDuration(unit);
+  if (unit.channelAction) return;
+  if (hasBattleState(unit,"stun") || (action.type === "skill" && hasBattleState(unit,"silence"))) return;
+  const skill = action.type === "skill" ? action.skill : getUnitSkill(unit, action.type === "heal" ? DEFAULT_HEAL_SKILL_ID : DEFAULT_ATTACK_SKILL_ID);
+  if (!isSkillExecutable(skill)) return;
+  const castTime = normalizeSkillCastTime(unit.isSummon && action.type !== "skill" ? unit.castSpeed : skill?.castTime);
+  const castDuration = Math.round((castTime == null ? getCastDuration(unit) : castTime * BASE_ATTACK_COOLDOWN) * (action.skillModifier?.castTimePercent ?? 100) / 100);
 
   markAction(unit);
+  const pendingAction = { ...action, skill };
+  unit.pendingAction = pendingAction;
+  unit.castTimer = castDuration;
+  unit.castDuration = castDuration;
+  publishBattleEvents([{type:"cast_start",source:unit,target:action.target,skill}]);
+  if (!unit.alive || unit.pendingAction !== pendingAction) return;
   if (castDuration <= 0) {
-    resolveCastAction(unit, action);
-    if (action.type !== "skill") {
+    unit.pendingAction = null;
+    resolveCastAction(unit, pendingAction);
+    if (action.type !== "skill" && !unit.channelAction) {
       setCooldownAfterCast(unit, castDuration);
     }
     return;
   }
 
-  unit.pendingAction = action;
-  unit.castTimer = castDuration;
-  unit.castDuration = castDuration;
 }
 
 function updateCast(unit) {
@@ -537,7 +847,7 @@ function updateCast(unit) {
     unit.pendingAction = null;
     unit.castDuration = 0;
     resolveCastAction(unit, action);
-    if (action.type !== "skill") {
+    if (action.type !== "skill" && !unit.channelAction) {
       setCooldownAfterCast(unit, getCastDuration(unit));
     }
   }
@@ -550,18 +860,25 @@ function setCooldownAfterCast(unit, castDuration) {
 }
 
 function resolveCastAction(unit, action) {
-  if (!unit.alive || !action?.target?.alive) {
+  if (!unit.alive || !action) {
     return;
   }
+
+  const completedSkill = action.skill ?? getUnitSkill(unit,action.type === "heal" ? DEFAULT_HEAL_SKILL_ID : DEFAULT_ATTACK_SKILL_ID);
+  if (completedSkill.slot !== "passive" && normalizeSkillChannel(completedSkill.channel).duration > 0) {
+    startBattleChannel(unit,action,completedSkill);return;
+  }
+  publishBattleEvents([{type:"cast_complete",source:unit,target:action.target,skill:completedSkill}]);
+  if (!unit.alive || hasBattleState(unit,"stun") || (action.type === "skill" && hasBattleState(unit,"silence"))) return;
 
   if (action.type === "skill") {
     resolveSkillCast(unit, action);
   } else if (action.type === "heal") {
-    spawnProjectile(unit, action.target, "heal", getUnitSkill(unit, DEFAULT_HEAL_SKILL_ID));
+    spawnProjectile(unit, action.target, "heal", completedSkill);
   } else if (action.ranged) {
-    spawnProjectile(unit, action.target, "attack", getUnitSkill(unit, DEFAULT_ATTACK_SKILL_ID));
+    spawnProjectile(unit, action.target, "attack", completedSkill);
   } else {
-    doAttack(unit, action.target, getUnitSkill(unit, DEFAULT_ATTACK_SKILL_ID));
+    doAttack(unit, action.target, completedSkill);
   }
 }
 
@@ -571,11 +888,191 @@ function resolveSkillCast(unit, action) {
     return;
   }
 
-  unit.skillCooldowns[skill.id] = getSkillCooldownTicks(skill);
-  if (action.ranged) {
-    spawnProjectile(unit, action.target, "skill", skill);
-  } else {
-    applySkill(unit, action.target, skill);
+  unit.skillCooldowns[skill.id] = getModifiedSkillCooldownTicks(skill,unit,action.skillModifier);
+  dispatchSkillActions(unit, action.target, skill, true, false, null, action.resourceSpent);
+}
+
+function getIndependentWeaponSkill(unit,weapon,target) {
+  const assigned=getSkillById(weapon.attackSkillId);
+  const base=isSkillExecutable(assigned) && assigned.slot !== "passive"
+    ? assigned : createDefaultAttackSkillForUnit({...unit,attackType:weapon.attackType,attackSkillId:""});
+  const skill=structuredClone(base);
+  const focusedCount=(unit.weaponAttackStates ?? []).filter(state=>state.focusTarget===target).length;
+  skill.weaponDamagePercent=Math.max(0,100-(Number(unit.sameTargetWeaponPenaltyPercent)||0)*Math.max(0,focusedCount-1));
+  skill.actions=skill.actions.map(action=>action.rangeMode === "mainWeapon"
+    ? {...action,rangeMode:"custom",rangeValue:weapon.attackRange} : action);
+  return skill;
+}
+
+function canPayIndependentWeaponCost(unit,weapon) {
+  return weapon.attackType === "magic" ? (Number(unit.mp)||0)>=MP_ACTION_COST : (Number(unit.st)||0)>=ST_PHYSICAL_ATTACK_COST;
+}
+
+function spendIndependentWeaponCost(unit,weapon) {
+  if (weapon.attackType === "magic") unit.mp=Math.max(0,(Number(unit.mp)||0)-MP_ACTION_COST);
+  else {
+    unit.st=Math.max(0,(Number(unit.st)||0)-ST_PHYSICAL_ATTACK_COST);
+    if (unit.st<=0) unit.exhausted=true;
+  }
+}
+
+function resolveIndependentWeaponAttack(unit,state) {
+  const target=state.target;
+  state.target=null;
+  if (!unit.alive || !target?.alive) return;
+  const skill=getIndependentWeaponSkill(unit,state.weapon,target);
+  if (state.weapon.attackRange>1) spawnProjectile(unit,target,"attack",skill);
+  else doAttack(unit,target,skill);
+}
+
+function updateIndependentWeaponAttacks(unit,enemies) {
+  const resolving=[];
+  unit.weaponAttackStates.forEach(state=>{
+    if (state.cooldown>0) state.cooldown--;
+    if (state.castTimer>0) {
+      state.castTimer--;
+      if (state.castTimer<=0) resolving.push(state);
+      return;
+    }
+    if (state.cooldown>0 || !canPayIndependentWeaponCost(unit,state.weapon)) return;
+    const range=state.weapon.attackRange*ATTACK_RANGE_UNIT;
+    const target=enemies.filter(enemy=>enemy.alive && distance(unit,enemy)<=range).sort((a,b)=>distance(unit,a)-distance(unit,b))[0];
+    if (!target) return;
+    spendIndependentWeaponCost(unit,state.weapon);
+    markAction(unit);
+    state.target=target;
+    state.focusTarget=target;
+    state.cooldown=Math.max(1,Math.round(BASE_ATTACK_COOLDOWN*state.weapon.attackSpeed));
+    state.castTimer=Math.max(0,Math.round(BASE_ATTACK_COOLDOWN*state.weapon.castSpeed));
+    if (state.castTimer<=0) resolving.push(state);
+  });
+  resolving.forEach(state=>resolveIndependentWeaponAttack(unit,state));
+}
+
+function getClampedPosition(unit,x,y) {
+  const margin=UNIT_RADIUS;
+  const bounds=unit.isEntityPreview ? unit.previewBounds ?? canvas : canvas;
+  return {x:Math.max(margin,Math.min(bounds.width-margin,x)),y:Math.max(margin,Math.min(bounds.height-margin,y))};
+}
+
+function moveUnitWithCollision(unit,desiredX,desiredY,{sweep=true}={}) {
+  const startX=unit.x,startY=unit.y;
+  const desired=getClampedPosition(unit,desiredX,desiredY);
+  const vx=desired.x-startX,vy=desired.y-startY;
+  if (!(Math.hypot(vx,vy)>0)) return 0;
+  const units=unit.isEntityPreview ? [] : [...playerSquad,...enemySquad].filter(other=>other!==unit && other.alive);
+  if (!sweep) {
+    if (units.some(other=>Math.hypot(desired.x-other.x,desired.y-other.y)<COLLISION_DISTANCE)) return 0;
+    unit.x=desired.x;unit.y=desired.y;
+    return Math.hypot(vx,vy);
+  }
+
+  let maxT=1;
+  for (const other of units) {
+    const px=startX-other.x,py=startY-other.y;
+    const startDistance=Math.hypot(px,py);
+    const endDistance=Math.hypot(desired.x-other.x,desired.y-other.y);
+    if (startDistance<COLLISION_DISTANCE) {
+      if (endDistance>=startDistance) continue;
+      maxT=0;break;
+    }
+    const a=vx*vx+vy*vy,b=2*(px*vx+py*vy),c=px*px+py*py-COLLISION_DISTANCE*COLLISION_DISTANCE;
+    const discriminant=b*b-4*a*c;
+    if (discriminant<0) continue;
+    const hit=(-b-Math.sqrt(discriminant))/(2*a);
+    if (hit>=0 && hit<=maxT) maxT=Math.max(0,hit);
+  }
+  unit.x=startX+vx*maxT;unit.y=startY+vy*maxT;
+  return Math.hypot(unit.x-startX,unit.y-startY);
+}
+
+function createBattleField(source,target,action,skill) {
+  if (source?.isEntityPreview) return;
+  const center=action.fieldCenter === "self" || action.target === "self" ? source : target;
+  if (!center || !(action.fieldRadius > 0) || !(action.fieldInterval > 0)) return;
+  const snapshot=structuredClone(action);snapshot._actionIndex=skill?.actions?.indexOf(action) ?? -1;
+  battleFields.push({source,skill,action:snapshot,x:center.x,y:center.y,
+    remainingTicks:action.duration > 0 ? Math.max(1,Math.ceil(action.duration*BASE_ATTACK_COOLDOWN)) : null,
+    nextTick:Math.max(1,Math.ceil(action.fieldInterval*BASE_ATTACK_COOLDOWN))});
+  publishBattleEvents([{type:"field_create",source,target,skill}]);
+  addBattleEventLog(source,`${source.name}: ${skill?.name ?? "필드"} 생성 (${action.fieldRadius} 반경)`);
+}
+
+function updateBattleFields() {
+  battleFields=battleFields.filter(field => {
+    const {source,skill,action}=field;
+    if (--field.nextTick <= 0) {
+      field.nextTick=Math.max(1,Math.ceil(action.fieldInterval*BASE_ATTACK_COOLDOWN));
+      const own=source.side === "enemy" ? enemySquad : playerSquad;
+      const other=source.side === "enemy" ? playerSquad : enemySquad;
+      const resource=action.fieldEffect === "heal" ? getResourceField(action.healResource) : null;
+      const drained=action.fieldEffect === "drain_resource" ? getResourceField(action.drainResource) : null;
+      const targetPool=action.target === "enemy" ? other : action.target === "summon" ? own.filter(unit=>unit.isSummon && unit.summoner===source) : own;
+      let targets=targetPool.filter(unit => unit.alive
+        && distance(unit,field) <= action.fieldRadius*ATTACK_RANGE_UNIT
+        && (!resource || normalizeResourceReference(action.healResource) === "BP" || (getUnitResourceState(unit,action.healResource) && getUnitResourceCurrent(unit,action.healResource) < getUnitResourceMax(unit,action.healResource)))
+        && (!drained || getUnitResourceCurrent(unit,action.drainResource)>0));
+      targets.sort((a,b)=>resource && normalizeResourceReference(action.healResource) !== "BP"
+        ? getUnitResourceCurrent(a,action.healResource)/Math.max(1,getUnitResourceMax(a,action.healResource))-getUnitResourceCurrent(b,action.healResource)/Math.max(1,getUnitResourceMax(b,action.healResource)) || distance(a,field)-distance(b,field)
+        : distance(a,field)-distance(b,field));
+      if (action.target === "self") targets=targets.filter(unit=>unit===source);
+      if (action.maxTargets > 0) targets=targets.slice(0,action.maxTargets);
+      const applied={...action,type:action.fieldEffect,area:0,chainCount:0,
+        ...(["add_buff","add_state"].includes(action.fieldEffect) ? {duration:action.fieldEffectDuration} : {}),
+        ...(action.fieldEffect === "move" ? {moveType:action.fieldMoveType,distance:action.fieldDistance,_moveOrigin:{x:field.x,y:field.y}} : {})};
+      for(const target of targets) applySkillAction(source,target,applied,skill,createSkillExecutionContext());
+      publishBattleEvents([{type:"field_tick",source,skill}]);
+    }
+    if (field.remainingTicks === null || --field.remainingTicks > 0) return true;
+    publishBattleEvents([{type:"field_expire",source,skill}]);
+    return false;
+  });
+}
+
+function dispatchSkillActions(source, preferredTarget, skill, allowProjectiles, forceProjectile = false, channelAction = null, resourceSpent = null) {
+  if (!source?.alive || !isSkillExecutable(skill)) return;
+  if (skillUsesExecutionResults(skill)) {
+    dispatchSkillActionSequence(source,preferredTarget,skill,allowProjectiles,forceProjectile,channelAction,0,createSkillExecutionContext(resourceSpent));
+    return;
+  }
+  const hasMovement = skill.actions.some(action => action.type === "move");
+  skill.actions.forEach(action => {
+    if (!source.alive || (channelAction && source.channelAction !== channelAction)) return;
+    const target = resolveSkillActionTarget(source, action, preferredTarget, skill);
+    if (!target) return;
+    const ranged = allowProjectiles && !hasMovement && ["deal_damage", "heal", "drain_resource"].includes(action.type)
+      && target !== source && (forceProjectile || distance(source, target) > ATTACK_RANGE_UNIT)
+      && !(!isChainAction(action) && action.area > 0 && (action.areaCenter === "self" || action.target === "self"));
+    if (ranged) {
+      projectiles.push({source, target, type: action.type === "heal" ? "heal" : "skill", skill,
+        skillAction: action, x: source.x, y: source.y});
+    } else {
+      applySkillAction(source, target, action, skill);
+    }
+  });
+}
+
+function dispatchSkillActionSequence(source, preferredTarget, skill, allowProjectiles, forceProjectile, channelAction, startIndex, execution) {
+  const hasMovement = skill.actions.some(action => action.type === "move");
+  for (let index=startIndex; index<skill.actions.length; index++) {
+    if (!source.alive || (channelAction && source.channelAction !== channelAction)) return;
+    const action=skill.actions[index];
+    const target=resolveSkillActionTarget(source,action,preferredTarget,skill);
+    if (!target) {
+      execution.previousActualDamage=0;
+      execution.previousActualHealing=0;
+      execution.previousResourceDrained=0;
+      continue;
+    }
+    const ranged=allowProjectiles && !hasMovement && ["deal_damage","heal","drain_resource"].includes(action.type)
+      && target !== source && (forceProjectile || distance(source,target)>ATTACK_RANGE_UNIT)
+      && !(!isChainAction(action) && action.area>0 && (action.areaCenter === "self" || action.target === "self"));
+    if (ranged) {
+      projectiles.push({source,target,type:action.type === "heal" ? "heal" : "skill",skill,skillAction:action,
+        execution,resumeActionIndex:index+1,preferredTarget,allowProjectiles,forceProjectile,channelAction,x:source.x,y:source.y});
+      return;
+    }
+    applySkillAction(source,target,action,skill,execution);
   }
 }
 
@@ -602,14 +1099,7 @@ function doAttack(attacker, target, skill = getUnitSkill(attacker, DEFAULT_ATTAC
 }
 
 function spawnProjectile(source, target, type, skill) {
-  projectiles.push({
-    source,
-    target,
-    type,
-    skill,
-    x: source.x,
-    y: source.y
-  });
+  dispatchSkillActions(source, target, skill, true, true);
 }
 
 function updateProjectiles() {
@@ -618,7 +1108,17 @@ function updateProjectiles() {
   projectiles.forEach(projectile => {
     const { source, target, type, skill } = projectile;
 
-    if (!target.alive || !source.alive) {
+    if (!source.alive) {
+      return;
+    }
+    if (!target.alive) {
+      if (projectile.resumeActionIndex != null) {
+        projectile.execution.previousActualDamage=0;
+        projectile.execution.previousActualHealing=0;
+        projectile.execution.previousResourceDrained=0;
+        dispatchSkillActionSequence(source,projectile.preferredTarget,skill,projectile.allowProjectiles,
+          projectile.forceProjectile,projectile.channelAction,projectile.resumeActionIndex,projectile.execution);
+      }
       return;
     }
 
@@ -627,7 +1127,11 @@ function updateProjectiles() {
     const dist = Math.hypot(dx, dy);
 
     if (dist <= PROJECTILE_SPEED || dist === 0) {
-      if (type === "heal") {
+      if (projectile.skillAction) {
+        applySkillAction(source, target, projectile.skillAction, skill, projectile.execution);
+        if (projectile.resumeActionIndex != null) dispatchSkillActionSequence(source,projectile.preferredTarget,skill,
+          projectile.allowProjectiles,projectile.forceProjectile,projectile.channelAction,projectile.resumeActionIndex,projectile.execution);
+      } else if (type === "heal") {
         applyHeal(source, target, skill);
       } else if (type === "skill") {
         applySkill(source, target, skill);
@@ -754,6 +1258,11 @@ function drawUnit(unit, isEnemy) {
   ctx.fillText(unit.name, unit.x - 12 * scale, unit.y - statusOffset - 4 * scale);
 
   drawSkillBubble(unit, statusOffset);
+  const effectsText = getBattleEffectLabel(unit);
+  if (effectsText) {
+    ctx.save();ctx.fillStyle="#7c3aed";ctx.font=`${10 * scale}px Arial`;ctx.textAlign="center";
+    ctx.fillText(effectsText,unit.x,unit.y + statusOffset + 12 * scale);ctx.restore();
+  }
 }
 
 function drawProjectiles() {
@@ -765,18 +1274,136 @@ function drawProjectiles() {
   });
 }
 
+function createSkillAreaIndicator(source, target, action, skill, phase, progress = 0) {
+  if (isChainAction(action)) return null;
+  if (source.isEntityPreview || !supportsActionArea(action.type) || !(action.area > 0)) return null;
+  const center = getSkillAreaCenter(source, target, action);
+  if (!center) return null;
+  return {
+    x: center.x, y: center.y, radius: action.area * ATTACK_RANGE_UNIT,
+    color: source.side === "enemy" ? "#ef4444" : action.type === "heal" || action.type === "add_buff" || action.type.startsWith("delete_") ? "#16a34a" : action.type === "add_state" ? "#9333ea" : "#2563eb",
+    label: `${source.side === "enemy" ? "적군" : "아군"} · ${skill?.name ?? "광역"}`,
+    phase, progress
+  };
+}
+
+function showSkillAreaImpact(source, target, action, skill) {
+  const indicator = createSkillAreaIndicator(source, target, action, skill, "impact", 1);
+  if (!indicator) return;
+  skillAreaImpacts.push({ ...indicator, expiresAt: performance.now() + SKILL_AREA_IMPACT_MS });
+  if (skillAreaImpacts.length > 128) skillAreaImpacts.shift();
+}
+
+function getSkillAreaIndicators(now = performance.now()) {
+  skillAreaImpacts = skillAreaImpacts.filter(effect => effect.expiresAt > now);
+  const indicators = skillAreaImpacts.map(effect => ({ ...effect, alpha: (effect.expiresAt - now) / SKILL_AREA_IMPACT_MS }));
+  if (!isBattleRunning) return indicators;
+  const append = (source, target, skill, phase, progress, skillAction = null) => {
+    if (!source?.alive) return;
+    (skillAction ? [skillAction] : skill?.actions ?? []).forEach(action => {
+      const resolved = skillAction ? (target?.alive ? target : null) : resolveSkillActionTarget(source, action, target, skill);
+      if (!resolved) return;
+      const indicator = createSkillAreaIndicator(source, resolved, action, skill, phase, progress);
+      if (indicator) indicators.push(indicator);
+    });
+  };
+  [...playerSquad, ...enemySquad].forEach(unit => {
+    if (unit.channelAction) {
+      append(unit,unit.channelAction.target,unit.channelAction.skill,"cast",1-unit.channelTimer/Math.max(1,unit.channelDuration));
+    }
+    if (unit.castTimer > 0 && unit.pendingAction) {
+      append(unit, unit.pendingAction.target, unit.pendingAction.skill, "cast", 1 - unit.castTimer / Math.max(1, unit.castDuration));
+    }
+  });
+  projectiles.forEach(projectile => append(projectile.source, projectile.target, projectile.skill, "flight", 1, projectile.skillAction));
+  return indicators;
+}
+
+function drawSkillAreas() {
+  getSkillAreaIndicators().forEach(area => {
+    ctx.save();
+    ctx.fillStyle = area.color;
+    ctx.strokeStyle = area.color;
+    ctx.globalAlpha = area.phase === "impact" ? 0.28 * area.alpha : 0.12;
+    ctx.beginPath();
+    ctx.arc(area.x, area.y, area.radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = area.alpha ?? 0.85;
+    ctx.lineWidth = 2;
+    ctx.setLineDash(area.phase === "cast" ? [6, 4] : []);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    if (area.phase === "cast") {
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.arc(area.x, area.y, area.radius, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * area.progress);
+      ctx.stroke();
+    }
+    ctx.font = "11px sans-serif";
+    ctx.textAlign = "center";
+    const phase = area.phase === "cast" ? "시전 중" : area.phase === "flight" ? "도달 중" : "발동";
+    ctx.fillText(`${area.label} · ${phase}`, area.x, Math.max(12, area.y - area.radius - 7));
+    ctx.restore();
+  });
+}
+
+function showSkillChainImpact(source, targets, action) {
+  if (source.isEntityPreview || targets.length < 2) return;
+  skillChainImpacts.push({points: targets.map(unit => ({x:unit.x, y:unit.y})),
+    color: source.side === "enemy" ? "#ef4444" : action.type === "heal" ? "#16a34a" : "#2563eb",
+    expiresAt: performance.now() + 400});
+  if (skillChainImpacts.length > 128) skillChainImpacts.shift();
+}
+
+function drawSkillChains() {
+  const now = performance.now();
+  skillChainImpacts = skillChainImpacts.filter(effect => effect.expiresAt > now);
+  skillChainImpacts.forEach(effect => {
+    ctx.save();ctx.strokeStyle=effect.color;ctx.fillStyle=effect.color;
+    ctx.globalAlpha=(effect.expiresAt-now)/400;ctx.lineWidth=3;
+    ctx.beginPath();
+    effect.points.forEach((point,index) => {
+      if (index === 0) ctx.moveTo(point.x,point.y);
+      else ctx.lineTo(point.x,point.y);
+    });
+    ctx.stroke();
+    effect.points.forEach(point => {ctx.beginPath();ctx.arc(point.x,point.y,5,0,Math.PI*2);ctx.fill();});
+    ctx.restore();
+  });
+}
+
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drawBattleFields();
+  drawSkillAreas();
   playerSquad.forEach(unit => drawUnit(unit, false));
   enemySquad.forEach(unit => drawUnit(unit, true));
   drawProjectiles();
+  drawSkillChains();
+}
+
+function drawBattleFields() {
+  battleFields.forEach(field=>{
+    const color=field.source.side === "enemy" ? "#ef4444" : ["heal","add_buff"].includes(field.action.fieldEffect) ? "#16a34a" : field.action.fieldEffect === "move" ? "#0891b2" : "#7c3aed";
+    ctx.save();ctx.strokeStyle=color;ctx.fillStyle=color;ctx.globalAlpha=.16;ctx.lineWidth=2;
+    ctx.beginPath();ctx.arc(field.x,field.y,field.action.fieldRadius*ATTACK_RANGE_UNIT,0,Math.PI*2);ctx.fill();
+    ctx.globalAlpha=.8;ctx.stroke();ctx.font="11px sans-serif";ctx.textAlign="center";
+    const time=field.remainingTicks === null ? "∞" : `${(field.remainingTicks/BASE_ATTACK_COOLDOWN).toFixed(1)}초`;
+    ctx.fillText(`${field.skill?.name ?? "필드"} · ${time}`,field.x,Math.max(12,field.y-field.action.fieldRadius*ATTACK_RANGE_UNIT-7));ctx.restore();
+  });
 }
 
 function resetGame() {
+  resetBattleEvents();
+  skillAreaImpacts = [];
+  skillChainImpacts = [];
+  battleFields = [];
   isBattleRunning = false;
   gameSpeed = 1;
   playerSquad = [];
   enemySquad = [];
+  activeBattleSideBaseRules = { player: normalizeTeamBattleRules(), enemy: normalizeTeamBattleRules() };
+  activeBattleSideRules = { player: normalizeTeamBattleRules(), enemy: normalizeTeamBattleRules() };
   clearBattleEventLogs();
   selectedBattleTeamIds.clear();
   selectedBattleCharacterIds.clear();
@@ -809,9 +1436,16 @@ function runBattleTick() {
         break;
       }
 
+      combatEventTick++;
+      updateBattleEffects();
+      updateRuntimeRuleOverrides();
+      updateBattleReentries();
+      updateBattleFields();
+      updateSummonLifetimes();
       updateMovement();
       resolveCollision();
       updateCombat();
+      if (!isBattleRunning) break;
       updateProjectiles();
       updateEffects();
     }

@@ -1,5 +1,7 @@
 # 액션 정의
 
+시전시간·원형 광역·소환의 현재 필드와 실행 규칙은 [스킬 엔진 안내](SKILL_ENGINE.md)를 참고한다. `castTime`, `area`/`areaCenter`/`maxTargets`, `summon` 설정은 편집과 저장을 지원한다.
+
 스킬은 하나 이상의 액션으로 구성된다. 액션은 피해, 회복, 이동, 버프, 상태이상, 필드 생성처럼 전투 중 발생하는 실제 동작을 표현한다.
 
 ## 공통 규칙
@@ -20,7 +22,7 @@
 
 - 베이직: 기본 공격, 기본 회복처럼 전투에서 자동으로 사용되는 기본 스킬
 - 액티브: 사용 조건이나 선택 입력을 통해 실행될 수 있는 능동 스킬
-- 패시브: 직접 시전하지 않고 조건에 따라 적용될 지속 효과 스킬
+- 패시브: 적중·피격·시전 완료·회복·적 처치 이벤트에 따라 즉시 발동하는 스킬. `passiveTrigger.event`, `chance`, `includePeriodic`를 설정하고 공통 자원·쿨타임을 적용한다. 시전시간은 적용하지 않는다. 자세한 규칙은 [현재 엔진 안내](SKILL_ENGINE.md#이벤트-기반-패시브)를 참고한다.
 
 ## 캐릭터 장착 스킬
 
@@ -90,6 +92,7 @@
 - MP
 - ST
 - BP
+- 캐릭터·몬스터에 정의한 커스텀 자원 (`custom:<id>`)
 
 자원 소모 방식은 다음과 같다.
 
@@ -99,7 +102,7 @@
 
 데이터 필드는 다음과 같다.
 
-- `skill.resourceCosts[].resource`: 자원 종류
+- `skill.resourceCosts[].resource`: 기본 자원 또는 `custom:<id>`
 - `skill.resourceCosts[].mode`: `fixed`, `maxPercent`, `currentPercent`
 - `skill.resourceCosts[].value`: 소모 수치 또는 비율
 
@@ -114,7 +117,9 @@
 
 데이터 필드는 다음과 같다.
 
-- `healResource`: `HP`, `MP`, `ST`, `BP`
+- `healResource`: `HP`, `MP`, `ST`, `BP`, `custom:<id>`
+
+커스텀 자원은 대상 유닛에 같은 ID가 정의되어 있어야 한다. 정의가 없으면 비용 지불은 불가능하고 회복·감소는 0으로 처리한다. `drainResource`와 주기 회복 자원에도 같은 참조 형식을 사용한다.
 
 ## 액션 목록
 
@@ -136,22 +141,30 @@
 ### 이동
 
 - 코드: `move`
-- 설명: 시전자가 선택 대상 방향으로 이동한다.
+- 설명: 시전자가 선택 대상 방향으로 이동하거나 선택 대상을 강제로 이동시킨다.
 - 대상: `아군`, `적군`만 선택할 수 있다.
 - 주요 필드: `target`, `moveType`, `distance`, `moveSpeed`
-- 이동 방식: `Dash`, `Teleport`
+- 이동 방식: `Dash`, `Teleport`, `Knockback`, `Pull`, `Push`
 - 돌진(`Dash`): 현재 위치에서 대상까지 빠른 속도로 이동한다. `moveSpeed`로 증가한 이동속도를 입력한다.
 - 순간이동(`Teleport`): 현재 위치에서 대상 방향의 지정 거리 위치에 즉시 등장한다.
-- 이동거리(`distance`): 1~10 범위의 값이며 기본값은 10이다. 현재 위치에서 대상까지의 거리 중 `distance * 10%`만큼 이동한다. 10이면 보통 대상 위치까지 이동한다.
+- 넉백·밀치기(`Knockback`, `Push`): 대상을 시전자 반대 방향으로 이동시킨다. 두 값은 현재 같은 실행 규칙을 사용하므로 스킬 데이터의 의도를 구분하는 용도다.
+- 끌어오기(`Pull`): 대상을 시전자 방향으로 이동시킨다.
+- 이동거리(`distance`): 1~10 범위이며 기본값은 10이다. 돌진·순간이동은 대상까지 거리의 `distance * 10%`, 강제 이동은 사거리 단위로 사용한다.
+- 돌진과 강제 이동은 경로에서 다른 유닛이나 전장 경계를 만나면 그 앞에서 멈춘다. 순간이동은 중간 유닛을 통과하지만 목적지가 점유되어 있으면 이동하지 않는다.
 - UI 숨김 필드: `damageType`, `healResource`, `range`, `coefficients`, `fieldRadius`
 
 ### 변신
 
 - 코드: `transform`
-- 설명: 대상의 형태를 변경한다.
-- 주요 필드: `target`, `duration`
+- 설명: 시전자를 일정 시간 다른 전투 형태로 전환하고 여러 능력치를 함께 변경한다.
+- 대상: `self`로 고정한다.
+- 주요 필드: `duration`, `transform.id`, `transform.name`, `transform.mode`, `transform.modifiers`
+- 계산 방식: `flat`은 고정값 가산, `percent`는 변신 전 기본 능력치의 비율을 가산한다. 공격력·마력·방어력·저항력·이동속도·사거리·공격 간격·기본 시전시간을 설정한다.
+- 새 변신은 기존 변신 하나를 교체한다. 일반 버프는 유지하며 변신과 함께 기본 능력치에서 합산한다. 지속시간 0은 전투 종료까지 유지한다.
 
 ### 상태 추가
+
+현재 `effect` 설정으로 기절(`stun`), 이동 불가(`root`), 침묵(`silence`)을 지원한다. 은신·탑승은 미지원이다. 지속시간·중첩·해제와 JSON 구조는 [현재 엔진 안내](SKILL_ENGINE.md#상태버프의-지속시간과-중첩)를 따른다.
 
 - 코드: `add_state`
 - 설명: 대상에게 상태이상을 추가한다.
@@ -161,17 +174,27 @@
 
 ### 상태 제거
 
+`effect.dispelMode`로 ID·분류·전체를 선택하고 `dispelCategory`, `dispelPolarity`로 범위를 제한한다. `dispellable: false`인 효과는 제거하지 않는다. 버프 제거도 같은 규칙이며 상태와 버프는 별도 종류로 처리한다.
+
 - 코드: `delete_state`
 - 설명: 대상의 상태이상을 제거한다.
 - 주요 필드: `target`
 
 ### 버프 추가
 
+현재 `effect.id`, `name`, `stat`, `mode`(`flat`/`percent`), `value`, `stackMode`(`refresh`/`stack`), `maxStacks`를 사용한다. `duration`은 초 단위이며 0은 전투 종료까지다. 제거 액션은 `effect.id`로 일치하는 종류의 효과를 모든 시전자에 대해 해제한다. 효과 정의가 없는 과거 액션은 잠금 상태로 보존한다.
+
+상태·버프에는 선택적으로 `effect.periodic`을 추가해 주기 피해·회복을 실행한다. `type`, `interval`, `value`, `damageType`, `resource`를 편집하며, 버프의 `mode` 또는 상태의 `state`를 `periodic`으로 선택하면 능력치·행동 제한 없이 주기 효과만 실행한다.
+
 - 코드: `add_buff`
 - 설명: 대상에게 지속 효과를 추가한다.
 - 주요 필드: `target`, `duration`
 
 ### 버프 제거
+
+효과 부여 면역은 버프의 `effect.immunity`로 설정한다. `scope`(상태/해로운 효과/모든 효과), `category`(전체/일반/물리/마법), `state`(전체/특정 상태)를 모두 만족하는 새 부여를 막는다. 기존 효과를 제거하거나 직접 피해를 막지는 않는다. 면역 전용은 `effect.mode: "immunity"`로 설정한다.
+
+피해 대리는 버프의 `effect.mode: "damage_proxy"`로 설정한다. 버프 시전자가 보호자가 되며 `proxyPercent`(분배율), `proxyPriority`(낮을수록 먼저), `proxyScope`(`all`/`basic`/`skill`)를 사용한다. 보호자별 방어·보호막을 적용하며 대리 피해는 다시 전달하지 않는다.
 
 - 코드: `delete_buff`
 - 설명: 대상의 버프를 제거한다.
@@ -186,8 +209,9 @@
 ### 필드 생성
 
 - 코드: `create_field`
-- 설명: 특정 지역에 액션이 이루어지는 필드를 생성한다. 필드 안에서 피해, 회복, 버프, 상태이상 등의 동작이 이루어진다.
-- 주요 필드: `target`, `rangeMode`, `rangeValue`, `fieldShape`, `fieldRadius`, `duration`, `coefficients`
+- 설명: 대상 또는 시전자의 현재 위치에 고정 필드를 만들고 일정 간격마다 범위 안의 대상을 다시 선택한다. 현재 피해, 회복, 자원 감소를 지원한다.
+- 주요 필드: `target`, `fieldEffect`, `fieldCenter`, `fieldRadius`, `duration`, `fieldInterval`, `maxTargets`, `coefficients`
+- `duration`이 0이면 전투가 끝날 때까지 유지한다. 시전자가 죽거나 이동해도 필드는 생성 위치에 남으며, 지속시간보다 간격이 길면 한 번도 발동하지 않고 사라질 수 있다.
 
 ## UI 목록 처리
 
@@ -195,3 +219,6 @@
 - `override_rule`, `copy_skill`: 현재 구현 난이도가 높아 UI 목록에서는 잠금 처리한다. 추후 확장 가능하도록 코드에는 잠금 목록으로 남긴다.
 
 앞으로 스킬 관리 UI에서 액션 입력 항목, 슬롯 종류, 액션 의미가 바뀌면 이 문서에도 같은 내용을 반영한다.
+## 구현된 채널링 공통값
+
+Skill의 `channel: {duration: 0, interval: 1, interruptOnDamage: true}`로 설정한다. 유지시간 0은 단발 실행, 양수는 일반 시전 후 지정 간격마다 전체 액션 반복이다. 매 반복마다 독립 대상을 검증한다. 자원은 최초 한 번 소모하고 완료·중단 시 쿨타임을 적용한다. 패시브에는 적용하지 않는다. 상세 중단 규칙과 이벤트는 [스킬 엔진 안내](SKILL_ENGINE.md)를 참고한다.

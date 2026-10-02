@@ -42,6 +42,7 @@ function renderMonsterTable() {
       <td>${monster.resistance}</td>
       <td>${monster.attackRange}</td>
       <td>${escapeHtml(getRoleLabel(monster.role))}</td>
+      <td>${(monster.skillIds ?? []).map(id => escapeHtml(getSkillById(id)?.name ?? "없는 스킬")).join(", ") || "없음"}</td>
       <td><button onclick="openMonsterModal(${index})">수정</button></td>
     </tr>
   `).join("");
@@ -66,6 +67,8 @@ function openMonsterModal(index = "") {
   monsterResistanceEl.value = monster?.resistance ?? getDefaultAbility(monster?.role ?? "melee", "resistance");
   monsterAttackRangeEl.value = monster?.attackRange ?? getDefaultAbility(monster?.role ?? "melee", "attackRange");
   monsterRoleEl.value = monster?.role ?? "melee";
+  monsterSkillsEl.innerHTML = getCharacterSkillOptionsHtml(monster?.skillIds ?? []);
+  renderCustomResourceEditor(monsterCustomResourcesEl, monster?.customResources);
   monsterModalEl.classList.remove("hidden");
 }
 
@@ -81,6 +84,7 @@ async function saveMonsterFromForm(event) {
   const editIndex = monsterEditIndexEl.value;
   const previousMonster = editIndex !== "" ? monsterJson[Number(editIndex)] : null;
   const monster = {
+    ...previousMonster,
     label: monsterLabelEl.value.trim(),
     hp: Number(monsterHpEl.value),
     mp: Number(monsterMpEl.value),
@@ -94,6 +98,8 @@ async function saveMonsterFromForm(event) {
     resistance: Number(monsterResistanceEl.value),
     attackRange: Number(monsterAttackRangeEl.value),
     role: monsterRoleEl.value,
+    skillIds: [...monsterSkillsEl.selectedOptions].map(option => option.value),
+    customResources: readCustomResourcesFromEditor(monsterCustomResourcesEl),
     portrait: await getPortraitForSave("monster", previousMonster?.portrait, monsterLabelEl.value.trim())
   };
 
@@ -112,6 +118,11 @@ async function saveMonsterFromForm(event) {
 
   try {
     await saveMonsterJson();
+    if (editIndex !== "" && !isBattleRunning) {
+      enemySquad.filter(unit => unit.sourceMonsterIndex === Number(editIndex)).forEach(unit => {
+        unit.skillIds = [...monster.skillIds];
+      });
+    }
     refreshMonsterUI();
     closeMonsterModal();
   } catch (error) {
@@ -163,6 +174,7 @@ function createEnemy(monsterIndex) {
     maxMp: monster.mp,
     st: monster.st,
     maxSt: monster.st,
+    customResources: createBattleCustomResources(monster.customResources),
     atk: monster.atk,
     magic: monster.magic,
     speed: monster.speed,
@@ -170,6 +182,8 @@ function createEnemy(monsterIndex) {
     castSpeed: monster.castSpeed,
     attackType: monster.attackType,
     attackSkillId: monster.attackSkillId ?? "",
+    skillIds: [...(monster.skillIds ?? [])],
+    sourceMonsterIndex: monsterIndex,
     defense: monster.defense,
     resistance: monster.resistance,
     attackRange: monster.attackRange,

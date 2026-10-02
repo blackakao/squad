@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CharacterViewer · SD 캐릭터 개발 도구</title>
+  <link rel="stylesheet" href="css/character-viewer.css">
+  <script src="js/portrait/imported-catalog.js?v=20260929"></script>
+  <script src="js/portrait/catalog.js?v=20260929"></script>
+  <script type="importmap">
+    {"imports":{"three":"./assets/vendor/three/build/three.module.js","three/addons/":"./assets/vendor/three/examples/jsm/"}}
+  </script>
+</head>
+<body>
+  <header>
+    <div><h1>CharacterViewer <span>SD CHARACTER LAB</span></h1><p>2.5~3등신 인간형 · GLB / glTF · 독립 개발 도구</p></div>
+    <a href="/">게임으로 돌아가기 ↗</a>
+  </header>
+  <main>
+    <section class="stage" aria-label="3D 미리보기">
+      <div id="viewport"></div>
+      <div class="stage-caption">왼쪽 드래그: 회전 · 휠: 확대/축소 · 오른쪽 드래그: 이동</div>
+      <div id="empty-hint">테스트할 캐릭터를 불러오세요.<small>공통 SD 베이스 또는 직접 만든 GLB를 선택할 수 있습니다.</small></div>
+    </section>
+    <aside>
+      <section>
+        <h2>01 / 모델 불러오기</h2>
+        <p><a href="character-viewer.html?model=assets/characters/base/human_sd_base_v1.glb">공통 SD 베이스 v1 보기 ↗</a></p>
+        <fieldset id="source-controls" disabled>
+          <div class="button-row"><button type="button" data-sd-model="bald">대머리 SD · 외형 기준</button><button type="button" data-sd-model="male">남성 SD · 외형/무기</button><button type="button" data-sd-model="female">여성 SD · 외형/무기</button></div>
+          <form id="url-form">
+            <label for="model-url">서버 경로 또는 HTTP(S) URL</label>
+            <input id="model-url" type="text" placeholder="assets/characters/models/human_sd_test.glb" required>
+            <button type="submit">경로에서 불러오기</button>
+          </form>
+          <label for="model-files">내 컴퓨터의 GLB 파일 (복수 선택 가능)</label>
+          <input id="model-files" type="file" accept=".glb" multiple>
+          <label for="local-models">선택한 파일</label>
+          <select id="local-models" disabled><option>선택한 파일 없음</option></select>
+        </fieldset>
+        <p class="hint">로컬 GLB는 업로드하지 않습니다. 외부 이미지·BIN을 참조하는 모델은 폴더 구조를 유지한 채 서버 경로로 불러오세요.</p>
+        <p id="load-status" role="status" aria-live="polite">3D 뷰어 초기화 중…</p>
+        <p id="error-message" role="alert" hidden></p>
+      </section>
+      <section>
+        <h2>02 / 애니메이션</h2>
+        <fieldset id="animation-controls" disabled>
+          <label for="clip-select">모델에 포함된 클립</label>
+          <select id="clip-select"><option>애니메이션 없음</option></select>
+          <div class="button-row"><button id="play" type="button">재생</button><button id="pause" type="button">일시정지</button><button id="stop" type="button">정지 / 처음</button></div>
+          <label class="check"><input id="loop" type="checkbox" checked> 반복 재생</label>
+          <label for="speed">재생 속도 <output id="speed-value">1.00×</output></label>
+          <input id="speed" type="range" min="0.1" max="3" step="0.05" value="1">
+        </fieldset>
+        <p id="playback-status" class="hint">모델을 불러오면 실제 클립만 표시됩니다.</p>
+      </section>
+      <section>
+        <h2>03 / 표시 설정</h2>
+        <fieldset id="display-controls" disabled>
+          <button id="frame-model" type="button">캐릭터 전체 보기</button>
+          <label for="model-scale">표시 배율 (원본 변환에 추가 적용)</label>
+          <input id="model-scale" type="number" min="0.001" max="1000" step="any" value="1">
+          <label class="check"><input id="show-skeleton" type="checkbox"> Skeleton 표시</label>
+        </fieldset>
+      </section>
+      <section>
+        <h2>04 / 장착 장비 미리보기</h2>
+        <button id="equip-refresh" type="button">아이템·카테고리 다시 읽기</button>
+        <fieldset id="equipment-controls" disabled>
+          <label for="equip-main">주무기 · 오른손 (활은 왼손)</label>
+          <select id="equip-main"><option value="">장착 안 함</option></select>
+          <label for="equip-sub">보조무기 · 왼손</label>
+          <select id="equip-sub"><option value="">장착 안 함</option></select>
+          <label for="equip-top">상의 · 공통 베이스 체형</label>
+          <select id="equip-top"><option value="">장착 안 함</option></select>
+          <div class="button-row"><button id="equip-clear" type="button">모두 해제</button></div>
+        </fieldset>
+        <p id="equipment-status" class="hint" role="status">장비 목록 준비 중…</p>
+        <p class="hint">등록 아이템과 카테고리 시제품의 외형을 확인합니다. 장착 상태·능력치는 저장하지 않습니다.</p>
+      </section>
+      <section>
+        <h2>05 / 외형·초상화 조합</h2>
+        <fieldset id="portrait-controls" disabled>
+          <img id="portrait-preview" class="portrait-composition-preview" alt="조합한 초상화 미리보기">
+          <p id="portrait-selection" class="hint"></p>
+          <label for="hair-group">남녀 베이스 / 머리 분류</label>
+          <select id="hair-group"><option value="male">남성형 머리 10종</option><option value="female" selected>여성형 머리 10종</option></select>
+          <div class="button-row"><button id="portrait-random" type="button">무작위 조합 생성</button><button id="portrait-default" type="button">기본 조합</button></div>
+          <div id="portrait-parts"></div>
+          <label for="portrait-preset-name">조합 이름</label>
+          <input id="portrait-preset-name" type="text" maxlength="60" placeholder="예: 갈색 단발의 기사">
+          <div class="button-row"><button id="portrait-save-preset" type="button">조합 저장</button><button id="portrait-delete-preset" type="button">선택 조합 삭제</button></div>
+          <label for="portrait-presets">이 브라우저에 저장한 조합</label>
+          <select id="portrait-presets"><option value="">저장한 조합 선택</option></select>
+          <div class="button-row"><button id="portrait-download" type="button">초상화 PNG 다운로드</button><button id="portrait-apply-character" type="button" hidden>캐릭터 초상화에 적용</button></div>
+        </fieldset>
+        <p id="portrait-status" class="hint" role="status">공통 SD 베이스를 불러오면 조합할 수 있습니다.</p>
+      </section>
+      <section>
+        <h2>06 / 모델 정보</h2>
+        <dl id="model-info"><dt>모델</dt><dd>불러온 모델 없음</dd></dl>
+        <details><summary>텍스처</summary><ul id="texture-info"><li>없음</li></ul></details>
+        <details><summary>AnimationClip / duration</summary><ul id="clip-info"><li>없음</li></ul></details>
+        <details><summary>본 / attachment point</summary><ul id="rig-info"><li>없음</li></ul></details>
+      </section>
+    </aside>
+  </main>
+  <script type="module">
+    import('./js/character-viewer/main.js?v=20260929-bald7').catch(error => {
+      document.getElementById('load-status').textContent = '뷰어 초기화 실패';
+      const message = document.getElementById('error-message');
+      message.hidden = false;
+      message.textContent = `3D 모듈을 불러오지 못했습니다. python server.py로 실행했는지, assets/vendor/three 파일이 있는지 확인하세요. ${error.message}`;
+    });
+  </script>
+</body>
+</html>

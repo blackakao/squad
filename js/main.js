@@ -12,6 +12,7 @@ async function initApp() {
       loadCategoryJson()
     ]);
     await loadItemJson();
+    await loadEntityJson();
     await loadSkillJson();
     await loadCharacterJson();
     await loadTeamJson();
