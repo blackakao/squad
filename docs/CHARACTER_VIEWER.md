@@ -2,9 +2,9 @@
 
 ## 현재 프로젝트와 변경 범위
 
-이 프로젝트는 HTML/CSS/일반 JavaScript와 Python `SimpleHTTPRequestHandler` 기반 앱이다. `package.json`, npm dependency, `src/`, `public/`, 빌드·lint·typecheck 설정은 없다. 기존 UI는 Bootstrap 5.3.3, 이미지 생성 화면은 Puter.js를 외부 스크립트로 사용한다. 기존 3D 라이브러리와 GLB/glTF 모델은 없다.
+이 프로젝트는 HTML/CSS/일반 JavaScript와 Python `SimpleHTTPRequestHandler` 기반 앱이다. `package.json`, npm dependency, `src/`, `public/`, 빌드·lint·typecheck 설정은 없다. 기존 UI는 Bootstrap 5.3.3, 이미지 생성 화면은 Puter.js를 외부 스크립트로 사용한다. 현재 로컬 Three.js와 SD GLB 모델을 포함하며 [공통 베이스](SD_BASE_MODEL.md), [외형 조합](PORTRAIT_COMPOSER.md), [외부 모델](IMPORTED_SD_MODELS.md) 문서가 후속 확장을 설명한다.
 
-- [캐릭터 데이터](../data/characters.json): 이름, role, faction, portrait, hp/mp/st/bp, 전투 능력치, attributes, skillIds, equipment. 현재 3D 외형 식별자나 리그 정보는 없다.
+- [캐릭터 데이터](../data/characters.json): 이름, role, faction, portrait, hp/mp/st/bp, 전투 능력치, attributes, skillIds, equipment. 외형 조합을 적용하면 선택적 `appearance`를 저장하며 상세 필드는 [데이터 구조](data_structure.md)를 참고한다. 전투 유닛을 3D 리그로 렌더링하는 구조는 아니다.
 - [캐릭터 모듈](../js/character.js): 데이터 CRUD, 관리 UI, 전투 유닛 생성이 함께 있다.
 - [전투 모듈](../js/battle.js): Canvas 2D 원형 초상화(없으면 색상 원), HP, 이름, 스킬 말풍선을 그린다. 계산과 draw 함수가 같은 전역 상태를 공유한다. 실제 `gameLoop()`는 `setTimeout`을 사용한다.
 - 향후 3D 전투 전환 시 렌더러, 캐릭터 외형 정의, 애셋 캐시, 게임 상태→애니메이션 연결, 장비 표시가 필요하다. 이번 단계는 이 연결을 구현하지 않는다.

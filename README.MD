@@ -1,10 +1,14 @@
 # Squad Auto Battle Prototype
 
+관전형 자동전투 RPG를 실험하는 정적 HTML/CSS/JavaScript 앱입니다. Python 서버로 실행하며, 캐릭터·팀·장비·스킬 조합의 자동 전투 결과를 관찰합니다.
+
+처음 실행할 때는 아래 실행 방법을, 개발을 재개할 때는 [작업 재개 메모](docs/resume.md)와 [에이전트 작업 규칙](AGENTS.md)을 먼저 확인합니다. 전체 구현 요약은 [프로젝트 개요](docs/project_overview.md), 파일과 모듈 관계는 [아키텍처](docs/architecture.md), 저장 형식은 [데이터 구조](docs/data_structure.md)를 기준으로 확인합니다.
+
 ## 독립 3D CharacterViewer
 
 외부 남녀 SD 모델은 뷰어의 **남성 SD · 외형/무기**, **여성 SD · 외형/무기** 버튼으로 불러옵니다. 각 모델에 맞는 머리·피부색·눈·코·귀·입 10종의 변형과 손에 따라 움직이는 무기 장착 지점을 추가했습니다. [외부 모델 사용법과 지원 범위](docs/IMPORTED_SD_MODELS.md)를 참고하세요.
 
-공통 SD 베이스에서 남성형 머리 10종·여성형 머리 10종, 눈 10종, 코 5종, 입 10종, 피부색 5종을 조합할 수 있습니다. 무작위 조합·부품 잠금·조합 저장·512×512 PNG 다운로드를 지원합니다. 캐릭터 편집창의 **3D 외형·초상화 조합**에서 만든 결과를 적용한 뒤 캐릭터를 저장하세요. [외형·초상화 조합 안내](docs/PORTRAIT_COMPOSER.md)를 참고하세요.
+캐릭터 편집창의 **3D 외형·초상화 조합**은 현재 대머리 SD 파생 모델을 기본으로 사용합니다. 공통 SD 베이스에서도 남성형 머리 10종·여성형 머리 10종, 눈 10종, 코 5종, 입 10종, 피부색 5종을 조합할 수 있습니다. 무작위 조합·부품 잠금·조합 저장·512×512 PNG 다운로드를 지원합니다. 만든 결과를 적용한 뒤 캐릭터를 저장하세요. [외형·초상화 조합 안내](docs/PORTRAIT_COMPOSER.md)와 [현재 기본 모델](docs/IMPORTED_SD_MODELS.md)을 참고하세요.
 
 공통 베이스의 Walk/Run은 정면(+Z) 이동 주기를 사용하며, Knockdown은 넘어지기, Death는 누운 자세 유지로 구분됩니다. 뷰어의 `장착 장비 미리보기`에서 현재 아이템·카테고리를 읽어 주무기·보조무기·상의 외형을 장착할 수 있습니다. 무기 9종·상의 4종의 시제품 GLB를 포함하며 게임의 저장 장비·능력치는 변경하지 않습니다.
 
@@ -93,42 +97,67 @@ python server.py
 ```text
 .
 ├── index.html           # 단일 페이지 앱의 HTML과 모달/화면 뼈대
+├── character-viewer.html # 독립 3D 캐릭터/초상화 뷰어
+├── environment-viewer.html # 독립 3D 환경 뷰어
 ├── server.py            # 정적 파일 서버 및 JSON 저장 API
+├── entity_store.py      # Entity 저장소와 스킬 참조 검증
+├── AGENTS.md            # 에이전트 작업·문서 관리 규칙
 ├── css/
 │   └── style.css        # 전체 화면, 테이블, 모달, 전투 화면 스타일
 ├── js/
 │   ├── api.js           # JSON 로드/저장 공통 fetch 래퍼
 │   ├── battle.js        # 자동 전투 루프, 이동, 공격, 스킬, 렌더링
+│   ├── battle-events.js # 상세 전투 이벤트
 │   ├── bootstrap-ui.js  # Bootstrap 기반 UI 보강
 │   ├── category.js      # 장비 카테고리 관리
 │   ├── character.js     # 캐릭터 CRUD 및 전투 유닛 생성
 │   ├── equipment.js     # 아이템/장비 장착 및 능력치 합산
+│   ├── entity.js        # 소환 Entity 관리와 미리보기
 │   ├── faction.js       # 진영 관리
 │   ├── layout.js        # 페이지 레이아웃 설정
 │   ├── logger.js        # 앱 로그 저장/표시
 │   ├── main.js          # 앱 초기화 순서
+│   ├── image-generator.js # 이미지 생성과 설정 저장
 │   ├── monster.js       # 몬스터 CRUD 및 적 유닛 생성
 │   ├── record.js        # 전투 기록 저장/목록/페이지네이션
 │   ├── skill.js         # 스킬 데이터, 액션 편집, 스킬 적용
+│   ├── skill-effects.js # 지속 효과
+│   ├── skill-passives.js # 이벤트 기반 패시브
+│   ├── skill-channel.js # 채널링
 │   ├── stats.js         # 캐릭터 스탯 배분
 │   ├── team.js          # 팀 편성 및 전투 선택
-│   └── ui.js            # 전역 상태, 상수, 공통 UI 유틸리티
+│   ├── ui.js            # 전역 상태, 상수, 공통 UI 유틸리티
+│   └── character-viewer/, environment/, portrait/, three/ # 3D 도구
 ├── data/
 │   ├── battle-records.json
 │   ├── categories.json
 │   ├── characters.json
 │   ├── factions.json
 │   ├── items.json
+│   ├── image-generator-settings.json
+│   ├── entities/        # 개체별 Entity JSON
 │   ├── monsters.json
 │   ├── skills.json
 │   └── teams.json
 ├── assets/
+│   ├── characters/     # SD 캐릭터 GLB
+│   ├── equipment/      # 장비 GLB
+│   ├── vendor/         # 로컬 Three.js
 │   └── images/
 │       ├── portraits/   # 캐릭터/몬스터 초상화 이미지
 │       ├── skills/      # 스킬 아이콘/효과 이미지
 │       ├── items/       # 아이템 아이콘 이미지
-│       └── icons/       # 공용 UI/시스템 아이콘 이미지
-└── docs/
+│       ├── icons/       # 공용 UI/시스템 아이콘 이미지
+│       └── generated/   # 생성 이미지
+├── tests/              # Node/Python 회귀 테스트
+├── tools/              # 모델 생성·변환 도구
+└── docs/               # 아래 문서 안내에서 전체 목록 확인
+    ├── project_overview.md
+    ├── architecture.md
+    ├── data_structure.md
+    ├── todo.md
+    ├── changelog.md
+    ├── resume.md
     ├── ACTION.MD
     ├── BATTLEGROUND.MD
     ├── CLASS.MD
@@ -153,9 +182,21 @@ python server.py
 
 저장 API는 `PUT` 또는 `POST`를 지원하며, JSON 루트가 배열이어야 합니다.
 
+이 규칙은 위 표의 일반 데이터 API에 적용됩니다. 별도 API는 다음과 같습니다.
+
+| API | 저장 위치/역할 | 메서드·본문 |
+| --- | --- | --- |
+| `/api/image-settings` | `data/image-generator-settings.json` | GET/PUT, 설정 객체 |
+| `/api/entities/`, `/api/entities/<id>` | `data/entities/<id>.json` | 목록/단일 GET, 생성 POST, 수정 PUT, 삭제 DELETE; [상세 규칙](docs/ENTITIES.md) |
+| `/api/image/generate` | 서버 기반 이미지 생성 | POST, 생성 옵션 객체 |
+| `/api/assets/<kind>`, `/api/assets-url/<kind>` | 허용된 이미지 폴더에 저장 | POST, 이미지 데이터 또는 URL |
+| `/api/open-folder/<kind>` | 허용된 이미지 폴더 열기 | POST |
+
+스킬 및 Entity 조회 시 이전 형식의 소환 정의가 Entity 파일로 자동 이전될 수 있습니다. 상세한 필드와 참조 관계는 [데이터 구조](docs/data_structure.md)를 참고합니다.
+
 ## 전투 시스템 개요
 
-- 전투는 `requestAnimationFrame` 기반 루프로 진행됩니다.
+- 전투는 `setTimeout` 기반 `gameLoop()`에서 경과 시간에 따라 틱을 진행하고 Canvas 2D를 렌더링합니다.
 - 유닛은 사정거리까지 이동한 뒤 공격하거나 스킬을 시전합니다.
 - HP가 0 이하가 되면 사망 처리됩니다.
 - MP, ST, BP 같은 자원을 사용합니다.
@@ -163,10 +204,10 @@ python server.py
 - 물리 피해는 방어력, 마법 피해는 저항력의 영향을 받습니다.
 - BP는 HP보다 먼저 피해를 받으며, 남는 피해가 HP로 이월되지 않는 보호막 자원으로 설계되어 있습니다.
 - 전투 이벤트 로그는 현재 전투 세션 안에서만 유지되며, 새 전투 시작/전투 중단/초기화/전투 종료 시 비워집니다.
-- 전투 루프는 시간 기반 타이머로 동작해 브라우저가 백그라운드에 있어도 전투 진행을 이어갑니다.
+- 전투 루프는 시간 기반 타이머로 백그라운드 진행을 이어가되, 브라우저의 타이머 제한과 루프당 최대 틱 수 때문에 진행 속도는 달라질 수 있습니다.
 - 전투 중단은 현재 전투를 즉시 멈추며 전투 기록에 저장하지 않습니다.
 - 결과 바로 보기는 전투 화면을 기다리지 않고 내부 전투 틱을 빠르게 진행해 승패 결과와 전투 기록을 생성합니다.
-- 전투 종료 시 결과와 멤버별 딜/피해/회복 정보를 전투 기록에 저장합니다.
+- 전투 종료 시 결과, 멤버별 HP/MP/ST·역할·DPS와 최근 최대 1,000건의 상세 이벤트를 저장합니다. 누적 피해·받은 피해·치유 통계 전체를 멤버 필드로 저장하는 형식은 아닙니다.
 
 ## 설계 문서 요약
 
@@ -178,13 +219,38 @@ python server.py
 - `docs/BATTLEGROUND.MD`: 화력전, 호위전, 점령전, 보스 쟁탈전, 생존전, 조합전과 타이브레이커 규칙을 설명합니다.
 - `docs/CLASS.MD`: 기사, 궁사, 마법사, 성직자 등 클래스 컨셉과 스킬 아이디어를 정리합니다.
 
+## 문서 안내
+
+README는 실행과 문서 탐색의 진입점이고 AGENTS는 작업 절차의 기준입니다. 운영 문서 6종은 현재 구현과 작업 상태를 요약하며, 기능별 문서가 세부 규칙을 보완합니다. 아래 설계 원안은 구현 목표와 아이디어이므로 현재 지원 범위와 구분해서 읽습니다.
+
+| 역할 | 문서 | 관계와 사용 기준 |
+| --- | --- | --- |
+| 현재 기능 | [project_overview.md](docs/project_overview.md) | 구현 범위 요약 → 아키텍처·데이터·기능별 문서 |
+| 구현 구조 | [architecture.md](docs/architecture.md) | 파일 역할·모듈 관계 → 관련 코드 |
+| 데이터 계약 | [data_structure.md](docs/data_structure.md) | 저장·런타임 필드 → 스킬·Entity·외형 상세 문서 |
+| 작업 계획 | [todo.md](docs/todo.md) | 완료·진행 중·예정 작업의 체크리스트 |
+| 프로젝트 이력 | [changelog.md](docs/changelog.md) | 날짜별 실제 변경·검증 → 기능별 상세 이력 |
+| 작업 재개 | [resume.md](docs/resume.md) | 마지막 완료·진행 중·다음 작업·주의사항 → TODO |
+| 전투·스킬 상세 | [SKILL_ENGINE.md](docs/SKILL_ENGINE.md), [ENTITIES.md](docs/ENTITIES.md) | 현재 실행 규칙·액션 필드·Entity 저장과 검증 |
+| 스킬 구현 이력 | [SKILL_ENGINE_CHANGELOG.md](docs/SKILL_ENGINE_CHANGELOG.md), [CLASS_SKILLS.md](docs/CLASS_SKILLS.md) | 엔진 확장 이력과 최초 등록 기록; 현재 동작은 상세 규칙·코드 확인 |
+| 캐릭터 3D 기반 | [CHARACTER_VIEWER.md](docs/CHARACTER_VIEWER.md), [SD_BASE_MODEL.md](docs/SD_BASE_MODEL.md) | 독립 뷰어·공통 리그·베이스 모델 |
+| 외형·초상화 | [PORTRAIT_COMPOSER.md](docs/PORTRAIT_COMPOSER.md), [IMPORTED_SD_MODELS.md](docs/IMPORTED_SD_MODELS.md) | 조합·PNG 저장 → 공통 베이스 및 외부 모델별 지원 범위 |
+| 환경 3D 기반 | [ENVIRONMENT_SYSTEM.md](docs/ENVIRONMENT_SYSTEM.md) | CharacterViewer 렌더링 기반을 재사용하는 독립 환경 도구 |
+| 설계 원안 | [ENGINE_ARCHITECTURE.md](docs/ENGINE_ARCHITECTURE.md), [TOTAL.MD](docs/TOTAL.MD), [BATTLEGROUND.MD](docs/BATTLEGROUND.MD), [CLASS.MD](docs/CLASS.MD) | 핵심 방향 → 전체 규칙 → 전장·직업 구상; 구현 완료 목록 아님 |
+| 액션 설계 | [ACTION.MD](docs/ACTION.MD) | 액션 개념·설계와 일부 구현 안내; 현재 필드는 SKILL_ENGINE・ENTITIES 확인 |
+| 아이디어 | [ideas.MD](docs/ideas.MD) | 후보 아이디어를 보존하고 실제 예정 작업은 todo.md로 연결 |
+
+문서가 충돌하면 현재 코드를 먼저 확인하고 구현 요약·상세 문서를 함께 수정합니다. 과거 검증 결과는 당시 날짜의 기록으로 유지하며 새 검증으로 단정하지 않습니다. 기능 변경은 개요·상세 규칙, 구조 변경은 아키텍처, 스키마 변경은 데이터 구조에 반영하고 매 작업의 완료·중단 시 TODO·변경 기록·재개 메모를 갱신합니다.
+
 ## 현재 데이터 규모
 
-- 전투 기록: 81개
-- 장비 카테고리: 13개
-- 캐릭터: 8개
-- 진영: 5개
-- 아이템: 5개
+2026-10-04 문서 점검 시점의 스냅샷입니다. 이후 앱에서 콘텐츠를 편집하면 개수는 달라지며, 실제 값은 `data/` 파일을 기준으로 확인합니다.
+
+- 전투 기록: 115개
+- 장비 카테고리: 14개
+- 캐릭터: 9개
+- 진영: 6개
+- 아이템: 6개
 - 몬스터: 6개
 - 스킬: 40개 (기존 3개 + 직업 액티브 30개 + 광역/소환 예제 7개). 스킬별 시전시간(0초 즉시시전), 원형 광역 피해/회복, 자체 능력치와 수명을 갖는 소환수를 편집할 수 있습니다. [스킬 엔진 안내](docs/SKILL_ENGINE.md)와 [직업 스킬 등록 안내](docs/CLASS_SKILLS.md)를 참고하세요.
 - 팀: 2개
@@ -204,6 +270,8 @@ python server.py
 
 - 기능, 실행 방법, 파일 구조, API, 데이터 스키마, 전투 규칙처럼 개발적으로 의미 있는 변경사항이 생기면 반드시 이 `README.MD`도 함께 갱신합니다.
 - 구현과 문서가 어긋나지 않도록 변경 작업을 마무리하기 전에 README의 관련 섹션을 확인합니다.
+- 코드 수정 시 관련 운영 문서와 기능별 상세 문서를 함께 갱신합니다. 작업 완료 또는 중단 가능성이 있을 때 [TODO](docs/todo.md), [변경 기록](docs/changelog.md), [작업 재개 메모](docs/resume.md)를 반드시 최신 상태로 유지합니다.
+- 문서 간 역할과 참조 순서는 아래 문서 안내를 따릅니다. 설계 원안과 과거 구현 기록을 현재 지원 기능으로 단정하지 않습니다.
 
 ## 이미지 생성 설정
 
@@ -226,10 +294,10 @@ python server.py
 기존 전투와 독립된 초원/숲 3D 실험 화면은 서버 실행 후
 <http://127.0.0.1:8000/environment-viewer.html>에서 확인할 수 있습니다.
 CharacterViewer와 동일한 로컬 Three.js 및 렌더링 기반을 사용하며 WebGL2가 필요합니다.
-캐릭터 GLB가 없어 비율 확인용 임시 캐릭터를 제공합니다.
+기본 화면은 비율 확인용 임시 캐릭터를 제공하며, 포함된 `assets/characters/`의 GLB를 같은 서버 경로로 불러와 배치할 수 있습니다.
 카메라 조작, 조명, SpawnPoint, Grid, Wireframe, 성능 통계 및 같은 서버의 GLB 캐릭터 배치를 지원합니다.
 설계·Asset 규격·확장 방법은 [환경 시스템 문서](docs/ENVIRONMENT_SYSTEM.md)를 참고하세요.
-# 채널링 스킬
+## 확장 스킬 기능과 상세 이벤트
 
 계산계수에서 전투 누적 실제 피해량, 누적 이동 거리, 대상의 전체 또는 특정 ID 효과 중첩 합계, 생존한 자기 소환수 수와 같은 스킬 실행의 직전·누적 실제 피해·치유량을 선택할 수 있습니다. 실제 피해를 후속 회복에 사용하거나 실제 치유를 후속 피해에 사용해 전환형 스킬을 구성할 수 있습니다. 정의와 제한은 [스킬 엔진 안내](docs/SKILL_ENGINE.md)를 참고하세요.
 

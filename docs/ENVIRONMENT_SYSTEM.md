@@ -2,7 +2,7 @@
 
 ## 현재 프로젝트 분석
 
-현재 체크아웃은 정적 HTML/CSS/JavaScript와 Python 서버로 구성된다. 전투는 `js/ui.js`의 2D Canvas와 `js/battle.js`의 자동 전투 루프를 사용한다. 작업 중 추가된 [CharacterViewer](../js/character-viewer/CharacterViewer.js)는 로컬 Three.js 0.180.0, Renderer, Perspective Camera, OrbitControls, GLTFLoader, AnimationMixer, 리소스 해제를 제공한다. GLB 캐시는 없으며 캐릭터 GLB도 포함되어 있지 않다.
+현재 체크아웃은 정적 HTML/CSS/JavaScript와 Python 서버로 구성된다. 전투는 `js/ui.js`의 2D Canvas와 `js/battle.js`의 자동 전투 루프를 사용한다. [CharacterViewer](../js/character-viewer/CharacterViewer.js)는 로컬 Three.js 0.180.0, Renderer, Perspective Camera, OrbitControls, GLTFLoader, AnimationMixer, 리소스 해제를 제공한다. GLB 캐시는 없으며 현재 캐릭터 GLB는 `assets/characters/`에 포함되어 있다. 모델별 지원 범위는 [공통 베이스](SD_BASE_MODEL.md)와 [외부 모델](IMPORTED_SD_MODELS.md)을 참고한다.
 
 기존 서버와 CharacterViewer의 렌더링 기반 및 `disposeObject`를 재사용한다. 게임 초기화, 캐릭터 데이터, 전투, 스킬, 이미지 API와 CharacterViewer 파일은 변경하지 않는다. 기존 사용자 변경이 있는 README는 안내만 덧붙인다.
 
