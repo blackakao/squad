@@ -46,17 +46,17 @@ Walk/Run은 얼굴 방향을 돌리지 않고 주기의 시간 진행 방향을 
 
 ## 장착 장비 미리보기
 
-[장비 모듈](../js/character-viewer/equipment.js)이 현재 `/api/items`, `/api/categories`를 GET으로 읽는다. `등록된 아이템`과 `카테고리 시제품`을 구분해 표시하며, `아이템·카테고리 다시 읽기`로 변경된 목록을 갱신한다. 선택 상태는 뷰어 메모리에만 있으며 캐릭터의 저장 장비나 전투 능력치를 변경하지 않는다.
+[장비 모듈](../js/character-viewer/equipment.js)은 게임 장비 데이터와 분리된 개발용 `EquipmentPreview`를 제공한다. `head`, `body`, `hands`, `feet`, `mainHand`, `offHand` 슬롯을 독립적으로 바꾸며 외형 조합 프리셋의 `equipment`에 선택 ID를 저장한다. 예전 프리셋처럼 이 필드가 없으면 모든 슬롯을 비운다.
 
-- 현재 등록된 활·방패샘플·한손검샘플·지팡이 샘플·치유서는 각 카테고리의 외형 GLB를 공유한다.
-- 무기 시제품 9종: 한손검, 양손검, 한손둔기, 양손둔기, 지팡이, 활, 총, 방패, 치유서.
-- 상의 시제품 4종: 판금, 사슬, 가죽, 천. 공통 베이스의 Chest에 장착하는 강체 외형이며 범용 skinned 의상은 아니다. 장착 시 기본 Top을 숨기고 해제 시 복원한다.
-- 주무기는 Weapon_R, 보조무기는 Weapon_L에 장착한다. 활은 주무기 슬롯을 사용하되 Weapon_L에 배치한다.
-- `handType`, `slotType`은 카테고리 값을 우선한다. 양손 주무기는 보조 슬롯을 비우고 비활성화한다. 현재 방패 아이템의 저장 slot은 mainWeapon이지만 카테고리가 subOnly이므로 보조무기 목록에 표시한다. 원본 데이터를 수정하지 않는다.
-- [장비 GLB 폴더](../assets/characters/equipment/)의 13개 파일은 [장비 생성 코드](../tools/generate_sd_equipment.py)로 다시 만들 수 있다. 외부 텍스처·추가 dependency는 없다.
-- 모델 교체/종료 및 장비 교체 시 장비 geometry/material을 해제한다. 연속 선택 시 마지막 요청만 장착한다. 장착 지점 부재·외형 미지원·로딩 실패는 화면에 표시한다.
+- 테스트 장비: 투구, 장갑, 부츠, 검, 창, 방패와 플레이트·사슬갑옷·가죽갑옷·판타지 천옷·턱시도·셔츠+청바지 복장 세트. 모두 런타임 저폴리 강체 Mesh이며 매 장착 때 독립 geometry/material을 생성한다.
+- 공통 베이스는 기존 `Weapon_R/L`을 사용한다. 블랭크 Mixamo 모델은 Head·Spine2·Hips·양손·양발과 좌우 Arm/ForeArm/UpLeg/Leg 아래에 장비 Anchor를 생성한다.
+- 검·창은 오른손 `MainHandEquipmentAnchor`, 방패는 왼손 `OffHandEquipmentAnchor`를 사용한다. 투구·갑옷·장갑·부츠는 각 Head·Spine2·양손·양발 Anchor를 사용한다.
+- 장비 카탈로그의 `transform`이 위치·회전·배율을 소유한다. 향후 항목에 `url`을 주면 동일 생명주기로 rigid GLB를 불러올 수 있다.
+- 슬롯 교체 시 해당 인스턴스만 detach/dispose하며 카탈로그 정의와 다른 장비·외형 파츠는 유지한다. 모델 교체 시 모든 장비와 Anchor를 본체보다 먼저 정리한다.
 
-현재는 주무기·보조무기·상의만 지원한다. 하의·장신구·특수장비, 캐릭터 저장 장비 자동 적용, 양손 그립 IK, 활 시위 당기기, 무기별 공격·시전 클립은 미지원이다. 기존 Attack_01 등을 그대로 재생하므로 일부 포즈에서 무기·몸체 간섭이 생길 수 있다. 모델 정보의 triangle 수는 기본 캐릭터 로딩 시점의 값이며 장비 합계가 아니다.
+복장은 몸통·골반·좌우 상완/전완·상퇴/하퇴로 분할되어 각 캐릭터 본을 따라가는 rigid segmented mesh다. 플레이트의 하의도 Hips와 좌우 UpLeg를 따르며, 긴 소매와 바지는 Upper/Lower 구간을 각각 추적한다. 관절 커버가 틈을 줄이지만 팔꿈치·무릎 vertex가 두 본 사이에서 연속 변형되는 정식 skinning은 아니다. 동일 Skeleton을 공유하는 SkinnedMesh 장비, 양손 그립 IK, 무기별 공격/시전 클립, 게임 캐릭터 장비 자동 적용은 아직 구현하지 않았다.
+
+실제 복장 GLB는 캐릭터와 동일한 origin·scale·T-pose·bone naming 및 inverse bind matrices를 사용한다. 상완/전완과 상퇴/하퇴의 관절 vertex에는 두 인접 본의 혼합 weight를 적용하고, 남녀 체형은 같은 슬롯·리그 정의 아래 fit profile 또는 geometry variant로 제공한다. 몸 clipping을 완전히 제거하려면 몸체도 의상이 덮는 부위를 material group 또는 분리 mesh로 숨길 수 있어야 한다.
 
 ## 현재 한계와 보정 순서
 

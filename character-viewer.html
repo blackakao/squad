@@ -1,12 +1,13 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="ko">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CharacterViewer · SD 캐릭터 개발 도구</title>
   <link rel="stylesheet" href="css/character-viewer.css">
-  <script src="js/portrait/imported-catalog.js?v=20260929"></script>
-  <script src="js/portrait/catalog.js?v=20260929"></script>
+  <script src="js/portrait/hair-colors.js?v=20261007-parts1"></script>
+  <script src="js/portrait/imported-catalog.js?v=20261010-visual20"></script>
+  <script src="js/portrait/catalog.js?v=20261007-parts1"></script>
   <script type="importmap">
     {"imports":{"three":"./assets/vendor/three/build/three.module.js","three/addons/":"./assets/vendor/three/examples/jsm/"}}
   </script>
@@ -25,9 +26,8 @@
     <aside>
       <section>
         <h2>01 / 모델 불러오기</h2>
-        <p><a href="character-viewer.html?model=assets/characters/base/human_sd_base_v1.glb">공통 SD 베이스 v1 보기 ↗</a></p>
         <fieldset id="source-controls" disabled>
-          <div class="button-row"><button type="button" data-sd-model="bald">대머리 SD · 외형 기준</button><button type="button" data-sd-model="male">남성 SD · 외형/무기</button><button type="button" data-sd-model="female">여성 SD · 외형/무기</button></div>
+          <div class="button-row"><button type="button" data-sd-model="blank-male">남성 블랭크 · 머리/눈</button><button type="button" data-sd-model="blank-female">여성 블랭크 · 머리/눈</button></div>
           <form id="url-form">
             <label for="model-url">서버 경로 또는 HTTP(S) URL</label>
             <input id="model-url" type="text" placeholder="assets/characters/models/human_sd_test.glb" required>
@@ -38,7 +38,7 @@
           <label for="local-models">선택한 파일</label>
           <select id="local-models" disabled><option>선택한 파일 없음</option></select>
         </fieldset>
-        <p class="hint">로컬 GLB는 업로드하지 않습니다. 외부 이미지·BIN을 참조하는 모델은 폴더 구조를 유지한 채 서버 경로로 불러오세요.</p>
+        <p class="hint">로컬 GLB는 업로드하지 않습니다. 외부 이미지·BIN을 참조하는 모델은 폴더 구조를 유지한 서버 경로로 불러오세요.</p>
         <p id="load-status" role="status" aria-live="polite">3D 뷰어 초기화 중…</p>
         <p id="error-message" role="alert" hidden></p>
       </section>
@@ -52,7 +52,7 @@
           <label for="speed">재생 속도 <output id="speed-value">1.00×</output></label>
           <input id="speed" type="range" min="0.1" max="3" step="0.05" value="1">
         </fieldset>
-        <p id="playback-status" class="hint">모델을 불러오면 실제 클립만 표시됩니다.</p>
+        <p id="playback-status" class="hint">모델을 불러오면 실제 클립만 표시합니다.</p>
       </section>
       <section>
         <h2>03 / 표시 설정</h2>
@@ -64,19 +64,19 @@
         </fieldset>
       </section>
       <section>
-        <h2>04 / 장착 장비 미리보기</h2>
-        <button id="equip-refresh" type="button">아이템·카테고리 다시 읽기</button>
+        <h2>04 / 장비 테스트</h2>
         <fieldset id="equipment-controls" disabled>
-          <label for="equip-main">주무기 · 오른손 (활은 왼손)</label>
-          <select id="equip-main"><option value="">장착 안 함</option></select>
-          <label for="equip-sub">보조무기 · 왼손</label>
-          <select id="equip-sub"><option value="">장착 안 함</option></select>
-          <label for="equip-top">상의 · 공통 베이스 체형</label>
-          <select id="equip-top"><option value="">장착 안 함</option></select>
+          <label for="equip-head">머리 장비</label><select id="equip-head"><option value="">없음</option></select>
+          <label for="equip-body">복장 세트</label><select id="equip-body"><option value="">없음</option></select>
+          <label for="equip-outfit-color">복장 색상</label><select id="equip-outfit-color"></select>
+          <label for="equip-hands">손 장비</label><select id="equip-hands"><option value="">없음</option></select>
+          <label for="equip-feet">발 장비</label><select id="equip-feet"><option value="">없음</option></select>
+          <label for="equip-mainHand">주무기 · 오른손</label><select id="equip-mainHand"><option value="">없음</option></select>
+          <label for="equip-offHand">보조무기 · 왼손</label><select id="equip-offHand"><option value="">없음</option></select>
           <div class="button-row"><button id="equip-clear" type="button">모두 해제</button></div>
         </fieldset>
-        <p id="equipment-status" class="hint" role="status">장비 목록 준비 중…</p>
-        <p class="hint">등록 아이템과 카테고리 시제품의 외형을 확인합니다. 장착 상태·능력치는 저장하지 않습니다.</p>
+        <p id="equipment-status" class="hint" role="status">모델을 불러오면 장비를 장착할 수 있습니다.</p>
+        <p class="hint">개발용 장비입니다. 외형 조합 저장에는 포함되지만 게임 장비·능력치는 변경하지 않습니다.</p>
       </section>
       <section>
         <h2>05 / 외형·초상화 조합</h2>
@@ -88,7 +88,7 @@
           <div class="button-row"><button id="portrait-random" type="button">무작위 조합 생성</button><button id="portrait-default" type="button">기본 조합</button></div>
           <div id="portrait-parts"></div>
           <label for="portrait-preset-name">조합 이름</label>
-          <input id="portrait-preset-name" type="text" maxlength="60" placeholder="예: 갈색 단발의 기사">
+          <input id="portrait-preset-name" type="text" maxlength="60" placeholder="예: 갈색 단발 기사">
           <div class="button-row"><button id="portrait-save-preset" type="button">조합 저장</button><button id="portrait-delete-preset" type="button">선택 조합 삭제</button></div>
           <label for="portrait-presets">이 브라우저에 저장한 조합</label>
           <select id="portrait-presets"><option value="">저장한 조합 선택</option></select>
@@ -106,11 +106,11 @@
     </aside>
   </main>
   <script type="module">
-    import('./js/character-viewer/main.js?v=20260929-bald7').catch(error => {
+    import('./js/character-viewer/main.js?v=20261010-visual20').catch(error => {
       document.getElementById('load-status').textContent = '뷰어 초기화 실패';
       const message = document.getElementById('error-message');
       message.hidden = false;
-      message.textContent = `3D 모듈을 불러오지 못했습니다. python server.py로 실행했는지, assets/vendor/three 파일이 있는지 확인하세요. ${error.message}`;
+      message.textContent = `3D 모듈을 불러오지 못했습니다. python server.py 실행과 assets/vendor/three 파일을 확인하세요. ${error.message}`;
     });
   </script>
 </body>

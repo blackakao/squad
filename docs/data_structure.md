@@ -4,6 +4,8 @@
 
 ## 저장 위치와 API
 
+이미지 사용자 스타일은 `data/image-styles.json` 배열에 저장하며 `GET/PUT /api/image-styles`를 사용합니다. 항목 필드는 `id`(UUID 문자열), `name`(1~80자, UI에서 중복 방지), `stylePrompt`(스타일 문장), `updatedAt`(ISO 시각)입니다. 파일 부재 시 빈 목록을 반환하고 최초 저장 시 생성합니다. 마지막 생성 설정 객체와 별도로 관리합니다. [사용법](IMAGE_GENERATION.md)
+
 대부분의 데이터는 `data/*.json`에 배열 형태로 저장됩니다. `server.py`는 `/api/<name>` 요청을 `data/<name>.json`에 매핑하고, `/api/records`만 `data/battle-records.json`에 매핑합니다.
 
 예외적으로 이미지 생성 설정은 객체 형태의 `data/image-generator-settings.json`에 저장되고, Entity는 `data/entities/<entityId>.json` 파일 단위로 저장됩니다.
@@ -27,7 +29,7 @@
 - `skillIds`: 장착 스킬 ID 배열
 - `portrait`: `assets/images/portraits/*` 경로 또는 빈 문자열
 - `customResources`: 사용자 정의 자원 배열, 스킬에서 `custom:<id>`로 참조
-- `appearance`: 선택적 3D 외형 조합 메타데이터, 초상화 조합 적용 시 저장
+- `appearance`: 선택적 3D 외형 조합 메타데이터. `version`, 모델 `base`, `hair`, `hairColor`, `eyes`, `eyebrows`, `nose`, `mouth` 등 파츠 ID를 사용합니다. 예전 데이터에 `hairColor` 또는 `eyebrows`가 없으면 각각 `hc1`, `brow1`로 정규화합니다.
 - `attributes`: `str`, `vit`, `agi`, `focus`, `int`, `wis` 기반 스탯
 - `equipmentRules`: 추가 무기 슬롯, 양손 무기 슬롯 규칙, 동일 대상 다중 무기 감산 규칙
 - `battleRules`: 진입 지연, 부활 횟수, 부활 대기, 부활 시 자원 비율, 무적 시간, 부활 위치
@@ -181,3 +183,9 @@
 - `seed`
 - `finalPrompt`
 - `updatedAt`
+
+## 아이콘 매핑 추가 (2026-10-05)
+
+`data/icon-mappings.json`은 `{ group, key, label, icon, removeBackground, backgroundTolerance }` 객체 배열입니다. `group`은 `role`, `slot`, `weapon`, `armor`, `skill`, `faction` 중 하나이며 `key`는 해당 분류의 내부 키(진영은 이름)입니다. `label`은 대체 표시명, `icon`은 원본 로컬 이미지 경로이며 두 필드는 빈 문자열을 허용합니다. `(group, key)`당 하나의 설정을 관리합니다. 초기값은 `[]`이며 기존 게임 데이터의 마이그레이션은 없습니다. [아이콘 관리](ICONS.md)를 참고합니다.
+
+2026-10-09 추가된 `removeBackground`는 배경 자동 제거 여부이며 생략 시 `true`입니다. `backgroundTolerance`는 제거 강도(8~100 정수, 기본 48)입니다. 기존 행은 조회 시 기본값을 사용하며 저장 시 옵션을 포함합니다. 원본 이미지와 `icon` 경로를 유지하고 표시용 투명 PNG는 브라우저 메모리에서만 생성합니다.

@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import { createIndependentHair } from './IndependentHair.js?v=20260929-hair1';
+import { createIndependentHair, setIndependentHairColor } from './IndependentHair.js?v=20261010-visual20';
+import { capturePartSpace } from './PartSpace.js?v=20261007-parts2';
 
 // Face variants deform the imported surface; hair is a replaceable mesh set.
 const EYES = [[1,1,0],[1.09,1.10,0],[1.10,.88,0],[.92,1,0],[1,.90,.14],[1,.90,-.14],[1,.80,0],[1.04,1.16,0],[.94,.90,.07],[1.12,.96,-.05]];
@@ -10,12 +11,15 @@ const clamp = (x,a=0,b=1)=>Math.max(a,Math.min(b,x));
 const bell = (x,y,z,cx,cy,cz,rx,ry,rz)=>Math.exp(-2*((x-cx)**2/rx**2+(y-cy)**2/ry**2+(z-cz)**2/rz**2));
 
 export class ImportedAppearance {
+  constructor(){this.supportedFields=['hair','hairColor','eyes','nose','ears','mouth','skin'];}
   setModel(root) {
     this.clear();
     this.root=root;
     this.profile=root?.userData.sdAppearance;
     this.meshes=[];
     if(!this.profile)return false;
+    const head=root.getObjectByName('mixamorigHead')||root.getObjectByName('Head');
+    this.hairProfile={...this.profile,partSpace:capturePartSpace(root,head)};
     root.traverse(mesh=>{
       if(!mesh.isSkinnedMesh||!mesh.geometry.attributes._sd_mask)return;
       const originalGeometry=mesh.geometry,originalMaterial=mesh.material;
@@ -41,16 +45,21 @@ export class ImportedAppearance {
     });
     return this.meshes.length>0;
   }
-  apply(style) {
+  apply(style,fields=null) {
     if(!this.meshes?.length)return;
-    this.hair?.userData.dispose();this.hair=createIndependentHair(this.root,this.profile.base,style.hair);
+    const requested=new Set(fields||['hair','hairColor','eyes','nose','ears','mouth','skin']);
+    if(requested.has('hair')){this.hair?.userData.dispose();this.hair=createIndependentHair(this.root,this.hairProfile,style.hair,style.hairColor);}
+    else if(requested.has('hairColor')&&!setIndependentHairColor(this.hair,style.hairColor)){this.hair=createIndependentHair(this.root,this.hairProfile,style.hair,style.hairColor);}
+    const updateFace=['eyes','nose','ears','mouth'].some(field=>requested.has(field));
+    if(!updateFace&&!requested.has('skin'))return;
     const eye=EYES[Number(style.eyes.slice(3))-1];
     const nose=NOSES[Number(style.nose.slice(4))-1],ear=EARS[Number(style.ears.slice(3))-1],mouth=MOUTHS[Number(style.mouth.slice(5))-1];
     const color=new THREE.Color(ImportedPortraitCatalog.skins.find(s=>s.id===style.skin).color);
     const baseline=new THREE.Color('#f4d5c1');color.r/=baseline.r;color.g/=baseline.g;color.b/=baseline.b;
     for(const entry of this.meshes){
       const {mesh,positions,tint}=entry,p=mesh.geometry.attributes.position,mask=mesh.geometry.attributes._sd_mask;
-      tint.value.copy(color);
+      if(requested.has('skin'))tint.value.copy(color);
+      if(!updateFace)continue;
       for(let i=0;i<p.count;i++){
         const x=positions[i*3],y=positions[i*3+1],z=positions[i*3+2],sign=x<0?-1:1;
         let dx=0,dy=0,dz=0;
@@ -74,6 +83,6 @@ export class ImportedAppearance {
   clear(){
     this.hair?.userData.dispose();this.hair=null;
     for(const {mesh,originalGeometry,originalMaterial} of this.meshes||[]){mesh.geometry.dispose();mesh.material.dispose();mesh.geometry=originalGeometry;mesh.material=originalMaterial;}
-    this.meshes=[];this.root=null;
+    this.meshes=[];this.root=null;this.hairProfile=null;
   }
 }

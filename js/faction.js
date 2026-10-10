@@ -58,7 +58,7 @@ function renderFactionPage() {
     return `
       <tr>
         <td><input type="checkbox" class="faction-check" value="${index}"></td>
-        <td>${escapeHtml(faction)}</td>
+        <td>${renderCategoryIcon("faction", faction, faction)}</td>
         <td>${renderFactionMemberTable(members)}</td>
         <td><button onclick="editFactionName(${index})">수정</button></td>
       </tr>
@@ -91,7 +91,7 @@ function renderFactionMemberTable(members) {
         ${members.map(character => `
           <tr>
             <td>${escapeHtml(character.name)}</td>
-            <td>${escapeHtml(getRoleLabel(character.role))}</td>
+            <td>${renderCategoryIcon("role", normalizeRole(character.role), getRoleLabel(character.role))}</td>
           </tr>
         `).join("")}
       </tbody>

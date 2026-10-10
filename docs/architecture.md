@@ -22,7 +22,7 @@
 
 ## 파일 역할
 
-- `index.html`: 단일 페이지 앱의 DOM 구조, 모달, 페이지 섹션, 주요 입력 요소를 정의합니다.
+- `index.html`: 단일 페이지 앱의 DOM 구조, 모달, 페이지 섹션, 주요 입력 요소와 독립 CharacterViewer 직접 진입 메뉴를 정의합니다.
 - `character-viewer.html`, `environment-viewer.html`: 게임과 독립된 3D 캐릭터·환경 개발용 화면입니다.
 - `css/style.css`: 공통 UI, 관리 화면, 전투 화면, 반응형 레이아웃 스타일을 담당합니다.
 - `server.py`: 정적 파일 서버, JSON API, Entity API 라우팅, 이미지 업로드/생성 API를 제공합니다.
@@ -45,8 +45,10 @@
 - `js/record.js`: 전투 기록 저장, 정규화, 목록, 페이지네이션, 상세 이벤트 표시를 담당합니다.
 - `js/layout.js`: 화면별 레이아웃 크기와 위치 설정을 담당합니다.
 - `js/image-generator.js`: 이미지 생성 화면, Provider 설정, 생성 이미지 저장을 담당합니다.
+- 같은 모듈의 내 스타일 관리 UI는 범용 `/api/image-styles` 배열 API로 이름·스타일 문장의 CRUD를 처리합니다. 별도 서버 라우트나 외부 AI 호출 없이 동작합니다.
 - `js/entity.js`: 소환 Entity 관리 UI와 API 연동을 담당합니다.
-- `js/portrait/*`: 캐릭터 초상/외형 조합과 카탈로그 로직을 담당합니다.
+- `js/portrait/*`: 캐릭터 초상/외형 조합과 카탈로그 로직을 담당합니다. `PartSpace.js`는 모델 로드 시 루트→Head 좌표계를 고정합니다. `BlankAppearance.js`는 `Face_Anchor` 아래 눈·눈썹·코·입 Anchor와 독립 그룹을 관리합니다. `IndependentHair.js`는 별도 `Hair_Anchor` 아래 공통 `Hair_Cap`과 스타일 파츠를 구성합니다. 선택 상태, 파츠 수명주기, 스타일 transform과 머리색을 카테고리별로 관리합니다.
+- `js/character-viewer/equipment.js`: 게임 장비 로직과 분리된 3D 개발용 장비 슬롯, 본 Attachment Anchor, 테스트 장비 인스턴스의 생성·해제를 담당합니다. 외형 프리셋에는 장비 ID만 저장하며 게임 캐릭터의 `equipment` 필드는 변경하지 않습니다.
 - `js/character-viewer/*`, `js/environment/*`, `js/three/*`: Three.js 기반 3D 뷰어와 환경 미리보기를 담당합니다.
 - `data/*.json`: 앱에서 실제로 읽고 쓰는 콘텐츠 데이터입니다.
 - `assets/`: 이미지, 캐릭터 GLB, 장비 GLB, Three.js vendor 파일을 보관합니다.
@@ -77,3 +79,10 @@
 5. 전투 시작 시 선택된 캐릭터/팀/몬스터를 전투 유닛으로 변환합니다.
 6. `setTimeout` 기반 `gameLoop()`가 경과 시간에 맞춰 제한된 수의 전투 틱을 실행하고 Canvas 2D와 상태 UI를 갱신합니다. 브라우저의 타이머 제한으로 백그라운드 진행 속도는 달라질 수 있습니다.
 7. 전투 종료 시 `data/battle-records.json`에 결과를 저장합니다.
+
+## 아이콘 표시 모듈 (2026-10-05)
+
+- `js/icons.js`: 아이콘 설정 조회·저장, 업로드·미리보기, 공통 HTML 렌더링과 이미지 실패 대체 표시.
+- `js/icon-background.js`: 가장자리 연결 배경색 제거, 알파 보존, 최대 384px Canvas 변환과 경로·강도별 64개 Promise 캐시. `icons.js`보다 먼저 로드하고 목록 이미지 로드 이벤트와 편집 미리보기에서 공통 사용합니다.
+- `js/main.js`에서 초기 설정을 조회하고 `js/ui.js`에서 아이콘 관리 화면을 전환합니다. 각 도메인의 목록 렌더러가 공통 표시 함수를 호출합니다.
+- 저장은 기존 범용 JSON API와 이미지 업로드 API를 사용합니다. 상세 범위는 [아이콘 관리](ICONS.md)를 참고합니다.

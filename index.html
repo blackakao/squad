@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Squad Auto Battle Prototype</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=20261001-record-events">
+<link rel="stylesheet" href="css/style.css?v=20261009-icon-background">
 </head>
 <body>
 
@@ -14,6 +14,7 @@
 <div class="nav">
   <button onclick="showPage('battle')">전투</button>
   <button onclick="showPage('character')">캐릭터 관리</button>
+  <button onclick="window.location.href='character-viewer.html'">3D 캐릭터 제작</button>
   <button onclick="showPage('team')">팀 편성</button>
   <button onclick="showPage('faction')">진영 관리</button>
   <button onclick="showPage('stats')">스탯 관리</button>
@@ -22,10 +23,33 @@
   <button onclick="showPage('skill')">스킬 관리</button>
   <button onclick="showPage('category')">장비 카테고리 관리</button>
   <button onclick="showPage('monster')">몬스터 관리</button>
+  <button onclick="showPage('icon')">아이콘 관리</button>
   <button onclick="showPage('image')">이미지 생성</button>
   <button onclick="showPage('record')">전투 기록</button>
   <button onclick="showPage('layout')">페이지 조정</button>
   <button onclick="showPage('log')">로그</button>
+</div>
+
+<div id="iconPage" class="page hidden">
+  <div class="panel">
+    <h3>동일 카테고리 아이콘 관리</h3>
+    <p>같은 분류의 단어에 대체 표시명과 아이콘을 지정합니다. 아이콘에 마우스를 올리면 이름이 표시됩니다.</p>
+    <p>선택 상자와 전투 로그는 원래 이름을 유지합니다. 해제하면 원래 텍스트로 돌아갑니다.</p>
+    <form id="iconMappingForm" class="icon-mapping-form" onsubmit="saveIconMapping(event)">
+      <label>분류<select name="group" onchange="updateIconTargets()"></select></label>
+      <label>대상 단어<select name="key" required onchange="selectIconMapping()"></select></label>
+      <label>대체 표시명<input name="label" maxlength="100" placeholder="비워두면 원래 이름" oninput="previewIconMapping()"></label>
+      <label>아이콘 경로<input name="icon" placeholder="assets/images/icons/example.png" oninput="previewIconMapping()"></label>
+      <label>또는 이미지 업로드 (최대 5MB)<input name="file" type="file" accept="image/png,image/jpeg,image/webp,image/gif" onchange="previewIconMapping()"></label>
+      <label><span><input name="removeBackground" type="checkbox" checked onchange="previewIconMapping()"> 배경 자동 제거</span></label>
+      <label>제거 강도 <output id="iconToleranceValue">48</output><input name="backgroundTolerance" type="range" min="8" max="100" value="48" oninput="previewIconMapping()"></label>
+      <p class="icon-background-help">기존 아이콘에도 자동 적용됩니다. 원본은 보존합니다. 그림이 지워지면 강도를 낮추거나 해제하세요. 복잡한 배경은 남을 수 있습니다.</p>
+      <div>미리보기: <span id="iconMappingPreview" class="category-icon"></span></div>
+      <button type="submit">저장 / 적용</button>
+    </form>
+    <p id="iconMappingStatus" role="status" aria-live="polite"></p>
+    <table class="data-table"><thead><tr><th>분류</th><th>원래 단어</th><th>표시명</th><th>아이콘</th><th>관리</th></tr></thead><tbody id="iconMappingRows"></tbody></table>
+  </div>
 </div>
 
 <div id="root" class="page">
@@ -340,25 +364,32 @@
 </div>
 
 <div id="skillPage" class="page hidden">
-  <div class="panel">
-    <h4>스킬 관리</h4>
-    <div class="data-toolbar">
-      <button onclick="openSkillModal()">추가</button>
-      <button onclick="deleteSelectedSkills()">선택 삭제</button>
+  <div class="panel skill-manager-panel">
+    <div class="skill-manager-header">
+      <div>
+        <h4>스킬 관리</h4>
+        <p>스킬을 선택해 발동 조건, 비용, 대상과 액션을 한 화면에서 편집합니다.</p>
+      </div>
+      <div class="data-toolbar skill-manager-actions">
+        <button class="skill-primary-button" onclick="openSkillModal()">+ 새 스킬</button>
+        <button onclick="deleteSelectedSkills()">선택 삭제</button>
+      </div>
     </div>
-    <table class="data-table skill-table">
-      <thead>
-        <tr>
-          <th>선택</th>
-          <th>이름</th>
-          <th>슬롯</th>
-          <th>재사용대기</th>
-          <th>설명</th>
-          <th>수정</th>
-        </tr>
-      </thead>
-      <tbody id="skillTableBody"></tbody>
-    </table>
+    <div class="skill-list-shell">
+      <table class="data-table skill-table">
+        <thead>
+          <tr>
+            <th>선택</th>
+            <th>이름</th>
+            <th>슬롯</th>
+            <th>재사용대기</th>
+            <th>설명</th>
+            <th>수정</th>
+          </tr>
+        </thead>
+        <tbody id="skillTableBody"></tbody>
+      </table>
+    </div>
   </div>
 </div>
 
@@ -414,7 +445,7 @@
   <div class="panel image-generator-panel">
     <h4>이미지 생성</h4>
     <div class="image-generator">
-      <form id="imageGeneratorForm" class="image-generator-controls" onsubmit="generateImageFromPrompt(event)">
+      <form id="imageGeneratorForm" class="image-generator-controls" novalidate onsubmit="generateImageFromPrompt(event)">
         <div class="form-row">
           <label for="imagePrompt">제시어</label>
           <textarea id="imagePrompt" rows="5" required placeholder="예: 은빛 갑옷을 입은 숲의 기사, 전투 대기 자세"></textarea>
@@ -431,6 +462,26 @@
           <label for="imageStylePrompt">스타일 세팅</label>
           <textarea id="imageStylePrompt" rows="4"></textarea>
         </div>
+        <fieldset class="image-style-library">
+          <legend>내 스타일 관리</legend>
+          <p>위 스타일 세팅을 이름과 함께 저장합니다.</p>
+          <div class="form-row">
+            <label for="savedImageStyle">저장된 스타일</label>
+            <select id="savedImageStyle" onchange="selectSavedImageStyle()"><option value="">스타일 선택</option></select>
+          </div>
+          <div class="form-row">
+            <label for="imageStyleName">스타일 이름</label>
+            <input id="imageStyleName" maxlength="80" placeholder="예: 수채화 캐릭터">
+          </div>
+          <div class="image-generator-actions">
+            <button id="imageStyleCreate" type="button" onclick="saveNamedImageStyle(false)" disabled>새 스타일로 저장</button>
+            <button id="imageStyleLoad" type="button" onclick="loadNamedImageStyle()" disabled>불러오기</button>
+            <button id="imageStyleUpdate" type="button" onclick="saveNamedImageStyle(true)" disabled>선택 스타일 수정</button>
+            <button id="imageStyleDelete" type="button" onclick="deleteNamedImageStyle()" disabled>삭제</button>
+            <button id="imageStyleRefresh" type="button" onclick="loadImageStyleLibrary()">목록 새로고침</button>
+          </div>
+          <p id="imageStyleLibraryStatus" role="status" aria-live="polite"></p>
+        </fieldset>
         <div class="image-options-grid">
           <div class="form-row">
             <label for="imageProvider">AI</label>
@@ -462,6 +513,7 @@
           <button id="imageSaveButton" type="button" onclick="saveGeneratedImage()" disabled>이미지 폴더에 저장</button>
           <button id="imageFolderButton" type="button" onclick="openGeneratedImageFolder()">폴더 열기</button>
         </div>
+        <div id="imageActionStatus" role="status" aria-live="polite"></div>
         <div class="image-usage-panel">
           <div class="image-usage-header">
             <h5>Puter 사용량</h5>
@@ -621,7 +673,6 @@
         <div class="portrait-editor">
           <img id="characterPortraitPreview" class="portrait-preview hidden" alt="캐릭터 초상화 미리보기">
           <button type="button" onclick="clearPortrait('character')">초상화 제거</button>
-          <button type="button" onclick="openPortraitComposer()">3D 외형·초상화 조합</button>
         </div>
       </div>
       <div class="form-row character-derived-field hidden">
@@ -769,60 +820,82 @@
 
 <div id="skillModal" class="modal hidden">
   <div class="modal-content skill-modal-content">
-    <h4 id="skillModalTitle">스킬 추가</h4>
+    <header class="skill-editor-header">
+      <div>
+        <span class="skill-editor-eyebrow">SKILL EDITOR</span>
+        <h4 id="skillModalTitle">스킬 추가</h4>
+        <p>기본 정보부터 액션까지 순서대로 확인하고 편집합니다.</p>
+      </div>
+      <div class="skill-editor-header-actions">
+        <button type="button" onclick="closeSkillModal()">취소</button>
+        <button id="skillSaveButton" class="skill-primary-button" type="button" onclick="saveSkillFromForm(event)">저장</button>
+      </div>
+    </header>
     <form id="skillForm" novalidate onsubmit="saveSkillFromForm(event)">
       <input type="hidden" id="skillEditIndex">
-      <div class="form-row">
-        <label for="skillName">이름</label>
-        <input id="skillName" required placeholder="스킬 이름">
+      <div class="skill-editor-sections">
+        <section class="skill-editor-section">
+          <div class="skill-editor-section-heading">
+            <span class="skill-editor-section-number">01</span>
+            <div><h5>기본 정보</h5><p>목록과 전투에서 스킬을 식별하는 정보입니다.</p></div>
+          </div>
+          <div class="skill-form-grid">
+            <div class="form-row"><label for="skillName">이름</label><input id="skillName" required placeholder="스킬 이름"></div>
+            <div class="form-row"><label for="skillSlot">슬롯</label><select id="skillSlot" required onchange="updatePassiveSkillFields()"><option value="basic">베이직</option><option value="active">액티브</option><option value="passive">패시브</option></select></div>
+            <div class="form-row skill-form-field-wide"><label for="skillDescription">설명</label><textarea id="skillDescription" rows="3" placeholder="스킬 효과와 특징을 입력하세요. 목록에는 요약해서 표시됩니다."></textarea></div>
+          </div>
+        </section>
+
+        <section class="skill-editor-section">
+          <div class="skill-editor-section-heading">
+            <span class="skill-editor-section-number">02</span>
+            <div><h5>발동 설정</h5><p>스킬이 언제, 얼마나 오래 실행되는지 설정합니다.</p></div>
+          </div>
+          <div class="skill-form-grid">
+            <div class="form-row"><label for="skillCooldown">재사용대기 시간</label><input id="skillCooldown" type="number" min="0" step="0.1" value="0" required></div>
+            <div class="form-row"><label for="skillCastTime">시전시간(초)</label><input id="skillCastTime" type="number" min="0" step="0.1" placeholder="비워두면 유닛 시전시간, 0은 즉시시전"></div>
+          </div>
+          <div id="skillPassiveFields" class="skill-settings-card hidden">
+            <div class="skill-settings-card-title">패시브 발동 조건</div>
+            <div class="skill-form-grid">
+              <label>발동 이벤트<select id="skillPassiveEvent"></select></label>
+              <label>발동 확률 (%)<input id="skillPassiveChance" type="number" min="0" max="100" step="0.1" value="100"></label>
+              <label class="skill-check-field skill-form-field-wide"><input id="skillPassivePeriodic" type="checkbox">주기 피해·회복도 발동 조건에 포함</label>
+            </div>
+            <small>조건 충족 시 즉시 실행합니다. 아래 자원 소모와 쿨타임을 적용하며, 동일 패시브는 한 전투 틱에 한 번만 발동합니다. 패시브 효과로 다른 패시브를 연쇄 발동하지 않습니다. 기절·침묵 중에도 발동하지만 사망한 유닛은 발동하지 않습니다.</small>
+          </div>
+          <details id="skillChannelDisclosure" class="skill-editor-disclosure">
+            <summary>고급 설정 · 채널링</summary>
+            <fieldset id="skillChannelFields">
+              <legend>채널링</legend>
+              <div class="skill-form-grid">
+                <label>유지시간 (초, 0: 사용 안 함)<input id="skillChannelDuration" type="number" min="0" step="0.1" value="0"></label>
+                <label>적용 간격 (초)<input id="skillChannelInterval" type="number" min="0.01" step="0.01" value="1"></label>
+                <label class="skill-check-field skill-form-field-wide"><input id="skillChannelDamage" type="checkbox" checked>피해를 받으면 채널링 중단</label>
+              </div>
+              <small>일반 시전 후 첫 간격이 지나면 액션을 반복합니다. 자원은 시작 시 한 번 소모하며, 쿨타임은 완료·중단 시 시작합니다. 기절·사망은 항상 중단하며 침묵은 장착 스킬의 채널링을 중단합니다.</small>
+            </fieldset>
+          </details>
+        </section>
+
+        <section class="skill-editor-section">
+          <div class="skill-editor-section-heading skill-editor-section-heading-actions">
+            <span class="skill-editor-section-number">03</span>
+            <div><h5>비용</h5><p>스킬 사용 시 한 번 소모할 자원을 설정합니다.</p></div>
+            <button type="button" onclick="addSkillResourceCostRow(this)">+ 자원 소모 추가</button>
+          </div>
+          <div class="skill-resource-cost"><div id="skillResourceCosts" class="skill-resource-cost-list"></div></div>
+        </section>
+
+        <section class="skill-editor-section skill-editor-section-actions">
+          <div class="skill-editor-section-heading skill-editor-section-heading-actions">
+            <span class="skill-editor-section-number">04</span>
+            <div><h5>액션</h5><p>대상 조건, 적용 범위와 실제 효과를 순서대로 설정합니다.</p></div>
+            <button class="skill-primary-button" type="button" onclick="addSkillActionRow()">+ 액션 추가</button>
+          </div>
+          <div id="skillActions" class="skill-actions"></div>
+        </section>
       </div>
-      <div class="form-row">
-        <label for="skillDescription">설명</label>
-        <textarea id="skillDescription" rows="3" placeholder="스킬 효과와 특징을 입력하세요. 목록에는 요약해서 표시됩니다."></textarea>
-      </div>
-      <div class="form-row">
-        <label for="skillSlot">슬롯</label>
-        <select id="skillSlot" required onchange="updatePassiveSkillFields()">
-          <option value="basic">베이직</option>
-          <option value="active">액티브</option>
-          <option value="passive">패시브</option>
-        </select>
-      </div>
-      <div class="form-row">
-        <label for="skillCooldown">재사용대기 시간</label>
-        <input id="skillCooldown" type="number" min="0" step="0.1" value="0" required>
-      </div>
-      <div class="skill-resource-cost">
-        <div id="skillPassiveFields" class="hidden">
-          <label>패시브 발동 조건<select id="skillPassiveEvent"></select></label>
-          <label>발동 확률 (%)<input id="skillPassiveChance" type="number" min="0" max="100" step="0.1" value="100"></label>
-          <label><input id="skillPassivePeriodic" type="checkbox">주기 피해·회복도 발동 조건에 포함</label>
-          <small>조건 충족 시 즉시 실행합니다. 아래 자원 소모와 쿨타임을 적용하며, 동일 패시브는 한 전투 틱에 한 번만 발동합니다. 패시브 효과로 다른 패시브를 연쇄 발동하지 않습니다. 기절·침묵 중에도 발동하지만 사망한 유닛은 발동하지 않습니다.</small>
-        </div>
-        <div class="form-row">
-          <label for="skillCastTime">시전시간(초)</label>
-          <input id="skillCastTime" type="number" min="0" step="0.1" placeholder="비워두면 유닛 시전시간, 0은 즉시시전">
-        </div>
-        <fieldset id="skillChannelFields">
-          <legend>채널링</legend>
-          <label>유지시간 (초, 0: 사용 안 함)<input id="skillChannelDuration" type="number" min="0" step="0.1" value="0"></label>
-          <label>적용 간격 (초)<input id="skillChannelInterval" type="number" min="0.01" step="0.01" value="1"></label>
-          <label><input id="skillChannelDamage" type="checkbox" checked>피해를 받으면 채널링 중단</label>
-          <small>일반 시전 후 첫 간격이 지나면 액션을 반복합니다. 자원은 시작 시 한 번 소모하며, 쿨타임은 완료·중단 시 시작합니다. 기절·사망은 항상 중단하며 침묵은 장착 스킬의 채널링을 중단합니다.</small>
-        </fieldset>
-        <div class="skill-coefficient-header">
-          <span>스킬 자원 소모</span>
-          <button type="button" onclick="addSkillResourceCostRow(this)">자원 소모 추가</button>
-        </div>
-        <div id="skillResourceCosts" class="skill-resource-cost-list"></div>
-      </div>
-      <div class="skill-action-header">
-        <strong>액션</strong>
-        <button type="button" onclick="addSkillActionRow()">액션 추가</button>
-      </div>
-      <div id="skillActions" class="skill-actions"></div>
-      <button id="skillSaveButton" type="button" onclick="saveSkillFromForm(event)">저장</button>
-      <button type="button" onclick="closeSkillModal()">취소</button>
     </form>
   </div>
 </div>
@@ -931,30 +1004,33 @@
 </div>
 
 <script src="js/logger.js?v=20260818-save-click2"></script>
-<script src="js/portrait/imported-catalog.js?v=20260929"></script>
-<script src="js/portrait/catalog.js?v=20260929"></script>
-<script src="js/ui.js?v=20260929-weapon-focus"></script>
+<script src="js/portrait/hair-colors.js?v=20261007-parts1"></script>
+<script src="js/portrait/imported-catalog.js?v=20261009-equipment1"></script>
+<script src="js/portrait/catalog.js?v=20261007-parts1"></script>
+<script src="js/ui.js?v=20261005-icons"></script>
 <script src="js/portrait/bridge.js?v=20260929-bald1"></script>
 <script src="js/api.js?v=20260914-image-assets"></script>
-<script src="js/category.js?v=20260611-categories"></script>
+<script src="js/category.js?v=20261005-icons"></script>
 <script src="js/battle-events.js?v=20261001-summon-command"></script>
 <script src="js/skill-channel.js?v=20260929-team-rules"></script>
 <script src="js/skill-passives.js?v=20260930-skill-ban"></script>
 <script src="js/skill-effects.js?v=20261001-field-effects"></script>
-  <script src="js/skill.js?v=20261001-field-effects"></script>
+  <script src="js/skill.js?v=20261005-icons"></script>
 <script src="js/entity.js?v=20261001-summon-inheritance"></script>
 <script src="js/layout.js?v=20260817-layout"></script>
-<script src="js/equipment.js?v=20260929-equipment-sets"></script>
-<script src="js/monster.js?v=20260929-custom-resources"></script>
-<script src="js/faction.js?v=20260606-weapons"></script>
-<script src="js/character.js?v=20260930-equipment-swap"></script>
-<script src="js/team.js?v=20260930-rule-suppression"></script>
+<script src="js/equipment.js?v=20261005-icons"></script>
+<script src="js/monster.js?v=20261005-icons"></script>
+<script src="js/faction.js?v=20261005-icons"></script>
+<script src="js/character.js?v=20261005-icons"></script>
+<script src="js/team.js?v=20261005-icons"></script>
 <script src="js/stats.js?v=20260606-weapons"></script>
 <script src="js/record.js?v=20261001-record-events"></script>
 <script src="js/battle.js?v=20261001-field-effects"></script>
 <script src="https://js.puter.com/v2/"></script>
-<script src="js/image-generator.js?v=20260915-image-generator6"></script>
-<script src="js/main.js?v=20260926-entities"></script>
+<script src="js/image-generator.js?v=20261005-image-actions"></script>
+<script src="js/icon-background.js?v=20261009"></script>
+<script src="js/icons.js?v=20261009-icon-background"></script>
+<script src="js/main.js?v=20261005-icons"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="js/bootstrap-ui.js?v=20260817-bootstrap"></script>
 

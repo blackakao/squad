@@ -58,6 +58,8 @@ export class CharacterViewer {
     this.loop = true;
     this.speed = 1;
     this.playback = 'stopped';
+    this.beforeAnimation = new Set();
+    this.afterAnimation = new Set();
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color('#1b2330');
     this.camera = new THREE.PerspectiveCamera(40, 1, 0.01, 1000);
@@ -95,7 +97,9 @@ export class CharacterViewer {
       const delta = this.lastTime === null ? 0 : Math.min((time - this.lastTime) / 1000, 0.1);
       this.lastTime = time;
       if (document.hidden) return;
+      this.beforeAnimation.forEach(callback => callback());
       this.mixer?.update(delta * this.speed);
+      this.afterAnimation.forEach(callback => callback());
       this.controls.update();
       this.skeletonHelper?.updateMatrixWorld(true);
       this.renderer.render(this.scene, this.camera);
@@ -251,6 +255,12 @@ export class CharacterViewer {
     this.onState({ type: 'playback', state: this.playback, index: this.selectedClipIndex });
   }
 
+  addAnimationModifier({ before, after }) {
+    if (before) this.beforeAnimation.add(before);
+    if (after) this.afterAnimation.add(after);
+    return () => { if (before) this.beforeAnimation.delete(before); if (after) this.afterAnimation.delete(after); };
+  }
+
   // Returns the actual imported bone/node. Missing sockets are valid for arbitrary test models.
   getAttachmentPoint(name) { return this.model?.getObjectByName(name) ?? null; }
 
@@ -281,6 +291,8 @@ export class CharacterViewer {
     this.resizeObserver.disconnect();
     this.clearModel();
     this.controls.dispose();
+    this.beforeAnimation.clear();
+    this.afterAnimation.clear();
     disposeObject(this.grid);
     this.renderer.domElement.removeEventListener('webglcontextlost', this.onContextLost);
     this.renderer.dispose();

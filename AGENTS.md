@@ -67,6 +67,8 @@ python server.py
 
 ## 작업 규칙
 
+- 매 작업 시작 시 이 문서(`AGENTS.md`)와 [README.MD](README.MD)를 먼저 읽고, [작업 재개 메모](docs/resume.md)와 [TODO](docs/todo.md)를 확인한 뒤 작업합니다.
+- 아이디어를 구현하기로 정하면 [ideas.MD](docs/ideas.MD)의 해당 내용을 [TODO](docs/todo.md)의 예정·진행 중 항목으로 옮기고, 완료 후 구현 범위와 검증 결과를 완료 체크리스트에 반영합니다. 원래 아이디어에는 상태와 TODO 링크를 남깁니다.
 - 기존 구조를 우선합니다. 프레임워크나 빌드 도구를 새로 도입하지 않습니다.
 - 새 기능은 관련 모듈에 좁게 추가합니다. 예: 전투 규칙은 `js/battle.js`, 데이터 저장은 `js/api.js`/`server.py`.
 - DOM ID, 데이터 필드명, JSON 스키마를 바꿀 때는 `index.html`, 관련 `js/*`, `data/*.json`, `README.MD`를 함께 확인합니다.
@@ -127,7 +129,7 @@ python server.py
 
 ## 문서 관리 규칙
 
-작업 시작 시 [resume.md](docs/resume.md)와 [todo.md](docs/todo.md)를 읽고, 코드를 수정하거나 기능을 추가·삭제할 경우 관련 문서를 반드시 함께 최신 상태로 갱신합니다.
+작업 시작 시 `AGENTS.md`와 [README.MD](README.MD)를 먼저 읽은 다음 [resume.md](docs/resume.md)와 [todo.md](docs/todo.md)를 확인하고, 코드를 수정하거나 기능을 추가·삭제할 경우 관련 문서를 반드시 함께 최신 상태로 갱신합니다.
 
 반드시 업데이트할 문서
 

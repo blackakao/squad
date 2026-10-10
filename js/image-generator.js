@@ -1,5 +1,5 @@
 const IMAGE_STYLE_SETTINGS_URL = "/api/image-settings";
-const DEFAULT_PUTER_IMAGE_MODEL = "gpt-image-1-mini";
+const DEFAULT_PUTER_IMAGE_MODEL = "gpt-image-2";
 const IMAGE_STYLE_PRESETS = [
   {
     key: "gamePortrait",
@@ -31,15 +31,136 @@ const IMAGE_STYLE_PRESETS = [
 let generatedImageDataUrl = "";
 let generatedImageUrl = "";
 let imageGeneratorSettingsLoaded = false;
+let imageGeneratorBusy = false;
+let savedImageStyles = [];
+let imageStyleLibraryReady = false;
+let imageStyleLibraryBusy = false;
 
 async function renderImageGeneratorPage() {
   populateImageStylePresets();
+  if (!imageStyleLibraryReady) await loadImageStyleLibrary();
 
   if (!imageGeneratorSettingsLoaded) {
     imageGeneratorSettingsLoaded = true;
     await loadImageGeneratorSettings();
     await refreshPuterUsage(false, true);
   }
+}
+
+function imageStyleLibraryStatus(message) {
+  const element = document.getElementById("imageStyleLibraryStatus");
+  if (element) element.textContent = message;
+}
+
+function updateImageStyleLibraryControls() {
+  const selected = savedImageStyles.some(style => style.id === getFieldValue("savedImageStyle"));
+  for (const id of ["imageStyleCreate", "imageStyleLoad", "imageStyleUpdate", "imageStyleDelete"]) {
+    const button = document.getElementById(id);
+    if (button) button.disabled = imageStyleLibraryBusy || !imageStyleLibraryReady || (id !== "imageStyleCreate" && !selected);
+  }
+  for (const id of ["savedImageStyle", "imageStyleRefresh", "imageStyleName"]) {
+    const element = document.getElementById(id);
+    if (element) element.disabled = imageStyleLibraryBusy;
+  }
+}
+
+function renderImageStyleLibrary(selectedId = getFieldValue("savedImageStyle")) {
+  const select = document.getElementById("savedImageStyle");
+  if (!select) return;
+  select.replaceChildren(new Option(savedImageStyles.length ? "스타일 선택" : "저장된 스타일 없음", ""));
+  for (const style of savedImageStyles) select.add(new Option(style.name, style.id));
+  select.value = savedImageStyles.some(style => style.id === selectedId) ? selectedId : "";
+  updateImageStyleLibraryControls();
+}
+
+async function loadImageStyleLibrary() {
+  if (imageStyleLibraryBusy) return;
+  imageStyleLibraryBusy = true;
+  updateImageStyleLibraryControls();
+  try {
+    const response = await fetch("/api/image-styles", { cache: "no-store" });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const styles = await response.json();
+    if (!Array.isArray(styles) || styles.some(style => !style || typeof style.id !== "string" || !style.id || typeof style.name !== "string" || typeof style.stylePrompt !== "string") || new Set(styles.map(style => style.id)).size !== styles.length) {
+      throw new Error("저장된 스타일 목록 형식이 올바르지 않습니다.");
+    }
+    savedImageStyles = styles;
+    imageStyleLibraryReady = true;
+    renderImageStyleLibrary();
+    imageStyleLibraryStatus(`${styles.length}개의 스타일을 불러왔습니다.`);
+  } catch (error) {
+    imageStyleLibraryReady = false;
+    imageStyleLibraryStatus(`목록 로드 실패: ${getImageGeneratorErrorMessage(error)} 목록 새로고침으로 다시 시도하세요.`);
+    logError("image-generator", "스타일 목록 로드 실패", error);
+  } finally {
+    imageStyleLibraryBusy = false;
+    updateImageStyleLibraryControls();
+  }
+}
+
+function selectSavedImageStyle() {
+  const style = savedImageStyles.find(item => item.id === getFieldValue("savedImageStyle"));
+  setFieldValue("imageStyleName", style?.name || "");
+  updateImageStyleLibraryControls();
+  imageStyleLibraryStatus(style ? `“${style.name}” 선택됨. 불러오기를 누르면 스타일 세팅에 적용합니다.` : "스타일을 선택하거나 새 이름을 입력하세요.");
+}
+
+function loadNamedImageStyle() {
+  if (!imageStyleLibraryReady || imageStyleLibraryBusy) return;
+  const style = savedImageStyles.find(item => item.id === getFieldValue("savedImageStyle"));
+  if (!style) return;
+  setFieldValue("imageStyleName", style.name);
+  setFieldValue("imageStylePreset", "custom");
+  setFieldValue("imageStylePrompt", style.stylePrompt);
+  imageStyleLibraryStatus(`“${style.name}” 스타일을 적용했습니다. 내용을 바꾼 뒤 선택 스타일 수정으로 저장하세요.`);
+}
+
+async function persistImageStyleLibrary(next, selectedId, message) {
+  imageStyleLibraryBusy = true;
+  updateImageStyleLibraryControls();
+  try {
+    const response = await fetch("/api/image-styles", {
+      method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(next)
+    });
+    const result = await parseJsonResponse(response);
+    if (!response.ok || !result?.ok) throw new Error(result?.error || `HTTP ${response.status}`);
+    savedImageStyles = next;
+    renderImageStyleLibrary(selectedId);
+    setFieldValue("imageStyleName", next.find(style => style.id === selectedId)?.name || "");
+    imageStyleLibraryStatus(message);
+  } catch (error) {
+    imageStyleLibraryStatus(`저장 실패: ${getImageGeneratorErrorMessage(error)} 입력 내용은 유지됩니다.`);
+    logError("image-generator", "스타일 목록 저장 실패", error);
+  } finally {
+    imageStyleLibraryBusy = false;
+    updateImageStyleLibraryControls();
+  }
+}
+
+async function saveNamedImageStyle(updateExisting = false) {
+  if (!imageStyleLibraryReady || imageStyleLibraryBusy) return;
+  const name = getFieldValue("imageStyleName");
+  const stylePrompt = getFieldValue("imageStylePrompt");
+  const existing = updateExisting ? savedImageStyles.find(style => style.id === getFieldValue("savedImageStyle")) : null;
+  if (updateExisting && !existing) return;
+  if (!name || name.length > 80 || !stylePrompt) {
+    imageStyleLibraryStatus("스타일 이름(1~80자)과 스타일 세팅을 입력하세요.");
+    return;
+  }
+  if (savedImageStyles.some(style => style.id !== existing?.id && style.name.toLocaleLowerCase() === name.toLocaleLowerCase())) {
+    imageStyleLibraryStatus("같은 이름의 스타일이 있습니다. 다른 이름을 입력하거나 해당 스타일을 선택해 수정하세요.");
+    return;
+  }
+  const style = { ...existing, id: existing?.id || crypto.randomUUID(), name, stylePrompt, updatedAt: new Date().toISOString() };
+  const next = existing ? savedImageStyles.map(item => item.id === existing.id ? style : item) : [...savedImageStyles, style];
+  await persistImageStyleLibrary(next, style.id, `“${name}” 스타일을 ${existing ? "수정" : "저장"}했습니다.`);
+}
+
+async function deleteNamedImageStyle() {
+  if (!imageStyleLibraryReady || imageStyleLibraryBusy) return;
+  const style = savedImageStyles.find(item => item.id === getFieldValue("savedImageStyle"));
+  if (!style || !window.confirm(`“${style.name}” 스타일을 삭제할까요?`)) return;
+  await persistImageStyleLibrary(savedImageStyles.filter(item => item.id !== style.id), "", `“${style.name}” 스타일을 삭제했습니다. 현재 스타일 세팅은 유지됩니다.`);
 }
 
 function populateImageStylePresets() {
@@ -125,13 +246,24 @@ function getImageGeneratorSettings(fullPrompt = "") {
 
 async function generateImageFromPrompt(event) {
   event.preventDefault();
+  if (imageGeneratorBusy) return;
 
   const prompt = getFieldValue("imagePrompt");
+  if (!prompt) {
+    setImageGeneratorStatus("제시어를 입력하세요.");
+    return;
+  }
+  for (const id of ["imageWidth", "imageHeight", "imageSeed"]) {
+    const field = document.getElementById(id);
+    if (field?.validity && !field.validity.valid) {
+      setImageGeneratorStatus(`${id === "imageWidth" ? "가로" : id === "imageHeight" ? "세로" : "시드"} 값을 확인하세요. ${field.validationMessage}`);
+      return;
+    }
+  }
   const settings = getImageGeneratorSettings();
   const fullPrompt = [prompt, settings.stylePrompt].filter(Boolean).join(", ");
 
   setImageGeneratorBusy(true, "이미지를 생성하고 있습니다...");
-  setGeneratedImage("", "");
 
   try {
     if (settings.provider === "puter") {
@@ -140,12 +272,11 @@ async function generateImageFromPrompt(event) {
       }
 
       const options = {
-        provider: "openai-image-generation",
         model: settings.model || DEFAULT_PUTER_IMAGE_MODEL
       };
       const imageElement = await window.puter.ai.txt2img(fullPrompt, options);
       const imageSource = imageElement?.src || imageElement;
-      if (!imageSource) {
+      if (typeof imageSource !== "string" || !imageSource) {
         throw new Error("Puter가 이미지 주소를 반환하지 않았습니다.");
       }
       setGeneratedImage(imageSource, "생성이 완료되었습니다. 마음에 들면 이미지 폴더에 저장하세요.");
@@ -163,7 +294,7 @@ async function generateImageFromPrompt(event) {
           seed: settings.seed
         })
       });
-      const result = await response.json();
+      const result = await parseJsonResponse(response);
 
       if (!response.ok || !result?.dataUrl) {
         throw new Error(result?.error || `HTTP ${response.status}`);
@@ -173,7 +304,9 @@ async function generateImageFromPrompt(event) {
     }
 
     await saveImageGeneratorSettings(fullPrompt);
-    await refreshPuterUsage(false);
+    if (settings.provider === "puter") {
+      await refreshPuterUsage(false, true);
+    }
   } catch (error) {
     const message = getImageGeneratorErrorMessage(error);
     logError("image-generator", "이미지 생성에 실패했습니다.", error);
@@ -184,6 +317,7 @@ async function generateImageFromPrompt(event) {
 }
 
 async function saveGeneratedImage() {
+  if (imageGeneratorBusy) return;
   if (!generatedImageDataUrl && !generatedImageUrl) {
     return;
   }
@@ -315,6 +449,9 @@ function getImageGeneratorErrorMessage(error) {
   if (typeof error === "string") {
     return error;
   }
+  if (error.error && error.error !== error) {
+    return getImageGeneratorErrorMessage(error.error);
+  }
   if (error.message) {
     return error.message;
   }
@@ -357,12 +494,12 @@ function setGeneratedImage(imageSource, statusText) {
 }
 
 function setImageGeneratorBusy(isBusy, statusText = "") {
+  imageGeneratorBusy = isBusy;
   const generateButton = document.getElementById("imageGenerateButton");
   const saveButton = document.getElementById("imageSaveButton");
 
   if (generateButton) {
     generateButton.disabled = isBusy;
-    generateButton.textContent = isBusy ? "처리 중..." : "생성";
   }
   if (saveButton) {
     saveButton.disabled = isBusy || (!generatedImageDataUrl && !generatedImageUrl);
@@ -373,6 +510,8 @@ function setImageGeneratorBusy(isBusy, statusText = "") {
 }
 
 function setImageGeneratorStatus(message) {
+  const actionStatus = document.getElementById("imageActionStatus");
+  if (actionStatus) actionStatus.textContent = message;
   const statusEl = document.getElementById("imageGeneratorStatus");
   if (statusEl) {
     statusEl.textContent = message;

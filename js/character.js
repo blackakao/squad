@@ -25,8 +25,8 @@ function renderCharacterTable() {
     <tr>
       <td><input type="checkbox" class="character-check" value="${index}"></td>
       <td>${renderPortraitCell(character.portrait, character.name)}</td>
-      <td>${escapeHtml(character.faction ?? getDefaultFactionName())}</td>
-      <td>${escapeHtml(getRoleLabel(character.role))}</td>
+      <td>${renderCategoryIcon("faction", character.faction ?? getDefaultFactionName(), character.faction ?? getDefaultFactionName())}</td>
+      <td>${renderCategoryIcon("role", normalizeRole(character.role), getRoleLabel(character.role))}</td>
       <td>${escapeHtml(character.name)}</td>
       <td>${character.hp}</td>
       <td>${character.mp}</td>

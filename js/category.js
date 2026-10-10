@@ -166,7 +166,7 @@ function renderWeaponCategoryTable() {
   weaponCategoryTableBodyEl.innerHTML = getWeaponCategories().map((category, index) => `
     <tr>
       <td><input type="checkbox" class="weapon-category-check" value="${index}"></td>
-      <td>${escapeHtml(category.label)}</td>
+      <td>${renderCategoryIcon("weapon", category.key, category.label)}</td>
       <td>${getHandTypeLabel(category.handType)}</td>
       <td>${category.attackRange}</td>
       <td>${category.attackSpeed}</td>
@@ -182,7 +182,7 @@ function renderArmorCategoryTable() {
   armorCategoryTableBodyEl.innerHTML = getArmorCategories().map((category, index) => `
     <tr>
       <td><input type="checkbox" class="armor-category-check" value="${index}"></td>
-      <td>${escapeHtml(category.label)}</td>
+      <td>${renderCategoryIcon("armor", category.key, category.label)}</td>
       <td><button type="button" onclick="openArmorCategoryModal(${index})">수정</button></td>
     </tr>
   `).join("");

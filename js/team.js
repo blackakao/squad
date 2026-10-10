@@ -173,7 +173,7 @@ function renderTeamEditor() {
     teamSynergyRuleListEl.innerHTML = '<span class="empty-text">팀을 선택해주세요.</span>';
     teamCharacterListEl.innerHTML = characterJson.map((character, index) => `
       <button class="team-character-button" onclick="alert('먼저 팀을 선택해주세요.')">
-        ${escapeHtml(character.name)} (${escapeHtml(getRoleLabel(character.role))})
+        ${escapeHtml(character.name)} (${renderCategoryIcon("role", normalizeRole(character.role), getRoleLabel(character.role))})
       </button>
     `).join("");
     return;
@@ -198,7 +198,7 @@ function renderTeamEditor() {
       const character = characterJson[id];
       return `
         <div class="team-member-row">
-          <span>${escapeHtml(character.name)} (${escapeHtml(getRoleLabel(character.role))})</span>
+          <span>${escapeHtml(character.name)} (${renderCategoryIcon("role", normalizeRole(character.role), getRoleLabel(character.role))})</span>
           <button onclick="removeCharacterFromSelectedTeam(${id})">삭제</button>
         </div>
       `;
@@ -207,7 +207,7 @@ function renderTeamEditor() {
 
   teamCharacterListEl.innerHTML = characterJson.map((character, index) => `
     <button class="team-character-button ${selectedIds.has(index) ? "selected" : ""}" onclick="toggleCharacterInSelectedTeam(${index})">
-      ${escapeHtml(character.name)} (${escapeHtml(getRoleLabel(character.role))})
+      ${escapeHtml(character.name)} (${renderCategoryIcon("role", normalizeRole(character.role), getRoleLabel(character.role))})
     </button>
   `).join("");
 }
@@ -421,7 +421,7 @@ function renderBattleMemberList(title, members, emptyText = "선택 없음") {
             ${members.map(member => `
               <tr>
                 <td>${escapeHtml(member.name ?? member.label ?? "")}</td>
-                <td>${escapeHtml(getRoleLabel(member.role))}</td>
+                <td>${renderCategoryIcon("role", normalizeRole(member.role), getRoleLabel(member.role))}</td>
                 <td>${Math.floor(Number(member.hp) || Number(member.maxHp) || 0)}</td>
                 <td>${Number(member.atk) || 0} / ${Number(member.magic) || 0}</td>
                 <td>${Number(member.defense) || 0} / ${Number(member.resistance) || 0}</td>

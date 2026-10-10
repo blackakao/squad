@@ -450,7 +450,7 @@ function renderEquipmentSlots() {
     const item = getItemById(equipment[slot.key]);
     return `
       <div class="equipment-slot" ondragover="allowEquipmentDrop(event)" ondrop="dropEquipmentItem(event, '${slot.key}')">
-        <div class="equipment-slot-title">${slot.label}</div>
+        <div class="equipment-slot-title">${renderCategoryIcon("slot", slot.key, slot.label)}</div>
         <div class="equipment-slot-item ${item ? "" : "empty"}">
           ${item ? escapeHtml(item.name) : "비어 있음"}
         </div>
@@ -602,7 +602,7 @@ function renderEquipmentItemTable() {
           ${escapeHtml(item.name)}
           <div class="equipment-tooltip">
             <div class="equipment-tooltip-title">${escapeHtml(item.name)}</div>
-            <div>${getSlotLabel(item.slot)}</div>
+            <div>${renderCategoryIcon("slot", item.slot, getSlotLabel(item.slot))}</div>
             <pre>${escapeHtml(getItemStatSummary(item))}</pre>
           </div>
         </div>
@@ -707,10 +707,10 @@ function renderItemPage() {
     <tr>
       <td><input type="checkbox" class="item-check" value="${index}"></td>
       <td>${escapeHtml(item.name)}</td>
-      <td>${getSlotLabel(item.slot)}</td>
-      <td>${isWeaponItem(item) ? getWeaponCategoryLabel(item.weaponCategory) : "-"}</td>
+      <td>${renderCategoryIcon("slot", item.slot, getSlotLabel(item.slot))}</td>
+      <td>${isWeaponItem(item) ? renderCategoryIcon("weapon", item.weaponCategory, getWeaponCategoryLabel(item.weaponCategory)) : "-"}</td>
       <td>${isWeaponItem(item) ? escapeHtml(getSkillById(item.attackSkillId)?.name ?? "기본 공격") : "-"}</td>
-      <td>${isArmorSlot(item.slot) ? getArmorCategoryLabel(item.armorCategory) : "-"}</td>
+      <td>${isArmorSlot(item.slot) ? renderCategoryIcon("armor", item.armorCategory, getArmorCategoryLabel(item.armorCategory)) : "-"}</td>
       <td>${isWeaponItem(item) ? getHandTypeLabel(item.handType) : "-"}</td>
       ${ABILITY_ROWS.map(([, key]) => `<td>${item[key]}</td>`).join("")}
       <td><button type="button" onclick="openItemModal(${index})">수정</button></td>

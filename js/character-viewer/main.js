@@ -1,6 +1,6 @@
-import { CharacterViewer } from './CharacterViewer.js?v=20260926-equipment1';
-import { setupEquipment } from './equipment.js?v=20260926-equipment1';
-import { setupComposer } from '../portrait/composer.js?v=20260929-bald7';
+﻿import { CharacterViewer } from './CharacterViewer.js?v=20261010-visual12';
+import { setupEquipment } from './equipment.js?v=20261010-visual12';
+import { setupComposer } from '../portrait/composer.js?v=20261010-visual20';
 
 const byId = id => document.getElementById(id);
 let viewer;
@@ -61,8 +61,8 @@ function onState(event) {
       ? `모델 데이터 수신 ${Math.round(event.loaded / event.total * 100)}% · 리소스 처리 중…`
       : `${(event.loaded / 1024).toFixed(0)} KB 수신 · 리소스 처리 중…`;
   } else if (event.type === 'loaded') {
-    equipment?.setModel(viewer.model);
     composer?.setModel(viewer.model);
+    equipment?.setModel(viewer.model);
     const { info, clips } = event;
     byId('load-status').textContent = `${event.name} 로딩 완료`;
     byId('empty-hint').hidden = true;
@@ -93,7 +93,7 @@ function onState(event) {
     byId('display-controls').disabled = true;
     modelRows = [['모델', '불러온 모델 없음']];
     renderInfo();
-    showError(event.message || `${event.error.message || event.error}\n경로, glTF의 BIN·텍스처 참조, 외부 서버의 CORS 설정을 확인하세요. Draco / Meshopt / KTX2 압축은 아직 지원하지 않습니다.`);
+    showError(event.message || `${event.error.message || event.error}\n경로, glTF의 BIN·텍스처 참조, 서버의 CORS 설정을 확인하세요. Draco / Meshopt / KTX2 압축은 아직 지원하지 않습니다.`);
     if (event.type === 'fatal') byId('source-controls').disabled = true;
   }
 }
@@ -101,7 +101,8 @@ function onState(event) {
 try {
   viewer = new CharacterViewer(byId('viewport'), onState);
   equipment = setupEquipment(viewer);
-  composer = setupComposer(viewer);
+  composer = setupComposer(viewer,equipment);
+  globalThis.characterViewerDebug={viewer,composer,equipment};
   byId('source-controls').disabled = false;
   byId('load-status').textContent = '준비 완료 · 모델을 선택하세요.';
 } catch (error) {
@@ -123,7 +124,11 @@ byId('url-form').addEventListener('submit', event => {
   loadPath(byId('model-url').value.trim());
 });
 document.querySelectorAll('[data-sd-model]').forEach(button=>button.addEventListener('click',()=>{
-  byId('model-url').value=button.dataset.sdModel==='bald'?'assets/characters/base/human_sd_bald_v1.glb':`assets/characters/base/human_sd_${button.dataset.sdModel}_v2.glb`;
+  const paths={
+    'blank-male':'assets/characters/base/대머리 블랭크 얼굴 남자.glb',
+    'blank-female':'assets/characters/base/대머리 블랭크 얼굴 여자.glb'
+  };
+  byId('model-url').value=paths[button.dataset.sdModel];
   loadPath(byId('model-url').value);
 }));
 
@@ -141,7 +146,7 @@ byId('model-files').addEventListener('change', event => {
     ? files.map((file, index) => new Option(file.name, String(index)))
     : [new Option('선택한 파일 없음', '')]));
   if (files.length) loadLocal(0);
-  else showError('로컬 선택은 .glb 파일을 지원합니다. glTF는 서버 경로로 불러오세요.');
+  else showError('로컬 선택은 .glb 파일만 지원합니다. glTF는 서버 경로로 불러오세요.');
   event.target.value = '';
 });
 byId('local-models').addEventListener('change', event => loadLocal(Number(event.target.value)));

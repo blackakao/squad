@@ -5,6 +5,7 @@
     ...['단발','긴 생머리','포니테일','트윈테일','높은 올림머리','양갈래 땋은 머리','웨이브 단발','옆으로 땋은 머리','양쪽 둥근 올림머리','공주 반묶음'].map((name,i)=>({id:`f${i+1}`,name,group:'female'}))
   ];
   const eyes = ['동그란 눈','아몬드 눈','가늘고 긴 눈','처진 눈','올라간 눈','나른한 눈','별빛 눈','커다란 눈','웃는 눈','감은 눈'].map((name,i)=>({id:`eye${i+1}`,name}));
+  const eyebrows = ['기본 눈썹','일자 눈썹','부드러운 곡선 눈썹','올라간 눈썹','처진 눈썹'].map((name,i)=>({id:`brow${i+1}`,name}));
   const noses = ['작은 둥근 코','아주 작은 코','길쭉한 코','뾰족한 코','넓은 코'].map((name,i)=>({id:`nose${i+1}`,name}));
   const mouths = ['미소','작은 미소','일자 입','벌린 입','활짝 웃음','시무룩한 입','놀란 입','오므린 입','한쪽 미소','장난스러운 입'].map((name,i)=>({id:`mouth${i+1}`,name}));
   const skins = [
@@ -12,16 +13,17 @@
     {id:'skin3',name:'따뜻한 베이지',color:'#ce9673'}, {id:'skin4',name:'브론즈',color:'#a66b4e'},
     {id:'skin5',name:'짙은 브라운',color:'#704331'}
   ];
-  const groups = {hair,eyes,noses,mouths,skins};
-  const fields = {hair:'hair',eyes:'eyes',nose:'noses',mouth:'mouths',skin:'skins'};
-  const defaults = Object.freeze({version:1,hair:'f8',eyes:'eye1',nose:'nose1',mouth:'mouth1',skin:'skin2'});
+  const hairColors=globalThis.HairColorCatalog||[];
+  const groups = {hair,hairColors,eyes,eyebrows,noses,mouths,skins};
+  const fields = {hair:'hair',hairColor:'hairColors',eyes:'eyes',eyebrows:'eyebrows',nose:'noses',mouth:'mouths',skin:'skins'};
+  const defaults = Object.freeze({version:1,hair:'f8',hairColor:'hc1',eyes:'eye1',eyebrows:'brow1',nose:'nose1',mouth:'mouth1',skin:'skin2'});
   function normalize(value) {
     if(value?.version===2)return globalThis.ImportedPortraitCatalog?.normalize(value)||null;
     if (!value || typeof value !== 'object' || value.version !== 1) return null;
-    const output = {version:1};
+    const output = {version:1},source={...value,hairColor:value.hairColor||defaults.hairColor,eyebrows:value.eyebrows||defaults.eyebrows};
     for (const [field,group] of Object.entries(fields)) {
-      if (!groups[group].some(entry=>entry.id===value[field])) return null;
-      output[field] = value[field];
+      if (!groups[group].some(entry=>entry.id===source[field])) return null;
+      output[field] = source[field];
     }
     return output;
   }

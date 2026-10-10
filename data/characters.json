@@ -52,7 +52,7 @@
     },
     "equipmentSets": [
       {
-        "name": "세트 1",
+        "name": "세트 2",
         "equipment": {
           "mainWeapon": "",
           "subWeapon": "",
@@ -136,12 +136,32 @@
   },
   {
     "name": "승려",
+    "hp": 2000,
+    "mp": 100,
+    "st": 150,
+    "bp": 0,
+    "atk": 170,
+    "magic": 10,
+    "speed": 2,
+    "attackSpeed": 0.5,
+    "castSpeed": 0,
+    "defense": 5,
+    "resistance": 0,
+    "attackRange": 3,
     "role": "healer",
-    "faction": "쥬신",
     "skillIds": [
       "skill_class_monk_combo",
       "skill_class_monk_area_heal"
     ],
+    "portrait": "assets/images/portraits/character-003.png",
+    "attributes": {
+      "str": 50,
+      "vit": 0,
+      "agi": 50,
+      "focus": 50,
+      "int": 0,
+      "wis": 0
+    },
     "equipmentRules": {
       "extraWeaponSlots": 0,
       "twoHandSingleSlot": false,
@@ -156,15 +176,6 @@
       "reviveStPercent": 100,
       "reviveInvulnerable": 0,
       "revivePosition": "death"
-    },
-    "customResources": [],
-    "attributes": {
-      "str": 50,
-      "vit": 0,
-      "agi": 50,
-      "focus": 50,
-      "int": 0,
-      "wis": 0
     },
     "equipment": {
       "mainWeapon": "item_1790432044932",
@@ -188,20 +199,8 @@
       }
     ],
     "activeEquipmentSet": 0,
-    "portrait": "assets/images/portraits/character-003.png",
-    "hp": 2000,
-    "mp": 100,
-    "st": 150,
-    "bp": 0,
-    "atk": 170,
-    "magic": 10,
-    "speed": 2,
-    "attackSpeed": 0.5,
-    "castSpeed": 0,
-    "attackType": "physical",
-    "defense": 5,
-    "resistance": 0,
-    "attackRange": 3
+    "faction": "쥬신",
+    "attackType": "physical"
   },
   {
     "name": "사제",
@@ -476,16 +475,15 @@
     "st": 150,
     "bp": 0,
     "atk": 10,
-    "magic": 60,
+    "magic": 160,
     "speed": 2,
     "attackSpeed": 1.5,
     "castSpeed": 0.5,
     "defense": 0,
     "resistance": 15,
-    "attackRange": 1,
+    "attackRange": 6,
     "role": "healer",
     "skillIds": [
-      "skill_class_fiend_armageddon",
       "skill_class_spirit_summon"
     ],
     "portrait": "assets/images/portraits/character-008.png",
@@ -513,7 +511,7 @@
       "revivePosition": "death"
     },
     "equipment": {
-      "mainWeapon": "",
+      "mainWeapon": "item_1786972173219",
       "subWeapon": "",
       "top": "",
       "bottom": "",
@@ -524,7 +522,7 @@
       {
         "name": "세트 1",
         "equipment": {
-          "mainWeapon": "",
+          "mainWeapon": "item_1786972173219",
           "subWeapon": "",
           "top": "",
           "bottom": "",
@@ -535,7 +533,7 @@
     ],
     "activeEquipmentSet": 0,
     "faction": "누레아",
-    "attackType": "physical"
+    "attackType": "magic"
   },
   {
     "name": "흑마법사",

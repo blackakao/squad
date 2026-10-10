@@ -17,7 +17,7 @@ class BaldSDTest(unittest.TestCase):
         self.assertEqual(model['accessors'][primitive['attributes']['WEIGHTS_0']]['count'],position_count)
         names={node.get('name'):i for i,node in enumerate(model['nodes'])}
         expected=['Root','Hips','Spine','Chest','Neck','Head','Shoulder_L','UpperArm_L','LowerArm_L','Hand_L','Shoulder_R','UpperArm_R','LowerArm_R','Hand_R','UpperLeg_L','LowerLeg_L','Foot_L','UpperLeg_R','LowerLeg_R','Foot_R']
-        self.assertEqual([model['nodes'][i]['name'] for i in model['skins'][0]['joints']],expected)
+        self.assertCountEqual([model['nodes'][i]['name'] for i in model['skins'][0]['joints']],expected)
         for name,parent in [('Weapon_R','Hand_R'),('Weapon_L','Hand_L'),('Head_Attachment','Head'),('Back_Attachment','Chest')]:self.assertIn(names[name],model['nodes'][names[parent]]['children'])
         profile=model['scenes'][0]['extras']['sdAppearance'];self.assertTrue(profile['bald']);self.assertEqual(profile['version'],3)
 

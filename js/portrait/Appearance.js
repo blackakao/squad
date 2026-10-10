@@ -1,7 +1,8 @@
-import * as THREE from 'three';
-import { ImportedAppearance } from './ImportedAppearance.js?v=20260929-hair1';
-import { BaldAppearance } from './BaldAppearance.js?v=20260929-bald7';
-import { disposeObject } from '../character-viewer/CharacterViewer.js?v=20260926-equipment1';
+﻿import * as THREE from 'three';
+import { ImportedAppearance } from './ImportedAppearance.js?v=20261010-visual20';
+import { BaldAppearance } from './BaldAppearance.js?v=20261010-visual20';
+import { BlankAppearance } from './BlankAppearance.js?v=20261010-visual20';
+import { disposeObject } from '../character-viewer/CharacterViewer.js?v=20261010-visual7';
 
 const ORIGINAL_PARTS = ['Hair_Cap','Hair_Fringe','Hair_SideLocks','Hair_Braid','Hair_Tie','Hair_Tail',
   'Eye_Liner','Eye_Whites','Eye_Iris','Eye_Pupils','Eye_Glint','Brows','Nose','Smile','Cheeks'];
@@ -12,7 +13,9 @@ function createParts(style) {
   root.position.y = -1.91;
   const mat = (color,roughness=.75)=>new THREE.MeshStandardMaterial({color,roughness});
   const skin = mat(PortraitCatalog.skins.find(s=>s.id===style.skin).color);
-  const hair = mat('#794425'), highlight = mat('#965b34'), dark = mat('#342016');
+  const hairTone=globalThis.HairColorCatalog?.find(c=>c.id===style.hairColor)||globalThis.HairColorCatalog?.[0];
+  const hair = mat(hairTone?.dark||'#794425'), highlight = mat(hairTone?.light||'#965b34'), dark = mat('#342016');
+  hair.name='Hair_Dark';highlight.name='Hair_Light';
   const white = mat('#fff4de',.4), iris = mat('#9f612d',.4), pupil=mat('#21120d',.4);
   const pink = mat('#d4817c'), mouth = mat('#713a35'), teeth = white, ribbon=mat('#448779');
   const materials = [skin,hair,highlight,dark,white,iris,pupil,pink,mouth,ribbon];
@@ -103,7 +106,13 @@ function createParts(style) {
       const points=[];for(let i=0;i<=8;i++){const t=i/8;points.push([x-.095+t*.19,y+(eyeId===9?1:-1)*.045*Math.sin(Math.PI*t),z+.013]);}
       line('Eye_Closed',dark,points,.012);
     }
-    line('Brow',hair,[[x-.071,2.463,.337],[x,2.480,.352],[x+.072,2.464,.337]],.013);
+    const browId=Math.max(1,Math.min(5,Number(style.eyebrows?.slice(4))||1)),browY=2.472;
+    const browPoints=browId===2?[[-.071,0,0],[0,0,.006],[.072,0,0]]
+      :browId===3?[[-.071,-.006,0],[0,.020,.012],[.072,-.006,0]]
+      :browId===4?[[-.071,-s*.018,0],[0,0,.008],[.072,s*.018,0]]
+      :browId===5?[[-.071,s*.018,0],[0,0,.008],[.072,-s*.018,0]]
+      :[[-.071,-.006,0],[0,.010,.010],[.072,0,0]];
+    line('Brow',hair,browPoints.map(p=>[x+p[0],browY+p[1],.337+p[2]]),.013);
     ellipsoid('Cheek',pink,[s*.276,2.15,.298],[.039,.015,.006]);
   }
   const noseId=Number(style.nose.slice(4));
@@ -131,11 +140,34 @@ function createParts(style) {
 
 export class Appearance {
   constructor(){this.root=null;this.parts=null;this.hidden=[];this.colors=new Map();}
-  setModel(root){this.clear();this.root=root;if(root?.userData.sdAppearance?.bald){this.imported=new BaldAppearance();return this.imported.setModel(root);}if(root?.userData.sdAppearance){this.imported=new ImportedAppearance();return this.imported.setModel(root);}return Boolean(root?.getObjectByName('Head_Face')&&root?.getObjectByName('Head'));}
-  apply(value){
-    if(this.imported){this.imported.apply(value);return;}
+  setModel(root){
+    this.clear();this.root=root;
+    if(!root?.userData.sdAppearance&&root?.getObjectByName('mixamorigHead')&&root?.getObjectByName('headfront')){
+      const box=new THREE.Box3().setFromObject(root),base=box.max.x-box.min.x>1.29?'male':'female';
+      const faceLayout=base==='male'
+        ?{foreheadLift:.095,eyeY:1.30,eyeFront:.320,eyeSpacing:.105,noseFront:.328,mouthY:1.095,mouthFront:.298,crownBulge:0}
+        :{foreheadLift:.125,eyeY:1.34,eyeFront:.249,eyeSpacing:.098,noseFront:.270,mouthY:1.160,mouthFront:.232,crownBulge:.055};
+      root.userData.sdAppearance={version:3,blank:true,base,headScale:base==='male'?1.32:1.24,hairDepth:base==='male'?-.070:-.050,...faceLayout};
+    }
+    if(root?.userData.sdAppearance?.blank){this.imported=new BlankAppearance(root.userData.sdAppearance);return this.imported.setModel(root);}
+    if(root?.userData.sdAppearance?.bald){this.imported=new BaldAppearance();return this.imported.setModel(root);}
+    if(root?.userData.sdAppearance){this.imported=new ImportedAppearance();return this.imported.setModel(root);}
+    return Boolean(root?.getObjectByName('Head_Face')&&root?.getObjectByName('Head'));
+  }
+  get supportedFields(){return this.imported?.supportedFields||null;}
+  filterOptions(field,entries){return this.imported?.filterOptions?this.imported.filterOptions(field,entries):entries;}
+  apply(value,fields=null){
+    if(this.imported){this.imported.apply(value,fields);return;}
     const style=PortraitCatalog.normalize(value);
-    if(!style||!this.root?.getObjectByName('Head_Face'))throw new Error('공통 SD 베이스에서 외형 조합을 사용할 수 있습니다.');
+    if(!style||!this.root?.getObjectByName('Head_Face'))throw new Error('怨듯넻 SD 踰좎씠?ㅼ뿉???명삎 議고빀???ъ슜?????덉뒿?덈떎.');
+    const requested=new Set(fields||Object.keys(PortraitCatalog.fields));
+    if(requested.size===1&&requested.has('hairColor')&&this.parts){
+      const tone=globalThis.HairColorCatalog?.find(c=>c.id===style.hairColor)||globalThis.HairColorCatalog?.[0];
+      this.parts.traverse(node=>{for(const material of [].concat(node.material||[])){
+        if(material.name==='Hair_Dark')material.color.set(tone.dark);
+        if(material.name==='Hair_Light')material.color.set(tone.light);
+      }});this.style=style;return;
+    }
     if(this.parts){this.parts.removeFromParent();disposeObject(this.parts);}
     if(!this.hidden.length)for(const name of ORIGINAL_PARTS){const node=this.root.getObjectByName(name);if(node){this.hidden.push([node,node.visible]);node.visible=false;}}
     const color=PortraitCatalog.skins.find(s=>s.id===style.skin).color;

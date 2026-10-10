@@ -41,7 +41,7 @@ function renderMonsterTable() {
       <td>${monster.defense}</td>
       <td>${monster.resistance}</td>
       <td>${monster.attackRange}</td>
-      <td>${escapeHtml(getRoleLabel(monster.role))}</td>
+      <td>${renderCategoryIcon("role", normalizeRole(monster.role), getRoleLabel(monster.role))}</td>
       <td>${(monster.skillIds ?? []).map(id => escapeHtml(getSkillById(id)?.name ?? "없는 스킬")).join(", ") || "없음"}</td>
       <td><button onclick="openMonsterModal(${index})">수정</button></td>
     </tr>

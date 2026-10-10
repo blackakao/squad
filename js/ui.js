@@ -270,6 +270,7 @@ const ST_PHYSICAL_ATTACK_COST = 10;
 const EXHAUSTED_MOVE_MULTIPLIER = 0.5;
 const EXHAUSTED_ATTACK_SPEED_MULTIPLIER = 0.7;
 const API_URLS = {
+  iconMappings: "/api/icon-mappings",
   monsters: "/api/monsters",
   characters: "/api/characters",
   factions: "/api/factions",
@@ -875,6 +876,7 @@ function normalizeCombatJson(items, defaults, nameKey) {
 }
 
 async function showPage(pageName) {
+  document.getElementById("iconPage").classList.toggle("hidden", pageName !== "icon");
   battlePageEl.classList.toggle("hidden", pageName !== "battle");
   monsterPageEl.classList.toggle("hidden", pageName !== "monster");
   characterPageEl.classList.toggle("hidden", pageName !== "character");
@@ -890,7 +892,9 @@ async function showPage(pageName) {
   layoutPageEl.classList.toggle("hidden", pageName !== "layout");
   logPageEl.classList.toggle("hidden", pageName !== "log");
 
-  if (pageName === "monster") {
+  if (pageName === "icon") {
+    await renderIconPage();
+  } else if (pageName === "monster") {
     await loadMonsterJson();
     enemySquad = [];
     refreshMonsterUI();

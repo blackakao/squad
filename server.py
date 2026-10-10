@@ -60,6 +60,29 @@ def slugify_asset_name(value):
     return slug or "image"
 
 
+def save_asset_image(asset_kind, image_bytes, name, ext):
+    target_dir = ASSET_IMAGE_DIRS[asset_kind]
+    target_dir.mkdir(parents=True, exist_ok=True)
+    if asset_kind == "generated":
+        # Preserve Unicode names, but never allow paths or Windows reserved names.
+        stem = re.sub(r'[<>:"/\\|?*\x00-\x1f]', '-', str(name or 'image')).strip(' .')
+        stem = re.sub(r'\.(png|jpe?g|webp|gif)$', '', stem, flags=re.IGNORECASE).strip(' .')[:100] or 'image'
+        if re.fullmatch(r'(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(?:\..*)?', stem, re.IGNORECASE):
+            stem = '_' + stem
+    else:
+        stem = slugify_asset_name(name) + '-' + datetime.now().strftime('%Y%m%d%H%M%S%f')
+    number = 1
+    while True:
+        suffix = '' if number == 1 else f'-{number}'
+        file_path = target_dir / f'{stem}{suffix}.{ext}'
+        try:
+            with file_path.open('xb') as output:
+                output.write(image_bytes)
+            return file_path
+        except FileExistsError:
+            number += 1
+
+
 class BattleHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(ROOT), **kwargs)
@@ -244,11 +267,7 @@ class BattleHandler(SimpleHTTPRequestHandler):
             if not ext:
                 raise ValueError(f"unsupported image content type: {content_type}")
 
-            target_dir.mkdir(parents=True, exist_ok=True)
-            stem = slugify_asset_name(body.get("name"))
-            timestamp = datetime.now().strftime("%Y%m%d%H%M%S%f")
-            file_path = target_dir / f"{stem}-{timestamp}.{ext}"
-            file_path.write_bytes(image_bytes)
+            file_path = save_asset_image(asset_kind, image_bytes, body.get("name"), ext)
 
             relative_path = file_path.relative_to(ROOT).as_posix()
             server_log(f"POST {path} saved {relative_path}")
@@ -336,11 +355,7 @@ class BattleHandler(SimpleHTTPRequestHandler):
             if not image_bytes:
                 raise ValueError("image payload is empty")
 
-            target_dir.mkdir(parents=True, exist_ok=True)
-            stem = slugify_asset_name(body.get("name"))
-            timestamp = datetime.now().strftime("%Y%m%d%H%M%S%f")
-            file_path = target_dir / f"{stem}-{timestamp}.{ext}"
-            file_path.write_bytes(image_bytes)
+            file_path = save_asset_image(asset_kind, image_bytes, body.get("name"), ext)
 
             relative_path = file_path.relative_to(ROOT).as_posix()
             server_log(f"POST {path} saved {relative_path}")

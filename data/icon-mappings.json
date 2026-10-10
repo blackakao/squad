@@ -1,0 +1,146 @@
+[
+  {
+    "group": "role",
+    "key": "tank",
+    "label": "",
+    "icon": "assets/images/icons/role-tank-20261005225208415794.png"
+  },
+  {
+    "group": "role",
+    "key": "melee",
+    "label": "",
+    "icon": "assets/images/icons/role-melee-20261005225215793340.png"
+  },
+  {
+    "group": "role",
+    "key": "ranged",
+    "label": "",
+    "icon": "assets/images/icons/role-ranged-20261005225220354508.png"
+  },
+  {
+    "group": "role",
+    "key": "healer",
+    "label": "",
+    "icon": "assets/images/icons/role-healer-20261005225224539731.png"
+  },
+  {
+    "group": "armor",
+    "key": "plate",
+    "label": "",
+    "icon": "assets/images/icons/armor-plate-20261005233516471014.png"
+  },
+  {
+    "group": "armor",
+    "key": "chain",
+    "label": "",
+    "icon": "assets/images/icons/armor-chain-20261005233523298833.png"
+  },
+  {
+    "group": "armor",
+    "key": "leather",
+    "label": "",
+    "icon": "assets/images/icons/armor-leather-20261005233528783010.png"
+  },
+  {
+    "group": "armor",
+    "key": "cloth",
+    "label": "",
+    "icon": "assets/images/icons/armor-cloth-20261005233534115692.png"
+  },
+  {
+    "group": "weapon",
+    "key": "bow",
+    "label": "",
+    "icon": "assets/images/icons/weapon-bow-20261005233543570677.png"
+  },
+  {
+    "group": "weapon",
+    "key": "oneHandSword",
+    "label": "",
+    "icon": "assets/images/icons/weapon-onehandsword-20261005233551760994.png"
+  },
+  {
+    "group": "weapon",
+    "key": "oneHandMace",
+    "label": "",
+    "icon": "assets/images/icons/weapon-onehandmace-20261005234239207447.png"
+  },
+  {
+    "group": "weapon",
+    "key": "twoHandMace",
+    "label": "",
+    "icon": "assets/images/icons/weapon-twohandmace-20261005234329071697.png"
+  },
+  {
+    "group": "weapon",
+    "key": "staff",
+    "label": "",
+    "icon": "assets/images/icons/weapon-staff-20261005234336895496.png"
+  },
+  {
+    "group": "weapon",
+    "key": "방패",
+    "label": "",
+    "icon": "assets/images/icons/weapon-20261005234350855655.png"
+  },
+  {
+    "group": "weapon",
+    "key": "치유서",
+    "label": "",
+    "icon": "assets/images/icons/weapon-20261005234358324923.png"
+  },
+  {
+    "group": "weapon",
+    "key": "주먹구",
+    "label": "",
+    "icon": "assets/images/icons/weapon-20261005234404128404.png"
+  },
+  {
+    "group": "weapon",
+    "key": "gun",
+    "label": "",
+    "icon": "assets/images/icons/weapon-gun-20261005234509864429.png"
+  },
+  {
+    "group": "role",
+    "key": "special",
+    "label": "",
+    "icon": "assets/images/icons/role-special-20261005235146745497.png"
+  },
+  {
+    "group": "faction",
+    "key": "쥬신",
+    "label": "",
+    "icon": "assets/images/icons/faction-20261006000754296232.png"
+  },
+  {
+    "group": "faction",
+    "key": "프라가",
+    "label": "",
+    "icon": "assets/images/icons/faction-20261006000811889733.png"
+  },
+  {
+    "group": "faction",
+    "key": "누레아",
+    "label": "",
+    "icon": "assets/images/icons/faction-20261006000822215177.png"
+  },
+  {
+    "group": "faction",
+    "key": "철엘프",
+    "label": "",
+    "icon": "assets/images/icons/faction-20261006000831616327.png"
+  },
+  {
+    "group": "faction",
+    "key": "신성교단",
+    "label": "",
+    "icon": "assets/images/icons/faction-20261006001025198490.png"
+  },
+  {
+    "group": "faction",
+    "key": "제3지대",
+    "label": "",
+    "icon": "assets/images/icons/faction--3-20261007223237195083.png"
+  }
+]

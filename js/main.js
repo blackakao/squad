@@ -6,6 +6,7 @@ async function initApp() {
     loadLayoutSettings();
     log("앱 초기화를 시작합니다.", "main");
     await Promise.all([
+      loadIconMappings(),
       loadMonsterJson(),
       loadFactionJson(),
       loadBattleRecordsJson(),

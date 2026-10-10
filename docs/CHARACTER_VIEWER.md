@@ -1,5 +1,14 @@
 # CharacterViewer / SD 인간형 3D 기반
 
+## 블랭크 헤어 20종 제작 규칙 (2026-10-10)
+
+- 외부 실루엣은 `CrownHair`, `FrontHair`, `SideHair`, `BackHair`, `StyleParts`가 담당합니다.
+- 블랭크 20종은 외부 실루엣용 `InternalScalpCover`와 공통 `Hairline` 타원체를 사용하지 않습니다.
+- 각 스타일은 전용 `CrownHair_<id>`가 Head 곡면을 얇게 따라가며, front/side/back 종료각과 crown 굴곡·평탄도·방향성을 catalog profile로 가집니다.
+- 단발·장발·포니테일·트윈테일·번·땋은 머리 등은 연속 Crown 위에 필요한 `FrontHair`/`SideHair`/`BackHair`/style part만 추가합니다.
+- 투구 partial 모드에서는 Crown 역할만 숨기고 Side/Back/포니테일 계열은 유지합니다.
+- 생성 코드는 공유하지만 20종 profile은 모두 별도이며, 실제 WebGL 6방향 렌더로 각각 검증합니다.
+
 ## 현재 프로젝트와 변경 범위
 
 이 프로젝트는 HTML/CSS/일반 JavaScript와 Python `SimpleHTTPRequestHandler` 기반 앱이다. `package.json`, npm dependency, `src/`, `public/`, 빌드·lint·typecheck 설정은 없다. 기존 UI는 Bootstrap 5.3.3, 이미지 생성 화면은 Puter.js를 외부 스크립트로 사용한다. 현재 로컬 Three.js와 SD GLB 모델을 포함하며 [공통 베이스](SD_BASE_MODEL.md), [외형 조합](PORTRAIT_COMPOSER.md), [외부 모델](IMPORTED_SD_MODELS.md) 문서가 후속 확장을 설명한다.
@@ -23,7 +32,7 @@ python server.py
 
 브라우저에서 `http://127.0.0.1:8000/character-viewer.html`을 연다. 사용자 지정 `PORT`를 사용하면 주소의 포트도 바꾼다. `file://`로 직접 열지 않는다. WebGL2와 import map을 지원하는 최신 브라우저가 필요하다.
 
-모델 경로 없이 열면 빈 공간과 그리드가 정상 초기 상태이다. 이후 제작한 [공통 SD 베이스 v1](../assets/characters/base/human_sd_base_v1.glb)은 `?model=assets/characters/base/human_sd_base_v1.glb`를 붙여 확인한다. [제작·보정 안내](SD_BASE_MODEL.md)를 참고한다. 레퍼런스 PNG 자체를 자동으로 3D 변환한 모델은 아니다.
+모델 경로 없이 열면 빈 공간과 그리드가 정상 초기 상태이다. 빠른 선택에는 외형 제작 기준인 남성 블랭크와 여성 블랭크만 표시한다. 기존 공통/대머리/외형 기준 GLB는 테스트와 이전 직접 링크 호환 때문에 파일을 유지하며, 필요한 경우 URL 입력란에서 경로로 직접 불러올 수 있다. [제작·보정 안내](SD_BASE_MODEL.md)를 참고한다.
 
 **서버 경로:** 예를 들어 직접 제작한 `human_sd_test.glb`를 [assets/characters/models](../assets/characters/models/)에 추가하고 입력란에 `assets/characters/models/human_sd_test.glb`를 입력한 뒤 불러온다. 이 파일명은 예시이며 실제 파일이 포함되어 있지 않다. 임의의 GLB/glTF 경로를 사용할 수 있다.
 
@@ -77,7 +86,9 @@ Root
       └ Foot_R
 ```
 
-`Weapon_R` → `Hand_R`, `Weapon_L` → `Hand_L`, `Head_Attachment` → `Head`, `Back_Attachment` → `Chest` 아래의 export되는 Bone/Node로 제작하는 방향을 권장한다. 장착 노드의 로컬 축과 원점을 통일한다. `CharacterViewer.getAttachmentPoint(name)`은 실제 모델의 노드 또는 `null`을 반환한다. [장비 미리보기](SD_BASE_MODEL.md#장착-장비-미리보기)는 이 노드에 무기 GLB를 장착하며 장비 리소스를 별도로 소유한다. 모델의 unloading 알림에서 먼저 장비를 해제한 뒤 본체를 정리한다.
+`Weapon_R` → `Hand_R`, `Weapon_L` → `Hand_L`, `Head_Attachment` → `Head`, `Back_Attachment` → `Chest` 아래의 export되는 Bone/Node로 제작하는 방향을 권장한다. 장착 노드의 로컬 축과 원점을 통일한다. `CharacterViewer.getAttachmentPoint(name)`은 실제 모델의 노드 또는 `null`을 반환한다. [장비 테스트](SD_BASE_MODEL.md#장착-장비-미리보기)는 모델에 소켓이 있으면 이를 사용하고, 블랭크 Mixamo 모델처럼 소켓이 없으면 Head·Spine2·양손·양발 본 아래에 모델 축 기준 Anchor를 생성한다. 모델의 unloading 알림에서 장비 인스턴스를 먼저 해제한 뒤 본체를 정리한다.
+
+장비 상태는 `head`, `body`, `hands`, `feet`, `mainHand`, `offHand` 여섯 슬롯이다. 카탈로그 항목은 `id`, `slot`, `mounts`, `transform`, 그리고 코드 생성용 `create` 또는 향후 GLB용 `url`을 가진다. rigid GLB는 Y-up, 캐릭터 정면 +Z, 무기 손잡이 중심을 원점으로 export하고 길이 방향은 +Y를 기준으로 한다. 장비별 위치·회전·배율은 카탈로그 `transform`에 기록하며 모델을 직접 변형하지 않는다.
 
 얼굴·피부는 재질/텍스처 variant, 머리·의상은 같은 rig에 맞춘 교체 가능한 skinned mesh, 무기·장식은 attachment node를 중심으로 설계한다. 임의의 mesh를 붙이는 것만으로 의상의 skin binding이 자동 호환되지는 않는다.
 
@@ -119,7 +130,7 @@ assets/
 
 ## 지원 범위와 다음 단계
 
-무기·상의 교체는 [공통 베이스 장비 미리보기](SD_BASE_MODEL.md#장착-장비-미리보기)로 지원한다. 현재 미지원: 자동 retargeting, 외부 공통 애니메이션 적용, 얼굴·범용 skinned 의상 교체, morph target 편집 UI, root-motion 추출, 애니메이션 블렌드·전투 연동, 뷰어 안에서 모델 제작/변환/저장, 폴더 모델 자동 검색, Draco/Meshopt/KTX2 디코더. 압축 모델은 비압축 glTF 2.0으로 export해서 확인한다.
+저폴리 rigid 장비 조합은 [공통 베이스 장비 미리보기](SD_BASE_MODEL.md#장착-장비-미리보기)로 지원한다. 현재 미지원: 정식 skinned 갑옷/신발, 양손 IK, 자동 retargeting, 외부 공통 애니메이션 적용, morph target 편집 UI, root-motion 추출, 애니메이션 블렌드·전투 연동, 뷰어 안에서 모델 제작/변환/저장, 폴더 모델 자동 검색, Draco/Meshopt/KTX2 디코더. 압축 모델은 비압축 glTF 2.0으로 export해서 확인한다.
 
 다음 순서 권장:
 
@@ -154,3 +165,33 @@ git diff --check
 - 기존 게임 페이지의 Canvas 2D 초기화, 캐릭터 9개·몬스터 6개 로딩 및 오류 로그 없음 확인. 기존 게임에서 CharacterViewer 스크립트가 로드되지 않음을 확인. 전투 결과 저장처럼 사용자 데이터를 변경하는 동작은 이번 검증에서 실행하지 않았다.
 
 모든 테스트 모델은 브라우저 메모리에 생성한 최소 형상·본·클립을 사용했다. 실제 SD 캐릭터 파일이나 사용자 데이터에 테스트 애셋을 저장하지 않았다. 실제 인간형 변형 품질과 최종 성능 검증을 대체하지 않는다. 별도 npm build/lint/typecheck 설정은 추가하지 않았다.
+
+
+## 장비 외형 override와 pose profile
+
+테스트 장비 catalog는 `fitProfile`, `appearanceOverride`, `poseProfile`을 지원합니다. 테스트 투구는 `hairMode: partial`로 두상 안쪽 cap/front만 숨기고 아래쪽 side/back/style 파츠를 유지합니다. 선택 머리 상태는 바꾸지 않으므로 해제하면 전체 머리가 복원됩니다. 갑옷과 부츠는 남녀 체형별 치수를 사용합니다.
+
+장비 pose는 AnimationMixer 결과 뒤에 합성하고 다음 프레임 전에 이전 보정을 되돌립니다. 검/창에는 제한적 grip만 적용합니다. 방패는 팔을 강제로 꺾지 않고 왼손 아래 `ShieldGripAnchor`의 외측 transform을 사용합니다. 현재 블랭크 GLB는 몸과 발이 하나의 SkinnedMesh이고 완전한 손가락 체인이 없으므로, 발의 실제 body mask와 완전한 grip은 지원하지 않습니다. 정식 장비는 공통 Skeleton, 분리 가능한 body material/mesh 영역, finger bone chain을 포함해야 합니다.
+
+### 장비 피복 단위
+
+테스트 투구는 `partial` hair override를 사용합니다. HairCap·Hairline·FrontHair와 상단 bun은 숨기고 SideHair·BackHair·wave·braid·ponytail은 유지합니다. 투구 해제 시 저장한 외형을 재생성하지 않고 각 파츠의 기존 visibility를 복원합니다.
+
+테스트 갑옷은 Front/Side/Back과 허리·어깨의 rigid part로 구성되며, 테스트 부츠는 ankle/instep/toe/heel 외피로 발 전체를 덮습니다. 방패는 팔 animation을 변경하지 않고 LeftHand 아래 `ShieldGripAnchor`에 장착합니다. 이 구조는 장착 표현 검증용이며, 실제 게임용 갑옷은 공통 Skeleton에 skinning된 GLB가 필요합니다.
+
+### 복장 세트와 분절 본 추적
+
+`body` 슬롯은 플레이트, 사슬갑옷, 가죽갑옷, 판타지 천옷, 턱시도, 셔츠+청바지 여섯 세트를 선택합니다. 플레이트에는 허리와 좌우 상부 다리 보호대를 추가했고, 신규 다섯 세트는 몸통·허리·소매·바지를 서로 다른 저폴리 실루엣과 재질로 구성합니다. 복장 교체는 `body` 슬롯만 바꾸므로 투구·장갑·부츠·주무기·보조무기를 유지합니다.
+
+현재 런타임 프로토타입은 캐릭터 Skeleton의 `Spine2`, `Hips`, 좌우 `Arm/ForeArm`, 좌우 `UpLeg/Leg`에 개별 복장 구간을 rigid attach합니다. 소매와 바지는 각 본을 직접 따라가며 팔꿈치·무릎 시작부에 작은 관절 커버를 겹칩니다. 이는 고정 몸통 한 개보다 애니메이션 추적이 정확하지만 연속적으로 휘는 SkinnedMesh는 아닙니다. 실제 GLB 복장은 동일 origin·scale·T-pose·bone naming·bind matrices를 사용하고, 팔꿈치와 무릎 vertex에 인접한 두 본의 혼합 weight를 주어야 합니다. 남녀는 공통 정의와 별도 fit profile 또는 체형별 geometry variant를 사용합니다.
+
+2026-10-10부터 몸통은 단순 Box/Sphere 대신 목·어깨·가슴·허리·골반의 타원 ring을 연결한 fitted shell을 사용합니다. 턱시도는 shell 위에 셔츠·lapel·bow를, 플레이트는 shell 위에 흉부/허리 band를 둡니다. 로브 하단은 Front/Back/Left/Right 네 패널로 종아리까지 내려오며 cloth simulation은 하지 않습니다. 이 런타임 geometry는 조합·리깅 검증용이고 실제 게임용 복장은 SkinnedMesh GLB로 교체해야 합니다.
+# HairCap, 하의 및 복장 팔레트 보정 (2026-10-10)
+
+공통 두피 가림 Mesh는 `InternalScalpCover`라는 내부 레이어로만 사용합니다. 외부 실루엣은 각 헤어 스타일의 FrontHair, Crown, SideHair, BackHair, StyleParts가 담당합니다. 투구의 부분 숨김 규칙도 이 이름을 cap 영역으로 인식합니다.
+
+복장 하의는 남녀 체형별 waist/hip ring을 연결한 fitted shell을 사용합니다. 로브는 Hips에 붙는 짧은 Front/Back/Side 허리 패널과 좌우 UpperLeg에 붙는 Front/Back 패널로 나뉩니다. 현재 구현은 개발용 rigid segmented 방식이며 cloth simulation이나 연속 bone weight skinning은 지원하지 않습니다.
+
+복장 색상은 스타일과 별도인 `outfitColor`로 저장됩니다. 기본색, 검정, 흰색, 회색, 갈색, 네이비, 빨강, 초록의 8개 팔레트를 제공하며 `primary`, `secondary`, `trim` material role에 적용합니다. 색상 변경 시 기존 Mesh와 BufferGeometry를 유지하고 Material 색상만 바꿉니다. 이전 저장 데이터에 `outfitColor`가 없으면 기본색을 사용합니다.
+
+기술 검증에서 여성 단발·긴 머리·포니테일의 모든 파츠가 유효한 geometry와 matrix를 유지했고, 8색 연속 변경 전후 Mesh/Geometry UUID가 동일했습니다. Walking/Running은 각 8구간에서 로브 22개 파츠의 행렬이 유효했습니다. WebGL 캔버스 캡처 제약으로 다각도 외관과 실제 clipping에 대한 최종 시각 판정은 별도 검수가 필요합니다.

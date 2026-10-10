@@ -999,7 +999,7 @@ function renderSkillPage() {
     <tr>
       <td><input type="checkbox" class="skill-check" value="${index}" ${isDefaultSkill(skill.id) ? "disabled" : ""}></td>
       <td>${escapeHtml(skill.name)}</td>
-      <td>${escapeHtml(getSkillSlotLabel(skill.slot))}</td>
+      <td>${renderCategoryIcon("skill", skill.slot, getSkillSlotLabel(skill.slot))}</td>
       <td>${skill.cooldown}<br>${skill.slot === "passive" ? `패시브 · ${escapeHtml(PASSIVE_TRIGGER_LABELS[skill.passiveTrigger?.event] ?? "조건 미설정")} · ${skill.passiveTrigger?.chance ?? 100}%` : `시전 ${skill.castTime == null ? "유닛 기준" : `${skill.castTime}초`}${skill.channel?.duration > 0 ? `<br>채널링 ${skill.channel.duration}초 · ${skill.channel.interval}초 간격` : ""}`}</td>
       <td class="skill-description" title="${escapeHtml(getSkillDescription(skill))}">${escapeHtml(summarizeSkillDescription(skill))}
         ${!isSkillExecutable(skill) ? `<div class="skill-support-warning">전투 사용 불가 · ${skill.slot === "passive" && !isPassiveTriggerConfigured(skill) ? "패시브 조건 설정 필요" : `미지원: ${escapeHtml(getUnsupportedActionNames(skill).join(", "))}`}</div>` : ""}
@@ -1020,6 +1020,8 @@ function openSkillModal(index = "") {
   skillCastTimeEl.value = skill?.castTime ?? "";
   renderPassiveTriggerForm(skill);
   renderSkillChannelForm(skill);
+  const channelDisclosure = document.getElementById("skillChannelDisclosure");
+  if (channelDisclosure) channelDisclosure.open = Number(skill?.channel?.duration ?? 0) > 0;
   renderSkillResourceCostsToForm(skill?.resourceCosts ?? normalizeSkillResourceCosts(skill));
   renderSkillActionRows(skill?.actions ?? [createDefaultAction()]);
   skillModalEl.classList.remove("hidden");
@@ -1044,36 +1046,38 @@ function renderSkillActionRow(action, index) {
     const options = action.type === "move"
       ? `<option value="unsupported_move" selected disabled>${escapeHtml(getUnsupportedActionNames({actions:[action]})[0])} · 미지원 (잠금)</option>${renderActionTypeOptions("")}`
       : renderActionTypeOptions(action.type);
-    return `<div class="skill-action-row" data-action-index="${index}" data-unsupported-action="${escapeHtml(JSON.stringify(action))}">
-      <label class="skill-action-field"><span>액션 종류</span><select class="skill-action-type" onchange="renderSkillActionRows(readSkillActionsFromForm())">${options}</select></label>
+    return `<div class="skill-action-row skill-action-row-unsupported" data-action-index="${index}" data-unsupported-action="${escapeHtml(JSON.stringify(action))}">
+      <div class="skill-action-card-header"><div><span>ACTION ${index + 1}</span><strong>지원되지 않는 액션</strong></div><button type="button" onclick="removeSkillActionRow(this)">삭제</button></div>
+      <label class="skill-action-field skill-action-type-field"><span>액션 종류</span><select class="skill-action-type" onchange="renderSkillActionRows(readSkillActionsFromForm())">${options}</select></label>
       <div class="skill-support-warning">미지원 액션이거나 효과 설정이 누락되었습니다. 원본 데이터는 보존되지만 이 스킬 전체는 전투에서 사용하지 않습니다. 저장하려면 지원 설정으로 바꾸거나 삭제하세요.</div>
       ${TIMED_EFFECT_ACTIONS.includes(action.type) ? '<button type="button" onclick="replaceMissingEffectAction(this)">기본 효과 설정으로 교체</button>' : ""}
-      <button type="button" onclick="removeSkillActionRow(this)">삭제</button>
     </div>`;
   }
   const targetOptions = getActionTargetsForType(action.type);
   return `
     <div class="skill-action-row" data-action-index="${index}">
-      <label class="skill-action-field">
+      <div class="skill-action-card-header">
+        <div><span>ACTION ${index + 1}</span><strong>액션 설정</strong></div>
+        <button type="button" onclick="removeSkillActionRow(this)">삭제</button>
+      </div>
+      <label class="skill-action-field skill-action-type-field">
         <span>액션 종류</span>
         <select class="skill-action-type" onchange="changeSkillActionType(this)">
           ${renderActionTypeOptions(action.type)}
         </select>
       </label>
-      <label class="skill-action-field">
+      <label class="skill-action-field skill-action-target-field">
         <span>대상 (액션별 선택)</span>
         <select class="skill-action-target">
           ${targetOptions.map(target => `<option value="${target}" ${target === action.target ? "selected" : ""}>${ACTION_TARGET_LABELS[target] ?? target}</option>`).join("")}
         </select>
         <small>각 액션의 사거리 안에서 대상을 찾습니다. 회복은 해당 자원이 부족한 대상을 우선합니다.</small>
       </label>
-      <label class="skill-action-field">
-        <span>대상 HP 이하 (%) · 100: 제한 없음</span>
-        <input class="skill-action-target-hp" type="number" min="0" max="100" step="1" value="${action.targetHpBelow ?? 100}">
-        <span>대상별 쿨타임 (초) · 0: 제한 없음</span>
-        <input class="skill-action-target-cooldown" type="number" min="0" step="0.1" value="${action.targetCooldown ?? 0}">
+      <div class="skill-action-condition-field">
+        <label class="skill-action-field"><span>대상 HP 이하 (%) · 100: 제한 없음</span><input class="skill-action-target-hp" type="number" min="0" max="100" step="1" value="${action.targetHpBelow ?? 100}"></label>
+        <label class="skill-action-field"><span>대상별 쿨타임 (초) · 0: 제한 없음</span><input class="skill-action-target-cooldown" type="number" min="0" step="0.1" value="${action.targetCooldown ?? 0}"></label>
         <small>동일 시전자의 같은 스킬·액션 기준입니다. 효과 적용 시 쿨타임을 시작하며, 광역·연쇄도 각 대상을 검사합니다.</small>
-      </label>
+      </div>
       <label class="skill-action-field" data-action-field="damageType">
         <span>피해 타입</span>
         <select class="skill-action-damage-type">
@@ -1171,7 +1175,6 @@ function renderSkillActionRow(action, index) {
       ${renderRuleOverrideActionArea(action)}
       ${renderTimedEffectFields(action.type === "create_field" ? {...action,type:action.fieldEffect,duration:action.fieldEffectDuration} : action)}
       ${renderEntityActionArea(action)}
-      <button type="button" onclick="removeSkillActionRow(this)">삭제</button>
     </div>
   `;
 }
