@@ -47,7 +47,7 @@ function handlePassiveBattleEvent(event, context) {
   if (!owner?.alive || owner.isEntityPreview) return;
   if (triggerType === "kill" && (!context.target || context.target.side === owner.side || event.reason !== "HP 소진")) return;
   const preferred = event.type === "damaged" ? context.source : context.target;
-  const skills = [...new Set(owner.skillIds ?? [])].map(getSkillById).filter(skill => skill?.slot === "passive" && isSkillExecutable(skill) && !isUnitSkillDisabled(owner,skill));
+  const skills = [...new Set(owner.skillIds ?? [])].map(getSkillById).filter(skill => skill?.slot === "passive" && isSkillExecutable(skill) && !isUnitSkillDisabled(owner,skill)).map(skill => getRuntimeItemSkill(owner,skill));
   for (const skill of skills) {
     if (!owner.alive) break;
     const trigger = skill.passiveTrigger;

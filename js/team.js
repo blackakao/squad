@@ -160,6 +160,7 @@ function renderTeamList() {
 }
 
 function renderTeamEditor() {
+  if (typeof renderTeamSynergyPreview === "function") renderTeamSynergyPreview();
   const team = getSelectedTeam();
 
   if (!team) {
@@ -376,8 +377,10 @@ async function saveSelectedTeam() {
 function createSquadFromCharacterIds(ids, side = "player", activeMemberCount = null) {
   const uniqueIds = [...new Set(ids)].filter(id => characterJson[id]).slice(0, MAX_PLAYER_SQUAD);
   const activeLimit = Math.max(1, Math.min(uniqueIds.length || 1, Math.floor(Number(activeMemberCount) || uniqueIds.length || 1)));
+  const evaluation = typeof evaluateSynergies === "function" ? evaluateSynergies(uniqueIds.map(id => characterJson[id])) : null;
   return uniqueIds.map((id, index) => {
-    const unit = createCharacter(characterJson[id], id, side);
+    const unit = createCharacter(characterJson[id], id, side, evaluation?.modifiers[index]);
+    unit.synergySources = evaluation?.sources[index] || [];
     unit.startsInReserve = index >= activeLimit;
     unit.squadActiveLimit = activeLimit;
     unit.reserveOrder = index;

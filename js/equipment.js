@@ -137,7 +137,7 @@ function applyWeaponCategoryStats(item) {
 
 function normalizeItemJson(items) {
   const defaults = createDefaultItemJson();
-  if (!Array.isArray(items) || items.length === 0) {
+  if (!Array.isArray(items)) {
     return defaults;
   }
 
@@ -158,6 +158,8 @@ function normalizeItemJson(items) {
       attackType: String(item.attackType ?? ""),
       attackSkillId: String(item.attackSkillId ?? ""),
       armorCategory: String(item.armorCategory ?? getDefaultArmorCategory(item)),
+      ...(Object.keys(normalizeItemStatModifiers(item.statModifiers)).length ? {statModifiers:normalizeItemStatModifiers(item.statModifiers)} : {}),
+      ...(normalizeItemSkillModifiers(item.skillModifiers).length ? {skillModifiers:normalizeItemSkillModifiers(item.skillModifiers)} : {}),
       ...stats
     };
   }).filter(item => item.name && validSlots.includes(item.slot))
@@ -191,7 +193,7 @@ function normalizeItemJson(items) {
     })
     .filter(item => !isWeaponItem(item) || item.weaponCategory);
 
-  return normalized.length ? normalized : defaults;
+  return normalized;
 }
 
 async function loadItemJson() {
@@ -225,13 +227,13 @@ async function loadItemJson() {
 }
 
 async function saveItemJson() {
-  localStorage.setItem(ITEM_STORAGE_KEY, JSON.stringify(itemsJson));
-
   try {
     await saveJsonFile("items", itemsJson);
+    localStorage.setItem(ITEM_STORAGE_KEY, JSON.stringify(itemsJson));
     log("아이템 데이터가 API와 브라우저 저장소에 저장되었습니다.", "item");
   } catch (error) {
-    logError("item", "아이템 API 저장에 실패해 브라우저 저장소에만 저장했습니다.", error);
+    logError("item", "아이템 API 저장에 실패했습니다.", error);
+    throw error;
   }
 }
 
@@ -253,27 +255,6 @@ function initEquipmentFilters() {
     equipmentItemSlotFilterEl.innerHTML = getSlotOptionsHtml();
     equipmentItemSlotFilterEl.value = selectedEquipmentItemSlotFilter;
   }
-}
-
-function normalizeItemFormActions() {
-  if (!itemFormEl || itemFormEl.dataset.actionsNormalized === "true") {
-    return;
-  }
-
-  itemFormEl.querySelectorAll("button").forEach(button => button.remove());
-
-  const saveButton = document.createElement("button");
-  saveButton.type = "submit";
-  saveButton.textContent = "저장";
-
-  const cancelButton = document.createElement("button");
-  cancelButton.type = "button";
-  cancelButton.textContent = "취소";
-  cancelButton.onclick = closeItemModal;
-
-  itemFormEl.appendChild(saveButton);
-  itemFormEl.appendChild(cancelButton);
-  itemFormEl.dataset.actionsNormalized = "true";
 }
 
 function syncItemWeaponFields() {
@@ -356,7 +337,7 @@ function formatSignedValue(value) {
 
 function getItemStatSummary(item) {
   const weaponSummary = isWeaponItem(item)
-    ? [`무기 카테고리 ${getWeaponCategoryLabel(item.weaponCategory)}`, `착용 방식 ${getHandTypeLabel(item.handType)}`, `착용 가능 슬롯 ${getWeaponSlotTypeLabel(getWeaponCategory(item.weaponCategory)?.slotType)}`, `공격 타입 ${getWeaponAttackTypeLabel(getWeaponCategory(item.weaponCategory)?.attackType)}`, `공격 스킬 ${getSkillById(item.attackSkillId)?.name ?? "기본 공격"}`]
+    ? [`무기 카테고리 ${getWeaponCategoryLabel(item.weaponCategory)}`, `착용 방식 ${getHandTypeLabel(item.handType)}`, `착용 가능 슬롯 ${getWeaponSlotTypeLabel(getWeaponCategory(item.weaponCategory)?.slotType)}`, `공격 타입 ${getWeaponAttackTypeLabel(getWeaponCategory(item.weaponCategory)?.attackType)}`, `작동스킬 ${getSkillById(item.attackSkillId)?.name ?? "기본 공격"}`]
     : [];
   const armorSummary = isArmorSlot(item.slot)
     ? [`방어구 카테고리 ${getArmorCategoryLabel(item.armorCategory)}`]
@@ -365,7 +346,8 @@ function getItemStatSummary(item) {
     .map(([label, key]) => Number(item[key]) ? `${label} ${formatSignedValue(item[key])}` : "")
     .filter(Boolean);
 
-  return [...weaponSummary, ...armorSummary, ...statSummary].join("\n") || "능력치 없음";
+  const modifierSummary = getItemExtraDetails({...item,...Object.fromEntries(ITEM_SECONDARY_STATS.map(([,key])=>[key,0]))});
+  return [...weaponSummary, ...armorSummary, ...statSummary, ...modifierSummary].join("\n") || "능력치 없음";
 }
 
 function getFilteredItems(slotFilter) {
@@ -411,6 +393,7 @@ function renderAbilityTable(baseCharacter, equippedCharacter) {
 }
 
 function renderEquipmentPage() {
+  endEquipmentDrag();
   if (!characterJson.length) {
     selectedEquipmentCharacterIndex = "";
   } else if (selectedEquipmentCharacterIndex === "" || !characterJson[selectedEquipmentCharacterIndex]) {
@@ -437,6 +420,50 @@ function renderEquipmentCharacterButtons() {
   `).join("");
 }
 
+let selectedInventoryItemId = "";
+let equipmentDragState = null;
+
+function equipmentItemIcon(item, slotKey = "") {
+  const group = item?.weaponCategory ? "weapon" : item?.armorCategory ? "armor" : "slot";
+  const key = item?.weaponCategory || item?.armorCategory || item?.slot || slotKey;
+  const label = group === "weapon" ? getWeaponCategoryLabel(key) : group === "armor" ? getArmorCategoryLabel(key) : getSlotLabel(key);
+  return `<span class="equipment-icon">${renderCategoryIcon(group, key, label)}</span>`;
+}
+
+// Match the existing equipment bonus policy: a two-handed item is counted once.
+function getCharacterModifierItems(character) {
+  const seen = new Set();
+  return getCharacterEquipmentSlots(character).flatMap(slot => {
+    const item = getItemById(character?.equipment?.[slot.key]);
+    if (!item) return [];
+    if (isWeaponItem(item) && item.handType === "twoHand") {
+      if (seen.has(item.id)) return [];
+      seen.add(item.id);
+    }
+    return [item];
+  });
+}
+
+function normalizeItemStatModifiers(source = {}) {
+  return Object.fromEntries(CHARACTER_STAT_DEFS.flatMap(({key}) => {
+    const value = Number(source?.[key]);
+    return Number.isFinite(value) && value !== 0 ? [[key, value]] : [];
+  }));
+}
+
+function getCharacterEffectiveAttributes(character) {
+  const attributes = createCharacterAttributes(character.attributes);
+  const items = getCharacterModifierItems(character);
+  for (const {key} of CHARACTER_STAT_DEFS) {
+    attributes[key] = Math.max(0, attributes[key] + (Number(character.runtimeSynergyModifiers?.[key]) || 0) + items.reduce((sum, item) => sum + (Number(item.statModifiers?.[key]) || 0), 0));
+  }
+  return attributes;
+}
+
+function getCharacterItemSkillModifiers(character) {
+  return getCharacterModifierItems(character).flatMap(item => normalizeItemSkillModifiers(item.skillModifiers));
+}
+
 function renderEquipmentSlots() {
   const character = characterJson[selectedEquipmentCharacterIndex];
   if (!character) {
@@ -449,12 +476,15 @@ function renderEquipmentSlots() {
   equipmentSlotGridEl.innerHTML = `<div class="equipment-rule-summary">추가 무기 ${rules.extraWeaponSlots}칸 · 양손 무기 ${rules.twoHandSingleSlot ? "단일 슬롯" : "두 슬롯 점유"} · 집중 감산 ${rules.sameTargetWeaponPenaltyPercent}%</div>` + getCharacterEquipmentSlots(character).map(slot => {
     const item = getItemById(equipment[slot.key]);
     return `
-      <div class="equipment-slot" ondragover="allowEquipmentDrop(event)" ondrop="dropEquipmentItem(event, '${slot.key}')">
+      <div class="equipment-slot ${item ? "occupied" : ""}" data-slot="${slot.key}" ondragover="allowEquipmentDrop(event)" ondragleave="this.classList.remove('drop-hover')" ondrop="dropEquipmentItem(event, '${slot.key}')">
         <div class="equipment-slot-title">${renderCategoryIcon("slot", slot.key, slot.label)}</div>
+        <button type="button" class="equipment-slot-target" aria-label="${escapeHtml(slot.label)}: ${escapeHtml(item?.name || '비어 있음')}" onclick="equipSelectedInventoryItem('${slot.key}')" ${item ? `draggable="true" data-item-id="${escapeHtml(item.id)}" ondragstart="dragEquipmentItem(event, this.dataset.itemId, '${slot.key}')" ondragend="endEquipmentDrag()"` : ""}>
+          ${equipmentItemIcon(item, slot.key)}
+        </button>
         <div class="equipment-slot-item ${item ? "" : "empty"}">
           ${item ? escapeHtml(item.name) : "비어 있음"}
         </div>
-        <button type="button" onclick="unequipItem('${slot.key}')" ${item ? "" : "disabled"}>해제</button>
+        <button type="button" class="equipment-unequip" aria-label="${escapeHtml(slot.label)} 해제" onclick="unequipItem('${slot.key}')" ${item ? "" : "disabled"}>해제</button>
       </div>
     `;
   }).join("");
@@ -469,9 +499,7 @@ function renderEquipmentSetControls() {
   const normalized = normalizeCharacterEquipmentSets(character);
   character.equipmentSets = normalized.equipmentSets;
   character.activeEquipmentSet = normalized.activeEquipmentSet;
-  equipmentSetControlsEl.innerHTML = normalized.equipmentSets.map((set, index) => `
-    <button type="button" class="${index === normalized.activeEquipmentSet ? "selected" : ""}" onclick="activateEquipmentSet(${index})">${escapeHtml(set.name)}</button>
-  `).join("") + `<button type="button" onclick="copyActiveEquipmentSet()" ${normalized.equipmentSets.length >= 3 ? "disabled" : ""}>현재 세트 복제</button><button type="button" onclick="deleteActiveEquipmentSet()" ${normalized.equipmentSets.length <= 1 ? "disabled" : ""}>현재 세트 삭제</button>`;
+  equipmentSetControlsEl.innerHTML = `<label>장비 세트 <select aria-label="장비 세트" onchange="activateEquipmentSet(this.value)">${normalized.equipmentSets.map((set, index) => `<option value="${index}" ${index === normalized.activeEquipmentSet ? "selected" : ""}>${escapeHtml(set.name)}</option>`).join("")}</select></label><button type="button" onclick="copyActiveEquipmentSet()" ${normalized.equipmentSets.length >= 3 ? "disabled" : ""}>복제</button><button type="button" onclick="deleteActiveEquipmentSet()" ${normalized.equipmentSets.length <= 1 ? "disabled" : ""}>삭제</button>`;
 }
 
 async function saveEquipmentSetChange(character) {
@@ -594,21 +622,40 @@ function equipItemToSlot(equipment, item, slotKey, character = null) {
 }
 
 function renderEquipmentItemTable() {
-  const filteredItems = getFilteredItems(selectedEquipmentItemSlotFilter);
+  const query = document.getElementById("equipmentItemSearch").value.trim().toLocaleLowerCase();
+  const filteredItems = getFilteredItems(selectedEquipmentItemSlotFilter).filter(({item}) => item.name.toLocaleLowerCase().includes(query));
+  document.getElementById("equipmentItemCount").textContent = `${filteredItems.length}개`;
   equipmentItemTableBodyEl.innerHTML = filteredItems.map(({ item }) => `
-    <tr draggable="true" ondragstart="dragEquipmentItem(event, '${item.id}')">
-      <td>
-        <div class="equipment-list-item" tabindex="0">
-          ${escapeHtml(item.name)}
-          <div class="equipment-tooltip">
-            <div class="equipment-tooltip-title">${escapeHtml(item.name)}</div>
-            <div>${renderCategoryIcon("slot", item.slot, getSlotLabel(item.slot))}</div>
-            <pre>${escapeHtml(getItemStatSummary(item))}</pre>
-          </div>
-        </div>
-      </td>
-    </tr>
-  `).join("");
+    <button type="button" class="inventory-item ${selectedInventoryItemId === item.id ? 'selected' : ''}" draggable="true" data-item-id="${escapeHtml(item.id)}"
+      aria-pressed="${selectedInventoryItemId === item.id}" title="${escapeHtml(item.name + '\n' + getSlotLabel(item.slot) + '\n' + getItemStatSummary(item))}"
+      onclick="selectInventoryItem(this.dataset.itemId)" ondragstart="dragEquipmentItem(event, this.dataset.itemId)" ondragend="endEquipmentDrag()">
+      ${equipmentItemIcon(item)}<span class="inventory-item-name">${escapeHtml(item.name)}</span>
+    </button>
+  `).join("") || `<p class="empty-text">조건에 맞는 아이템이 없습니다.</p>`;
+  renderInventoryItemDetail();
+}
+
+function selectInventoryItem(itemId) {
+  selectedInventoryItemId = itemId;
+  equipmentItemTableBodyEl.querySelectorAll('[data-item-id]').forEach(el => {
+    el.classList.toggle('selected', el.dataset.itemId === itemId);
+    el.setAttribute('aria-pressed', String(el.dataset.itemId === itemId));
+  });
+  renderInventoryItemDetail();
+}
+
+function renderInventoryItemDetail() {
+  const item = getItemById(selectedInventoryItemId);
+  const detail = document.getElementById('equipmentItemDetail');
+  if (!item) { detail.textContent = '아이템을 선택하면 상세정보를 확인할 수 있습니다.'; return; }
+  const character = characterJson[selectedEquipmentCharacterIndex];
+  const slots = character ? getCharacterEquipmentSlots(character).filter(slot => canEquipItemToSlot(item, slot.key, character)).map(slot => slot.label) : [];
+  detail.innerHTML = `<strong>${escapeHtml(item.name)}</strong><div>${escapeHtml(getSlotLabel(item.slot))} · ${escapeHtml(item.weaponCategory ? getWeaponCategoryLabel(item.weaponCategory) : item.armorCategory ? getArmorCategoryLabel(item.armorCategory) : '')}</div><pre>${escapeHtml(getItemStatSummary(item))}</pre><div>장착 가능: ${escapeHtml(slots.join(', ') || '캐릭터를 선택하세요')}</div>`;
+}
+
+function equipSelectedInventoryItem(slotKey) {
+  if (!selectedInventoryItemId) return;
+  return dropEquipmentItem({preventDefault() {}, dataTransfer: {getData: () => selectedInventoryItemId}}, slotKey);
 }
 
 function renderEquipmentAbilityPreview() {
@@ -622,6 +669,10 @@ function renderEquipmentAbilityPreview() {
     getCharacterBaseWithoutEquipment(character),
     applyCharacterStatAbilities(character)
   );
+  equipmentAbilityPreviewEl.querySelectorAll('tbody tr').forEach(row => {
+    const delta = row.lastElementChild;
+    delta.classList.toggle('equipment-delta', delta.textContent.trim() !== '-');
+  });
 }
 
 function selectEquipmentCharacter(index) {
@@ -629,12 +680,57 @@ function selectEquipmentCharacter(index) {
   renderEquipmentPage();
 }
 
-function dragEquipmentItem(event, itemId) {
+function dragEquipmentItem(event, itemId, sourceSlot = "") {
+  endEquipmentDrag();
+  const item = getItemById(itemId);
+  if (!item) { event.preventDefault(); return; }
+  selectInventoryItem(itemId);
+  const preview = event.currentTarget.querySelector('.equipment-icon').cloneNode(true);
+  preview.classList.add('equipment-drag-preview');
+  preview.querySelectorAll('img').forEach(img => img.removeAttribute('data-icon-background'));
+  document.body.appendChild(preview);
+  equipmentDragState = {itemId, sourceSlot, source: event.currentTarget, preview};
   event.dataTransfer.setData("text/plain", itemId);
+  event.dataTransfer.effectAllowed = 'copyMove';
+  event.dataTransfer.setDragImage(preview, 34, 34);
+  event.currentTarget.classList.add('is-dragging');
+  const character = characterJson[selectedEquipmentCharacterIndex];
+  equipmentSlotGridEl.querySelectorAll('[data-slot]').forEach(el => {
+    const allowed = !!character && canEquipItemToSlot(item, el.dataset.slot, character);
+    el.classList.toggle('drop-allowed', allowed);
+    el.classList.toggle('drop-blocked', !allowed);
+  });
 }
 
 function allowEquipmentDrop(event) {
+  if (!equipmentDragState) return;
   event.preventDefault();
+  const allowed = event.currentTarget.classList.contains('drop-allowed');
+  event.dataTransfer.dropEffect = allowed ? 'copy' : 'none';
+  event.currentTarget.classList.toggle('drop-hover', allowed);
+}
+
+function endEquipmentDrag() {
+  equipmentDragState?.preview.remove();
+  equipmentDragState?.source.classList.remove('is-dragging');
+  equipmentDragState = null;
+  equipmentSlotGridEl.querySelectorAll('[data-slot]').forEach(el => el.classList.remove('drop-allowed', 'drop-blocked', 'drop-hover'));
+  document.querySelector('.equipment-inventory')?.classList.remove('drop-hover');
+}
+
+function allowInventoryReturn(event) {
+  if (!equipmentDragState?.sourceSlot) return;
+  event.preventDefault();
+  event.dataTransfer.dropEffect = 'move';
+  event.currentTarget.classList.add('drop-hover');
+}
+
+function returnEquipmentItem(event) {
+  if (!equipmentDragState?.sourceSlot) return;
+  event.preventDefault();
+  const slot = equipmentDragState.sourceSlot;
+  endEquipmentDrag();
+  return unequipItem(slot);
 }
 
 function changeEquipmentItemSlotFilter(slotKey) {
@@ -646,6 +742,7 @@ async function dropEquipmentItem(event, slotKey) {
   event.preventDefault();
   const character = characterJson[selectedEquipmentCharacterIndex];
   const item = getItemById(event.dataTransfer.getData("text/plain"));
+  endEquipmentDrag();
   if (!character || !canEquipItemToSlot(item, slotKey, character)) {
     alert("해당 슬롯에 착용할 수 없는 장비입니다.");
     return;
@@ -696,26 +793,100 @@ async function unequipItem(slotKey) {
   }
 }
 
+const ITEM_TABLE_COLUMNS = [['name','이름'],['handType','착용방식'],['atk','공격력'],['magic','마력'],['defense','방어력'],['resistance','저항력'],['attackRange','사정거리'],['skill','작동스킬'],['extra','부가 능력치']];
+const ITEM_SECONDARY_STATS = [['HP','hp'],['MP','mp'],['ST','st'],['이동속도','speed'],['공격속도','attackSpeed'],['시전속도','castSpeed']];
+let itemTableSort = {key:'', direction:1};
+let itemMutationPending = false;
+function getItemCategoryLabel(item) {
+  return isWeaponItem(item) ? getWeaponCategoryLabel(item.weaponCategory) : isArmorSlot(item.slot) ? getArmorCategoryLabel(item.armorCategory) : getSlotLabel(item.slot);
+}
+function getItemExtraDetails(item) {
+  return [...ITEM_SECONDARY_STATS.filter(([,key])=>Number(item[key])).map(([label,key])=>`${label} ${formatSignedValue(item[key])}`),
+    ...CHARACTER_STAT_DEFS.filter(({key})=>Number(item.statModifiers?.[key])).map(({label,key})=>`${label} ${formatSignedValue(item.statModifiers[key])}`),
+    ...normalizeItemSkillModifiers(item.skillModifiers).map(row=>{
+      const skill=getSkillById(row.skillId);
+      const target=getItemSkillTargets(skill).find(t=>t.target===row.target && t.signature===row.signature);
+      return `${skill?.name ?? '삭제된 스킬'} · ${target?.label ?? '대상 변경됨 (미적용)'} ${formatSignedValue(row.value)}`;
+    })];
+}
+function getItemSortValue(item,key) {
+  if (['atk','magic','defense','resistance','attackRange'].includes(key)) return Number(item[key])||0;
+  if (key==='category') return getItemCategoryLabel(item);
+  if (key==='handType') return getHandTypeLabel(item.handType);
+  if (key==='skill') return isWeaponItem(item) ? getSkillById(item.attackSkillId)?.name ?? '기본 공격' : '';
+  if (key==='extra') return getItemExtraDetails(item).join(' · ');
+  return item.name;
+}
+function sortItemTable(key) {
+  if (!ITEM_TABLE_COLUMNS.some(([k])=>k===key)) return;
+  itemTableSort={key,direction:itemTableSort.key===key ? -itemTableSort.direction : 1};
+  renderItemPage();
+}
 function renderItemPage() {
-  if (!itemTableBodyEl) {
-    return;
-  }
-
+  if (!itemTableBodyEl) return;
   initEquipmentFilters();
-  const filteredItems = getFilteredItems(selectedItemSlotFilter);
-  itemTableBodyEl.innerHTML = filteredItems.map(({ item, index }) => `
-    <tr>
-      <td><input type="checkbox" class="item-check" value="${index}"></td>
-      <td>${escapeHtml(item.name)}</td>
-      <td>${renderCategoryIcon("slot", item.slot, getSlotLabel(item.slot))}</td>
-      <td>${isWeaponItem(item) ? renderCategoryIcon("weapon", item.weaponCategory, getWeaponCategoryLabel(item.weaponCategory)) : "-"}</td>
-      <td>${isWeaponItem(item) ? escapeHtml(getSkillById(item.attackSkillId)?.name ?? "기본 공격") : "-"}</td>
-      <td>${isArmorSlot(item.slot) ? renderCategoryIcon("armor", item.armorCategory, getArmorCategoryLabel(item.armorCategory)) : "-"}</td>
-      <td>${isWeaponItem(item) ? getHandTypeLabel(item.handType) : "-"}</td>
-      ${ABILITY_ROWS.map(([, key]) => `<td>${item[key]}</td>`).join("")}
-      <td><button type="button" onclick="openItemModal(${index})">수정</button></td>
-    </tr>
-  `).join("");
+  const header=document.getElementById('itemTableHeader');
+  if (!header.children.length) header.innerHTML=ITEM_TABLE_COLUMNS.map(([key,label])=>`<th scope="col" data-sort-key="${key}" onclick="sortItemTable('${key}')"><button type="button" class="item-sort-button">${label}<span aria-hidden="true"></span></button></th>`).join('')+'<th scope="col">수정</th>';
+  header.querySelectorAll('[data-sort-key]').forEach(th=>{
+    const active=th.dataset.sortKey===itemTableSort.key;
+    th.setAttribute('aria-sort',active ? itemTableSort.direction===1 ? 'ascending' : 'descending' : 'none');
+    th.querySelector('span').textContent=active ? itemTableSort.direction===1 ? ' ↑' : ' ↓' : '';
+  });
+  const items=getFilteredItems(selectedItemSlotFilter);
+  if (itemTableSort.key) items.sort((a,b)=>{
+    const x=getItemSortValue(a.item,itemTableSort.key), y=getItemSortValue(b.item,itemTableSort.key);
+    return (typeof x==='number' ? x-y : x.localeCompare(y,'ko',{numeric:true}))*itemTableSort.direction || a.index-b.index;
+  });
+  itemTableBodyEl.innerHTML=items.map(({item,index})=>{
+    const details=getItemExtraDetails(item);
+    const skillCount=normalizeItemSkillModifiers(item.skillModifiers).length;
+    const statDetails=details.slice(0,details.length-skillCount);
+    const summary=[...statDetails.slice(0,2),...(statDetails.length>2 ? [`외 ${statDetails.length-2}`] : []),...(skillCount ? [`스킬 보조 ${skillCount}`] : [])].join(' · ');
+    return `<tr data-item-index="${index}"><td><div class="item-identity">${equipmentItemIcon(item)}<strong>${escapeHtml(item.name)}</strong></div></td>
+      <td>${isWeaponItem(item) ? item.handType==='twoHand' ? '양손' : '한손' : '-'}</td>
+      ${['atk','magic','defense','resistance','attackRange'].map(key=>`<td class="item-number ${Number(item[key]) ? '' : 'item-zero'}">${Number(item[key])||'-'}</td>`).join('')}
+      <td>${escapeHtml(getItemSortValue(item,'skill')||'-')}</td>
+      <td>${details.length ? `<details class="item-extra"><summary>${escapeHtml(summary)}</summary><ul>${details.map(text=>`<li>${escapeHtml(text)}</li>`).join('')}</ul></details>` : '<span class="item-zero">-</span>'}</td>
+      <td><button type="button" onclick="openItemModal(${index})">수정</button></td></tr>`;
+  }).join('') || '<tr><td colspan="10">표시할 아이템이 없습니다.</td></tr>';
+}
+
+function renderItemModifiers(item) {
+  document.getElementById('itemStatModifiers').innerHTML=CHARACTER_STAT_DEFS.map(({key,label})=>`<label>${escapeHtml(label)}<input type="number" step="any" data-stat-key="${key}" value="${Number(item?.statModifiers?.[key])||0}"></label>`).join('');
+  document.getElementById('itemSkillModifiers').innerHTML='';
+  normalizeItemSkillModifiers(item?.skillModifiers).forEach(addItemSkillModifierRow);
+}
+function addItemSkillModifierRow(modifier=null) {
+  const row=document.createElement('div');row.className='item-skill-modifier';
+  const skills=skillsJson.filter(skill=>isSkillExecutable(skill) && !isDefaultSkill(skill.id));
+  row.innerHTML=`<label>스킬<select class="item-modifier-skill" onchange="updateItemModifierTargets(this.closest('.item-skill-modifier'))"><option value="">스킬 선택</option>${skills.map(skill=>`<option value="${escapeHtml(skill.id)}">${escapeHtml(skill.name)}</option>`).join('')}</select></label><label>대상 효과 · 보조 항목<select class="item-modifier-target"></select></label><label>보정값<input class="item-modifier-value" type="number" step="any" value="${modifier?.value ?? 0}"></label><button type="button" onclick="this.closest('.item-skill-modifier').remove()">보조 삭제</button>`;
+  document.getElementById('itemSkillModifiers').appendChild(row);
+  if(modifier && !skills.some(s=>s.id===modifier.skillId)) row.querySelector('select').add(new Option('삭제되거나 미지원인 스킬',modifier.skillId));
+  row.querySelector('select').value=modifier?.skillId ?? '';
+  updateItemModifierTargets(row,modifier);
+}
+function updateItemModifierTargets(row, modifier=null) {
+  const targets=getItemSkillTargets(getSkillById(row.querySelector('.item-modifier-skill').value));
+  row.modifierTargets=targets;
+  const select=row.querySelector('.item-modifier-target');
+  select.innerHTML='<option value="">보조 항목 선택</option>'+targets.map((target,i)=>`<option value="${i}">${escapeHtml(target.label)}</option>`).join('');
+  if (modifier) {
+    const index=targets.findIndex(t=>t.target===modifier.target && t.signature===modifier.signature);
+    if(index>=0) select.value=String(index);
+    else {select.add(new Option('대상 변경됨 · 다시 선택하거나 삭제하세요','stale'));select.value='stale';}
+  }
+}
+function readItemModifiers() {
+  const statModifiers=normalizeItemStatModifiers(Object.fromEntries([...document.querySelectorAll('#itemStatModifiers input')].map(input=>[input.dataset.statKey,Number(input.value)])));
+  const skillModifiers=[...document.querySelectorAll('.item-skill-modifier')].map(row=>{
+    const skillId=row.querySelector('.item-modifier-skill').value;
+    const selection=row.querySelector('.item-modifier-target').value;
+    const target=selection!=='' ? row.modifierTargets[Number(selection)] : null;
+    const value=Number(row.querySelector('.item-modifier-value').value);
+    if(!skillId || !target || !Number.isFinite(value) || !value) throw new Error('스킬 보조의 스킬·대상·0이 아닌 보정값을 확인하세요.');
+    return {skillId,target:target.target,signature:target.signature,value};
+  });
+  return {...(Object.keys(statModifiers).length ? {statModifiers} : {}),...(skillModifiers.length ? {skillModifiers} : {})};
 }
 
 function changeItemSlotFilter(slotKey) {
@@ -724,7 +895,7 @@ function changeItemSlotFilter(slotKey) {
 }
 
 function openItemModal(index = "") {
-  normalizeItemFormActions();
+  if (itemMutationPending) return;
   const item = itemsJson[index];
   itemModalTitleEl.innerText = item ? "아이템 수정" : "아이템 추가";
   itemEditIndexEl.value = item ? index : "";
@@ -749,20 +920,28 @@ function openItemModal(index = "") {
   itemResistanceEl.value = item?.resistance ?? 0;
   itemAttackRangeEl.value = item?.attackRange ?? 0;
   syncItemWeaponFields();
+  renderItemModifiers(item);
+  document.getElementById("itemDeleteButton").classList.toggle("hidden", !item);
   itemModalEl.classList.remove("hidden");
 }
 
 function closeItemModal() {
+  if (itemMutationPending) return;
   itemModalEl.classList.add("hidden");
   itemFormEl.reset();
 }
 
 async function saveItemFromForm(event) {
   event.preventDefault();
+  if (itemMutationPending) return;
+  let modifiers;
+  try { modifiers=readItemModifiers(); } catch(error) { alert(error.message);return; }
+  const before=itemsJson.slice();
   const editIndex = itemEditIndexEl.value;
   const isWeapon = isWeaponSlot(itemSlotEl.value);
   const weaponCategory = isWeapon ? getWeaponCategory(itemWeaponCategoryEl.value) : null;
   const item = {
+    ...modifiers,
     id: editIndex !== "" ? itemsJson[Number(editIndex)].id : `item_${Date.now()}`,
     name: itemNameEl.value.trim(),
     slot: itemSlotEl.value,
@@ -795,13 +974,15 @@ async function saveItemFromForm(event) {
     itemsJson.push(item);
   }
 
+  itemMutationPending=true;
   try {
     await saveItemJson();
   } catch (error) {
+    itemsJson=before;
     logError("item", "아이템 저장 요청이 실패했습니다.", error);
     alert("아이템 데이터를 저장하지 못했습니다.");
     return;
-  }
+  } finally { itemMutationPending=false; }
 
   try {
     await loadCharacterJson();
@@ -816,36 +997,45 @@ async function saveItemFromForm(event) {
   }
 }
 
-async function deleteSelectedItems() {
-  const checkedIndexes = [...document.querySelectorAll(".item-check:checked")]
-    .map(input => Number(input.value))
-    .sort((a, b) => b - a);
-
-  if (!checkedIndexes.length) {
-    alert("삭제할 아이템을 선택하세요.");
-    return;
-  }
-
-  const deletedIds = checkedIndexes.map(index => itemsJson[index]?.id).filter(Boolean);
-  checkedIndexes.forEach(index => itemsJson.splice(index, 1));
-  characterJson.forEach(character => {
-    const normalized = normalizeCharacterEquipmentSets(character);
-    normalized.equipmentSets.forEach(set => getCharacterEquipmentSlots(normalized).forEach(slot => {
-      if (deletedIds.includes(set.equipment[slot.key])) set.equipment[slot.key] = "";
-    }));
-    Object.assign(character, normalized);
-    character.equipment = createEquipmentSlots(character.equipmentSets[character.activeEquipmentSet].equipment, character);
-  });
-  characterJson = characterJson.map(character => applyCharacterStatAbilities(character));
-
+async function deleteItemFromModal() {
+  if (itemMutationPending || itemEditIndexEl.value==='') return;
+  const index=Number(itemEditIndexEl.value), item=itemsJson[index];
+  if(!item) return;
+  itemMutationPending=true;
+  let rawCharacters;
   try {
-    await saveItemJson();
-    await saveCharacterJson();
-    renderItemPage();
-    renderEquipmentPage();
-    refreshCharacterUI();
-  } catch (error) {
-    logError("item", "아이템 삭제 처리 중 실패했습니다.", error);
-    alert("아이템 데이터를 삭제하지 못했습니다.");
+  // Characters (all saved loadouts) are the only persistent item-ID owners.
+  // Detach first: if item saving fails, the item remains and no reference dangles.
+  const response=await fetch(API_URLS.characters,{cache:'no-store'});
+  if(!response.ok) { alert('장착 참조를 확인하지 못했습니다. 다시 시도하세요.');return; }
+  rawCharacters=await response.json();
+  } catch(error) {
+    logError('item','장착 참조 조회 실패',error);
+    alert('장착 참조를 확인하지 못했습니다. 다시 시도하세요.');return;
+  } finally { itemMutationPending=false; }
+  const references=rawCharacters.filter(c=>Object.values(c.equipment ?? {}).includes(item.id) || (c.equipmentSets ?? []).some(set=>Object.values(set.equipment ?? {}).includes(item.id))).map(c=>c.name);
+  if (!window.confirm(`"${item.name}" 아이템을 삭제하시겠습니까?`+(references.length ? `\n장착 중: ${references.join(', ')}\n모든 장비 세트에서 해제됩니다.` : ''))) return;
+  const cleaned=structuredClone(rawCharacters);
+  for (const character of cleaned) {
+    for (const equipment of [character.equipment,...(character.equipmentSets ?? []).map(set=>set.equipment)]) {
+      if(equipment) for (const key of Object.keys(equipment)) if(equipment[key]===item.id) equipment[key]='';
+    }
   }
+  itemMutationPending=true;
+  const before=itemsJson.slice();
+  try {
+    if(references.length) await saveJsonFile('characters',cleaned);
+    itemsJson.splice(index,1);
+    await saveItemJson();
+  } catch(error) {
+    itemsJson=before;
+    logError('item','아이템 삭제 저장 실패',error);
+    alert('아이템을 삭제하지 못했습니다. 장비 해제가 먼저 저장됐을 수 있습니다. 장착 상태를 확인하고 다시 시도하세요.');
+    return;
+  } finally {
+    itemMutationPending=false;
+    await loadCharacterJson();
+    renderItemPage();renderEquipmentPage();refreshCharacterUI();
+  }
+  closeItemModal();
 }

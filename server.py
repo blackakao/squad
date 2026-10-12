@@ -11,11 +11,27 @@ import urllib.request
 import subprocess
 from datetime import datetime
 from entity_store import EntityStore, EntityError
+from simulation_jobs import SimulationJobs, SimulationError
+import threading
+import atexit
 
 
 ROOT = Path(__file__).resolve().parent
 DATA_DIR = ROOT / "data"
 ENTITY_STORE = EntityStore(DATA_DIR)
+SIMULATION_JOBS = None
+SIMULATION_LOCK = threading.Lock()
+
+
+def get_simulation_jobs():
+    global SIMULATION_JOBS
+    with SIMULATION_LOCK:
+        if SIMULATION_JOBS is None:
+            SIMULATION_JOBS = SimulationJobs(ROOT, DATA_DIR)
+            atexit.register(SIMULATION_JOBS.close)
+        return SIMULATION_JOBS
+
+
 IMAGE_SETTINGS_PATH = DATA_DIR / "image-generator-settings.json"
 ASSET_IMAGE_DIRS = {
     "portraits": ROOT / "assets" / "images" / "portraits",
@@ -84,11 +100,60 @@ def save_asset_image(asset_kind, image_bytes, name, ext):
 
 
 class BattleHandler(SimpleHTTPRequestHandler):
+    def handle_simulation_request(self, path):
+        if not (path == "/api/simulation-targets" or path == "/api/simulations" or path.startswith("/api/simulations/")):
+            return False
+        try:
+            jobs = get_simulation_jobs()
+            body = None
+            if self.command in ("POST", "PUT"):
+                size = int(self.headers.get("Content-Length", "0"))
+                if size < 0 or size > 16384:
+                    raise SimulationError("요청 크기가 너무 큽니다.")
+                body = json.loads(self.rfile.read(size) or b"{}")
+            if path == "/api/simulation-targets" and self.command in ("GET", "PUT"):
+                if self.command == "PUT" and (not isinstance(body, dict) or body.get("targets") is None):
+                    raise SimulationError("목표 설정이 필요합니다.")
+                result = jobs.targets(body["targets"] if self.command == "PUT" else None)
+            elif path == "/api/simulations" and self.command in ("GET", "POST"):
+                result = jobs.start(body) if self.command == "POST" else jobs.list()
+            else:
+                match = re.fullmatch(r"/api/simulations/([A-Za-z0-9_.-]+)(?:/(result|cancel|json|markdown|log|journal))?", path)
+                if not match:
+                    raise SimulationError("지원하지 않는 전투 테스트 요청입니다.", 404)
+                job_id, action = match.groups()
+                if action == "cancel" and self.command == "POST":
+                    result = jobs.cancel(job_id)
+                elif self.command == "GET" and action in (None, "result"):
+                    result = jobs.result(job_id) if action else jobs.get(job_id)
+                elif self.command == "GET" and action in ("json", "markdown", "log", "journal"):
+                    content = jobs.file(job_id, action).read_bytes()
+                    self.send_response(200)
+                    self.send_header("Content-Type", "application/json; charset=utf-8" if action == "json" else "text/plain; charset=utf-8")
+                    self.send_header("Content-Length", str(len(content)))
+                    self.send_header("Cache-Control", "no-store")
+                    self.end_headers()
+                    self.wfile.write(content)
+                    return True
+                else:
+                    raise SimulationError("지원하지 않는 요청 방식입니다.", 405)
+            self.send_json(result)
+        except SimulationError as exc:
+            self.send_json_error(exc.status, str(exc))
+        except (ValueError, UnicodeError):
+            self.send_json_error(400, "JSON 형식과 입력값을 확인해 주세요.")
+        except OSError as exc:
+            server_log(f"Simulation API: {exc}")
+            self.send_json_error(500, "테스트 파일을 읽거나 저장하지 못했습니다. 서버 로그를 확인해 주세요.")
+        return True
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(ROOT), **kwargs)
 
     def do_GET(self):
         path = self.path.split("?", 1)[0]
+        if self.handle_simulation_request(path):
+            return
         if path.rstrip("/") == "/api/entities" or path.startswith("/api/entities/"):
             self.handle_entities(path)
             return
@@ -111,6 +176,8 @@ class BattleHandler(SimpleHTTPRequestHandler):
 
     def do_PUT(self):
         path = self.path.split("?", 1)[0]
+        if self.handle_simulation_request(path):
+            return
         if path.rstrip("/") == "/api/entities" or path.startswith("/api/entities/"):
             self.handle_entities(path)
             return
@@ -122,6 +189,8 @@ class BattleHandler(SimpleHTTPRequestHandler):
 
     def do_POST(self):
         path = self.path.split("?", 1)[0]
+        if self.handle_simulation_request(path):
+            return
         if path.rstrip("/") == "/api/entities" or path.startswith("/api/entities/"):
             self.handle_entities(path)
             return

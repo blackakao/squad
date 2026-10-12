@@ -1,0 +1,88 @@
+{
+  "completed": [
+    {
+      "simulationId": "simulation_20261011_085434_0d93adb1",
+      "startedAt": "2026-10-10T23:54:34.962222+00:00",
+      "finishedAt": "2026-10-10T23:55:24.961Z",
+      "status": "COMPLETED",
+      "settings": {
+        "count": 100,
+        "teamSize": 3,
+        "seed": 12345,
+        "maxSeconds": 600,
+        "width": 400,
+        "height": 300,
+        "minSamples": 30
+      },
+      "completed": 100,
+      "total": 100,
+      "elapsedSeconds": 44.1692916,
+      "error": null,
+      "resultUrl": "/api/simulations/simulation_20261011_085434_0d93adb1/result",
+      "dataHash": "943307d84e5f2ec59bc94d5828a5959adcf75e274c4d052f6414e2201eea4136",
+      "engineHash": "3ae36a867a7d5c442b96c80beb68ca4390f8d0e8edd2ef37fd7d0f46e38cbb84",
+      "gitRevision": "1ad765f88a9ef1e94782d42e80737234331df948",
+      "averageDuration": 131.365
+    },
+    {
+      "simulationId": "simulation_20261011_085531_ebb8e7e0",
+      "startedAt": "2026-10-10T23:55:31.405559+00:00",
+      "finishedAt": "2026-10-10T23:59:08.623Z",
+      "status": "COMPLETED",
+      "settings": {
+        "count": 1000,
+        "teamSize": 3,
+        "seed": 12345,
+        "maxSeconds": 600,
+        "width": 400,
+        "height": 300,
+        "minSamples": 30
+      },
+      "completed": 1000,
+      "total": 1000,
+      "elapsedSeconds": 216.9415872,
+      "error": null,
+      "resultUrl": "/api/simulations/simulation_20261011_085531_ebb8e7e0/result",
+      "dataHash": "943307d84e5f2ec59bc94d5828a5959adcf75e274c4d052f6414e2201eea4136",
+      "engineHash": "3ae36a867a7d5c442b96c80beb68ca4390f8d0e8edd2ef37fd7d0f46e38cbb84",
+      "gitRevision": "1ad765f88a9ef1e94782d42e80737234331df948",
+      "averageDuration": 134.9745166666666
+    }
+  ],
+  "cancelled": {
+    "simulationId": "simulation_20261011_152053_a2bfd283",
+    "startedAt": "2026-10-11T06:20:53.647373+00:00",
+    "finishedAt": "2026-10-11T06:20:57.352Z",
+    "status": "CANCELLED",
+    "settings": {
+      "count": 10000,
+      "teamSize": 3,
+      "seed": 12345,
+      "maxSeconds": 600,
+      "width": 400,
+      "height": 300,
+      "minSamples": 30
+    },
+    "completed": 5,
+    "total": 10000,
+    "elapsedSeconds": 3.4970684999999997,
+    "error": null,
+    "resultUrl": "/api/simulations/simulation_20261011_152053_a2bfd283/result",
+    "dataHash": "943307d84e5f2ec59bc94d5828a5959adcf75e274c4d052f6414e2201eea4136",
+    "engineHash": "da2b7b03769112693f3cc77e48396f43f82517cf7ecc716412c2b8ae5ffc79db",
+    "gitRevision": "1ad765f88a9ef1e94782d42e80737234331df948",
+    "averageDuration": 216.80333333333334
+  },
+  "checks": [
+    "progress",
+    "navigation",
+    "refresh",
+    "duplicate 409",
+    "numeric sorts",
+    "history",
+    "640px overflow",
+    "cancel partial",
+    "target snapshot",
+    "worker failure"
+  ]
+}

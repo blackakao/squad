@@ -1,0 +1,20 @@
+{
+  "simulationId": "simulation_20261011_213032_625cb872",
+  "startedAt": "2026-10-11T12:30:32.404888+00:00",
+  "finishedAt": "2026-10-11T12:30:50.383306+00:00",
+  "status": "FAILED",
+  "settings": {
+    "count": 1000,
+    "teamSize": 1,
+    "seed": 12345,
+    "maxSeconds": 600,
+    "width": 400,
+    "height": 300,
+    "minSamples": 30
+  },
+  "completed": 324,
+  "total": 1000,
+  "elapsedSeconds": 17.993263,
+  "error": "[WinError 5] 액세스가 거부되었습니다: 'C:\\\\Users\\\\park\\\\Desktop\\\\project\\\\balance\\\\jobs\\\\simulation_20261011_213032_625cb872\\\\job.tmp' -> 'C:\\\\Users\\\\park\\\\Desktop\\\\project\\\\balance\\\\jobs\\\\simulation_20261011_213032_625cb872\\\\job.json' 개발 로그를 확인해 주세요.",
+  "resultUrl": "/api/simulations/simulation_20261011_213032_625cb872/result"
+}

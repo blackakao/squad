@@ -49,6 +49,7 @@
 }
 
 let nextSummonId = 1;
+const pendingSummonDeaths = new Set();
 let skillAreaImpacts = [];
 let skillChainImpacts = [];
 let battleFields = [];
@@ -59,12 +60,111 @@ function getSummonSquad(source) {
   return source.side === "enemy" ? enemySquad : playerSquad;
 }
 
+// Squads store runtime entities; roster and active views have separate meanings.
+function getBattleCharacters(squad) {
+  return squad.filter(unit => !unit.isSummon);
+}
+
+function getActiveBattleEntities(squad) {
+  return squad.filter(unit => unit.alive && !unit.removed);
+}
+
+function getSummonOwner(source) {
+  const visited = new Set();
+  while (source?.isSummon) {
+    if (visited.has(source)) return null;
+    visited.add(source);
+    source = source.owner ?? source.summoner;
+  }
+  return source ?? null;
+}
+
+function clearSummonReferences(unit) {
+  unit.pendingAction = null;
+  unit.castTimer = 0; unit.castDuration = 0; unit.summonTicks = null;
+  unit.vx = 0; unit.vy = 0; unit.isMoving = false;
+  clearBattleChannel(unit);
+  clearBattleEffects(unit);
+  unit.weaponAttackStates = [];
+  actionTargetCooldowns.delete(unit);
+  for (const other of [...playerSquad, ...enemySquad]) {
+    if (other.pendingAction?.target === unit) other.pendingAction.target = null;
+    if (other.channelAction?.target === unit) other.channelAction.target = null;
+    for (const state of other.weaponAttackStates ?? []) {
+      if (state.target === unit) { state.target = null; state.castTimer = 0; }
+    }
+  }
+  // Preserve continuation actions, but never retain the removed target object.
+  projectiles = projectiles.filter(projectile => projectile.source !== unit);
+  for (const projectile of projectiles) {
+    if (projectile.target === unit) projectile.target = null;
+    if (projectile.preferredTarget === unit) projectile.preferredTarget = null;
+    if (projectile.channelAction?.target === unit) projectile.channelAction.target = null;
+  }
+  if (unit.removed) battleFields = battleFields.filter(field => field.source !== unit);
+}
+
+function removeSummonedBattleUnit(unit) {
+  if (!unit?.isSummon || unit.removed) return;
+  unit.alive = false;
+  unit.removed = true;
+  pendingSummonDeaths.delete(unit);
+  clearSummonReferences(unit);
+  for (const squad of [playerSquad, enemySquad, unit.owner?.summons ?? []]) {
+    const index = squad.indexOf(unit);
+    if (index >= 0) squad.splice(index, 1);
+  }
+  // Keep scalar attribution for saved events, never a removed runtime graph.
+  unit.owner = null;
+  unit.summoner = null;
+}
+
+function finalizeSummonDeaths() {
+  for (const unit of pendingSummonDeaths) {
+    pendingSummonDeaths.delete(unit);
+    if (unit.isSummon && !unit.alive && !unit.isEntityPreview) {
+      if (unit.summonType === "persistent") {
+        if (!unit.summonDeathCleaned) {
+          clearSummonReferences(unit);
+          unit.summonDeathCleaned = true;
+        }
+      } else removeSummonedBattleUnit(unit);
+    }
+  }
+}
+
+// Extension point only: callers must provide the future resurrection rule's HP.
+function reactivatePersistentSummon(unit, hp) {
+  if (!unit?.isSummon || unit.summonType !== "persistent" || unit.alive || unit.removed
+      || !unit.owner?.summons?.includes(unit) || !getSummonSquad(unit).includes(unit)
+      || !Number.isFinite(hp) || hp <= 0) return false;
+  unit.hp = Math.min(unit.maxHp, hp);
+  unit.alive = true;
+  unit.summonDeathCleaned = false;
+  return true;
+}
+
+function clearBattleSummons() {
+  for (const unit of [...playerSquad, ...enemySquad]) {
+    if (unit.isSummon) removeSummonedBattleUnit(unit);
+    else { unit.summons = []; clearBattleChannel(unit); unit.pendingAction = null; }
+  }
+  projectiles = [];
+  pendingSummonDeaths.clear();
+  battleFields = [];
+  battleEntitySnapshot = null;
+}
+
 function canSummonBattleUnit(source, action, skill) {
   const squad = getSummonSquad(source);
   const config = getSummonConfiguration(source, action);
   if (!config) return false;
+  const owner = getSummonOwner(source);
+  if (!owner) return false;
+  if (config.summonType === "persistent"
+      && (owner.summons ?? []).filter(unit => unit.summonType === "persistent" && unit.entityId === config.entityId).length >= Math.min(config.count, config.limit)) return false;
   const living = squad.filter(unit => unit.alive && unit.isSummon);
-  return living.length < MAX_ACTIVE_SUMMONS_PER_SIDE && living.filter(unit => unit.summoner === source && unit.summonSkillId === skill?.id).length < config.limit;
+  return living.length < MAX_ACTIVE_SUMMONS_PER_SIDE && living.filter(unit => unit.summoner === owner && unit.summonSkillId === skill?.id).length < config.limit;
 }
 
 function summonBattleUnits(source, action, skill, target = source) {
@@ -76,17 +176,22 @@ function summonBattleUnits(source, action, skill, target = source) {
     const unit = createSummonedBattleUnit(source, {...config,spawnCenter:config.summonCenter === "target" ? target : source});
     unit.summonSkillId = skill?.id;
     unit.summonTicks = config.lifetime > 0 ? Math.max(1, Math.round(config.lifetime * BASE_ATTACK_COOLDOWN)) : null;
+    (unit.owner.summons ??= []).push(unit);
     squad.push(unit);
+    registerBattleContribution(unit);
     addBattleEventLog(source, `${source.name}: ${config.name} 소환`);
   }
 }
 
 function createSummonedBattleUnit(source, config) {
+    const owner = getSummonOwner(source);
     const angle = (nextSummonId * 2.4) % (Math.PI * 2);
     const center=config.spawnCenter ?? source;
     const unit = {
       id: `summon_${nextSummonId++}`, side: source.side, isSummon: true,
-      summoner: source, entityId: config.entityId, role: config.role, ai: config.ai,
+      summoner: owner, owner, ownerId: owner?.id ?? null, ownerEventId: owner ? snapshotEventUnit(owner).id : null,
+      summonType: config.summonType === "persistent" ? "persistent" : "temporary",
+      entityId: config.entityId, summonTemplateName: config.name, role: config.role, ai: config.ai,
       summonBaseAi:config.ai,summonBaseSpeed:config.speed,
       isEntityPreview: Boolean(source.isEntityPreview),
       previewBounds: source.isEntityPreview ? source.previewBounds : undefined,
@@ -235,6 +340,7 @@ function syncAliveState(unit, context = {}) {
         addBattleEventLog(unit, `${unit.name}: 부활 대기 (${(unit.reviveTicks / BASE_ATTACK_COOLDOWN).toFixed(1)}초)`);
       }
       events.push({type:"death",source:context.source ?? null,target:unit,skill:context.skill,periodic:context.periodic,reason:context.reason ?? "HP 소진"});
+      if (unit.isSummon && !unit.isEntityPreview) pendingSummonDeaths.add(unit);
     }
   }
   if (!context.deferEvents) publishBattleEvents(events);
@@ -387,10 +493,15 @@ function updateBattleReentries() {
 
 function updateRuntimeRuleOverrides() {
   [...playerSquad,...enemySquad].forEach(unit => {
-    const equipmentWasDisabled=(unit.runtimeRuleOverrides ?? []).some(rule=>rule.disableEquipmentEffects);
-    if (!unit.alive) { unit.runtimeRuleOverrides=[]; return; }
+    const equipmentWasDisabled=getRuntimeModifierSuppression(unit);
+    if (!unit.alive) {
+      const hadOverrides=(unit.runtimeRuleOverrides ?? []).length > 0;
+      unit.runtimeRuleOverrides=[];
+      if (hadOverrides) refreshBattleEquipmentRuleState(unit);
+      return;
+    }
     unit.runtimeRuleOverrides=(unit.runtimeRuleOverrides ?? []).filter(rule=>rule.remainingTicks === null || --rule.remainingTicks > 0);
-    const equipmentIsDisabled=unit.runtimeRuleOverrides.some(rule=>rule.disableEquipmentEffects);
+    const equipmentIsDisabled=getRuntimeModifierSuppression(unit);
     if (equipmentWasDisabled !== equipmentIsDisabled) refreshBattleEquipmentRuleState(unit);
   });
 }
@@ -422,16 +533,24 @@ function placeSquadForBattle(units, side) {
 
 let isImmediateBattleResolving = false;
 let lastResolvedBattleResult = "";
+// Optional headless result sink. Combat and victory checks stay shared with the UI.
+let battleResultSink = null;
 
 async function finishBattle(result) {
   updateResources();
   lastBattleDurationMs = battleStartedAt ? Date.now() - battleStartedAt : lastBattleDurationMs;
   lastResolvedBattleResult = result;
   isBattleRunning = false;
+  if (battleResultSink) {
+    battleResultSink(result);
+    clearBattleSummons();
+    return;
+  }
   updateBattleButton();
 
   const record = createBattleRecord(result);
   [...playerSquad, ...enemySquad].forEach(clearBattleEffects);
+  clearBattleSummons();
   battleFields = [];
   battleRecordsJson.unshift(record);
   recordPage = 1;
@@ -451,6 +570,7 @@ async function finishBattle(result) {
 }
 
 function prepareBattleSession({ openScreen = true } = {}) {
+  clearBattleSummons();
   resetBattleEvents();
   skillAreaImpacts = [];
   skillChainImpacts = [];
@@ -475,6 +595,7 @@ function prepareBattleSession({ openScreen = true } = {}) {
   }
 
   snapshotActiveBattleSideRules();
+  if (typeof snapshotBattleSynergies === "function") snapshotBattleSynergies();
 
   const missingEntity = [...playerSquad, ...enemySquad].flatMap(unit => getEquippedSkills(unit))
     .flatMap(skill => skill.actions).find(action => action.type === 'summon_entity' && !getEntityById(action.entityId));
@@ -515,6 +636,7 @@ function startBattle() {
 
 function abortBattle() {
   [...playerSquad, ...enemySquad].forEach(clearBattleEffects);
+  clearBattleSummons();
   skillAreaImpacts = [];
   skillChainImpacts = [];
   battleFields = [];
@@ -695,8 +817,8 @@ function resolveCollision() {
 }
 
 function updateCombat() {
-  const alivePlayers = playerSquad.filter(unit => unit.alive);
-  const aliveEnemies = enemySquad.filter(unit => unit.alive);
+  const alivePlayers = getActiveBattleEntities(playerSquad);
+  const aliveEnemies = getActiveBattleEntities(enemySquad);
 
   const playersContinue = canSquadContinueBattle(playerSquad);
   const enemiesContinue = canSquadContinueBattle(enemySquad);
@@ -896,7 +1018,7 @@ function getIndependentWeaponSkill(unit,weapon,target) {
   const assigned=getSkillById(weapon.attackSkillId);
   const base=isSkillExecutable(assigned) && assigned.slot !== "passive"
     ? assigned : createDefaultAttackSkillForUnit({...unit,attackType:weapon.attackType,attackSkillId:""});
-  const skill=structuredClone(base);
+  const skill=structuredClone(getRuntimeItemSkill(unit,base));
   const focusedCount=(unit.weaponAttackStates ?? []).filter(state=>state.focusTarget===target).length;
   skill.weaponDamagePercent=Math.max(0,100-(Number(unit.sameTargetWeaponPenaltyPercent)||0)*Math.max(0,focusedCount-1));
   skill.actions=skill.actions.map(action=>action.rangeMode === "mainWeapon"
@@ -1001,6 +1123,7 @@ function createBattleField(source,target,action,skill) {
 function updateBattleFields() {
   battleFields=battleFields.filter(field => {
     const {source,skill,action}=field;
+    if (source.removed) return false;
     if (--field.nextTick <= 0) {
       field.nextTick=Math.max(1,Math.ceil(action.fieldInterval*BASE_ATTACK_COOLDOWN));
       const own=source.side === "enemy" ? enemySquad : playerSquad;
@@ -1023,10 +1146,11 @@ function updateBattleFields() {
       for(const target of targets) applySkillAction(source,target,applied,skill,createSkillExecutionContext());
       publishBattleEvents([{type:"field_tick",source,skill}]);
     }
+    if (source.removed) return false;
     if (field.remainingTicks === null || --field.remainingTicks > 0) return true;
     publishBattleEvents([{type:"field_expire",source,skill}]);
     return false;
-  });
+  }).filter(field => !field.source.removed);
 }
 
 function dispatchSkillActions(source, preferredTarget, skill, allowProjectiles, forceProjectile = false, channelAction = null, resourceSpent = null) {
@@ -1087,7 +1211,7 @@ function findHealTarget(healer, team) {
 }
 
 function applyHeal(healer, target, skill = getUnitSkill(healer, DEFAULT_HEAL_SKILL_ID)) {
-  if (!target.alive || target.hp <= 0) {
+  if (!target?.alive || target.hp <= 0) {
     return;
   }
 
@@ -1111,7 +1235,7 @@ function updateProjectiles() {
     if (!source.alive) {
       return;
     }
-    if (!target.alive) {
+    if (!target?.alive) {
       if (projectile.resumeActionIndex != null) {
         projectile.execution.previousActualDamage=0;
         projectile.execution.previousActualHealing=0;
@@ -1146,7 +1270,7 @@ function updateProjectiles() {
     activeProjectiles.push(projectile);
   });
 
-  projectiles = activeProjectiles;
+  projectiles = activeProjectiles.filter(projectile => !projectile.source.removed);
 }
 
 function updateEffects() {
@@ -1394,6 +1518,7 @@ function drawBattleFields() {
 }
 
 function resetGame() {
+  clearBattleSummons();
   resetBattleEvents();
   skillAreaImpacts = [];
   skillChainImpacts = [];

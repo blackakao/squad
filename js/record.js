@@ -3,7 +3,8 @@ let recordPage = 1;
 
 function normalizeRecordEvents(events) {
   if (!Array.isArray(events)) return [];
-  const unit=entry=>entry ? {id:Number(entry.id) || 0,name:String(entry.name ?? ""),side:String(entry.side ?? ""),isSummon:Boolean(entry.isSummon)} : null;
+  const unit=entry=>entry ? {id:Number(entry.id) || 0,name:String(entry.name ?? ""),side:String(entry.side ?? ""),isSummon:Boolean(entry.isSummon),
+    ...(entry.isSummon ? {summonType:entry.summonType === "persistent" ? "persistent" : "temporary",ownerId:entry.ownerId ?? null,ownerEventId:Number(entry.ownerEventId) || null,entityId:entry.entityId ?? null} : {})} : null;
   return events.slice(-1000).map(event=>({
     id:Number(event?.id) || 0,tick:Math.max(0,Number(event?.tick) || 0),type:String(event?.type ?? ""),
     source:unit(event?.source),target:unit(event?.target),skillId:event?.skillId == null ? null : String(event.skillId),skillName:String(event?.skillName ?? ""),
@@ -33,17 +34,21 @@ function normalizeRecordJson(records) {
       maxMp: Number(member.maxMp) || 0,
       st: Number(member.st) || 0,
       maxSt: Number(member.maxSt) || 0,
-      dps: Number(member.dps) || 0
+      dps: Number(member.dps) || 0,
+      ...(member.contribution ? {eventId:member.eventId,contribution:structuredClone(member.contribution),
+        damageDealt:Number(member.damageDealt)||0,healingDone:Number(member.healingDone)||0,hps:Number(member.hps)||0,kills:Number(member.kills)||0} : {})
     };
   };
 
   return records
     .map(record => ({
+      contributionVersion:Number(record.contributionVersion) || 0,
       battleAt: String(record.battleAt ?? "").trim(),
       result: String(record.result ?? "").trim(),
       playerMembers: Array.isArray(record.playerMembers) ? record.playerMembers.map(normalizeMember) : [],
       monsterMembers: Array.isArray(record.monsterMembers) ? record.monsterMembers.map(normalizeMember) : [],
       durationSeconds: Number(record.durationSeconds) || 0,
+      activeSynergies: structuredClone(record.activeSynergies || {player:[], enemy:[]}),
       events: normalizeRecordEvents(record.events)
     }))
     .filter(record => record.battleAt && record.result);
@@ -78,21 +83,36 @@ function renderMemberTable(members) {
           <th>이름</th>
           <th>계열</th>
           <th>HP</th>
-          <th>DPS</th>
+          <th title="소환수의 피해 기여도를 포함합니다.">DPS</th>
         </tr>
       </thead>
       <tbody>
         ${sortedMembers.map(member => `
           <tr>
-            <td>${escapeHtml(member.name)}</td>
+            <td>${member.contribution ? `<button type="button" class="record-contribution-toggle" aria-expanded="false" onclick="toggleRecordContribution(this)">▶ ${escapeHtml(member.name)}</button>` : escapeHtml(member.name)}</td>
             <td>${escapeHtml(getRoleLabel(member.role))}</td>
             <td>${Math.floor(member.hp)} / ${member.maxHp}</td>
             <td>${member.dps.toFixed(1)}</td>
           </tr>
+          ${member.contribution ? `<tr class="record-contribution-row" hidden><td colspan="4">${renderMemberContribution(member)}</td></tr>` : ''}
         `).join("")}
       </tbody>
     </table>
   `;
+}
+
+function renderMemberContribution(member) {
+  const c = member.contribution;
+  if (!c) return '';
+  const line = (label,part) => `<div><strong>${escapeHtml(label)}</strong> · 피해 ${part.damageDealt.toFixed(1)} · DPS ${part.dps.toFixed(1)} · 치유 ${part.healingDone.toFixed(1)} · HPS ${part.hps.toFixed(1)} · 처치 ${part.kills}</div>`;
+  return `<div class="record-contribution">${line('총 기여',c.total)}${line('직접',c.direct)}${line('소환수',c.summon)}${c.groups.map(g=>line(`${g.name} ×${g.count} (${g.summonType === 'persistent' ? '영구' : '임시'})`,g)).join('')}</div>`;
+}
+
+function toggleRecordContribution(button) {
+  const row = button.closest('tr').nextElementSibling;
+  row.hidden = !row.hidden;
+  button.setAttribute('aria-expanded',String(!row.hidden));
+  button.firstChild.textContent = button.firstChild.textContent.replace(/^[▶▼]/,row.hidden ? '▶' : '▼');
 }
 
 function formatBattleAt(value) {
@@ -129,7 +149,7 @@ function renderBattleRecords() {
       <td><input type="checkbox" class="record-check" value="${originalIndex}"></td>
       <td>${formatBattleAt(record.battleAt)}</td>
       <td>${escapeHtml(record.result)}</td>
-      <td>${renderMemberTable(record.playerMembers)}</td>
+      <td>${!record.contributionVersion ? '<small class="record-legacy-note">이전 기록 · 소유자별 기여도 정보 없음</small>' : ''}${renderMemberTable(record.playerMembers)}</td>
       <td>${renderMemberTable(record.monsterMembers)}</td>
       <td>${record.durationSeconds.toFixed(1)}초</td>
       <td>${renderRecordEvents(record.events)}</td>
@@ -197,7 +217,8 @@ async function clearBattleRecords() {
 }
 
 function createRecordMembers(units, durationSeconds) {
-  return sortMembersByDps(units.map(unit => {
+  return sortMembersByDps(units.filter(unit => !unit.isSummon).map(unit => {
+    const contribution = getBattleContribution(unit,durationSeconds);
     const maxMp = Math.max(0, Number(unit.maxMp ?? DEFAULT_RESOURCE_VALUE));
     const maxSt = Math.max(0, Number(unit.maxSt ?? DEFAULT_RESOURCE_VALUE));
 
@@ -210,20 +231,28 @@ function createRecordMembers(units, durationSeconds) {
       maxMp,
       st: Math.max(0, Math.floor(Number(unit.st) || 0)),
       maxSt,
-      dps: durationSeconds > 0 ? (Number(unit.stats?.damage) || 0) / durationSeconds : 0
+      eventId:snapshotEventUnit(unit).id,
+      contribution,
+      damageDealt:contribution.total.damageDealt,
+      healingDone:contribution.total.healingDone,
+      kills:contribution.total.kills,
+      dps:contribution.total.dps,
+      hps:contribution.total.hps
     };
   }));
 }
 
 function createBattleRecord(result) {
-  const durationSeconds = battleStartedAt ? (Date.now() - battleStartedAt) / 1000 : 0;
+  const durationSeconds = combatEventTick / 60;
 
   return {
+    contributionVersion:1,
     battleAt: battleStartedAtText || new Date().toISOString(),
     result,
     playerMembers: createRecordMembers(playerSquad, durationSeconds),
     monsterMembers: createRecordMembers(enemySquad, durationSeconds),
     durationSeconds,
+    activeSynergies: typeof activeBattleSynergies === "undefined" ? {player:[], enemy:[]} : structuredClone(activeBattleSynergies),
     events:normalizeRecordEvents(getBattleEvents())
   };
 }

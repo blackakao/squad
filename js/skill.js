@@ -654,6 +654,60 @@ function getSkillById(skillId) {
   return skillsJson.find(skill => skill.id === skillId);
 }
 
+function normalizeItemSkillModifiers(source) {
+  return (Array.isArray(source) ? source : []).filter(row => row && typeof row.skillId === "string"
+    && typeof row.target === "string" && typeof row.signature === "string"
+    && Number.isFinite(Number(row.value)) && Number(row.value) !== 0)
+    .map(row => ({skillId:row.skillId, target:row.target, signature:row.signature, value:Number(row.value)}));
+}
+
+// Enumerate only numeric fields actually consumed by the engine. Action signatures
+// prevent an edited/reordered skill from silently redirecting an item modifier.
+function getItemSkillTargets(skill) {
+  if (!skill || !isSkillExecutable(skill)) return [];
+  const targets = [];
+  const add = (path, label, signature = "skill", min = 0) => targets.push({target:path.join("."), path, label, signature, min});
+  add(["cooldown"], "재사용 대기시간 (초)");
+  (skill.resourceCosts ?? []).forEach((cost, i) => add(["resourceCosts",i,"value"],
+    `자원 소모 ${i+1} · ${getResourceLabel(cost.resource)} · ${RESOURCE_COST_MODE_LABELS[cost.mode] ?? cost.mode}`, JSON.stringify(cost)));
+  if (skill.channel?.duration > 0) add(["channel","duration"], "채널링 지속시간 (초)");
+  (skill.actions ?? []).forEach((action, i) => {
+    const prefix = `${i+1}. ${ACTION_TYPE_LABELS[action.type] ?? action.type}`;
+    const signature = JSON.stringify(action);
+    const valueTypes = ["deal_damage","heal","drain_resource"];
+    if (valueTypes.includes(action.type) || (action.type === "create_field" && valueTypes.includes(action.fieldEffect))) {
+      (action.coefficients ?? []).forEach((coefficient,j) => add(["actions",i,"coefficients",j,"value"],
+        `${prefix} · 계수 ${j+1} (${formatCoefficientSummary(coefficient)})`, signature, -Infinity));
+    }
+    if (["add_buff","add_state","create_field","summon_entity","transform","override_rule"].includes(action.type))
+      add(["actions",i,"duration"], `${prefix} · 지속시간 (초, 0의 의미는 스킬 설정과 동일)`, signature);
+    if (action.rangeMode === "custom") add(["actions",i,"rangeValue"], `${prefix} · 대상 사정거리`, signature);
+    if (valueTypes.includes(action.type)) add(["actions",i,"area"], `${prefix} · 광역 반경`, signature);
+    if (action.type === "create_field") add(["actions",i,"fieldRadius"], `${prefix} · 필드 반경`, signature);
+    if (action.type === "create_field" && ["add_buff","add_state"].includes(action.fieldEffect))
+      add(["actions",i,"fieldEffectDuration"], `${prefix} · 필드가 부여하는 효과 지속시간 (초)`, signature);
+  });
+  return targets;
+}
+
+function getRuntimeItemSkill(unit, skill) {
+  if (!skill || !unit?.itemSkillModifiers?.length || (unit.runtimeRuleOverrides ?? []).some(rule => rule.disableEquipmentEffects)) return skill;
+  const modifiers = unit.itemSkillModifiers.filter(row => row.skillId === (skill.copiedFrom || skill.id));
+  if (!modifiers.length) return skill;
+  const targets = getItemSkillTargets(skill);
+  let result = null;
+  for (const target of targets) {
+    const matching = modifiers.filter(row => row.target === target.target && row.signature === target.signature);
+    if (!matching.length) continue;
+    result ??= structuredClone(skill);
+    let parent = result;
+    for (const key of target.path.slice(0,-1)) parent = parent[key];
+    const key = target.path.at(-1);
+    parent[key] = Math.max(target.min, (Number(parent[key]) || 0) + matching.reduce((sum,row) => sum + row.value,0));
+  }
+  return result ?? skill;
+}
+
 function getSkillCooldownTicks(skill, unit = null) {
   const percent = getUnitTeamBattleRules(unit).cooldownPercent;
   return Math.max(0, Math.round(normalizeSkillCooldown(skill?.cooldown) * BASE_ATTACK_COOLDOWN * percent / 100));
@@ -682,7 +736,7 @@ function getEquippedSkills(unit) {
     .filter(skill => skill && !isDefaultSkill(skill.id) && skill.slot !== "passive" && isSkillExecutable(skill) && !isUnitSkillDisabled(unit,skill));
   const copied = (Array.isArray(unit?.runtimeCopiedSkills) ? unit.runtimeCopiedSkills : [])
     .filter(skill => skill && isSkillExecutable(skill) && !isUnitSkillDisabled(unit,skill));
-  return [...equipped, ...copied];
+  return [...equipped, ...copied].map(skill => getRuntimeItemSkill(unit, skill));
 }
 
 function getCopyableUnitSkills(unit) {
@@ -730,11 +784,11 @@ function copyUnitSkill(source, target, action) {
 function applyRuleOverride(source,target,action,skill=null) {
   const config=action.ruleOverride;
   if (!target?.alive || !config?.id) return null;
-  const equipmentWasDisabled=(target.runtimeRuleOverrides ?? []).some(rule=>rule.disableEquipmentEffects);
+  const equipmentWasDisabled=getRuntimeModifierSuppression(target);
   const instance={...config,remainingTicks:action.duration>0 ? Math.max(1,Math.ceil(action.duration*BASE_ATTACK_COOLDOWN)) : null,sourceName:source.name,skillId:skill?.id};
   target.runtimeRuleOverrides=(target.runtimeRuleOverrides ?? []).filter(rule=>rule.id!==instance.id);
   target.runtimeRuleOverrides.push(instance);
-  const equipmentIsDisabled=target.runtimeRuleOverrides.some(rule=>rule.disableEquipmentEffects);
+  const equipmentIsDisabled=getRuntimeModifierSuppression(target);
   if (equipmentWasDisabled !== equipmentIsDisabled) refreshBattleEquipmentRuleState(target);
   if (isUnitSkillDisabled(target,target.pendingAction?.skill) || isUnitSkillDisabled(target,target.channelAction?.skill)) {
     interruptBattleCast(target,"스킬 금지 규칙");
@@ -1655,15 +1709,15 @@ async function deleteSelectedSkills() {
 function getUnitSkill(unit, fallbackSkillId = DEFAULT_ATTACK_SKILL_ID) {
   const transform=(unit?.activeEffects ?? []).find(effect=>effect.kind === "transform");
   const assigned = getSkillById(transform?.attackSkillId || unit?.attackSkillId);
-  if (isSkillExecutable(assigned) && assigned.slot !== "passive" && !isUnitSkillDisabled(unit,assigned)) return assigned;
+  if (isSkillExecutable(assigned) && assigned.slot !== "passive" && !isUnitSkillDisabled(unit,assigned)) return getRuntimeItemSkill(unit, assigned);
   if (fallbackSkillId === DEFAULT_ATTACK_SKILL_ID) {
-    return isUnitSkillDisabled(unit,DEFAULT_ATTACK_SKILL_ID) ? null : createDefaultAttackSkillForUnit(unit);
+    return isUnitSkillDisabled(unit,DEFAULT_ATTACK_SKILL_ID) ? null : getRuntimeItemSkill(unit, createDefaultAttackSkillForUnit(unit));
   }
   if (isUnitSkillDisabled(unit,fallbackSkillId)) return null;
   const fallback = getSkillById(fallbackSkillId);
-  return (isSkillExecutable(fallback) && !isUnitSkillDisabled(unit,fallback) ? fallback : null)
+  return getRuntimeItemSkill(unit, (isSkillExecutable(fallback) && !isUnitSkillDisabled(unit,fallback) ? fallback : null)
     ?? createDefaultSkillJson().find(skill => skill.id === fallbackSkillId)
-    ?? createDefaultSkillJson()[0];
+    ?? createDefaultSkillJson()[0]);
 }
 
 function resolveSkillActionTarget(source, action, preferredTarget = null, skill = null) {
@@ -1819,9 +1873,16 @@ function renderEquipmentSetSwapActionArea(action) {
   </div>`;
 }
 
+function getRuntimeModifierSuppression(unit) {
+  return (unit.runtimeRuleOverrides ?? []).reduce((state, rule) => state
+    | (rule.disableEquipmentEffects ? 1 : 0) | (rule.disableTeamSynergies ? 2 : 0), 0);
+}
+
 function applyBattleEquipmentLoadout(target,loadout,index) {
   const disabled=(target.runtimeRuleOverrides ?? []).some(rule=>rule.disableEquipmentEffects);
-  const applied=disabled && loadout.withoutEquipment ? loadout.withoutEquipment : loadout;
+  const synergyDisabled=(target.runtimeRuleOverrides ?? []).some(rule=>rule.disableTeamSynergies);
+  const selected=synergyDisabled && loadout.withoutSynergy ? loadout.withoutSynergy : loadout;
+  const applied=disabled && selected.withoutEquipment ? selected.withoutEquipment : selected;
   const current={hp:target.hp,mp:target.mp,st:target.st,bp:target.bp};
   const combatStats=["atk","magic","speed","attackSpeed","castSpeed","defense","resistance","attackRange"];
   for (const stat of combatStats) {
@@ -1834,6 +1895,8 @@ function applyBattleEquipmentLoadout(target,loadout,index) {
   target.maxHp=applied.maxHp;target.maxMp=applied.maxMp;target.maxSt=applied.maxSt;target.baseBp=applied.baseBp;target.maxBp=applied.baseBp;
   target.hp=Math.min(current.hp,target.maxHp);target.mp=Math.min(current.mp,target.maxMp);target.st=Math.min(current.st,target.maxSt);target.bp=Math.min(current.bp,target.maxBp);
   target.attackType=applied.attackType;target.attackSkillId=applied.attackSkillId;
+  if (applied.attributes) target.attributes=structuredClone(applied.attributes);
+  target.itemSkillModifiers=structuredClone(applied.itemSkillModifiers ?? []);
   target.weaponAttacks=structuredClone(applied.weaponAttacks ?? []);
   target.sameTargetWeaponPenaltyPercent=applied.sameTargetWeaponPenaltyPercent;
   target.weaponAttackStates=target.weaponAttacks.map(weapon=>({weapon,cooldown:getAttackCooldown(target),castTimer:0,target:null,focusTarget:null}));

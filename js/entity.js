@@ -8,7 +8,7 @@ const ENTITY_ROLES = {melee:"근접",ranged:"원거리",healer:"치유 (힐)",ta
 const ENTITY_AI = {melee:"근접",ranged:"원거리",healer:"치유",stationary:"설치형"};
 
 function createDefaultEntity() {
-  return {entityId:"",name:"새 Entity",description:"",icon:"",role:"melee",ai:"melee",tags:["summon"],stats:{hp:100,mp:100,st:100,atk:10,magic:10,defense:0,resistance:0,speed:1,attackSpeed:1,castTime:0,attackRange:1}};
+  return {entityId:"",name:"새 Entity",description:"",icon:"",role:"melee",ai:"melee",summonType:"temporary",tags:["summon"],stats:{hp:100,mp:100,st:100,atk:10,magic:10,defense:0,resistance:0,speed:1,attackSpeed:1,castTime:0,attackRange:1}};
 }
 
 async function entityRequest(path = "", method = "GET", body) {
@@ -34,6 +34,7 @@ function getSummonConfiguration(source, action) {
   const sourceFields={hp:"maxHp",mp:"maxMp",st:"maxSt",atk:"atk",magic:"magic",defense:"defense",resistance:"resistance",speed:"speed"};
   for(const stat of SUMMON_INHERIT_STATS) stats[stat]=(Number(stats[stat]) || 0)+(Number(source?.[sourceFields[stat]]) || 0)*(Number(action.inheritStats?.[stat]) || 0)/100;
   return {...stats, entityId:entity.entityId,name:entity.name,icon:entity.icon,role:entity.role,ai:entity.ai,
+    summonType:entity.summonType === "persistent" ? "persistent" : "temporary",
     speed:entity.ai === "stationary" ? 0 : stats.speed,
     count:action.count ?? 1,limit:action.limit ?? 3,lifetime:action.duration ?? 20,summonCenter:action.summonCenter ?? "self",
     protectOwnerPercent:action.protectOwnerPercent ?? 0,protectOwnerScope:action.protectOwnerScope ?? "all",
@@ -176,6 +177,7 @@ function ensureEntityEditor() {
     <h4>Entity 편집</h4><form id="entityEditorForm" onsubmit="saveEntityEditor(event)">
       <label>Entity ID (생성 시 빈칸: 자동)<input name="entityId" pattern="[a-z0-9](?:[a-z0-9]|_|-){0,79}"></label>
       <label>이름<input name="name" required></label><label>설명<textarea name="description"></textarea></label>
+      <label>소환수 종류<select name="summonType"><option value="temporary">임시 · 사망/소멸 시 제거</option><option value="persistent">영구 · 사망 객체 보존</option></select></label>
       <label>아이콘 URL / assets 경로<input name="icon"></label>
       <label>역할<select name="role">${options(ENTITY_ROLES)}</select></label>
       <label>태그 (쉼표 구분)<input name="tags"></label>
@@ -195,6 +197,7 @@ function openEntityEditor(button, edit = false) {
   entityEditorOriginalId = edit ? entity.entityId : '';
   const form = document.getElementById('entityEditorForm');
   for(const key of ['entityId','name','description','icon','role','ai']) form.elements[key].value = entity[key] || '';
+  form.elements.summonType.value = entity.summonType ?? 'temporary';
   form.elements.tags.value = entity.tags.join(', ');
   for(const key of Object.keys(ENTITY_STAT_FIELDS)) form.elements[key].value = entity.stats[key];
   form.elements.saveMode.value = edit ? 'update' : 'new';
@@ -218,6 +221,7 @@ function updateEntitySaveMode() {
 function readEntityEditor() {
   const form = document.getElementById('entityEditorForm');
   return {entityId:form.elements.entityId.value.trim(),name:form.elements.name.value.trim(),description:form.elements.description.value,
+    summonType:form.elements.summonType.value,
     icon:form.elements.icon.value.trim(),role:form.elements.role.value,ai:form.elements.ai.value,tags:form.elements.tags.value.split(',').map(s=>s.trim()).filter(Boolean),
     stats:Object.fromEntries(Object.keys(ENTITY_STAT_FIELDS).map(key=>[key,Number(form.elements[key].value)]))};
 }

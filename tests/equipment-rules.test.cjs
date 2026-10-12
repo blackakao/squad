@@ -4,6 +4,18 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const path = require('node:path');
 
+test('item modifiers follow two-hand deduplication and add across distinct equipment', () => {
+  const e=equipmentEngine();
+  e.CHARACTER_STAT_DEFS=[{key:'str',label:'힘'}];
+  e.createCharacterAttributes=source=>({str:Number(source?.str)||0});
+  e.itemsJson[1].statModifiers={str:5};e.itemsJson[2].statModifiers={str:3};
+  const c={attributes:{str:10},equipmentRules:{extraWeaponSlots:1},equipment:{mainWeapon:'two',subWeapon:'two',extraWeapon1:'two_b'}};
+  assert.equal(e.getCharacterEffectiveAttributes(c).str,18);
+  assert.equal(e.getCharacterEffectiveAttributes(c).str,18);
+  assert.equal(c.attributes.str,10);
+  assert.equal(e.getCharacterEffectiveAttributes({...c,equipment:{}}).str,10);
+});
+
 function equipmentEngine() {
   const categories = [
     {key:'sword',label:'한손검',handType:'oneHand',slotType:'both'},

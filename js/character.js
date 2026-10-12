@@ -16,18 +16,62 @@ function refreshCharacterUI() {
   updateStatusUI();
 }
 
+const CHARACTER_TABLE_COLUMNS = [
+  ['name', '이름'], ['role', '계열'], ['faction', '진영'],
+  ['hp', 'HP'], ['mp', 'MP'], ['st', 'ST'], ['atk', '공격력'], ['magic', '마력'],
+  ['speed', '이동속도'], ['attackSpeed', '공격속도'], ['castSpeed', '시전속도'],
+  ['defense', '방어력'], ['resistance', '저항력'], ['attackRange', '사정거리']
+];
+let characterTableSort = { key: '', direction: 'asc' };
+const characterNameCollator = new Intl.Collator('ko', { numeric: true, sensitivity: 'base' });
+let characterDeletePending = false;
+
+function characterSortValue(character, key) {
+  if (key === 'name') return String(character.name ?? '');
+  if (key === 'role' || key === 'faction') {
+    const value = key === 'role' ? normalizeRole(character.role) : character.faction ?? getDefaultFactionName();
+    return iconMappings.find(mapping => mapping.group === key && mapping.key === value)?.label
+      || (key === 'role' ? getRoleLabel(value) : value);
+  }
+  const value = Number(character[key]);
+  return Number.isFinite(value) ? value : 0;
+}
+
+function sortCharacterTable(key) {
+  if (!CHARACTER_TABLE_COLUMNS.some(([column]) => column === key)) return;
+  characterTableSort = { key, direction: characterTableSort.key === key && characterTableSort.direction === 'asc' ? 'desc' : 'asc' };
+  renderCharacterTable();
+}
+
 function renderCharacterTable() {
+  const header = document.getElementById('characterTableHeader');
+  if (!header.children.length) {
+    header.innerHTML = CHARACTER_TABLE_COLUMNS.map(([key, label]) => `<th scope="col" data-sort-key="${key}" onclick="sortCharacterTable('${key}')"><button type="button" class="character-sort-button" title="${label}: 클릭하여 정렬">${label}<span class="character-sort-direction" aria-hidden="true"></span></button></th>`).join('') + '<th scope="col">수정</th>';
+  }
+  header.querySelectorAll('[data-sort-key]').forEach(th => {
+    const active = th.dataset.sortKey === characterTableSort.key;
+    th.setAttribute('aria-sort', active ? (characterTableSort.direction === 'asc' ? 'ascending' : 'descending') : 'none');
+    th.querySelector('.character-sort-direction').textContent = active ? (characterTableSort.direction === 'asc' ? ' ↑' : ' ↓') : '';
+  });
   const visibleCharacters = characterJson
     .map((character, index) => ({ character, index }))
     .filter(({ character }) => selectedCharacterRoleFilter === "all" || normalizeRole(character.role) === selectedCharacterRoleFilter);
 
+  if (characterTableSort.key) {
+    const { key, direction } = characterTableSort;
+    visibleCharacters.sort((a, b) => {
+      const left = characterSortValue(a.character, key);
+      const right = characterSortValue(b.character, key);
+      const comparison = typeof left === 'number' ? left - right : characterNameCollator.compare(left, right);
+      return comparison * (direction === 'asc' ? 1 : -1) || a.index - b.index;
+    });
+  }
+
   characterTableBodyEl.innerHTML = visibleCharacters.map(({ character, index }) => `
-    <tr>
-      <td><input type="checkbox" class="character-check" value="${index}"></td>
-      <td>${renderPortraitCell(character.portrait, character.name)}</td>
-      <td>${renderCategoryIcon("faction", character.faction ?? getDefaultFactionName(), character.faction ?? getDefaultFactionName())}</td>
+    <tr data-character-index="${index}">
+      <td><div class="character-identity"><span class="character-portrait">${renderPortraitCell(character.portrait, character.name)}</span><span class="character-name">${escapeHtml(character.name)}</span></div></td>
       <td>${renderCategoryIcon("role", normalizeRole(character.role), getRoleLabel(character.role))}</td>
-      <td>${escapeHtml(character.name)}</td>
+      <td>${renderCategoryIcon("faction", character.faction ?? getDefaultFactionName(), character.faction ?? getDefaultFactionName())}</td>
       <td>${character.hp}</td>
       <td>${character.mp}</td>
       <td>${character.st}</td>
@@ -41,7 +85,7 @@ function renderCharacterTable() {
       <td>${character.attackRange}</td>
       <td><button onclick="openCharacterModal(${index})">수정</button></td>
     </tr>
-  `).join("");
+  `).join("") || '<tr><td colspan="15" class="character-empty">조건에 맞는 캐릭터가 없습니다.</td></tr>';
 }
 
 function changeCharacterRoleFilter(role) {
@@ -50,10 +94,12 @@ function changeCharacterRoleFilter(role) {
 }
 
 function openCharacterModal(index = "") {
+  if (characterDeletePending) return;
   const character = characterJson[index];
 
   characterModalTitleEl.innerText = character ? "캐릭터 수정" : "캐릭터 추가";
   characterEditIndexEl.value = character ? index : "";
+  document.getElementById('characterDeleteButton').classList.toggle('hidden', !character);
   characterNameEl.value = character?.name ?? "";
   resetPortraitDraft("character", character?.portrait ?? "");
   resetPortraitAppearance(character?.appearance);
@@ -81,6 +127,7 @@ function openCharacterModal(index = "") {
 }
 
 function closeCharacterModal() {
+  if (characterDeletePending) return;
   characterModalEl.classList.add("hidden");
   characterFormEl.reset();
   resetPortraitDraft("character");
@@ -89,6 +136,7 @@ function closeCharacterModal() {
 
 async function saveCharacterFromForm(event) {
   event.preventDefault();
+  if (characterDeletePending) return;
 
   const editIndex = characterEditIndexEl.value;
   const previousCharacter = editIndex !== "" ? characterJson[Number(editIndex)] : null;
@@ -144,57 +192,78 @@ async function saveCharacterFromForm(event) {
   }
 }
 
-async function deleteSelectedCharacters() {
-  const checkedIndexes = [...document.querySelectorAll(".character-check:checked")]
-    .map(input => Number(input.value))
-    .sort((a, b) => b - a);
+async function deleteCharacterFromModal() {
+  if (characterDeletePending || characterEditIndexEl.value === '') return;
+  const index = Number(characterEditIndexEl.value);
+  const character = characterJson[index];
+  if (!character || !window.confirm(`"${character.name}" 캐릭터를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`)) return;
+  const deletedIndexes = [index];
+  const previousCharacters = [...characterJson];
+  const previousTeams = teamsJson;
+  const previousTeamSelection = selectedTeamMemberIds;
+  let characterSaved = false;
+  characterDeletePending = true;
+  characterFormEl.querySelectorAll('.character-modal-actions button').forEach(button => { button.disabled = true; });
 
-  if (checkedIndexes.length === 0) {
-    alert("삭제할 캐릭터를 선택해주세요.");
-    return;
-  }
-
-  checkedIndexes.forEach(index => characterJson.splice(index, 1));
+  characterJson.splice(index, 1);
   playerSquad = [];
   enemySquad = [];
   selectedEnemyTeamIndex = "";
   selectedBattleCharacterIds.clear();
   selectedBattleTeamIds.clear();
   if (typeof syncTeamsAfterCharacterDeletion === "function") {
-    syncTeamsAfterCharacterDeletion(checkedIndexes);
+    syncTeamsAfterCharacterDeletion(deletedIndexes);
   }
   try {
     await saveCharacterJson();
+    characterSaved = true;
     if (typeof saveTeamJson === "function") {
       await saveTeamJson();
     }
-    refreshCharacterUI();
-    if (typeof renderBattleTeamButtons === "function") {
-      renderBattleTeamButtons();
-      renderBattleEnemyControls();
-    }
   } catch (error) {
+    if (!characterSaved) {
+      characterJson = previousCharacters;
+      teamsJson = previousTeams;
+      selectedTeamMemberIds = previousTeamSelection;
+    }
     logError("character", "캐릭터 삭제 처리 중 실패했습니다.", error);
-    alert("캐릭터 데이터를 저장하지 못했습니다.");
+    alert(characterSaved ? "캐릭터는 삭제됐지만 팀 편성 저장에 실패했습니다. 팀 편성을 확인하고 다시 저장해주세요." : "캐릭터 데이터를 저장하지 못했습니다. 다시 시도해주세요.");
+  } finally {
+    characterDeletePending = false;
+    characterFormEl.querySelectorAll('.character-modal-actions button').forEach(button => { button.disabled = false; });
+    if (characterSaved) {
+      refreshCharacterUI();
+      if (typeof renderBattleTeamButtons === 'function') {
+        renderBattleTeamButtons();
+        renderBattleEnemyControls();
+      }
+      closeCharacterModal();
+    }
   }
 }
 
-function createCharacter(characterData, index, side = "player") {
+function createCharacter(characterData, index, side = "player", synergyModifiers = null) {
+  const originalData = characterData;
+  if (synergyModifiers) characterData = {...characterData, runtimeSynergyModifiers:synergyModifiers};
   const derivedCharacter = applyCharacterStatAbilities(characterData);
   const unequippedCharacter = applyCharacterStatAbilities({...characterData,equipment:{}});
   const equipmentLoadouts = normalizeEquipmentSets(derivedCharacter).map(set => {
     const equipped = applyCharacterStatAbilities({...derivedCharacter,equipment:set.equipment});
     const weapon = getEquippedWeaponItemForCombat(equipped);
-    return {name:set.name,maxHp:equipped.hp,maxMp:equipped.mp,maxSt:equipped.st,baseBp:Math.max(0,Number(equipped.bp)||0),
+    return {name:set.name,attributes:getCharacterEffectiveAttributes(equipped),itemSkillModifiers:getCharacterItemSkillModifiers(equipped),maxHp:equipped.hp,maxMp:equipped.mp,maxSt:equipped.st,baseBp:Math.max(0,Number(equipped.bp)||0),
       atk:equipped.atk,magic:equipped.magic,speed:equipped.speed,attackSpeed:equipped.attackSpeed,castSpeed:equipped.castSpeed,
       defense:equipped.defense,resistance:equipped.resistance,attackRange:equipped.attackRange,attackType:equipped.attackType,
       attackSkillId:weapon?.attackSkillId ?? "",weaponAttacks:getCharacterWeaponAttacks(equipped),
       sameTargetWeaponPenaltyPercent:equipped.equipmentRules.sameTargetWeaponPenaltyPercent,
-      withoutEquipment:{name:`${set.name} (장비 효과 무효)`,maxHp:unequippedCharacter.hp,maxMp:unequippedCharacter.mp,maxSt:unequippedCharacter.st,baseBp:Math.max(0,Number(unequippedCharacter.bp)||0),
+      withoutEquipment:{name:`${set.name} (장비 효과 무효)`,attributes:getCharacterEffectiveAttributes(unequippedCharacter),itemSkillModifiers:[],maxHp:unequippedCharacter.hp,maxMp:unequippedCharacter.mp,maxSt:unequippedCharacter.st,baseBp:Math.max(0,Number(unequippedCharacter.bp)||0),
         atk:unequippedCharacter.atk,magic:unequippedCharacter.magic,speed:unequippedCharacter.speed,attackSpeed:unequippedCharacter.attackSpeed,castSpeed:unequippedCharacter.castSpeed,
         defense:unequippedCharacter.defense,resistance:unequippedCharacter.resistance,attackRange:unequippedCharacter.attackRange,attackType:unequippedCharacter.attackType,
         attackSkillId:"",weaponAttacks:[],sameTargetWeaponPenaltyPercent:0}};
   });
+  if (synergyModifiers && Object.keys(synergyModifiers).length) {
+    const plain = createCharacter(originalData, index, side);
+    equipmentLoadouts.forEach((loadout, i) => { loadout.withoutSynergy = plain.equipmentLoadouts[i]; });
+  }
   const equippedWeapon = getEquippedWeaponItemForCombat(derivedCharacter);
   const role = derivedCharacter.role;
   const fieldWidth = canvas.width || 400;
@@ -235,7 +304,8 @@ function createCharacter(characterData, index, side = "player") {
     defense: derivedCharacter.defense,
     resistance: derivedCharacter.resistance,
     attackRange: derivedCharacter.attackRange,
-    attributes: derivedCharacter.attributes,
+    attributes: getCharacterEffectiveAttributes(derivedCharacter),
+    itemSkillModifiers: getCharacterItemSkillModifiers(derivedCharacter),
     faction: derivedCharacter.faction ?? getDefaultFactionName(),
     portrait: derivedCharacter.portrait,
     x,

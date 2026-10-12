@@ -49,7 +49,7 @@ function enhanceField(field) {
 }
 
 function enhanceTable(table) {
-  if (table.hasAttribute(BOOTSTRAP_ENHANCED_ATTR)) {
+  if (!table.isConnected || !table.parentElement || table.hasAttribute(BOOTSTRAP_ENHANCED_ATTR)) {
     return;
   }
   addClasses(table, ["table", "table-sm", "table-striped", "table-hover", "align-middle"]);

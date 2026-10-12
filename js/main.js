@@ -17,6 +17,7 @@ async function initApp() {
     await loadSkillJson();
     await loadCharacterJson();
     await loadTeamJson();
+    await loadSynergyJson();
 
     initRoleOptions();
     refreshMonsterUI();

@@ -1,0 +1,35 @@
+[
+  {
+    "id": "synergy_2e200c9c-59d4-4670-a520-8671f6842297",
+    "name": "튼튼한 갑옷",
+    "condition": {
+      "type": "role",
+      "value": "tank"
+    },
+    "stacking": "cumulative",
+    "thresholds": [
+      {
+        "count": 2,
+        "effects": [
+          {
+            "type": "stat",
+            "stat": "vit",
+            "value": 5,
+            "target": "team"
+          }
+        ]
+      },
+      {
+        "count": 4,
+        "effects": [
+          {
+            "type": "stat",
+            "stat": "hp",
+            "value": 500,
+            "target": "team"
+          }
+        ]
+      }
+    ]
+  }
+]

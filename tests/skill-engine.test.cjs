@@ -4,6 +4,111 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const path = require('node:path');
 
+test('owner contribution survives repeated removal, groups templates and separates identical owners', () => {
+  const e=engine(), a=unit(e), b=unit(e), enemy=unit(e,'enemy');
+  a.name=b.name='same';a.id=b.id=0;
+  enemy.maxHp=enemy.hp=10000;
+  const summon=skill(e,{type:'summon_entity',summon:{count:1,lifetime:0,atk:7}});
+  const damage={type:'deal_damage',damageType:'fixed',coefficients:[{type:'fixed',value:7}]};
+  e.applyActionDamage(a,enemy,{...damage,coefficients:[{type:'fixed',value:10}]});
+  for(let i=0;i<12;i++) {
+    e.applySkill(a,a,summon);const s=a.summons[0];
+    e.applyActionDamage(s,enemy,damage);
+    s.hp=0;e.syncAliveState(s);
+  }
+  e.applySkill(b,b,summon);e.applyActionDamage(b.summons[0],enemy,damage);
+  const rows=e.createRecordMembers(e.playerSquad,10);
+  assert.equal(rows.length,2);
+  assert.equal(rows[0].damageDealt,94);assert.equal(rows[0].dps,9.4);
+  assert.equal(rows[0].contribution.direct.damageDealt,10);
+  assert.equal(rows[0].contribution.summon.damageDealt,84);
+  assert.equal(rows[0].contribution.groups.length,1);assert.equal(rows[0].contribution.groups[0].count,12);
+  assert.equal(rows[1].damageDealt,7);assert.notEqual(rows[0].eventId,rows[1].eventId);
+  assert.equal(e.getBattleEvents('hit').filter(v=>v.source.isSummon).length,13);
+  const saved=e.normalizeRecordJson([{battleAt:'2026-10-12',result:'test',playerMembers:rows,contributionVersion:1}]);
+  assert.equal(saved[0].playerMembers[0].contribution.summon.damageDealt,84);
+  e.resetBattleEvents();assert.equal(e.getBattleContribution(a,10).total.damageDealt,0);
+});
+
+test('persistent contribution includes healing resources kills after death but not owner HP or death', () => {
+  const e=engine(), owner=unit(e), target=unit(e,'enemy');
+  lifecycleSummon(e,owner,'persistent');const s=owner.summons[0];
+  owner.hp=40;owner.mp=50;
+  e.applyActionHeal(s,owner,{healResource:'HP',coefficients:[{type:'fixed',value:20}]});
+  e.applyActionHeal(s,owner,{healResource:'MP',coefficients:[{type:'fixed',value:10}]});
+  e.applyActionDamage(s,target,{damageType:'fixed',coefficients:[{type:'fixed',value:100}]});
+  s.hp=0;e.syncAliveState(s);
+  const row=e.createRecordMembers(e.playerSquad,5)[0];
+  assert.equal(row.healingDone,20);assert.equal(row.hps,4);assert.equal(row.kills,1);
+  assert.equal(row.hp,60);assert.equal(row.contribution.summon.resourceRecovery.MP,10);
+  assert.equal(row.contribution.groups[0].summonType,'persistent');
+  assert.equal(e.reactivatePersistentSummon(s,30),true);
+  e.registerBattleContribution(s);assert.equal(e.getBattleContribution(owner,5).groups[0].count,1);
+});
+
+test('contribution is independent of the capped event history', () => {
+  const e=engine(), owner=unit(e), target=unit(e,'enemy');
+  target.hp=target.maxHp=5000;
+  for(let i=0;i<1100;i++) e.applyActionDamage(owner,target,{damageType:'fixed',coefficients:[{type:'fixed',value:1}]});
+  assert.equal(e.getBattleEvents().length,1000);
+  assert.equal(e.createRecordMembers(e.playerSquad,100)[0].damageDealt,1100);
+});
+
+test('equipment loadout and suppression replace item modifiers and effective attributes', () => {
+  const e=engine(),source=unit(e);
+  const loadout={...source,baseBp:0,attributes:{str:15},itemSkillModifiers:[{skillId:'s',target:'cooldown',signature:'skill',value:-1}],weaponAttacks:[]};
+  loadout.withoutEquipment={...loadout,attributes:{str:10},itemSkillModifiers:[]};
+  e.applyBattleEquipmentLoadout(source,loadout,1);
+  assert.equal(source.attributes.str,15);assert.equal(source.itemSkillModifiers.length,1);
+  source.runtimeRuleOverrides=[{disableEquipmentEffects:true}];
+  e.applyBattleEquipmentLoadout(source,loadout,1);
+  assert.equal(source.attributes.str,10);assert.equal(source.itemSkillModifiers.length,0);
+  source.runtimeRuleOverrides=[];
+  e.applyBattleEquipmentLoadout(source,loadout,1);
+  assert.equal(source.attributes.str,15);assert.equal(source.itemSkillModifiers.length,1);
+});
+
+test('item skill modifiers target individual coefficients, stack once and protect source skills', () => {
+  const e=engine(),source=unit(e),target=unit(e,'enemy',105);
+  const s=skill(e,{type:'deal_damage',target:'enemy',damageType:'fixed',rangeMode:'custom',rangeValue:10,coefficients:[{type:'fixed',value:10},{type:'fixed',value:20}]});
+  e.skillsJson=[s];source.skillIds=[s.id];
+  const choice=e.getItemSkillTargets(s).find(t=>t.target==='actions.0.coefficients.1.value');
+  source.itemSkillModifiers=[{skillId:s.id,target:choice.target,signature:choice.signature,value:7},{skillId:s.id,target:choice.target,signature:choice.signature,value:3}];
+  const before=JSON.stringify(s);
+  for(let i=0;i<3;i++) assert.equal(e.getEquippedSkills(source)[0].actions[0].coefficients[1].value,30);
+  assert.equal(e.tryUseReadySkill(source,[source],[target]),true);
+  assert.equal(target.hp,60);
+  assert.equal(JSON.stringify(s),before);
+  source.itemSkillModifiers=[];
+  assert.equal(e.getEquippedSkills(source)[0].actions[0].coefficients[1].value,20);
+});
+
+test('item cooldown resource duration and range changes reach real engine execution', () => {
+  const e=engine(),source=unit(e),target=unit(e,'enemy',150);
+  const action=e.createDefaultAction('add_state');action.target='enemy';action.duration=2;action.rangeMode='custom';action.rangeValue=2;
+  const s=skill(e,action);s.cooldown=4;s.resourceCosts=[{resource:'MP',mode:'fixed',value:20},{resource:'ST',mode:'fixed',value:5}];
+  const values={'cooldown':-1,'resourceCosts.0.value':-10,'actions.0.duration':3,'actions.0.rangeValue':8};
+  source.itemSkillModifiers=e.getItemSkillTargets(s).filter(t=>t.target in values).map(t=>({skillId:s.id,target:t.target,signature:t.signature,value:values[t.target]}));
+  e.skillsJson=[s];source.skillIds=[s.id];
+  const runtime=e.getEquippedSkills(source)[0];
+  assert.equal(runtime.cooldown,3);assert.equal(runtime.resourceCosts[1].value,5);
+  assert.equal(e.tryUseReadySkill(source,[source],[target]),true);
+  assert.equal(source.mp,90);assert.equal(source.st,95);assert.equal(source.skillCooldowns[s.id],180);
+  assert.equal(target.activeEffects[0].remainingTicks,300);
+  source.runtimeRuleOverrides=[{disableEquipmentEffects:true}];
+  assert.equal(e.getEquippedSkills(source)[0].cooldown,4);
+});
+
+test('changed skill action or cost invalidates stale item targets without redirecting them', () => {
+  const e=engine(),source=unit(e);
+  const s=skill(e,{type:'deal_damage',target:'enemy',coefficients:[{type:'fixed',value:10}]});
+  s.resourceCosts=[{resource:'MP',mode:'fixed',value:20}];
+  source.itemSkillModifiers=e.getItemSkillTargets(s).filter(t=>['actions.0.coefficients.0.value','resourceCosts.0.value'].includes(t.target)).map(t=>({skillId:s.id,target:t.target,signature:t.signature,value:-9}));
+  s.actions[0].coefficients[0].value=30;s.resourceCosts[0].resource='ST';
+  const runtime=e.getRuntimeItemSkill(source,s);
+  assert.equal(runtime.actions[0].coefficients[0].value,30);assert.equal(runtime.resourceCosts[0].value,20);
+});
+
 test('unsupported actions preserve their original payload and are locked', () => {
   const e=engine();
   for(const type of ['add_buff','cast_skill','custom_action']) {
@@ -616,7 +721,7 @@ test('summons have independent stats, owner limits, expiry, records and can atta
   assert.equal(e.resolveSkillTarget(source,s,e.playerSquad,e.enemySquad),null);
   summon.x=enemy.x;summon.y=enemy.y;
   e.doAttack(summon,enemy); assert.equal(enemy.hp,93);
-  const records=e.createRecordMembers(e.playerSquad,1); assert.equal(records.length,3);
+  const records=e.createRecordMembers(e.playerSquad,1); assert.equal(records.length,1);
   assert.doesNotThrow(()=>JSON.stringify(records));
   for(let i=0;i<6;i++) e.updateSummonLifetimes();
   assert.equal(summon.alive,false);
@@ -1450,6 +1555,131 @@ function damageProxyAction(e,percent=20,priority=100,scope='all') {
  const action=e.createDefaultAction('add_buff');action.target='ally';action.effect.id=`proxy_${priority}_${scope}`;action.effect.name='피해 대리';
  Object.assign(action.effect,{mode:'damage_proxy',proxyPercent:percent,proxyPriority:priority,proxyScope:scope});return action;
 }
+
+function lifecycleSummon(e, owner, type, count=1) {
+  const s=skill(e,{type:'summon_entity',summon:{count,limit:3,lifetime:0}});
+  e.newEntity.summonType=type;
+  e.applySkill(owner,owner,s);
+  return s;
+}
+
+test('3v3 roster remains fixed while persistent and temporary entities have distinct lifecycles', () => {
+  const e=engine(), owner=unit(e), enemy=unit(e,'enemy');
+  unit(e);unit(e);unit(e,'enemy');unit(e,'enemy');
+  lifecycleSummon(e,owner,'persistent');
+  const wolf=owner.summons[0], id=wolf.id;
+  assert.equal(e.getBattleCharacters(e.playerSquad).length,3);
+  assert.equal(e.getActiveBattleEntities(e.playerSquad).length,4);
+  lifecycleSummon(e,owner,'temporary',2);
+  assert.equal(e.getBattleCharacters(e.playerSquad).length,3);
+  assert.equal(e.getActiveBattleEntities(e.playerSquad).length,6);
+  assert.equal(e.createRecordMembers(e.playerSquad,1).length,3);
+  assert(owner.summons.every(s=>s.owner===owner && s.summoner===owner));
+  wolf.x=enemy.x;wolf.y=enemy.y;
+  assert.equal(e.findTarget(enemy,[wolf]),wolf);
+  wolf.hp=0;e.syncAliveState(wolf);
+  assert(owner.summons.includes(wolf));assert(e.playerSquad.includes(wolf));
+  assert.equal(e.getActiveBattleEntities(e.playerSquad).length,5);
+  assert.equal(e.findTarget(enemy,[wolf]),undefined);
+  assert.equal(e.findHealTarget(owner,[wolf]),undefined);
+  assert.equal(e.reviveBattleUnitWithSkill(owner,wolf,{},null),false);
+  const revival=skill(e,{type:'revive_ally',target:'ally'});
+  assert.equal(e.resolveSkillActionTarget(owner,revival.actions[0],wolf,revival),null);
+  assert.equal(e.reactivatePersistentSummon(wolf,30),true);
+  assert.equal(wolf.id,id);assert.equal(owner.summons[0],wolf);
+  assert.equal(e.reactivatePersistentSummon(wolf,30),false);
+  assert.equal(e.getActiveBattleEntities(e.playerSquad).length,6);
+  const temporary=owner.summons[1];temporary.hp=0;e.syncAliveState(temporary);
+  assert(!owner.summons.includes(temporary));assert(!e.playerSquad.includes(temporary));
+  assert.equal(e.getActiveBattleEntities(e.playerSquad).length,5);
+  assert.equal(e.reactivatePersistentSummon(temporary,30),false);
+  assert.equal(e.normalizeRecordEvents(e.getBattleEvents()).find(x=>x.target?.id===e.snapshotEventUnit(wolf).id).target.ownerEventId,e.snapshotEventUnit(owner).id);
+});
+
+test('persistent repeated casts reuse stored slots including dead entities without imposing one pet per owner', () => {
+  const e=engine(), owner=unit(e);
+  const s=lifecycleSummon(e,owner,'persistent',2), first=owner.summons[0];
+  first.hp=0;e.syncAliveState(first);
+  for(let i=0;i<10;i++) e.applySkill(owner,owner,s);
+  assert.equal(owner.summons.length,2);assert.equal(owner.summons[0],first);
+  const alternate={...s,id:'alternate'};
+  e.applySkill(owner,owner,alternate);assert.equal(owner.summons.length,2);
+  lifecycleSummon(e,owner,'persistent');assert.equal(owner.summons.length,3);
+  owner.hp=0;e.syncAliveState(owner);
+  assert.equal(owner.summons.filter(s=>s.alive).length,2);
+  assert.equal(e.canSquadContinueBattle(e.playerSquad),true);
+});
+
+test('temporary 100 deaths dispatch before removal and release all targeting references', () => {
+  const e=engine(), owner=unit(e), enemy=unit(e,'enemy');
+  const s=skill(e,{type:'summon_entity',summon:{lifetime:0}});
+  let deaths=0;
+  const off=e.subscribeBattleEvent('death',(event,refs)=>{
+    if(!refs.target.isSummon)return;
+    deaths++;assert(owner.summons.includes(refs.target));assert.equal(refs.target.owner,owner);
+  });
+  for(let i=0;i<100;i++) {
+    e.applySkill(owner,owner,s);const summon=owner.summons[0];
+    enemy.pendingAction={target:summon};enemy.channelAction={target:summon};
+    enemy.weaponAttackStates=[{target:summon,castTimer:10}];
+    e.projectiles.push({source:enemy,target:summon,preferredTarget:summon});
+    e.markActionTargetCooldown(enemy,summon,{targetCooldown:1},null);
+    summon.hp=0;const events=e.syncAliveState(summon,{deferEvents:true});
+    assert(owner.summons.includes(summon));e.publishBattleEvents(events);
+    assert.equal(owner.summons.length,0);assert.equal(e.playerSquad.length,1);
+    assert.equal(enemy.pendingAction.target,null);assert.equal(enemy.channelAction.target,null);
+    assert.equal(enemy.weaponAttackStates[0].target,null);
+    assert.equal(e.projectiles[0].target,null);assert.equal(e.projectiles[0].preferredTarget,null);
+    e.updateProjectiles();assert.equal(e.projectiles.length,0);
+    assert.equal(summon.owner,null);assert.equal(summon.summoner,null);
+  }
+  off();assert.equal(deaths,100);
+  assert.equal(vm.runInContext('pendingSummonDeaths.size',e),0);
+});
+
+test('expiry, dismiss, nested summoners and battle teardown preserve ownership without retaining runtime summons', () => {
+  const e=engine(), owner=unit(e);owner.id=7;
+  lifecycleSummon(e,owner,'persistent');const wolf=owner.summons[0];
+  const temporary=skill(e,{type:'summon_entity',summon:{lifetime:0.1}});
+  e.applySkill(wolf,wolf,temporary);
+  const child=owner.summons[1];assert.equal(child.owner,owner);assert.equal(child.ownerId,7);
+  for(let i=0;i<6;i++)e.updateSummonLifetimes();
+  assert.equal(owner.summons.length,1);assert(!e.playerSquad.includes(child));
+  e.applySkill(owner,owner,temporary);const dismissed=owner.summons[1];
+  e.applySummonCommand(owner,dismissed,{summonCommand:'dismiss'});
+  assert.equal(owner.summons.length,1);
+  wolf.hp=0;e.syncAliveState(wolf);e.clearBattleSummons();
+  assert.equal(owner.summons.length,0);assert.equal(e.playerSquad.length,1);
+  assert.equal(wolf.owner,null);assert.equal(e.reactivatePersistentSummon(wolf,50),false);
+});
+
+test('ten minutes of repeated temporary expiry keep runtime collections bounded', () => {
+  const e=engine(), owner=unit(e);
+  const s=skill(e,{type:'summon_entity',summon:{count:2,limit:3,lifetime:0.5}});
+  let created=0;
+  for(let tick=0;tick<36000;tick++) {
+    if(tick%60===0){e.applySkill(owner,owner,s);created+=2;}
+    e.updateSummonLifetimes();
+    assert.equal(e.getBattleCharacters(e.playerSquad).length,1);
+    assert(e.playerSquad.length<=3);assert((owner.summons?.length ?? 0)<=2);
+  }
+  assert.equal(created,1200);assert.equal(owner.summons.length,0);
+  assert.equal(e.playerSquad.length,1);assert.equal(e.projectiles.length,0);
+  assert.equal(vm.runInContext('battleFields.length + pendingSummonDeaths.size + combatEventQueue.length',e),0);
+});
+
+test('field iteration cannot restore a removed temporary caster field', () => {
+  const e=engine(), owner=unit(e), enemy=unit(e,'enemy');
+  lifecycleSummon(e,owner,'temporary');const summon=owner.summons[0];
+  const field={type:'create_field',target:'enemy',fieldRadius:100,fieldInterval:1/60,duration:10,
+    fieldEffect:'deal_damage',coefficients:[{type:'fixed',value:1000}]};
+  e.createBattleField(summon,enemy,{...field,fieldInterval:10},{id:'summon_field'});
+  e.createBattleField(enemy,summon,field,{id:'enemy_field'});
+  e.updateBattleFields();
+  assert.equal(summon.removed,true);
+  assert.equal(vm.runInContext('battleFields.length',e),1);
+  assert.equal(vm.runInContext('battleFields.some(field=>field.source.removed)',e),false);
+});
 
 test('damage proxy splits actual damage between the protected unit and buff caster',()=>{
  const e=engine(),protector=unit(e),protectedUnit=unit(e),enemy=unit(e,'enemy',105);

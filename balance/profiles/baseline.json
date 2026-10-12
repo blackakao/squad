@@ -1,0 +1,136 @@
+{
+  "label": "baseline",
+  "count": 100,
+  "dataHash": "943307d84e5f2ec59bc94d5828a5959adcf75e274c4d052f6414e2201eea4136",
+  "resultsHash": "1b38273f96795ca5b4c77bf01f650a7124b52372be601e2d85422666263e369c",
+  "elapsedSeconds": 101.0670237,
+  "stagesMs": {
+    "initialize": 125.70409999999998,
+    "battles": 100933.51830000001,
+    "aggregate": 3.1728999999904772,
+    "serialize": 4.62840000000142
+  },
+  "serializedBytes": 365751,
+  "topSelfMs": [
+    {
+      "name": " js/battle.js:133",
+      "ms": 6818.873
+    },
+    {
+      "name": "moveUnit js/battle.js:617",
+      "ms": 5060.429
+    },
+    {
+      "name": "runBattleTick js/battle.js:1436",
+      "ms": 5005.246
+    },
+    {
+      "name": "takeAction js/battle.js:718",
+      "ms": 4414.997
+    },
+    {
+      "name": "tryUseReadySkill js/battle.js:783",
+      "ms": 3841.84
+    },
+    {
+      "name": "normalizeResourceReference js/skill.js:367",
+      "ms": 3797.05
+    },
+    {
+      "name": "getEquippedSkills js/skill.js:677",
+      "ms": 3747.016
+    },
+    {
+      "name": "getUnitResourceState js/skill.js:792",
+      "ms": 3515.209
+    },
+    {
+      "name": "resolveSkillActionTarget js/skill.js:1669",
+      "ms": 3349.402
+    },
+    {
+      "name": "normalizeSkillCooldown js/skill.js:189",
+      "ms": 3053.237
+    },
+    {
+      "name": "distance js/battle.js:209",
+      "ms": 2858.76
+    },
+    {
+      "name": "isSkillExecutable js/skill.js:254",
+      "ms": 2749.52
+    },
+    {
+      "name": "clampPosition js/battle.js:213",
+      "ms": 2676.259
+    },
+    {
+      "name": " js/skill.js:1700",
+      "ms": 2558.91
+    },
+    {
+      "name": "resolveCollision js/battle.js:668",
+      "ms": 2133.633
+    },
+    {
+      "name": "getResourceCostAmount js/skill.js:818",
+      "ms": 2115.121
+    },
+    {
+      "name": "isUnitSkillDisabled js/skill.js:666",
+      "ms": 2088.904
+    },
+    {
+      "name": "getUnitRange js/ui.js:548",
+      "ms": 1993.319
+    },
+    {
+      "name": "canPaySkillResourceCosts js/skill.js:835",
+      "ms": 1906.227
+    },
+    {
+      "name": " js/skill.js:837",
+      "ms": 1513.913
+    },
+    {
+      "name": "tickSkillCooldowns js/battle.js:777",
+      "ms": 1449.789
+    },
+    {
+      "name": "runBattle file:///C:/Users/park/Desktop/project/balance/simulator/engine.cjs:100",
+      "ms": 1440.672
+    },
+    {
+      "name": " js/battle.js:786",
+      "ms": 1436.147
+    },
+    {
+      "name": "normalizeSkillChannel js/skill-channel.js:1",
+      "ms": 1432.297
+    },
+    {
+      "name": " js/battle.js:614",
+      "ms": 1399.593
+    },
+    {
+      "name": " js/battle.js:613",
+      "ms": 1378.049
+    },
+    {
+      "name": " js/skill.js:682",
+      "ms": 1352.338
+    },
+    {
+      "name": "resolveSkillTarget js/battle.js:808",
+      "ms": 1342.144
+    },
+    {
+      "name": "getUnitResourceCurrent js/skill.js:799",
+      "ms": 1322.412
+    },
+    {
+      "name": "normalizeResourceCost js/skill.js:437",
+      "ms": 1321.176
+    }
+  ]
+}

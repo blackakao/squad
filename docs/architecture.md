@@ -1,8 +1,16 @@
 # 아키텍처
 
+## 공용 스탯 시너지 연결
+
+`js/synergy.js`는 정의 로드·검증과 DOM 독립 평가를 담당하고 `js/synergy-ui.js`는 관리 모달/표와 팀 미리보기를 담당합니다. `team.js`의 편성 유닛 생성에서 평가 결과를 `character.js`로 전달하며 `ui.js`/`equipment.js`의 기존 스탯 계산을 재사용합니다. `skill.js`의 장비 loadout은 시너지/장비 무효화 조합을 복원합니다. `battle.js`/`record.js`는 활성 시너지 스냅샷을 기록합니다. Node 엔진은 동일 모듈을 로드하고 Python Job과 CLI 모두 정의를 입력 스냅샷에 포함합니다. [상세 흐름](synergy/SYNERGY_SYSTEM.md).
+
+아이템 관리의 10열 정렬·편집·삭제와 장비 보정 수집은 `js/equipment.js`가 담당합니다. 표의 카테고리 열만 숨기고 편집·필터·데이터는 유지합니다. `ui.js`는 유효 스탯을 기존 공식으로 계산하고, `character.js`는 세트별 전투 스냅샷을 만듭니다. `skill.js`의 허용 대상 열거·런타임 복사를 활성/기본/독립 무기/패시브가 공유합니다. [구조·제한](ITEM_MANAGEMENT.md).
+
 기능 범위는 [프로젝트 개요](project_overview.md), 저장 필드는 [데이터 구조](data_structure.md)를 참고합니다. 독립 3D 도구는 [CharacterViewer](CHARACTER_VIEWER.md)와 [환경 시스템](ENVIRONMENT_SYSTEM.md)에 상세히 기록합니다.
 
 ## 폴더 구조
+
+아이템 생성의 날짜별 배치 도구는 [generate_sample_items_20261010.py](../tools/generate_sample_items_20261010.py), 생성 원칙·결과는 [data-generation](data-generation/DATA_GENERATION_RULES.md)에 있습니다. 게임 런타임은 기존 `data/items.json` → `loadItemJson` → 아이템/장비 화면 흐름을 그대로 사용합니다. [생성 데이터 검증](../tests/test_generated_items.py)은 기존 장비 UI 테스트의 격리 서버를 재사용합니다.
 
 ```text
 .
@@ -22,6 +30,15 @@
 
 ## 파일 역할
 
+- 소환 생명주기: `js/entity.js`/`entity_store.py`가 종류 편집·검증을 맡고, `js/battle.js`가 소유 관계·저장/활성 개체 조회·사망/제거/재활성화·종료 정리를 담당합니다. `js/battle-events.js`의 이벤트 큐 전달 완료 후 사망 소환수를 정리합니다. `js/ui.js`/`js/record.js`/headless 어댑터는 캐릭터 집계에서 소환수를 제외합니다. [상세 계약](ENTITIES.md#소환수-생명주기-2026-10-11).
+
+- `balance/simulator/engine.cjs`: Node VM에서 실제 전투 모듈을 로드하고 가상 시계·seed·출력 어댑터·전체 이벤트 누적을 연결합니다. 전투 수식은 복제하지 않습니다.
+- `balance/simulator/runner.cjs`, `report.cjs`: 균형 무작위 팀 편성·순차 실행·집계·목표 비교·JSON/Markdown 저장·재현 CLI입니다. [전투 재사용 경로](balance/SIMULATION_GUIDE.md)를 참고합니다.
+- `js/simulation.js`: 전투 테스트의 설정·1초 polling·진행률·중단·숫자 정렬·대시보드·목표 편집·이력 조회입니다. 브라우저는 반복 전투를 계산하지 않습니다.
+- `simulation_jobs.py`: 단일 실행 잠금, 입력 스냅샷, Node 자식 프로세스, 영속 Job/진행 상태·이력·실패 복구를 관리합니다. `server.py`가 `/api/simulations` 및 `/api/simulation-targets`를 연결합니다.
+- `balance/simulator/service.cjs`, `worker.cjs`: CLI와 서버의 공통 실행 서비스 및 stdout 진행 이벤트·전투별 journal·부분 결과 저장 어댑터입니다. 취소는 전투 사이에서 처리하며 실제 전투 틱/규칙은 유지합니다.
+- `js/battle.js`의 선택적 `battleResultSink`: headless 결과 수신 경로입니다. 기본값 null에서는 기존 화면과 전투 기록 저장을 유지합니다.
+
 - `index.html`: 단일 페이지 앱의 DOM 구조, 모달, 페이지 섹션, 주요 입력 요소와 독립 CharacterViewer 직접 진입 메뉴를 정의합니다.
 - `character-viewer.html`, `environment-viewer.html`: 게임과 독립된 3D 캐릭터·환경 개발용 화면입니다.
 - `css/style.css`: 공통 UI, 관리 화면, 전투 화면, 반응형 레이아웃 스타일을 담당합니다.
@@ -31,11 +48,11 @@
 - `js/api.js`: `/api/*` fetch 로드/저장 공통 함수와 이미지 업로드 유틸리티입니다.
 - `js/ui.js`: 전역 DOM 참조, 상수, 기본 데이터, 전역 상태, 공통 정규화/렌더 유틸리티를 포함합니다.
 - `js/battle.js`: 자동 전투 세션 준비, 이동, 충돌, 공격, 스킬 실행, 소환, 예비대, 부활, 전투 종료를 담당합니다.
-- `js/battle-events.js`: 전투 중 발생한 상세 이벤트를 기록하고 전투 기록으로 전달합니다.
-- `js/character.js`: 캐릭터 데이터 로드/저장, CRUD, 전투 유닛 생성, 선택 UI를 담당합니다.
+- `js/battle-events.js`: 상세 개체 이벤트와 독립된 전투 전체 소유자 기여도 누적을 담당합니다. 기록과 headless가 공통 집계를 사용합니다. [집계 구조](BATTLE_CONTRIBUTIONS.md).
+- `js/character.js`: 캐릭터 데이터 로드/저장, CRUD, 전투 유닛 생성, 선택 UI를 담당합니다. 관리 표는 원본 인덱스를 보존한 복사 목록만 정렬하고, 수정 창의 개별 삭제는 기존 팀 참조 정리 함수를 재사용합니다. [관리 UI](CHARACTER_UI.md).
 - `js/monster.js`: 몬스터 데이터 로드/저장, CRUD, 적 전투 유닛 생성을 담당합니다.
 - `js/team.js`: 팀 편성, 전투 참가 팀 선택, 팀 전투 규칙과 시너지 계산을 담당합니다.
-- `js/equipment.js`: 아이템 데이터, 장비 착용, 장비 세트, 장비 능력치 합산을 담당합니다.
+- `js/equipment.js`: 아이템 데이터, 장비 착용, 장비 세트, 장비 능력치 합산을 담당합니다. 인벤토리 선택·검색·아이콘 드래그 미리보기·슬롯 강조는 UI 상태로만 유지하며 기존 판정/저장 함수를 호출합니다. `equipmentItemTableBody` ID는 호환을 유지하지만 현재는 표 본문이 아닌 그리드 컨테이너입니다. [장비 UI](EQUIPMENT_UI.md)를 참고하세요.
 - `js/category.js`: 무기/방어구 카테고리 관리와 카테고리 기반 무기 전투 속성을 담당합니다.
 - `js/stats.js`: 캐릭터 기본 스탯 배분과 파생 능력치 계산을 담당합니다.
 - `js/skill.js`: 스킬 데이터, 액션 편집, 스킬 정규화, 스킬 실행 대상/계수 계산을 담당합니다.

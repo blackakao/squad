@@ -19,6 +19,17 @@ def entity(entity_id="wolf"):
 
 
 class EntityTests(unittest.TestCase):
+    def test_summon_lifecycle_roundtrip_and_legacy_default(self):
+        legacy = entity()
+        self.store.save(legacy, create=True)
+        self.assertNotIn('summonType', self.store.get('wolf'))
+        for kind in ('persistent', 'temporary'):
+            value = dict(legacy, summonType=kind)
+            self.store.save(value)
+            self.assertEqual(self.store.get('wolf')['summonType'], kind)
+        with self.assertRaises(EntityError):
+            self.store.save(dict(legacy, summonType='invalid'))
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)

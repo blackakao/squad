@@ -40,5 +40,33 @@
       4
     ],
     "activeMemberCount": 3
+  },
+  {
+    "name": "단일팀1",
+    "battleRules": {
+      "damagePercent": 100,
+      "healingPercent": 100,
+      "resourceCostPercent": 100,
+      "cooldownPercent": 100
+    },
+    "synergyRules": [],
+    "memberIds": [
+      0
+    ],
+    "activeMemberCount": 1
+  },
+  {
+    "name": "단일팀2",
+    "battleRules": {
+      "damagePercent": 100,
+      "healingPercent": 100,
+      "resourceCostPercent": 100,
+      "cooldownPercent": 100
+    },
+    "synergyRules": [],
+    "memberIds": [
+      1
+    ],
+    "activeMemberCount": 1
   }
 ]

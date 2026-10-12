@@ -8,6 +8,62 @@ let combatEventSequence = 0;
 let combatEventTick = 0;
 let combatEventUnitIds = new WeakMap();
 let combatEventNextUnitId = 1;
+let battleContributions = new Map();
+let contributionSummons = new WeakSet();
+
+function emptyBattleContribution() {
+  return {damageDealt:0,healingDone:0,kills:0,resourceRecovery:{},skillUsage:{},damageBySkill:{},healingBySkill:{}};
+}
+
+function registerBattleContribution(unit) {
+  if (!unit || unit.isEntityPreview) return null;
+  const owner = unit.isSummon ? (unit.owner ?? unit.summoner) : unit;
+  const ownerId = unit.isSummon ? (owner ? snapshotEventUnit(owner).id : unit.ownerEventId) : snapshotEventUnit(unit).id;
+  if (ownerId == null) return null;
+  if (!battleContributions.has(ownerId)) battleContributions.set(ownerId,{direct:emptyBattleContribution(),summon:emptyBattleContribution(),groups:[]});
+  const row = battleContributions.get(ownerId);
+  if (!unit.isSummon) return {row,part:row.direct};
+  let group = row.groups.find(g=>g.entityId === (unit.entityId ?? null) && g.summonType === (unit.summonType || 'temporary'));
+  if (!group) {
+    group = {entityId:unit.entityId ?? null,name:unit.summonTemplateName || unit.name,summonType:unit.summonType || 'temporary',count:0,...emptyBattleContribution()};
+    row.groups.push(group);
+  }
+  if (!contributionSummons.has(unit)) { contributionSummons.add(unit); group.count++; }
+  return {row,part:row.summon,group};
+}
+
+function accumulateBattleContribution(event, source, target) {
+  const entry = registerBattleContribution(source);
+  if (!entry) return;
+  const skill = event.skillId || '(basic)';
+  for (const part of [entry.part,entry.group].filter(Boolean)) {
+    const add = (map,key,value) => { map[key] = (map[key] || 0) + value; };
+    if (event.type === 'hit') { part.damageDealt += event.amount; add(part.damageBySkill,skill,event.amount); }
+    if (event.type === 'heal') {
+      if (event.resource === 'HP') { part.healingDone += event.amount; add(part.healingBySkill,skill,event.amount); }
+      else add(part.resourceRecovery,event.resource,event.amount);
+    }
+    if (event.type === 'death' && target && !target.isSummon && target.side !== source.side) part.kills++;
+    if (event.type === 'cast_complete') add(part.skillUsage,skill,1);
+  }
+}
+
+function getBattleContribution(unit, duration = 0) {
+  const entry = registerBattleContribution(unit);
+  const row = structuredClone(entry?.row || {direct:emptyBattleContribution(),summon:emptyBattleContribution(),groups:[]});
+  const total = emptyBattleContribution();
+  for (const part of [row.direct,row.summon]) {
+    for (const key of ['damageDealt','healingDone','kills']) total[key] += part[key];
+    for (const key of ['resourceRecovery','skillUsage','damageBySkill','healingBySkill']) {
+      for (const [id,value] of Object.entries(part[key])) total[key][id] = (total[key][id] || 0) + value;
+    }
+  }
+  for (const part of [row.direct,row.summon,total,...row.groups]) {
+    part.dps = duration > 0 ? part.damageDealt / duration : 0;
+    part.hps = duration > 0 ? part.healingDone / duration : 0;
+  }
+  return {...row,total};
+}
 
 function subscribeBattleEvent(type, listener) {
   if (type !== "*" && !Object.hasOwn(BATTLE_EVENT_LABELS,type)) throw new Error("Unknown battle event");
@@ -20,7 +76,8 @@ function subscribeBattleEvent(type, listener) {
 function snapshotEventUnit(unit) {
   if (!unit) return null;
   if (!combatEventUnitIds.has(unit)) combatEventUnitIds.set(unit,combatEventNextUnitId++);
-  return Object.freeze({id:combatEventUnitIds.get(unit),name:String(unit.name ?? ""),side:unit.side ?? "",isSummon:Boolean(unit.isSummon)});
+  return Object.freeze({id:combatEventUnitIds.get(unit),name:String(unit.name ?? ""),side:unit.side ?? "",isSummon:Boolean(unit.isSummon),
+    ...(unit.isSummon ? {summonType:unit.summonType ?? "temporary",ownerId:unit.ownerId ?? null,ownerEventId:unit.ownerEventId ?? null,entityId:unit.entityId ?? null} : {})});
 }
 
 function publishBattleEvents(events) {
@@ -42,6 +99,7 @@ function publishBattleEvents(events) {
   try {
     while (combatEventQueue.length && delivered++ < 128) {
       const current = combatEventQueue.shift();
+      accumulateBattleContribution(current.snapshot,current.source,current.target);
       combatEventHistory.push(current.snapshot);
       if (combatEventHistory.length > 1000) combatEventHistory.shift();
       combatEventDepth = current.depth + 1;
@@ -53,6 +111,7 @@ function publishBattleEvents(events) {
     }
   } finally {
     combatEventQueue = [];combatEventDepth = 0;combatEventDispatching = false;
+    if (typeof finalizeSummonDeaths === "function") finalizeSummonDeaths();
   }
   renderBattleEngineEvents();
 }
@@ -64,6 +123,7 @@ function getBattleEvents(type = "all") {
 function resetBattleEvents() {
   combatEventHistory = [];combatEventQueue = [];combatEventSequence = 0;combatEventTick = 0;
   combatEventUnitIds = new WeakMap();combatEventNextUnitId = 1;
+  battleContributions = new Map();contributionSummons = new WeakSet();
   renderBattleEngineEvents();
 }
 

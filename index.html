@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Squad Auto Battle Prototype</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=20261009-icon-background">
+<link rel="stylesheet" href="css/style.css?v=20261012-contributions">
 </head>
 <body>
 
@@ -13,9 +13,11 @@
 
 <div class="nav">
   <button onclick="showPage('battle')">전투</button>
+  <button onclick="showPage('simulation')">전투 테스트</button>
   <button onclick="showPage('character')">캐릭터 관리</button>
   <button onclick="window.location.href='character-viewer.html'">3D 캐릭터 제작</button>
   <button onclick="showPage('team')">팀 편성</button>
+  <button onclick="showPage('synergy')">시너지 관리</button>
   <button onclick="showPage('faction')">진영 관리</button>
   <button onclick="showPage('stats')">스탯 관리</button>
   <button onclick="showPage('equipment')">장비 착용</button>
@@ -28,6 +30,29 @@
   <button onclick="showPage('record')">전투 기록</button>
   <button onclick="showPage('layout')">페이지 조정</button>
   <button onclick="showPage('log')">로그</button>
+</div>
+
+<div id="simulationPage" class="page hidden">
+  <header class="simulation-heading"><div><h3>전투 테스트</h3><p>현재 캐릭터와 장비로 반복 전투를 실행하고 승률·DPS·HPS를 비교합니다.</p></div><span class="simulation-tag">균형 무작위 편성</span></header>
+  <p id="simulationError" class="simulation-error" role="alert"></p>
+  <div class="simulation-top">
+    <section class="panel"><h4>실행 설정</h4>
+      <form id="simulationForm" onsubmit="SimulationPage.start(event)">
+        <fieldset id="simulationSettings">
+          <label for="simulationPreset">전투 횟수</label>
+          <div class="simulation-fields"><select id="simulationPreset" onchange="SimulationPage.preset(this.value)"><option value="100">100회</option><option value="1000">1,000회</option><option value="10000">10,000회</option><option value="custom">직접 입력</option></select><input aria-label="전투 횟수 직접 입력" id="simulationCount" type="number" min="1" max="10000" step="1" value="100" required oninput="document.getElementById('simulationPreset').value='custom'"></div>
+          <div class="simulation-fields"><label>전투 규모<select id="simulationTeamSize"><option value="1">1 vs 1</option><option value="2">2 vs 2</option><option value="3" selected>3 vs 3</option></select></label><label>Seed<input id="simulationSeed" type="number" min="0" max="4294967295" step="1" value="12345" required></label></div>
+          <details><summary>상세 설정</summary><div class="simulation-fields"><label>전투 제한시간(초)<input id="simulationMaxSeconds" type="number" min="1" max="3600" value="600" required></label><label>최소 평가 표본<input id="simulationMinSamples" type="number" min="1" max="10000" value="30" required></label></div></details>
+          <button id="simulationStart" type="submit">시뮬레이션 시작</button>
+        </fieldset>
+      </form>
+      <p class="simulation-note">저장된 캐릭터의 현재 장비·스킬과 공용 스탯 시너지를 사용합니다. 저장 팀의 배율·기존 배율 시너지·예비대는 적용하지 않습니다. 한 번에 하나만 실행합니다.</p>
+    </section>
+    <section class="panel"><h4>진행 상태</h4><div id="simulationProgress" aria-live="polite">실행 대기 중</div><progress id="simulationProgressBar" max="100" value="0" aria-label="완료 전투 비율"></progress><p id="simulationTiming">경과 — · 예상 잔여 —</p><button id="simulationCancel" type="button" disabled onclick="SimulationPage.cancel()">중단</button><p class="simulation-note">다른 메뉴로 이동하거나 새로고침해도 서버에서 계속 실행됩니다. 중단 시 현재 전투가 끝난 뒤 결과를 보존합니다.</p></section>
+  </div>
+  <section class="panel"><h4>결과</h4><div id="simulationResult">테스트를 시작하거나 아래 실행 기록을 선택하세요.</div></section>
+  <section class="panel"><details id="simulationTargets"><summary>목표 밸런스 편집</summary><p>비워 둔 값은 미정입니다. 저장한 목표는 다음 실행부터 적용하며, 과거 결과는 당시 목표로 비교합니다.</p><form onsubmit="SimulationPage.saveTargets(event)"><div class="simulation-table-wrap"><table class="data-table"><thead><tr><th>지표</th><th>최소</th><th>최대</th></tr></thead><tbody id="simulationTargetRows"></tbody></table></div><button type="submit">목표 저장</button><span id="simulationTargetStatus" role="status"></span></form></details></section>
+  <section class="panel"><div class="simulation-heading"><h4>이전 실행 기록</h4><button type="button" onclick="SimulationPage.refresh()">새로고침</button></div><div id="simulationHistory" class="simulation-table-wrap">기록을 불러오는 중입니다.</div></section>
 </div>
 
 <div id="iconPage" class="page hidden">
@@ -89,6 +114,24 @@
   </div>
 </div>
 
+<div id="synergyPage" class="page hidden">
+  <h3>시너지 관리</h3><p>편성된 캐릭터의 진영·계열로 활성화됩니다. 소환수는 인원과 적용 대상에서 제외합니다.</p>
+  <button onclick="openSynergyModal()">+ 시너지 추가</button>
+  <table><thead><tr><th>이름</th><th>조건</th><th>단계 적용</th><th>인원·효과·대상</th><th>수정</th></tr></thead><tbody id="synergyTableBody"></tbody></table>
+</div>
+<div id="synergyModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="synergyHeading">
+  <div class="modal-content synergy-modal-content">
+    <h3 id="synergyHeading">시너지 편집</h3>
+    <p>보정값은 기존 스탯 단위의 고정 가산입니다. 공격속도·시전속도는 시간 값이므로 증가하면 느려집니다.</p>
+    <form onsubmit="saveSynergyForm(event)"><fieldset id="synergyFormFields">
+      <label>이름<input id="synergyName" required maxlength="100"></label>
+      <div class="synergy-fields"><label>조건 유형<select id="synergyType" onchange="updateSynergyConditionOptions()"><option value="faction">진영</option><option value="role">계열</option></select></label><label>조건 대상<select id="synergyValue" required></select></label></div>
+      <label>단계 적용 방식<select id="synergyStacking"><option value="highest">충족한 최고 단계만 적용</option><option value="cumulative">충족한 모든 단계 합산</option></select></label>
+      <div id="synergyThresholds"></div><button type="button" onclick="addSynergyThreshold()">+ 단계 추가</button>
+      <div class="synergy-actions"><button type="button" id="synergyDelete" onclick="deleteSynergy()">삭제</button><button type="button" onclick="closeSynergyModal()">취소</button><button type="submit">저장</button></div>
+    </fieldset><p id="synergyError" role="alert"></p></form>
+  </div>
+</div>
 <div id="teamPage" class="page hidden">
   <div class="panel">
     <h4>팀 편성</h4>
@@ -123,8 +166,9 @@
           <label>재사용 대기시간(%)<input id="teamCooldownPercent" type="number" min="0" step="1" value="100"></label>
           <small>단일 팀만 출전할 때 적용됩니다. 여러 팀이나 개별 캐릭터를 섞으면 기본값 100%를 사용합니다.</small>
         </div>
+        <section id="teamSynergyPreview" aria-live="polite"></section>
         <div id="teamSynergyRules" class="team-synergy-rules">
-          <div class="team-synergy-header"><h5>편성 시너지</h5><button type="button" onclick="addSelectedTeamSynergy()">규칙 추가</button></div>
+          <div class="team-synergy-header"><h5>팀별 배율 시너지 (기존)</h5><button type="button" onclick="addSelectedTeamSynergy()">규칙 추가</button></div>
           <div id="teamSynergyRuleList"></div>
           <small>선봉과 예비대를 포함한 팀원 중 지정한 진영 또는 계열 인원이 조건을 만족하면 기본 전투 규칙에 배율이 곱해집니다.</small>
         </div>
@@ -175,34 +219,18 @@
   <div class="panel">
     <h4>캐릭터 관리</h4>
     <div class="data-toolbar">
-      <button onclick="openCharacterModal()">추가</button>
-      <button onclick="deleteSelectedCharacters()">선택 삭제</button>
-      <select id="characterRoleFilter" onchange="changeCharacterRoleFilter(this.value)"></select>
+      <button type="button" onclick="openCharacterModal()">+ 캐릭터 추가</button>
+      <select id="characterRoleFilter" aria-label="캐릭터 계열 필터" onchange="changeCharacterRoleFilter(this.value)"></select>
     </div>
-    <table class="data-table">
+    <div class="table-responsive character-table-scroll" tabindex="0" role="region" aria-label="캐릭터 능력치 목록, 가로 스크롤 가능">
+    <table class="data-table character-table">
+      <colgroup><col class="character-name-column"><col class="character-category-column" span="2"><col span="5"><col class="character-speed-column" span="3"><col span="2"><col class="character-speed-column"><col class="character-action-column"></colgroup>
       <thead>
-        <tr>
-          <th>선택</th>
-          <th>초상화</th>
-          <th>진영</th>
-          <th>계열</th>
-          <th>이름</th>
-          <th>HP</th>
-          <th>MP</th>
-          <th>ST</th>
-          <th>공격력</th>
-          <th>마력</th>
-          <th>이동속도</th>
-          <th>공격속도</th>
-          <th>시전속도</th>
-          <th>방어력</th>
-          <th>저항력</th>
-          <th>사정거리</th>
-          <th>수정</th>
-        </tr>
+        <tr id="characterTableHeader"></tr>
       </thead>
       <tbody id="characterTableBody"></tbody>
     </table>
+    </div>
   </div>
 </div>
 
@@ -291,38 +319,23 @@
         <div id="equipmentCharacterButtons"></div>
       </div>
       <div class="equipment-editor">
-        <h5>장비 착용 UI</h5>
+        <h5>캐릭터 장비</h5>
         <div id="equipmentSetControls" class="equipment-set-controls"></div>
         <div id="equipmentSlotGrid" class="equipment-slot-grid"></div>
-        <h5>스탯 결과창</h5>
-        <div id="equipmentAbilityPreview"></div>
-        <h5>장비 리스트</h5>
-        <table class="data-table equipment-list-table">
-          <thead>
-            <tr>
-              <th>이름</th>
-              <th>슬롯</th>
-              <th>능력치</th>
-            </tr>
-          </thead>
-          <tbody id="equipmentItemTableBodyUnused"></tbody>
-        </table>
+        <p class="equipment-help">아이콘을 끌어 장착하거나, 인벤토리에서 선택 후 슬롯을 누르세요.</p>
       </div>
-      <div class="stat-ability-preview">
-        <h5>장비 리스트</h5>
+      <div class="stat-ability-preview equipment-inventory" ondragover="allowInventoryReturn(event)" ondragleave="this.classList.remove('drop-hover')" ondrop="returnEquipmentItem(event)">
+        <h5>인벤토리 <small id="equipmentItemCount"></small></h5>
         <div class="data-toolbar">
-          <select id="equipmentItemSlotFilter" onchange="changeEquipmentItemSlotFilter(this.value)"></select>
+          <select id="equipmentItemSlotFilter" aria-label="장비 슬롯 필터" onchange="changeEquipmentItemSlotFilter(this.value)"></select>
+          <input type="search" id="equipmentItemSearch" aria-label="아이템 검색" placeholder="아이템 검색" oninput="renderEquipmentItemTable()">
         </div>
-        <table class="data-table equipment-list-table">
-          <thead>
-            <tr>
-              <th>이름</th>
-            </tr>
-          </thead>
-          <tbody id="equipmentItemTableBody"></tbody>
-        </table>
+        <div id="equipmentItemTableBody" class="equipment-inventory-grid" aria-label="아이템 목록"></div>
+        <div id="equipmentItemDetail" class="equipment-item-detail" aria-live="polite">아이템을 선택하면 상세정보를 확인할 수 있습니다.</div>
+        <p class="equipment-help">장착된 아이콘을 이곳으로 끌어오면 해제됩니다.</p>
       </div>
     </div>
+    <details class="equipment-stats" open><summary>능력치 변화</summary><div id="equipmentAbilityPreview"></div></details>
   </div>
 </div>
 
@@ -330,36 +343,12 @@
   <div class="panel">
     <h4>아이템 관리</h4>
     <div class="data-toolbar">
-      <button onclick="openItemModal()">추가</button>
-      <button onclick="deleteSelectedItems()">선택 삭제</button>
-      <select id="itemSlotFilter" onchange="changeItemSlotFilter(this.value)"></select>
+      <button type="button" onclick="openItemModal()">+ 아이템 추가</button>
+      <select id="itemSlotFilter" aria-label="아이템 슬롯 필터" onchange="changeItemSlotFilter(this.value)"></select>
     </div>
-    <table class="data-table item-table">
-      <thead>
-        <tr>
-          <th>선택</th>
-          <th>이름</th>
-          <th>슬롯</th>
-          <th>무기 카테고리</th>
-          <th>공격 스킬</th>
-          <th>방어구 카테고리</th>
-          <th>착용 방식</th>
-          <th>HP</th>
-          <th>MP</th>
-          <th>ST</th>
-          <th>공격력</th>
-          <th>마력</th>
-          <th>이동속도</th>
-          <th>공격속도</th>
-          <th>시전속도</th>
-          <th>방어력</th>
-          <th>저항력</th>
-          <th>사정거리</th>
-          <th>수정</th>
-        </tr>
-      </thead>
-      <tbody id="itemTableBody"></tbody>
-    </table>
+    <div class="table-responsive item-table-scroll" tabindex="0" role="region" aria-label="아이템 목록, 가로 스크롤 가능">
+      <table class="data-table item-table"><thead><tr id="itemTableHeader"></tr></thead><tbody id="itemTableBody"></tbody></table>
+    </div>
   </div>
 </div>
 
@@ -762,58 +751,53 @@
         <button type="button" onclick="addCustomResourceRow(characterCustomResourcesEl)">자원 추가</button>
         <small>ID는 영문 소문자, 숫자, _, -만 사용합니다.</small>
       </div>
-      <button type="submit">저장</button>
-      <button type="button" onclick="closeCharacterModal()">취소</button>
+      <div class="character-modal-actions">
+        <button id="characterDeleteButton" class="hidden" type="button" onclick="deleteCharacterFromModal()">캐릭터 삭제</button>
+        <div class="character-modal-save-actions">
+          <button type="button" onclick="closeCharacterModal()">취소</button>
+          <button type="submit">저장</button>
+        </div>
+      </div>
     </form>
   </div>
 </div>
 
 <div id="itemModal" class="modal hidden">
-  <div class="modal-content">
+  <div class="modal-content item-modal-content">
     <h4 id="itemModalTitle">아이템 추가</h4>
     <form id="itemForm" onsubmit="saveItemFromForm(event)">
       <input type="hidden" id="itemEditIndex">
-      <div class="form-row">
+      <div class="item-editor-body">
+<section class="item-editor-section"><h5>기본 정보</h5><div class="item-form-grid"><div class="form-row">
         <label for="itemName">이름</label>
         <input id="itemName" required placeholder="장비 이름">
-      </div>
-      <div class="form-row">
+      </div><div class="form-row">
         <label for="itemSlot">슬롯</label>
         <select id="itemSlot" required onchange="syncItemWeaponFields()"></select>
-      </div>
-      <div class="form-row item-weapon-field">
+      </div><div class="form-row item-weapon-field">
         <label for="itemWeaponCategory">무기 카테고리</label>
         <select id="itemWeaponCategory" onchange="syncItemWeaponFields()"></select>
-      </div>
-      <div class="form-row item-armor-field">
+      </div><div class="form-row item-armor-field">
         <label for="itemArmorCategory">방어구 카테고리</label>
         <select id="itemArmorCategory"></select>
-      </div>
-      <div class="form-row item-weapon-field">
+      </div><div class="form-row item-weapon-field">
         <label for="itemHandType">착용 방식</label>
         <input id="itemHandType" disabled>
-      </div>
-      <div class="form-row item-weapon-field">
+      </div><div class="form-row item-weapon-field">
         <label for="itemWeaponSlotType">착용 가능 슬롯</label>
         <input id="itemWeaponSlotType" disabled>
-      </div>
-      <div class="form-row"><label for="itemHp">HP</label><input id="itemHp" type="number" step="0.1" value="0" required></div>
-      <div class="form-row"><label for="itemMp">MP</label><input id="itemMp" type="number" step="0.1" value="0" required></div>
-      <div class="form-row"><label for="itemSt">ST</label><input id="itemSt" type="number" step="0.1" value="0" required></div>
-      <div class="form-row"><label for="itemAtk">공격력</label><input id="itemAtk" type="number" step="0.1" value="0" required></div>
-      <div class="form-row"><label for="itemMagic">마력</label><input id="itemMagic" type="number" step="0.1" value="0" required></div>
-      <div class="form-row"><label for="itemSpeed">이동속도</label><input id="itemSpeed" type="number" step="0.1" value="0" required></div>
-      <div class="form-row"><label for="itemAttackSpeed">공격속도</label><input id="itemAttackSpeed" type="number" step="0.1" value="0" required></div>
-      <div class="form-row"><label for="itemCastSpeed">시전속도</label><input id="itemCastSpeed" type="number" step="0.1" value="0" required></div>
-      <div class="form-row"><label for="itemDefense">방어력</label><input id="itemDefense" type="number" step="0.1" value="0" required></div>
-      <div class="form-row"><label for="itemResistance">저항력</label><input id="itemResistance" type="number" step="0.1" value="0" required></div>
-      <div class="form-row"><label for="itemAttackRange">사정거리</label><input id="itemAttackRange" type="number" step="0.1" value="0" required></div>
-      <div class="form-row item-weapon-field">
-        <label for="itemAttackSkill">공격 스킬</label>
+      </div><div class="form-row item-weapon-field">
+        <label for="itemAttackSkill">작동스킬</label>
         <select id="itemAttackSkill"></select>
+      </div></div></section><section class="item-editor-section"><h5>주 능력치</h5><div class="item-form-grid"><div class="form-row"><label for="itemAtk">공격력</label><input id="itemAtk" type="number" step="0.1" value="0" required></div><div class="form-row"><label for="itemMagic">마력</label><input id="itemMagic" type="number" step="0.1" value="0" required></div><div class="form-row"><label for="itemDefense">방어력</label><input id="itemDefense" type="number" step="0.1" value="0" required></div><div class="form-row"><label for="itemResistance">저항력</label><input id="itemResistance" type="number" step="0.1" value="0" required></div><div class="form-row"><label for="itemAttackRange">사정거리</label><input id="itemAttackRange" type="number" step="0.1" value="0" required></div></div></section><section class="item-editor-section"><h5>부가 능력치</h5><div class="item-form-grid"><div class="form-row"><label for="itemHp">HP</label><input id="itemHp" type="number" step="0.1" value="0" required></div><div class="form-row"><label for="itemMp">MP</label><input id="itemMp" type="number" step="0.1" value="0" required></div><div class="form-row"><label for="itemSt">ST</label><input id="itemSt" type="number" step="0.1" value="0" required></div><div class="form-row"><label for="itemSpeed">이동속도</label><input id="itemSpeed" type="number" step="0.1" value="0" required></div><div class="form-row"><label for="itemAttackSpeed">공격속도</label><input id="itemAttackSpeed" type="number" step="0.1" value="0" required></div><div class="form-row"><label for="itemCastSpeed">시전속도</label><input id="itemCastSpeed" type="number" step="0.1" value="0" required></div></div></section>
+      <section class="item-editor-section"><h5>스탯 보정</h5><p>장착 중 기본 스탯에 더합니다. 0은 저장하지 않습니다.</p><div id="itemStatModifiers" class="item-form-grid"></div></section>
+      <section class="item-editor-section"><h5>스킬 보조</h5><p>선택한 수치에 더합니다. 감소는 음수로 입력합니다. 계수·자원 비용은 선택한 항목의 단위를 사용합니다.</p>
+        <div id="itemSkillModifiers"></div>
+        <button type="button" onclick="addItemSkillModifierRow()">+ 스킬 보조 추가</button>
+      </section>
+      <p class="item-category-note">무기의 사정거리·공격속도·시전속도는 장비 카테고리 설정을 사용합니다. 작동스킬은 기존 무기 공격 연결입니다.</p>
       </div>
-      <button type="submit">저장</button>
-      <button type="button" onclick="closeItemModal()">취소</button>
+      <div class="item-modal-actions"><button id="itemDeleteButton" type="button" onclick="deleteItemFromModal()">삭제</button><div><button type="button" onclick="closeItemModal()">취소</button><button type="submit">저장</button></div></div>
     </form>
   </div>
 </div>
@@ -1007,32 +991,35 @@
 <script src="js/portrait/hair-colors.js?v=20261007-parts1"></script>
 <script src="js/portrait/imported-catalog.js?v=20261009-equipment1"></script>
 <script src="js/portrait/catalog.js?v=20261007-parts1"></script>
-<script src="js/ui.js?v=20261005-icons"></script>
+<script src="js/ui.js?v=20261011-synergy-v1"></script>
 <script src="js/portrait/bridge.js?v=20260929-bald1"></script>
 <script src="js/api.js?v=20260914-image-assets"></script>
 <script src="js/category.js?v=20261005-icons"></script>
-<script src="js/battle-events.js?v=20261001-summon-command"></script>
+<script src="js/battle-events.js?v=20261012-contributions"></script>
 <script src="js/skill-channel.js?v=20260929-team-rules"></script>
-<script src="js/skill-passives.js?v=20260930-skill-ban"></script>
+<script src="js/skill-passives.js?v=20261011-item-modifiers"></script>
 <script src="js/skill-effects.js?v=20261001-field-effects"></script>
-  <script src="js/skill.js?v=20261005-icons"></script>
+  <script src="js/skill.js?v=20261011-synergy-v1"></script>
 <script src="js/entity.js?v=20261001-summon-inheritance"></script>
 <script src="js/layout.js?v=20260817-layout"></script>
-<script src="js/equipment.js?v=20261005-icons"></script>
+<script src="js/equipment.js?v=20261011-synergy-v1"></script>
 <script src="js/monster.js?v=20261005-icons"></script>
 <script src="js/faction.js?v=20261005-icons"></script>
-<script src="js/character.js?v=20261005-icons"></script>
-<script src="js/team.js?v=20261005-icons"></script>
+<script src="js/character.js?v=20261011-synergy-v1"></script>
+<script src="js/synergy.js?v=20261011-v1"></script>
+<script src="js/synergy-ui.js?v=20261011-v1"></script>
+<script src="js/team.js?v=20261011-synergy-v1"></script>
 <script src="js/stats.js?v=20260606-weapons"></script>
-<script src="js/record.js?v=20261001-record-events"></script>
-<script src="js/battle.js?v=20261001-field-effects"></script>
+<script src="js/record.js?v=20261012-contributions"></script>
+<script src="js/battle.js?v=20261012-contributions"></script>
 <script src="https://js.puter.com/v2/"></script>
 <script src="js/image-generator.js?v=20261005-image-actions"></script>
 <script src="js/icon-background.js?v=20261009"></script>
 <script src="js/icons.js?v=20261009-icon-background"></script>
-<script src="js/main.js?v=20261005-icons"></script>
+<script src="js/main.js?v=20261011-synergy-v1"></script>
+<script src="js/simulation.js?v=20261011"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="js/bootstrap-ui.js?v=20260817-bootstrap"></script>
+<script src="js/bootstrap-ui.js?v=20261011-simulation"></script>
 
 </body>
 </html>

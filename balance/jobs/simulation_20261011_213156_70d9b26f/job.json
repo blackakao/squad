@@ -1,0 +1,24 @@
+{
+  "simulationId": "simulation_20261011_213156_70d9b26f",
+  "startedAt": "2026-10-11T12:31:56.144511+00:00",
+  "finishedAt": "2026-10-11T12:33:40.934Z",
+  "status": "COMPLETED",
+  "settings": {
+    "count": 1000,
+    "teamSize": 1,
+    "seed": 12345,
+    "maxSeconds": 600,
+    "width": 400,
+    "height": 300,
+    "minSamples": 30
+  },
+  "completed": 1000,
+  "total": 1000,
+  "elapsedSeconds": 104.25292759999999,
+  "error": null,
+  "resultUrl": "/api/simulations/simulation_20261011_213156_70d9b26f/result",
+  "dataHash": "943307d84e5f2ec59bc94d5828a5959adcf75e274c4d052f6414e2201eea4136",
+  "engineHash": "a89ef3bbdf2e51a3054cd14124ac351aa25f8be2f5f27bb5b4083774182f2d72",
+  "gitRevision": "1ad765f88a9ef1e94782d42e80737234331df948",
+  "averageDuration": 167.2921833333333
+}

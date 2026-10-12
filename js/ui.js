@@ -270,6 +270,7 @@ const ST_PHYSICAL_ATTACK_COST = 10;
 const EXHAUSTED_MOVE_MULTIPLIER = 0.5;
 const EXHAUSTED_ATTACK_SPEED_MULTIPLIER = 0.7;
 const API_URLS = {
+  synergies: "/api/synergies",
   iconMappings: "/api/icon-mappings",
   monsters: "/api/monsters",
   characters: "/api/characters",
@@ -501,13 +502,13 @@ function getWeaponCombatSettings(character) {
 function applyCharacterStatAbilities(character) {
   const attributes = createCharacterAttributes(character.attributes);
   const base = getBaseCharacterAbilities(character.role);
-  const bonus = getStatAbilityBonus(attributes);
+  const bonus = getStatAbilityBonus(getCharacterEffectiveAttributes(character));
   const equipmentRules = normalizeEquipmentRules(character.equipmentRules);
   const equipment = createEquipmentSlots(character.equipment, { ...character, equipmentRules });
   const equipmentBonus = getCharacterEquipmentBonus({ ...character, equipmentRules, equipment });
   const weaponCombat = getWeaponCombatSettings({ ...character, equipment });
 
-  return {
+  const result = {
     ...character,
     equipmentRules,
     attributes,
@@ -526,6 +527,14 @@ function applyCharacterStatAbilities(character) {
     resistance: base.resistance + bonus.resistance + equipmentBonus.resistance,
     attackRange: Math.max(1, base.attackRange + bonus.attackRange + equipmentBonus.attackRange)
   };
+  for (const [, key] of ABILITY_ROWS) {
+    result[key] += Number(character.runtimeSynergyModifiers?.[key]) || 0;
+  }
+  result.hp = Math.max(1, result.hp);
+  result.mp = Math.max(0, result.mp); result.st = Math.max(0, result.st);
+  result.speed = Math.max(0, result.speed); result.attackRange = Math.max(1, result.attackRange);
+  result.attackSpeed = Math.max(0.1, result.attackSpeed); result.castSpeed = Math.max(0, result.castSpeed);
+  return result;
 }
 
 function getBattleElapsedSeconds() {
@@ -876,6 +885,8 @@ function normalizeCombatJson(items, defaults, nameKey) {
 }
 
 async function showPage(pageName) {
+  document.getElementById("synergyPage")?.classList.toggle("hidden", pageName !== "synergy");
+  document.getElementById("simulationPage")?.classList.toggle("hidden", pageName !== "simulation");
   document.getElementById("iconPage").classList.toggle("hidden", pageName !== "icon");
   battlePageEl.classList.toggle("hidden", pageName !== "battle");
   monsterPageEl.classList.toggle("hidden", pageName !== "monster");
@@ -892,7 +903,13 @@ async function showPage(pageName) {
   layoutPageEl.classList.toggle("hidden", pageName !== "layout");
   logPageEl.classList.toggle("hidden", pageName !== "log");
 
-  if (pageName === "icon") {
+  if (pageName === "synergy") {
+    await loadFactionJson();
+    await loadSynergyJson();
+    renderSynergyPage();
+  } else if (pageName === "simulation") {
+    await SimulationPage.open();
+  } else if (pageName === "icon") {
     await renderIconPage();
   } else if (pageName === "monster") {
     await loadMonsterJson();
@@ -908,6 +925,7 @@ async function showPage(pageName) {
     selectedBattleCharacterIds.clear();
     refreshCharacterUI();
   } else if (pageName === "team") {
+    await loadSynergyJson();
     await loadCharacterJson();
     await loadTeamJson();
     renderTeamPage();
@@ -950,6 +968,7 @@ async function showPage(pageName) {
   }
 
   if (pageName === "battle") {
+    await loadSynergyJson();
     await loadTeamJson();
     renderBattleTeamButtons();
     renderBattleEnemyControls();
@@ -980,7 +999,7 @@ function renderCharacterFactionOptions() {
 }
 
 function renderStatus(units, colorResolver) {
-  return units.map(unit => {
+  return units.filter(unit => !unit.isSummon).map(unit => {
     const hpRatio = Math.max(0, (unit.hp / unit.maxHp) * 100);
     const hpText = `${Math.floor(unit.hp)} / ${unit.maxHp}`;
     const maxMp = Math.max(0, Number(unit.maxMp ?? DEFAULT_RESOURCE_VALUE));

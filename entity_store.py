@@ -49,6 +49,8 @@ class EntityStore:
             raise EntityError("잘못된 역할입니다.")
         if entity.get("ai") not in {"melee", "ranged", "healer", "stationary"}:
             raise EntityError("잘못된 AI입니다.")
+        if entity.get("summonType", "temporary") not in ("persistent", "temporary"):
+            raise EntityError("소환수 종류는 persistent 또는 temporary여야 합니다.")
         if not isinstance(entity.get("tags"), list) or not all(isinstance(t, str) for t in entity["tags"]):
             raise EntityError("태그는 문자열 배열이어야 합니다.")
         if not all(isinstance(entity.get(key, ""), str) for key in ("description", "icon")):
