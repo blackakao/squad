@@ -16,6 +16,8 @@ CharacterViewer의 외형 조합기는 공통 SD 베이스에서도 남성형 �
 
 `python server.py` 실행 후 `http://127.0.0.1:8000/character-viewer.html`에서 SD 인간형 GLB/glTF 개발용 뷰어를 엽니다. 기존 게임과 독립되어 모델 로딩, 전체 보기, 회전·줌, 실제 AnimationClip 목록과 재생/정지/반복/속도, 모델·텍스처·본 정보를 확인할 수 있습니다. Three.js 0.180.0은 로컬 배포 파일로 포함되어 별도 npm 설치나 빌드는 필요하지 않습니다.
 
+외부 머리 `.glb`는 `assets/characters/hair/imported/`에 복사하면 **외부 머리 GLB** 패널 목록에 자동으로 나타납니다. 페이지를 다시 열 필요 없이 **목록 새로고침** 후 선택하여 장착할 수 있으며, 프로젝트 경로·로컬 파일 선택도 계속 지원합니다. Head 추적, 위치·회전·배율 조정, 제거 후 기존 머리 복원을 지원합니다.
+
 [공통 SD 베이스 v1](assets/characters/base/human_sd_base_v1.glb)을 포함합니다. [샘플 뷰어](http://127.0.0.1:8000/character-viewer.html?model=assets/characters/base/human_sd_base_v1.glb)에서 실제 스킨과 9개 기본 클립을 확인할 수 있습니다. [베이스 모델 제작·보정 안내](docs/SD_BASE_MODEL.md)를 참고하세요. 다른 GLB는 [모델 폴더](assets/characters/models/)에 넣거나 로컬 파일로 선택할 수 있습니다. glTF는 BIN·텍스처 상대 경로를 유지하여 서버 경로로 불러옵니다. [CharacterViewer 사용법과 공통 리그/애셋 규격](docs/CHARACTER_VIEWER.md)을 참고하세요.
 
 관전형 자동전투 RPG를 실험하기 위한 웹 프로토타입입니다. 플레이어가 전투 중 직접 조작하지 않고, 미리 구성한 캐릭터, 팀, 장비, 스킬 조합이 자동 전투 결과를 만드는 구조를 검증합니다.

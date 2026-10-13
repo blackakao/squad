@@ -1,5 +1,23 @@
 # TODO
 
+## 2026-10-13 CharacterViewer 외부 머리 GLB 미리보기
+
+- [x] `assets/characters/hair/imported/` 고정 폴더의 GLB 자동 검색 API와 목록 새로고침·선택 장착 UI 추가
+- [x] `female_hair_ref01.glb` 구조·Mesh 역할·재질·좌표 변환 검사
+- [x] 프로젝트 머리 애셋 폴더 등록 및 원본 SHA-256 일치 확인
+- [x] 서버 경로와 로컬 파일 선택을 모두 지원하는 외부 머리 로더 추가
+- [x] Head rigid attachment, 기존 절차형 머리 임시 숨김, 제거 시 복원
+- [x] 위치 XYZ·회전 XYZ·배율 조정과 초기화 UI
+- [x] 공통 Blender node transform 중복을 감지해 자동 좌표 보정
+- [x] 여성 블랭크 Running에서 Head 추적, 등록 경로·로컬 파일 로드, 제거·복원 브라우저 검증
+- [ ] 외부 머리를 정식 커스터마이징 catalog 및 저장 조합 항목으로 등록하는 기능은 후속 작업
+
+## 2026-10-13 시너지 관리 공통 레이아웃
+
+- [x] 공통 페이지 여백 선택자·panel 래퍼 누락 원인 수정
+- [x] 기존 panel/h4/data-toolbar/data-table/table-responsive 재사용, 설명문 유지, 기능·Navigation 변경 없음
+- [x] 격리 API/Chrome 1920·1440·640px에서 아이템 관리와 패널 경계·제목·패딩·버튼·테이블 시작선 비교 및 화면 검수, 추가 모달 열기 확인
+
 ## 2026-10-13 전투 기록 소유자 기여도
 
 - [x] 실제 소유 관계 기반 공통 누적기, 소환수 제거·이벤트 이력 제한 이후 기여도 보존

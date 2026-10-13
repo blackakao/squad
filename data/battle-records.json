@@ -1,6 +1,3418 @@
 [
   {
     "contributionVersion": 1,
+    "battleAt": "2026-10-13T13:18:24.668Z",
+    "result": "승리",
+    "playerMembers": [
+      {
+        "name": "흑마법사",
+        "role": "ranged",
+        "hp": 1503,
+        "maxHp": 4785,
+        "mp": 115,
+        "maxMp": 200,
+        "st": 116,
+        "maxSt": 120,
+        "eventId": 1,
+        "contribution": {
+          "direct": {
+            "damageDealt": 3962,
+            "healingDone": 560,
+            "kills": 1,
+            "resourceRecovery": {
+              "BP": 1680
+            },
+            "skillUsage": {
+              "skill_class_warlock_barrier": 3,
+              "skill_class_warlock_bite": 3,
+              "skill_basic_weapon_attack": 6
+            },
+            "damageBySkill": {
+              "skill_class_warlock_bite": 1191.1999999999998,
+              "skill_basic_weapon_attack": 2770.8
+            },
+            "healingBySkill": {
+              "skill_class_warlock_bite": 560
+            },
+            "dps": 157.22222222222223,
+            "hps": 22.22222222222222
+          },
+          "summon": {
+            "damageDealt": 0,
+            "healingDone": 0,
+            "kills": 0,
+            "resourceRecovery": {},
+            "skillUsage": {},
+            "damageBySkill": {},
+            "healingBySkill": {},
+            "dps": 0,
+            "hps": 0
+          },
+          "groups": [],
+          "total": {
+            "damageDealt": 3962,
+            "healingDone": 560,
+            "kills": 1,
+            "resourceRecovery": {
+              "BP": 1680
+            },
+            "skillUsage": {
+              "skill_class_warlock_barrier": 3,
+              "skill_class_warlock_bite": 3,
+              "skill_basic_weapon_attack": 6
+            },
+            "damageBySkill": {
+              "skill_class_warlock_bite": 1191.1999999999998,
+              "skill_basic_weapon_attack": 2770.8
+            },
+            "healingBySkill": {
+              "skill_class_warlock_bite": 560
+            },
+            "dps": 157.22222222222223,
+            "hps": 22.22222222222222
+          }
+        },
+        "damageDealt": 3962,
+        "healingDone": 560,
+        "kills": 1,
+        "dps": 157.22222222222223,
+        "hps": 22.22222222222222
+      }
+    ],
+    "monsterMembers": [
+      {
+        "name": "마법사",
+        "role": "ranged",
+        "hp": 0,
+        "maxHp": 2282,
+        "mp": 80,
+        "maxMp": 200,
+        "st": 101,
+        "maxSt": 105,
+        "eventId": 2,
+        "contribution": {
+          "direct": {
+            "damageDealt": 5521.999999999998,
+            "healingDone": 0,
+            "kills": 0,
+            "resourceRecovery": {
+              "BP": 1680
+            },
+            "skillUsage": {
+              "skill_class_mage_barrier": 3,
+              "skill_class_mage_arrow": 3,
+              "skill_class_mage_quick": 3,
+              "skill_basic_weapon_attack": 7
+            },
+            "damageBySkill": {
+              "skill_class_mage_arrow": 1328.3999999999999,
+              "skill_class_mage_quick": 1152.5999999999997,
+              "skill_basic_weapon_attack": 3040.999999999999
+            },
+            "healingBySkill": {},
+            "dps": 219.12698412698407,
+            "hps": 0
+          },
+          "summon": {
+            "damageDealt": 0,
+            "healingDone": 0,
+            "kills": 0,
+            "resourceRecovery": {},
+            "skillUsage": {},
+            "damageBySkill": {},
+            "healingBySkill": {},
+            "dps": 0,
+            "hps": 0
+          },
+          "groups": [],
+          "total": {
+            "damageDealt": 5521.999999999998,
+            "healingDone": 0,
+            "kills": 0,
+            "resourceRecovery": {
+              "BP": 1680
+            },
+            "skillUsage": {
+              "skill_class_mage_barrier": 3,
+              "skill_class_mage_arrow": 3,
+              "skill_class_mage_quick": 3,
+              "skill_basic_weapon_attack": 7
+            },
+            "damageBySkill": {
+              "skill_class_mage_arrow": 1328.3999999999999,
+              "skill_class_mage_quick": 1152.5999999999997,
+              "skill_basic_weapon_attack": 3040.999999999999
+            },
+            "healingBySkill": {},
+            "dps": 219.12698412698407,
+            "hps": 0
+          }
+        },
+        "damageDealt": 5521.999999999998,
+        "healingDone": 0,
+        "kills": 0,
+        "dps": 219.12698412698407,
+        "hps": 0
+      }
+    ],
+    "durationSeconds": 25.2,
+    "activeSynergies": {
+      "player": [],
+      "enemy": []
+    },
+    "events": [
+      {
+        "id": 1,
+        "tick": 1,
+        "type": "cast_start",
+        "source": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_class_warlock_barrier",
+        "skillName": "흑마법사 · 보호막",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 2,
+        "tick": 1,
+        "type": "cast_start",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "skillId": "skill_class_mage_barrier",
+        "skillName": "마법사 · 보호막",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 3,
+        "tick": 31,
+        "type": "cast_complete",
+        "source": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_class_warlock_barrier",
+        "skillName": "흑마법사 · 보호막",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 4,
+        "tick": 31,
+        "type": "heal",
+        "source": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_class_warlock_barrier",
+        "skillName": "흑마법사 · 보호막",
+        "amount": 560,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": "BP",
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 5,
+        "tick": 31,
+        "type": "cast_complete",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "skillId": "skill_class_mage_barrier",
+        "skillName": "마법사 · 보호막",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 6,
+        "tick": 31,
+        "type": "heal",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "skillId": "skill_class_mage_barrier",
+        "skillName": "마법사 · 보호막",
+        "amount": 560,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": "BP",
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 7,
+        "tick": 241,
+        "type": "cast_start",
+        "source": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "target": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "skillId": "skill_class_warlock_bite",
+        "skillName": "흑마법사 · 암흑물기",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 8,
+        "tick": 241,
+        "type": "cast_start",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_class_mage_arrow",
+        "skillName": "마법사 · 마법화살",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 9,
+        "tick": 271,
+        "type": "cast_complete",
+        "source": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "target": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "skillId": "skill_class_warlock_bite",
+        "skillName": "흑마법사 · 암흑물기",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 10,
+        "tick": 271,
+        "type": "cast_complete",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_class_mage_arrow",
+        "skillName": "마법사 · 마법화살",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 11,
+        "tick": 272,
+        "type": "cast_start",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_class_mage_quick",
+        "skillName": "마법사 · 즉시시전 공격 (기본형)",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 12,
+        "tick": 272,
+        "type": "cast_complete",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_class_mage_quick",
+        "skillName": "마법사 · 즉시시전 공격 (기본형)",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 13,
+        "tick": 285,
+        "type": "cast_start",
+        "source": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "target": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 14,
+        "tick": 285,
+        "type": "cast_start",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 15,
+        "tick": 290,
+        "type": "hit",
+        "source": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "target": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "skillId": "skill_class_warlock_bite",
+        "skillName": "흑마법사 · 암흑물기",
+        "amount": 560,
+        "hpDamage": 0,
+        "barrierDamage": 560,
+        "damageType": "magic",
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 16,
+        "tick": 290,
+        "type": "damaged",
+        "source": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "target": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "skillId": "skill_class_warlock_bite",
+        "skillName": "흑마법사 · 암흑물기",
+        "amount": 560,
+        "hpDamage": 0,
+        "barrierDamage": 560,
+        "damageType": "magic",
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 17,
+        "tick": 290,
+        "type": "hit",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_class_mage_arrow",
+        "skillName": "마법사 · 마법화살",
+        "amount": 560,
+        "hpDamage": 0,
+        "barrierDamage": 560,
+        "damageType": "magic",
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 18,
+        "tick": 290,
+        "type": "damaged",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_class_mage_arrow",
+        "skillName": "마법사 · 마법화살",
+        "amount": 560,
+        "hpDamage": 0,
+        "barrierDamage": 560,
+        "damageType": "magic",
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 19,
+        "tick": 290,
+        "type": "hit",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_class_mage_quick",
+        "skillName": "마법사 · 즉시시전 공격 (기본형)",
+        "amount": 384.1999999999998,
+        "hpDamage": 384.1999999999998,
+        "barrierDamage": 0,
+        "damageType": "magic",
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 20,
+        "tick": 290,
+        "type": "damaged",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_class_mage_quick",
+        "skillName": "마법사 · 즉시시전 공격 (기본형)",
+        "amount": 384.1999999999998,
+        "hpDamage": 384.1999999999998,
+        "barrierDamage": 0,
+        "damageType": "magic",
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 21,
+        "tick": 435,
+        "type": "cast_complete",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 22,
+        "tick": 436,
+        "type": "cast_start",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 23,
+        "tick": 452,
+        "type": "hit",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 384.1999999999998,
+        "hpDamage": 384.1999999999998,
+        "barrierDamage": 0,
+        "damageType": "magic",
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 24,
+        "tick": 452,
+        "type": "damaged",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 384.1999999999998,
+        "hpDamage": 384.1999999999998,
+        "barrierDamage": 0,
+        "damageType": "magic",
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 25,
+        "tick": 465,
+        "type": "cast_complete",
+        "source": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "target": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 26,
+        "tick": 466,
+        "type": "cast_start",
+        "source": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "target": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 27,
+        "tick": 482,
+        "type": "hit",
+        "source": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "target": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 412.70000000000005,
+        "hpDamage": 412.70000000000005,
+        "barrierDamage": 0,
+        "damageType": "magic",
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 28,
+        "tick": 482,
+        "type": "damaged",
+        "source": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "target": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 412.70000000000005,
+        "hpDamage": 412.70000000000005,
+        "barrierDamage": 0,
+        "damageType": "magic",
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 29,
+        "tick": 586,
+        "type": "cast_complete",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 30,
+        "tick": 587,
+        "type": "cast_start",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "skillId": "skill_class_mage_barrier",
+        "skillName": "마법사 · 보호막",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 31,
+        "tick": 603,
+        "type": "hit",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 384.1999999999998,
+        "hpDamage": 384.1999999999998,
+        "barrierDamage": 0,
+        "damageType": "magic",
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 32,
+        "tick": 603,
+        "type": "damaged",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 384.1999999999998,
+        "hpDamage": 384.1999999999998,
+        "barrierDamage": 0,
+        "damageType": "magic",
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 33,
+        "tick": 617,
+        "type": "cast_complete",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "skillId": "skill_class_mage_barrier",
+        "skillName": "마법사 · 보호막",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 34,
+        "tick": 617,
+        "type": "heal",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "skillId": "skill_class_mage_barrier",
+        "skillName": "마법사 · 보호막",
+        "amount": 560,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": "BP",
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 35,
+        "tick": 618,
+        "type": "cast_start",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 36,
+        "tick": 646,
+        "type": "cast_complete",
+        "source": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "target": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 37,
+        "tick": 647,
+        "type": "cast_start",
+        "source": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_class_warlock_barrier",
+        "skillName": "흑마법사 · 보호막",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 38,
+        "tick": 663,
+        "type": "hit",
+        "source": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "target": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 560,
+        "hpDamage": 0,
+        "barrierDamage": 560,
+        "damageType": "magic",
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 39,
+        "tick": 663,
+        "type": "damaged",
+        "source": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "target": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 560,
+        "hpDamage": 0,
+        "barrierDamage": 560,
+        "damageType": "magic",
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 40,
+        "tick": 677,
+        "type": "cast_complete",
+        "source": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_class_warlock_barrier",
+        "skillName": "흑마법사 · 보호막",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 41,
+        "tick": 677,
+        "type": "heal",
+        "source": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_class_warlock_barrier",
+        "skillName": "흑마법사 · 보호막",
+        "amount": 560,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": "BP",
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 42,
+        "tick": 678,
+        "type": "cast_start",
+        "source": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "target": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 43,
+        "tick": 768,
+        "type": "cast_complete",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 44,
+        "tick": 769,
+        "type": "cast_start",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_class_mage_arrow",
+        "skillName": "마법사 · 마법화살",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 45,
+        "tick": 785,
+        "type": "hit",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 560,
+        "hpDamage": 0,
+        "barrierDamage": 560,
+        "damageType": "magic",
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 46,
+        "tick": 785,
+        "type": "damaged",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 560,
+        "hpDamage": 0,
+        "barrierDamage": 560,
+        "damageType": "magic",
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 47,
+        "tick": 799,
+        "type": "cast_complete",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_class_mage_arrow",
+        "skillName": "마법사 · 마법화살",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 48,
+        "tick": 800,
+        "type": "cast_start",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_class_mage_quick",
+        "skillName": "마법사 · 즉시시전 공격 (기본형)",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 49,
+        "tick": 800,
+        "type": "cast_complete",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_class_mage_quick",
+        "skillName": "마법사 · 즉시시전 공격 (기본형)",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 50,
+        "tick": 801,
+        "type": "cast_start",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 51,
+        "tick": 816,
+        "type": "hit",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_class_mage_arrow",
+        "skillName": "마법사 · 마법화살",
+        "amount": 384.1999999999998,
+        "hpDamage": 384.1999999999998,
+        "barrierDamage": 0,
+        "damageType": "magic",
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 52,
+        "tick": 816,
+        "type": "damaged",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_class_mage_arrow",
+        "skillName": "마법사 · 마법화살",
+        "amount": 384.1999999999998,
+        "hpDamage": 384.1999999999998,
+        "barrierDamage": 0,
+        "damageType": "magic",
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 53,
+        "tick": 817,
+        "type": "hit",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_class_mage_quick",
+        "skillName": "마법사 · 즉시시전 공격 (기본형)",
+        "amount": 384.1999999999998,
+        "hpDamage": 384.1999999999998,
+        "barrierDamage": 0,
+        "damageType": "magic",
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 54,
+        "tick": 817,
+        "type": "damaged",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_class_mage_quick",
+        "skillName": "마법사 · 즉시시전 공격 (기본형)",
+        "amount": 384.1999999999998,
+        "hpDamage": 384.1999999999998,
+        "barrierDamage": 0,
+        "damageType": "magic",
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 55,
+        "tick": 858,
+        "type": "cast_complete",
+        "source": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "target": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 56,
+        "tick": 859,
+        "type": "cast_start",
+        "source": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "target": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "skillId": "skill_class_warlock_bite",
+        "skillName": "흑마법사 · 암흑물기",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 57,
+        "tick": 875,
+        "type": "hit",
+        "source": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "target": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 412.70000000000005,
+        "hpDamage": 412.70000000000005,
+        "barrierDamage": 0,
+        "damageType": "magic",
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 58,
+        "tick": 875,
+        "type": "damaged",
+        "source": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "target": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 412.70000000000005,
+        "hpDamage": 412.70000000000005,
+        "barrierDamage": 0,
+        "damageType": "magic",
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 59,
+        "tick": 889,
+        "type": "cast_complete",
+        "source": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "target": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "skillId": "skill_class_warlock_bite",
+        "skillName": "흑마법사 · 암흑물기",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 60,
+        "tick": 889,
+        "type": "heal",
+        "source": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_class_warlock_bite",
+        "skillName": "흑마법사 · 암흑물기",
+        "amount": 280,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": "HP",
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 61,
+        "tick": 890,
+        "type": "cast_start",
+        "source": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "target": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 62,
+        "tick": 906,
+        "type": "hit",
+        "source": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "target": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "skillId": "skill_class_warlock_bite",
+        "skillName": "흑마법사 · 암흑물기",
+        "amount": 412.70000000000005,
+        "hpDamage": 412.70000000000005,
+        "barrierDamage": 0,
+        "damageType": "magic",
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 63,
+        "tick": 906,
+        "type": "damaged",
+        "source": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "target": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "skillId": "skill_class_warlock_bite",
+        "skillName": "흑마법사 · 암흑물기",
+        "amount": 412.70000000000005,
+        "hpDamage": 412.70000000000005,
+        "barrierDamage": 0,
+        "damageType": "magic",
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 64,
+        "tick": 951,
+        "type": "cast_complete",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 65,
+        "tick": 952,
+        "type": "cast_start",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 66,
+        "tick": 968,
+        "type": "hit",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 384.1999999999998,
+        "hpDamage": 384.1999999999998,
+        "barrierDamage": 0,
+        "damageType": "magic",
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 67,
+        "tick": 968,
+        "type": "damaged",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 384.1999999999998,
+        "hpDamage": 384.1999999999998,
+        "barrierDamage": 0,
+        "damageType": "magic",
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 68,
+        "tick": 1070,
+        "type": "cast_complete",
+        "source": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "target": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 69,
+        "tick": 1071,
+        "type": "cast_start",
+        "source": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "target": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 70,
+        "tick": 1087,
+        "type": "hit",
+        "source": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "target": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 412.70000000000005,
+        "hpDamage": 412.70000000000005,
+        "barrierDamage": 0,
+        "damageType": "magic",
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 71,
+        "tick": 1087,
+        "type": "damaged",
+        "source": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "target": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 412.70000000000005,
+        "hpDamage": 412.70000000000005,
+        "barrierDamage": 0,
+        "damageType": "magic",
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 72,
+        "tick": 1102,
+        "type": "cast_complete",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 73,
+        "tick": 1103,
+        "type": "cast_start",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "skillId": "skill_class_mage_barrier",
+        "skillName": "마법사 · 보호막",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 74,
+        "tick": 1119,
+        "type": "hit",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 384.1999999999998,
+        "hpDamage": 384.1999999999998,
+        "barrierDamage": 0,
+        "damageType": "magic",
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 75,
+        "tick": 1119,
+        "type": "damaged",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 384.1999999999998,
+        "hpDamage": 384.1999999999998,
+        "barrierDamage": 0,
+        "damageType": "magic",
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 76,
+        "tick": 1133,
+        "type": "cast_complete",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "skillId": "skill_class_mage_barrier",
+        "skillName": "마법사 · 보호막",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 77,
+        "tick": 1133,
+        "type": "heal",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "skillId": "skill_class_mage_barrier",
+        "skillName": "마법사 · 보호막",
+        "amount": 560,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": "BP",
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 78,
+        "tick": 1134,
+        "type": "cast_start",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 79,
+        "tick": 1251,
+        "type": "cast_complete",
+        "source": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "target": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 80,
+        "tick": 1252,
+        "type": "cast_start",
+        "source": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_class_warlock_barrier",
+        "skillName": "흑마법사 · 보호막",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 81,
+        "tick": 1268,
+        "type": "hit",
+        "source": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "target": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 560,
+        "hpDamage": 0,
+        "barrierDamage": 560,
+        "damageType": "magic",
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 82,
+        "tick": 1268,
+        "type": "damaged",
+        "source": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "target": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 560,
+        "hpDamage": 0,
+        "barrierDamage": 560,
+        "damageType": "magic",
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 83,
+        "tick": 1282,
+        "type": "cast_complete",
+        "source": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_class_warlock_barrier",
+        "skillName": "흑마법사 · 보호막",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 84,
+        "tick": 1282,
+        "type": "heal",
+        "source": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_class_warlock_barrier",
+        "skillName": "흑마법사 · 보호막",
+        "amount": 560,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": "BP",
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 85,
+        "tick": 1283,
+        "type": "cast_start",
+        "source": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "target": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 86,
+        "tick": 1284,
+        "type": "cast_complete",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 87,
+        "tick": 1285,
+        "type": "cast_start",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_class_mage_arrow",
+        "skillName": "마법사 · 마법화살",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 88,
+        "tick": 1301,
+        "type": "hit",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 560,
+        "hpDamage": 0,
+        "barrierDamage": 560,
+        "damageType": "magic",
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 89,
+        "tick": 1301,
+        "type": "damaged",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 560,
+        "hpDamage": 0,
+        "barrierDamage": 560,
+        "damageType": "magic",
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 90,
+        "tick": 1315,
+        "type": "cast_complete",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_class_mage_arrow",
+        "skillName": "마법사 · 마법화살",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 91,
+        "tick": 1316,
+        "type": "cast_start",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_class_mage_quick",
+        "skillName": "마법사 · 즉시시전 공격 (기본형)",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 92,
+        "tick": 1316,
+        "type": "cast_complete",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_class_mage_quick",
+        "skillName": "마법사 · 즉시시전 공격 (기본형)",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 93,
+        "tick": 1317,
+        "type": "cast_start",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 94,
+        "tick": 1332,
+        "type": "hit",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_class_mage_arrow",
+        "skillName": "마법사 · 마법화살",
+        "amount": 384.20000000000005,
+        "hpDamage": 384.20000000000005,
+        "barrierDamage": 0,
+        "damageType": "magic",
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 95,
+        "tick": 1332,
+        "type": "damaged",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_class_mage_arrow",
+        "skillName": "마법사 · 마법화살",
+        "amount": 384.20000000000005,
+        "hpDamage": 384.20000000000005,
+        "barrierDamage": 0,
+        "damageType": "magic",
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 96,
+        "tick": 1333,
+        "type": "hit",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_class_mage_quick",
+        "skillName": "마법사 · 즉시시전 공격 (기본형)",
+        "amount": 384.20000000000005,
+        "hpDamage": 384.20000000000005,
+        "barrierDamage": 0,
+        "damageType": "magic",
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 97,
+        "tick": 1333,
+        "type": "damaged",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_class_mage_quick",
+        "skillName": "마법사 · 즉시시전 공격 (기본형)",
+        "amount": 384.20000000000005,
+        "hpDamage": 384.20000000000005,
+        "barrierDamage": 0,
+        "damageType": "magic",
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 98,
+        "tick": 1463,
+        "type": "cast_complete",
+        "source": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "target": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 99,
+        "tick": 1464,
+        "type": "cast_start",
+        "source": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "target": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "skillId": "skill_class_warlock_bite",
+        "skillName": "흑마법사 · 암흑물기",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 100,
+        "tick": 1467,
+        "type": "cast_complete",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 101,
+        "tick": 1468,
+        "type": "cast_start",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 102,
+        "tick": 1480,
+        "type": "hit",
+        "source": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "target": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 412.7,
+        "hpDamage": 412.7,
+        "barrierDamage": 0,
+        "damageType": "magic",
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 103,
+        "tick": 1480,
+        "type": "damaged",
+        "source": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "target": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 412.7,
+        "hpDamage": 412.7,
+        "barrierDamage": 0,
+        "damageType": "magic",
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 104,
+        "tick": 1484,
+        "type": "hit",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 384.20000000000005,
+        "hpDamage": 384.20000000000005,
+        "barrierDamage": 0,
+        "damageType": "magic",
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 105,
+        "tick": 1484,
+        "type": "damaged",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 384.20000000000005,
+        "hpDamage": 384.20000000000005,
+        "barrierDamage": 0,
+        "damageType": "magic",
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 106,
+        "tick": 1494,
+        "type": "cast_complete",
+        "source": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "target": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "skillId": "skill_class_warlock_bite",
+        "skillName": "흑마법사 · 암흑물기",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 107,
+        "tick": 1494,
+        "type": "heal",
+        "source": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_class_warlock_bite",
+        "skillName": "흑마법사 · 암흑물기",
+        "amount": 280,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": "HP",
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 108,
+        "tick": 1495,
+        "type": "cast_start",
+        "source": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "target": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 109,
+        "tick": 1511,
+        "type": "hit",
+        "source": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "target": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "skillId": "skill_class_warlock_bite",
+        "skillName": "흑마법사 · 암흑물기",
+        "amount": 218.49999999999983,
+        "hpDamage": 218.49999999999983,
+        "barrierDamage": 0,
+        "damageType": "magic",
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 110,
+        "tick": 1511,
+        "type": "damaged",
+        "source": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "target": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "skillId": "skill_class_warlock_bite",
+        "skillName": "흑마법사 · 암흑물기",
+        "amount": 218.49999999999983,
+        "hpDamage": 218.49999999999983,
+        "barrierDamage": 0,
+        "damageType": "magic",
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": null,
+        "depth": 0
+      },
+      {
+        "id": 111,
+        "tick": 1511,
+        "type": "cast_interrupt",
+        "source": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "target": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "skillId": "skill_basic_weapon_attack",
+        "skillName": "기본 무기 공격",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": "사망",
+        "depth": 0
+      },
+      {
+        "id": 112,
+        "tick": 1511,
+        "type": "death",
+        "source": {
+          "id": 1,
+          "name": "흑마법사",
+          "side": "player",
+          "isSummon": false
+        },
+        "target": {
+          "id": 2,
+          "name": "마법사",
+          "side": "enemy",
+          "isSummon": false
+        },
+        "skillId": "skill_class_warlock_bite",
+        "skillName": "흑마법사 · 암흑물기",
+        "amount": 0,
+        "hpDamage": 0,
+        "barrierDamage": 0,
+        "damageType": null,
+        "resource": null,
+        "moveType": null,
+        "periodic": false,
+        "triggered": false,
+        "reason": "HP 소진",
+        "depth": 0
+      }
+    ]
+  },
+  {
+    "contributionVersion": 1,
     "battleAt": "2026-10-12T15:07:05.515Z",
     "result": "승리",
     "playerMembers": [
@@ -13,6 +3425,7 @@
         "maxMp": 100,
         "st": 103,
         "maxSt": 170,
+        "dps": 28.235294117647058,
         "eventId": 1,
         "contribution": {
           "direct": {
@@ -86,9 +3499,8 @@
         },
         "damageDealt": 720,
         "healingDone": 0,
-        "kills": 9,
-        "dps": 28.235294117647058,
-        "hps": 0
+        "hps": 0,
+        "kills": 9
       }
     ],
     "monsterMembers": [
@@ -101,6 +3513,7 @@
         "maxMp": 100,
         "st": 29,
         "maxSt": 100,
+        "dps": 4.666666666666667,
         "eventId": 6,
         "contribution": {
           "direct": {
@@ -148,9 +3561,8 @@
         },
         "damageDealt": 119,
         "healingDone": 0,
-        "kills": 0,
-        "dps": 4.666666666666667,
-        "hps": 0
+        "hps": 0,
+        "kills": 0
       },
       {
         "name": "슬라임-8",
@@ -161,6 +3573,7 @@
         "maxMp": 100,
         "st": 21,
         "maxSt": 100,
+        "dps": 3.843137254901961,
         "eventId": 10,
         "contribution": {
           "direct": {
@@ -208,9 +3621,8 @@
         },
         "damageDealt": 98,
         "healingDone": 0,
-        "kills": 0,
-        "dps": 3.843137254901961,
-        "hps": 0
+        "hps": 0,
+        "kills": 0
       },
       {
         "name": "슬라임-6",
@@ -221,6 +3633,7 @@
         "maxMp": 100,
         "st": 12,
         "maxSt": 100,
+        "dps": 3.2941176470588234,
         "eventId": 4,
         "contribution": {
           "direct": {
@@ -268,9 +3681,8 @@
         },
         "damageDealt": 84,
         "healingDone": 0,
-        "kills": 0,
-        "dps": 3.2941176470588234,
-        "hps": 0
+        "hps": 0,
+        "kills": 0
       },
       {
         "name": "슬라임-7",
@@ -281,6 +3693,7 @@
         "maxMp": 100,
         "st": 1,
         "maxSt": 100,
+        "dps": 3.019607843137255,
         "eventId": 11,
         "contribution": {
           "direct": {
@@ -328,9 +3741,8 @@
         },
         "damageDealt": 77,
         "healingDone": 0,
-        "kills": 0,
-        "dps": 3.019607843137255,
-        "hps": 0
+        "hps": 0,
+        "kills": 0
       },
       {
         "name": "슬라임-5",
@@ -341,6 +3753,7 @@
         "maxMp": 100,
         "st": 29,
         "maxSt": 100,
+        "dps": 2.196078431372549,
         "eventId": 8,
         "contribution": {
           "direct": {
@@ -388,9 +3801,8 @@
         },
         "damageDealt": 56,
         "healingDone": 0,
-        "kills": 0,
-        "dps": 2.196078431372549,
-        "hps": 0
+        "hps": 0,
+        "kills": 0
       },
       {
         "name": "슬라임-3",
@@ -401,6 +3813,7 @@
         "maxMp": 100,
         "st": 45,
         "maxSt": 100,
+        "dps": 1.3725490196078431,
         "eventId": 9,
         "contribution": {
           "direct": {
@@ -448,9 +3861,8 @@
         },
         "damageDealt": 35,
         "healingDone": 0,
-        "kills": 0,
-        "dps": 1.3725490196078431,
-        "hps": 0
+        "hps": 0,
+        "kills": 0
       },
       {
         "name": "슬라임-2",
@@ -461,6 +3873,7 @@
         "maxMp": 100,
         "st": 71,
         "maxSt": 100,
+        "dps": 0.5490196078431373,
         "eventId": 7,
         "contribution": {
           "direct": {
@@ -508,9 +3921,8 @@
         },
         "damageDealt": 14,
         "healingDone": 0,
-        "kills": 0,
-        "dps": 0.5490196078431373,
-        "hps": 0
+        "hps": 0,
+        "kills": 0
       },
       {
         "name": "슬라임-1",
@@ -521,6 +3933,7 @@
         "maxMp": 100,
         "st": 88,
         "maxSt": 100,
+        "dps": 0,
         "eventId": 5,
         "contribution": {
           "direct": {
@@ -560,9 +3973,8 @@
         },
         "damageDealt": 0,
         "healingDone": 0,
-        "kills": 0,
-        "dps": 0,
-        "hps": 0
+        "hps": 0,
+        "kills": 0
       },
       {
         "name": "슬라임-4",
@@ -573,6 +3985,7 @@
         "maxMp": 100,
         "st": 99,
         "maxSt": 100,
+        "dps": 0,
         "eventId": 2,
         "contribution": {
           "direct": {
@@ -612,9 +4025,8 @@
         },
         "damageDealt": 0,
         "healingDone": 0,
-        "kills": 0,
-        "dps": 0,
-        "hps": 0
+        "hps": 0,
+        "kills": 0
       }
     ],
     "durationSeconds": 25.5,

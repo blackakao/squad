@@ -4,6 +4,8 @@
 
 ## 기존 프로젝트와 연결
 
+- 관리 화면은 다른 관리 페이지와 동일한 공통 페이지 여백 변수, panel 카드, h4 제목, data-toolbar, data-table 및 table-responsive를 사용한다. 설명문은 공통 문단 흐름에 유지하고 시너지 전용 외곽 여백은 두지 않는다. 2026-10-13에 누락된 래퍼/공통 여백 적용을 복구하고 Chrome 1920·1440·640px에서 아이템 관리와 비교했다.
+
 - 캐릭터는 별도 classId 없이 `role`을 사용한다. 선택지는 `ROLES`, 이름은 `getRoleLabel`이다.
 - 진영은 별도 ID 레지스트리가 없고 `factions.json`의 문자열과 `character.faction`이 정식 키다. 이 기존 계약을 유지하며 아이콘의 대체 표시명이나 DOM 텍스트로 비교하지 않는다. 진영 ID 마이그레이션은 하지 않았다.
 - 배분 스탯은 `CHARACTER_STAT_DEFS`(str/vit/agi/focus/int/wis), 파생 능력치는 `ABILITY_ROWS`가 원본 정의다. 관리 화면은 두 목록에서 선택지를 구성한다. 새로운 스탯의 전투 계산 자체는 기존 스탯 엔진의 책임이다.

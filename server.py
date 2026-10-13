@@ -40,6 +40,7 @@ ASSET_IMAGE_DIRS = {
     "icons": ROOT / "assets" / "images" / "icons",
     "generated": ROOT / "assets" / "images" / "generated",
 }
+CHARACTER_HAIR_IMPORT_DIR = ROOT / "assets" / "characters" / "hair" / "imported"
 API_NAME_RE = re.compile(r"^[a-zA-Z0-9_-]+$")
 ASSET_NAME_RE = re.compile(r"[^a-zA-Z0-9_-]+")
 DATA_URL_RE = re.compile(r"^data:image/(?P<ext>png|jpeg|jpg|webp|gif);base64,(?P<data>.+)$", re.DOTALL)
@@ -53,6 +54,27 @@ IMAGE_CONTENT_TYPES = {
 API_FILE_ALIASES = {
     "records": "battle-records",
 }
+
+
+def list_imported_character_hair():
+    """List GLB files from CharacterViewer's fixed, project-local import folder."""
+    CHARACTER_HAIR_IMPORT_DIR.mkdir(parents=True, exist_ok=True)
+    files = []
+    for file_path in CHARACTER_HAIR_IMPORT_DIR.iterdir():
+        if not file_path.is_file() or file_path.suffix.lower() != ".glb":
+            continue
+        stat = file_path.stat()
+        files.append({
+            "name": file_path.name,
+            "path": file_path.relative_to(ROOT).as_posix(),
+            "bytes": stat.st_size,
+            "modified": datetime.fromtimestamp(stat.st_mtime).isoformat(timespec="seconds"),
+        })
+    files.sort(key=lambda item: (item["name"].casefold(), item["name"]))
+    return {
+        "folder": CHARACTER_HAIR_IMPORT_DIR.relative_to(ROOT).as_posix(),
+        "files": files,
+    }
 
 
 def server_log(message):
@@ -162,6 +184,10 @@ class BattleHandler(SimpleHTTPRequestHandler):
         if path == "/api/image-settings":
             server_log(f"GET {path} -> {IMAGE_SETTINGS_PATH.relative_to(ROOT)}")
             self.send_json(self.read_json_object(IMAGE_SETTINGS_PATH))
+            return
+        if path == "/api/character-assets/hair":
+            server_log(f"GET {path} -> {CHARACTER_HAIR_IMPORT_DIR.relative_to(ROOT)}")
+            self.send_json(list_imported_character_hair())
             return
 
         api_file_path = get_api_file_path(path)

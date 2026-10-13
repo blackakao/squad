@@ -28,6 +28,8 @@ button:hover:enabled { background: #3d5b80; }
 :focus-visible { outline: 2px solid #a9d1ff; outline-offset: 3px; }
 :disabled { opacity: .5; cursor: not-allowed; }
 .button-row { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+.transform-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.transform-grid label { margin-top: 10px; }
 .check { display: flex; align-items: center; gap: 7px; }
 output { float: right; color: #b3d6ff; }
 .hint, #load-status, #playback-status { font-size: 12px; line-height: 1.6; color: #aab8cd; overflow-wrap: anywhere; }

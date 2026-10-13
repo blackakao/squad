@@ -1,11 +1,13 @@
 ﻿import { CharacterViewer } from './CharacterViewer.js?v=20261010-visual12';
 import { setupEquipment } from './equipment.js?v=20261010-visual12';
 import { setupComposer } from '../portrait/composer.js?v=20261010-visual20';
+import { setupExternalHair } from './external-hair.js?v=20261013-hairlibrary1';
 
 const byId = id => document.getElementById(id);
 let viewer;
 let equipment;
 let composer;
+let externalHair;
 let files = [];
 let clipNames = [];
 let modelRows = [];
@@ -40,6 +42,7 @@ function updateInfo(label, value) {
 
 function onState(event) {
   if (event.type === 'unloading') {
+    externalHair?.clear();
     composer?.clear();
     equipment?.clear();
   } else if (event.type === 'loading') {
@@ -63,6 +66,7 @@ function onState(event) {
   } else if (event.type === 'loaded') {
     composer?.setModel(viewer.model);
     equipment?.setModel(viewer.model);
+    externalHair?.setModel(viewer.model);
     const { info, clips } = event;
     byId('load-status').textContent = `${event.name} 로딩 완료`;
     byId('empty-hint').hidden = true;
@@ -102,7 +106,8 @@ try {
   viewer = new CharacterViewer(byId('viewport'), onState);
   equipment = setupEquipment(viewer);
   composer = setupComposer(viewer,equipment);
-  globalThis.characterViewerDebug={viewer,composer,equipment};
+  externalHair = setupExternalHair(viewer);
+  globalThis.characterViewerDebug={viewer,composer,equipment,externalHair};
   byId('source-controls').disabled = false;
   byId('load-status').textContent = '준비 완료 · 모델을 선택하세요.';
 } catch (error) {
@@ -174,7 +179,7 @@ byId('model-scale').addEventListener('change', event => {
 byId('show-skeleton').addEventListener('change', event => {
   if (viewer.skeletonHelper) viewer.skeletonHelper.visible = event.target.checked;
 });
-window.addEventListener('pagehide', event => { if (!event.persisted) viewer?.dispose(); });
+window.addEventListener('pagehide', event => { if (!event.persisted){externalHair?.dispose();viewer?.dispose();} });
 
 // No implicit nonexistent default asset; query loading is explicitly requested by the URL.
 const requestedModel = new URLSearchParams(location.search).get('model');

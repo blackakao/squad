@@ -43,7 +43,31 @@
         <p id="error-message" role="alert" hidden></p>
       </section>
       <section>
-        <h2>02 / 애니메이션</h2>
+        <h2>02 / 외부 머리 GLB</h2>
+        <fieldset id="external-hair-controls" disabled>
+          <label for="external-hair-library">가져오기 폴더의 GLB</label>
+          <select id="external-hair-library"><option value="">폴더 목록 불러오는 중…</option></select>
+          <div class="button-row"><button id="external-hair-load-selected" type="button">선택 머리 장착</button><button id="external-hair-refresh" type="button">목록 새로고침</button><button id="external-hair-remove" type="button">외부 머리 제거</button></div>
+          <p class="hint"><code>assets/characters/hair/imported/</code>에 GLB를 넣고 목록 새로고침을 누르세요.</p>
+          <form id="external-hair-url-form">
+            <label for="external-hair-url">프로젝트 내부 GLB 경로</label>
+            <input id="external-hair-url" type="text" placeholder="assets/characters/hair/imported/example.glb" required>
+            <button type="submit">캐릭터에 머리 장착</button>
+          </form>
+          <label for="external-hair-file">내 컴퓨터의 머리 GLB</label>
+          <input id="external-hair-file" type="file" accept=".glb">
+          <div class="transform-grid">
+            <label>X<input id="external-hair-x" type="number" step="0.001" value="0"></label><label>Y<input id="external-hair-y" type="number" step="0.001" value="0"></label><label>Z<input id="external-hair-z" type="number" step="0.001" value="0"></label>
+            <label>회전 X°<input id="external-hair-rx" type="number" step="1" value="0"></label><label>회전 Y°<input id="external-hair-ry" type="number" step="1" value="0"></label><label>회전 Z°<input id="external-hair-rz" type="number" step="1" value="0"></label>
+          </div>
+          <label for="external-hair-scale">머리 배율</label><input id="external-hair-scale" type="number" min="0.001" step="0.01" value="1">
+          <button id="external-hair-reset" type="button">Transform 초기화</button>
+        </fieldset>
+        <p id="external-hair-status" class="hint" role="status">블랭크 캐릭터를 불러오면 머리 GLB를 장착할 수 있습니다.</p>
+        <p class="hint">GLB는 Head에 연결됩니다. 외부 머리를 제거하면 기존 절차형 머리가 다시 표시됩니다.</p>
+      </section>
+      <section>
+        <h2>03 / 애니메이션</h2>
         <fieldset id="animation-controls" disabled>
           <label for="clip-select">모델에 포함된 클립</label>
           <select id="clip-select"><option>애니메이션 없음</option></select>
@@ -55,7 +79,7 @@
         <p id="playback-status" class="hint">모델을 불러오면 실제 클립만 표시합니다.</p>
       </section>
       <section>
-        <h2>03 / 표시 설정</h2>
+        <h2>04 / 표시 설정</h2>
         <fieldset id="display-controls" disabled>
           <button id="frame-model" type="button">캐릭터 전체 보기</button>
           <label for="model-scale">표시 배율 (원본 변환에 추가 적용)</label>
@@ -64,7 +88,7 @@
         </fieldset>
       </section>
       <section>
-        <h2>04 / 장비 테스트</h2>
+        <h2>05 / 장비 테스트</h2>
         <fieldset id="equipment-controls" disabled>
           <label for="equip-head">머리 장비</label><select id="equip-head"><option value="">없음</option></select>
           <label for="equip-body">복장 세트</label><select id="equip-body"><option value="">없음</option></select>
@@ -79,7 +103,7 @@
         <p class="hint">개발용 장비입니다. 외형 조합 저장에는 포함되지만 게임 장비·능력치는 변경하지 않습니다.</p>
       </section>
       <section>
-        <h2>05 / 외형·초상화 조합</h2>
+        <h2>06 / 외형·초상화 조합</h2>
         <fieldset id="portrait-controls" disabled>
           <img id="portrait-preview" class="portrait-composition-preview" alt="조합한 초상화 미리보기">
           <p id="portrait-selection" class="hint"></p>
@@ -97,7 +121,7 @@
         <p id="portrait-status" class="hint" role="status">공통 SD 베이스를 불러오면 조합할 수 있습니다.</p>
       </section>
       <section>
-        <h2>06 / 모델 정보</h2>
+        <h2>07 / 모델 정보</h2>
         <dl id="model-info"><dt>모델</dt><dd>불러온 모델 없음</dd></dl>
         <details><summary>텍스처</summary><ul id="texture-info"><li>없음</li></ul></details>
         <details><summary>AnimationClip / duration</summary><ul id="clip-info"><li>없음</li></ul></details>
@@ -106,7 +130,7 @@
     </aside>
   </main>
   <script type="module">
-    import('./js/character-viewer/main.js?v=20261010-visual20').catch(error => {
+    import('./js/character-viewer/main.js?v=20261013-hairlibrary1').catch(error => {
       document.getElementById('load-status').textContent = '뷰어 초기화 실패';
       const message = document.getElementById('error-message');
       message.hidden = false;

@@ -540,29 +540,12 @@
   },
   {
     "name": "흑마법사",
-    "hp": 4785,
-    "mp": 200,
-    "st": 120,
-    "bp": 0,
-    "atk": 12,
-    "magic": 560,
-    "speed": 1,
-    "attackSpeed": 1,
-    "castSpeed": 3,
-    "defense": 11.9,
-    "resistance": 31.4,
-    "attackRange": 4,
     "role": "ranged",
-    "skillIds": [],
-    "portrait": "assets/images/portraits/character-009.png",
-    "attributes": {
-      "str": 0,
-      "vit": 50,
-      "agi": 0,
-      "focus": 0,
-      "int": 50,
-      "wis": 50
-    },
+    "faction": "철엘프",
+    "skillIds": [
+      "skill_class_warlock_bite",
+      "skill_class_warlock_barrier"
+    ],
     "equipmentRules": {
       "extraWeaponSlots": 0,
       "twoHandSingleSlot": false,
@@ -577,6 +560,15 @@
       "reviveStPercent": 100,
       "reviveInvulnerable": 0,
       "revivePosition": "death"
+    },
+    "customResources": [],
+    "attributes": {
+      "str": 0,
+      "vit": 50,
+      "agi": 0,
+      "focus": 0,
+      "int": 50,
+      "wis": 50
     },
     "equipment": {
       "mainWeapon": "item_1781186124129",
@@ -600,8 +592,20 @@
       }
     ],
     "activeEquipmentSet": 0,
-    "faction": "철엘프",
-    "attackType": "magic"
+    "portrait": "assets/images/portraits/character-009.png",
+    "hp": 4785,
+    "mp": 200,
+    "st": 120,
+    "bp": 0,
+    "atk": 12,
+    "magic": 560,
+    "speed": 1,
+    "attackSpeed": 1,
+    "castSpeed": 3,
+    "attackType": "magic",
+    "defense": 11.9,
+    "resistance": 31.4,
+    "attackRange": 4
   },
   {
     "name": "해병",

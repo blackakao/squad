@@ -42,6 +42,16 @@ python server.py
 
 **직접 링크:** `http://127.0.0.1:8000/character-viewer.html?model=assets%2Fcharacters%2Fmodels%2Fhuman_sd_test.glb`. 명시한 경로만 요청하며, 자동으로 존재하지 않는 예제 파일을 요청하지 않는다.
 
+## 외부 머리 GLB 미리보기
+
+1. 남성 또는 여성 블랭크를 먼저 불러온다.
+2. **외부 머리 GLB**에서 프로젝트 경로를 입력하거나 내 컴퓨터의 `.glb` 파일을 선택한다.
+3. GLB는 블랭크의 `mixamorigHead`에 rigid attachment되고 기존 절차형 머리는 렌더링만 숨겨진다.
+4. XYZ 위치, XYZ 회전(도), 배율로 fit을 조정한다. `Transform 초기화`는 모두 0과 배율 1로 되돌린다.
+5. `외부 머리 제거`는 GLB instance를 dispose하고 기존 선택 머리를 복원한다.
+
+등록된 첫 샘플은 [female_hair_ref01.glb](../assets/characters/hair/imported/female_hair_ref01.glb)이다. 파일 제작 규격은 [외부 머리 GLB 규격](../assets/characters/hair/README.md)을 따른다. 최상위 Mesh 전체에 동일한 Blender 축 transform이 중복 저장된 파일은 공통 역행렬로 자동 보정한다. 이 기능은 개발용 fit 미리보기이며, 외부 머리 ID와 transform을 조합 저장소에 기록하는 정식 catalog 등록은 아직 지원하지 않는다.
+
 ## 조작과 정보
 
 - 자동으로 모델 전체를 카메라에 맞춘다. 왼쪽 드래그 회전, 휠 줌, 오른쪽 드래그 이동. `캐릭터 전체 보기`는 현재 포즈에 다시 맞춘다. 창 크기 변경 시에도 다시 프레이밍한다.
@@ -195,3 +205,10 @@ git diff --check
 복장 색상은 스타일과 별도인 `outfitColor`로 저장됩니다. 기본색, 검정, 흰색, 회색, 갈색, 네이비, 빨강, 초록의 8개 팔레트를 제공하며 `primary`, `secondary`, `trim` material role에 적용합니다. 색상 변경 시 기존 Mesh와 BufferGeometry를 유지하고 Material 색상만 바꿉니다. 이전 저장 데이터에 `outfitColor`가 없으면 기본색을 사용합니다.
 
 기술 검증에서 여성 단발·긴 머리·포니테일의 모든 파츠가 유효한 geometry와 matrix를 유지했고, 8색 연속 변경 전후 Mesh/Geometry UUID가 동일했습니다. Walking/Running은 각 8구간에서 로브 22개 파츠의 행렬이 유효했습니다. WebGL 캔버스 캡처 제약으로 다각도 외관과 실제 clipping에 대한 최종 시각 판정은 별도 검수가 필요합니다.
+
+## 외부 머리 자동 폴더 목록 (2026-10-13)
+
+- `assets/characters/hair/imported/` 바로 아래에 `.glb`를 복사하면 CharacterViewer가 자동으로 목록에 표시한다.
+- 실행 중 파일을 추가한 경우 **목록 새로고침**을 누르고 파일을 선택한 뒤 **선택 머리 장착**을 누른다. 파일별 코드 등록이나 페이지 URL 변경은 필요 없다.
+- `GET /api/character-assets/hair`는 이 고정 폴더의 `.glb`만 이름순으로 반환한다. 하위 폴더와 다른 확장자는 노출하지 않는다.
+- 수동 프로젝트 경로 입력과 로컬 파일 선택은 임시 파일 확인을 위해 유지한다.
