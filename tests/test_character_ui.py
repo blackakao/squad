@@ -168,7 +168,7 @@ class CharacterUI(unittest.TestCase):
         self.assertEqual(self.driver.execute_script('return characterJson.length'), index)
 
     def test_columns_keyboard_sort_and_responsive(self):
-        expected = ['이름','계열','진영','HP','MP','ST','공격력','마력','이동속도','공격속도','시전속도','방어력','저항력','사정거리','수정']
+        expected = ['이름','계열','진영','종합전투력','HP','MP','ST','공격력','마력','이동속도','공격속도','시전속도','방어력','저항력','사정거리','수정']
         self.assertEqual([e.text for e in self.driver.find_elements(By.CSS_SELECTOR, '#characterTableHeader th')], expected)
         self.assertFalse(self.driver.find_elements(By.CSS_SELECTOR, '#characterPage input[type="checkbox"]'))
         self.assertNotIn('선택 삭제', self.driver.find_element(By.ID,'characterPage').text)

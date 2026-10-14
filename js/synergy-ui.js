@@ -103,7 +103,6 @@ function renderTeamSynergyPreview() {
   if (!el) return;
   if (!getSelectedTeam()) { el.innerHTML = '<p>팀을 선택해주세요.</p>'; return; }
   const result = evaluateSynergies([...new Set(selectedTeamMemberIds)].map(id => characterJson[id]));
-  const relevant = result.states.filter(s => s.count > 0 || s.error);
-  el.innerHTML = '<h5>공용 스탯 시너지</h5>' + (relevant.map(s => `<div class="synergy-preview ${s.active.length ? 'active' : ''}"><strong>${s.active.length ? '✓ 활성' : '미달'} · ${escapeHtml(s.definition.name)}</strong>${s.error ? `<p>${escapeHtml(s.error)}</p>` : s.definition.thresholds.map(t => `<p>${s.count} / ${t.count}명 · ${s.active.includes(t) ? '적용 중' : s.count < t.count ? `${t.count-s.count}명 더 필요` : '상위 단계 적용'}<br>${escapeHtml(synergyEffectsText(t.effects))}</p>`).join('')}</div>`).join('') || '<p>현재 편성과 관련된 시너지가 없습니다.</p>')
-    + '<h5>캐릭터별 시너지 합산</h5>' + result.roster.map((c,i) => `<p>${escapeHtml(c.name)}: ${escapeHtml(Object.entries(result.modifiers[i]).map(([key,value]) => `${getSynergyStatDefs().find(d => d.key===key)?.label || key} ${value >= 0 ? '+' : ''}${value}`).join(', ') || '없음')}</p>`).join('');
+  const active = result.states.filter(s=>s.active.length);
+  el.innerHTML = '<h5>활성 시너지</h5>' + (active.map(s=>`<div class="synergy-preview active"><strong>${escapeHtml(s.definition.name)}</strong>${s.active.map(t=>`<p>${t.count}명 효과 · ${escapeHtml(synergyEffectsText(t.effects))}</p>`).join('')}</div>`).join('') || '<p class="empty-text">활성 시너지가 없습니다.</p>');
 }

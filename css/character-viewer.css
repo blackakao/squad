@@ -28,6 +28,13 @@ button:hover:enabled { background: #3d5b80; }
 :focus-visible { outline: 2px solid #a9d1ff; outline-offset: 3px; }
 :disabled { opacity: .5; cursor: not-allowed; }
 .button-row { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+.segmented { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border: 1px solid #40516b; border-radius: 8px; background: #0e1520; }
+.segmented button { border-color: transparent; background: transparent; }
+.segmented button[aria-pressed=true] { background: #476b86; border-color: #9dc9ed; }
+.glb-part-row { padding: 8px 0; border-bottom: 1px solid #2b394d; }
+.glb-part-row[data-state=error] select { border-color: #c76a78; }
+.glb-part-row[data-state=loaded] select { border-color: #72a98b; }
+.part-status { margin: 5px 0 0; }
 .transform-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
 .transform-grid label { margin-top: 10px; }
 .check { display: flex; align-items: center; gap: 7px; }

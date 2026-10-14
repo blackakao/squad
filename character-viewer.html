@@ -43,28 +43,35 @@
         <p id="error-message" role="alert" hidden></p>
       </section>
       <section>
-        <h2>02 / 외부 머리 GLB</h2>
-        <fieldset id="external-hair-controls" disabled>
-          <label for="external-hair-library">가져오기 폴더의 GLB</label>
-          <select id="external-hair-library"><option value="">폴더 목록 불러오는 중…</option></select>
-          <div class="button-row"><button id="external-hair-load-selected" type="button">선택 머리 장착</button><button id="external-hair-refresh" type="button">목록 새로고침</button><button id="external-hair-remove" type="button">외부 머리 제거</button></div>
-          <p class="hint"><code>assets/characters/hair/imported/</code>에 GLB를 넣고 목록 새로고침을 누르세요.</p>
-          <form id="external-hair-url-form">
-            <label for="external-hair-url">프로젝트 내부 GLB 경로</label>
-            <input id="external-hair-url" type="text" placeholder="assets/characters/hair/imported/example.glb" required>
-            <button type="submit">캐릭터에 머리 장착</button>
-          </form>
-          <label for="external-hair-file">내 컴퓨터의 머리 GLB</label>
-          <input id="external-hair-file" type="file" accept=".glb">
-          <div class="transform-grid">
-            <label>X<input id="external-hair-x" type="number" step="0.001" value="0"></label><label>Y<input id="external-hair-y" type="number" step="0.001" value="0"></label><label>Z<input id="external-hair-z" type="number" step="0.001" value="0"></label>
-            <label>회전 X°<input id="external-hair-rx" type="number" step="1" value="0"></label><label>회전 Y°<input id="external-hair-ry" type="number" step="1" value="0"></label><label>회전 Z°<input id="external-hair-rz" type="number" step="1" value="0"></label>
+        <h2>02 / 파츠 소스</h2>
+        <fieldset id="part-source-controls" disabled>
+          <div class="segmented" role="group" aria-label="파츠 소스">
+            <button type="button" data-part-mode="js" aria-pressed="true">JS 파츠</button>
+            <button type="button" data-part-mode="glb" aria-pressed="false">GLB 파츠</button>
           </div>
-          <label for="external-hair-scale">머리 배율</label><input id="external-hair-scale" type="number" min="0.001" step="0.01" value="1">
-          <button id="external-hair-reset" type="button">Transform 초기화</button>
+          <div id="glb-part-panel" hidden>
+            <p class="hint">동일한 Base Character 위에서 외부 GLB를 비교하는 개발용 모드입니다.</p>
+            <button id="glb-part-refresh" type="button">GLB 폴더 목록 새로고침</button>
+            <div id="glb-part-categories"></div>
+            <details>
+              <summary>선택 파츠 Transform 보정</summary>
+              <label for="glb-transform-category">보정 대상</label><select id="glb-transform-category"></select>
+              <div class="transform-grid">
+                <label>X<input id="glb-part-x" type="number" step="0.001" value="0"></label><label>Y<input id="glb-part-y" type="number" step="0.001" value="0"></label><label>Z<input id="glb-part-z" type="number" step="0.001" value="0"></label>
+                <label>회전 X°<input id="glb-part-rx" type="number" step="1" value="0"></label><label>회전 Y°<input id="glb-part-ry" type="number" step="1" value="0"></label><label>회전 Z°<input id="glb-part-rz" type="number" step="1" value="0"></label>
+              </div>
+              <label for="glb-part-scale">배율</label><input id="glb-part-scale" type="number" min="0.001" step="0.01" value="1">
+              <button id="glb-part-transform-reset" type="button">현재 카테고리 Transform 초기화</button>
+            </details>
+            <details>
+              <summary>수동 GLB 불러오기</summary>
+              <p class="hint">Transform 보정의 현재 카테고리에 임시 장착합니다.</p>
+              <form id="glb-part-url-form"><label for="glb-part-url">프로젝트 경로 또는 HTTP(S) URL</label><input id="glb-part-url" type="text" placeholder="assets/characters/parts/example.glb" required><button type="submit">경로에서 장착</button></form>
+              <label for="glb-part-file">내 컴퓨터의 GLB</label><input id="glb-part-file" type="file" accept=".glb">
+            </details>
+          </div>
         </fieldset>
-        <p id="external-hair-status" class="hint" role="status">블랭크 캐릭터를 불러오면 머리 GLB를 장착할 수 있습니다.</p>
-        <p class="hint">GLB는 Head에 연결됩니다. 외부 머리를 제거하면 기존 절차형 머리가 다시 표시됩니다.</p>
+        <p id="glb-part-summary" class="hint" role="status">파츠 목록 준비 중…</p>
       </section>
       <section>
         <h2>03 / 애니메이션</h2>
@@ -102,20 +109,22 @@
         <p id="equipment-status" class="hint" role="status">모델을 불러오면 장비를 장착할 수 있습니다.</p>
         <p class="hint">개발용 장비입니다. 외형 조합 저장에는 포함되지만 게임 장비·능력치는 변경하지 않습니다.</p>
       </section>
-      <section>
+      <section id="portrait-section">
         <h2>06 / 외형·초상화 조합</h2>
         <fieldset id="portrait-controls" disabled>
           <img id="portrait-preview" class="portrait-composition-preview" alt="조합한 초상화 미리보기">
           <p id="portrait-selection" class="hint"></p>
-          <label for="hair-group">남녀 베이스 / 머리 분류</label>
-          <select id="hair-group"><option value="male">남성형 머리 10종</option><option value="female" selected>여성형 머리 10종</option></select>
           <div class="button-row"><button id="portrait-random" type="button">무작위 조합 생성</button><button id="portrait-default" type="button">기본 조합</button></div>
-          <div id="portrait-parts"></div>
-          <label for="portrait-preset-name">조합 이름</label>
-          <input id="portrait-preset-name" type="text" maxlength="60" placeholder="예: 갈색 단발 기사">
-          <div class="button-row"><button id="portrait-save-preset" type="button">조합 저장</button><button id="portrait-delete-preset" type="button">선택 조합 삭제</button></div>
-          <label for="portrait-presets">이 브라우저에 저장한 조합</label>
-          <select id="portrait-presets"><option value="">저장한 조합 선택</option></select>
+          <div id="js-portrait-options">
+            <label for="hair-group">남녀 베이스 / 머리 분류</label>
+            <select id="hair-group"><option value="male">남성형 머리 10종</option><option value="female" selected>여성형 머리 10종</option></select>
+            <div id="portrait-parts"></div>
+            <label for="portrait-preset-name">조합 이름</label>
+            <input id="portrait-preset-name" type="text" maxlength="60" placeholder="예: 갈색 단발 기사">
+            <div class="button-row"><button id="portrait-save-preset" type="button">조합 저장</button><button id="portrait-delete-preset" type="button">선택 조합 삭제</button></div>
+            <label for="portrait-presets">이 브라우저에 저장한 조합</label>
+            <select id="portrait-presets"><option value="">저장한 조합 선택</option></select>
+          </div>
           <div class="button-row"><button id="portrait-download" type="button">초상화 PNG 다운로드</button><button id="portrait-apply-character" type="button" hidden>캐릭터 초상화에 적용</button></div>
         </fieldset>
         <p id="portrait-status" class="hint" role="status">공통 SD 베이스를 불러오면 조합할 수 있습니다.</p>
@@ -130,7 +139,7 @@
     </aside>
   </main>
   <script type="module">
-    import('./js/character-viewer/main.js?v=20261013-hairlibrary1').catch(error => {
+    import('./js/character-viewer/main.js?v=20261014-gender1').catch(error => {
       document.getElementById('load-status').textContent = '뷰어 초기화 실패';
       const message = document.getElementById('error-message');
       message.hidden = false;

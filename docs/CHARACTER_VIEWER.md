@@ -44,6 +44,8 @@ python server.py
 
 ## 외부 머리 GLB 미리보기
 
+> 2026-10-14부터 이 기능은 Hair 전용 UI가 아니라 **JS 파츠 / GLB 파츠** 범용 모드로 확장되었다. Hair 기존 폴더는 유지하며 Eyes, Mouth, Nose, Clothes 폴더와 공통 lifecycle을 사용한다. 현재 경로와 제작 규격은 [외부 GLB 파츠 제작·등록 규격](CHARACTER_PARTS_GLB.md)을 따른다.
+
 1. 남성 또는 여성 블랭크를 먼저 불러온다.
 2. **외부 머리 GLB**에서 프로젝트 경로를 입력하거나 내 컴퓨터의 `.glb` 파일을 선택한다.
 3. GLB는 블랭크의 `mixamorigHead`에 rigid attachment되고 기존 절차형 머리는 렌더링만 숨겨진다.
@@ -194,6 +196,8 @@ git diff --check
 `body` 슬롯은 플레이트, 사슬갑옷, 가죽갑옷, 판타지 천옷, 턱시도, 셔츠+청바지 여섯 세트를 선택합니다. 플레이트에는 허리와 좌우 상부 다리 보호대를 추가했고, 신규 다섯 세트는 몸통·허리·소매·바지를 서로 다른 저폴리 실루엣과 재질로 구성합니다. 복장 교체는 `body` 슬롯만 바꾸므로 투구·장갑·부츠·주무기·보조무기를 유지합니다.
 
 현재 런타임 프로토타입은 캐릭터 Skeleton의 `Spine2`, `Hips`, 좌우 `Arm/ForeArm`, 좌우 `UpLeg/Leg`에 개별 복장 구간을 rigid attach합니다. 소매와 바지는 각 본을 직접 따라가며 팔꿈치·무릎 시작부에 작은 관절 커버를 겹칩니다. 이는 고정 몸통 한 개보다 애니메이션 추적이 정확하지만 연속적으로 휘는 SkinnedMesh는 아닙니다. 실제 GLB 복장은 동일 origin·scale·T-pose·bone naming·bind matrices를 사용하고, 팔꿈치와 무릎 vertex에 인접한 두 본의 혼합 weight를 주어야 합니다. 남녀는 공통 정의와 별도 fit profile 또는 체형별 geometry variant를 사용합니다.
+
+GLB 파츠 모드의 Clothes는 2026-10-14부터 Skin Joint 이름을 현재 Base Character의 Bone과 대조해 자동 재바인딩합니다. 성공한 의상은 자체 Armature를 scene에서 분리하고 Base AnimationMixer의 동작을 따라갑니다. GLB 모드는 JS 파츠를 섞지 않으며 선택하지 않은 카테고리는 비워 둡니다. 무작위 조합은 서버의 현재 폴더 목록에서 선택하고, 공통 초상화는 모든 GLB 로딩이 끝난 현재 장면을 512×512 PNG로 캡처합니다. JS와 GLB의 선택 상태는 별도로 유지합니다. 이 기능은 CharacterViewer 개발용 조립 기능이며 게임 캐릭터 데이터 저장에는 아직 연결하지 않았습니다.
 
 2026-10-10부터 몸통은 단순 Box/Sphere 대신 목·어깨·가슴·허리·골반의 타원 ring을 연결한 fitted shell을 사용합니다. 턱시도는 shell 위에 셔츠·lapel·bow를, 플레이트는 shell 위에 흉부/허리 band를 둡니다. 로브 하단은 Front/Back/Left/Right 네 패널로 종아리까지 내려오며 cloth simulation은 하지 않습니다. 이 런타임 geometry는 조합·리깅 검증용이고 실제 게임용 복장은 SkinnedMesh GLB로 교체해야 합니다.
 # HairCap, 하의 및 복장 팔레트 보정 (2026-10-10)

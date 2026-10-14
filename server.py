@@ -40,7 +40,14 @@ ASSET_IMAGE_DIRS = {
     "icons": ROOT / "assets" / "images" / "icons",
     "generated": ROOT / "assets" / "images" / "generated",
 }
-CHARACTER_HAIR_IMPORT_DIR = ROOT / "assets" / "characters" / "hair" / "imported"
+CHARACTER_PART_CATEGORIES = (
+    {"id": "hair", "label": "Hair", "folder": "assets/characters/hair/imported", "attachment": "head-root-space", "hideNodes": ["Hair_Anchor", "Independent_Hair"], "randomAllowNone": False},
+    {"id": "eyes", "label": "Eyes", "folder": "assets/characters/parts/eyes", "attachment": "head-root-space", "hideNodes": ["Independent_Eyes"], "randomAllowNone": False},
+    {"id": "mouth", "label": "Mouth", "folder": "assets/characters/parts/mouth", "attachment": "head-root-space", "hideNodes": ["Independent_Mouth"], "randomAllowNone": False},
+    {"id": "nose", "label": "Nose", "folder": "assets/characters/parts/nose", "attachment": "head-root-space", "hideNodes": ["Independent_Nose"], "randomAllowNone": False},
+    {"id": "clothes", "label": "Clothes", "folder": "assets/characters/parts/clothes", "attachment": "character-root", "hideNodes": [], "randomAllowNone": False},
+)
+CHARACTER_HAIR_IMPORT_DIR = ROOT / CHARACTER_PART_CATEGORIES[0]["folder"]
 API_NAME_RE = re.compile(r"^[a-zA-Z0-9_-]+$")
 ASSET_NAME_RE = re.compile(r"[^a-zA-Z0-9_-]+")
 DATA_URL_RE = re.compile(r"^data:image/(?P<ext>png|jpeg|jpg|webp|gif);base64,(?P<data>.+)$", re.DOTALL)
@@ -75,6 +82,29 @@ def list_imported_character_hair():
         "folder": CHARACTER_HAIR_IMPORT_DIR.relative_to(ROOT).as_posix(),
         "files": files,
     }
+
+
+def list_character_parts():
+    """Build the development catalog from the fixed character-part registry."""
+    categories = []
+    for definition in CHARACTER_PART_CATEGORIES:
+        folder = ROOT / definition["folder"]
+        folder.mkdir(parents=True, exist_ok=True)
+        files = []
+        for file_path in folder.iterdir():
+            if not file_path.is_file() or file_path.suffix.lower() != ".glb":
+                continue
+            stat = file_path.stat()
+            files.append({
+                "name": file_path.name,
+                "displayName": file_path.stem,
+                "path": file_path.relative_to(ROOT).as_posix(),
+                "bytes": stat.st_size,
+                "modified": datetime.fromtimestamp(stat.st_mtime).isoformat(timespec="seconds"),
+            })
+        files.sort(key=lambda item: (item["name"].casefold(), item["name"]))
+        categories.append({**definition, "files": files, "supportsNone": True})
+    return {"categories": categories}
 
 
 def server_log(message):
@@ -188,6 +218,10 @@ class BattleHandler(SimpleHTTPRequestHandler):
         if path == "/api/character-assets/hair":
             server_log(f"GET {path} -> {CHARACTER_HAIR_IMPORT_DIR.relative_to(ROOT)}")
             self.send_json(list_imported_character_hair())
+            return
+        if path == "/api/character-assets/parts":
+            server_log(f"GET {path} -> character part registry")
+            self.send_json(list_character_parts())
             return
 
         api_file_path = get_api_file_path(path)

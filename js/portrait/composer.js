@@ -37,6 +37,7 @@ export function setupComposer(viewer,equipment=null) {
   const appearance=new Appearance();
   const el=id=>document.getElementById(id),status=el('portrait-status');
   let selectedParts={...catalog.defaults},enabled=false,presets=[],baldModel=false,blankModel=false,pendingEquipment=null;
+  let sourceMode='js',externalParts=null,externalBusy=false;
   const buttons=new Map();
   const token=new URLSearchParams(location.search).get('compose');
   const labels={hair:'머리',hairColor:'머리 색상',eyes:'눈매',eyeColor:'눈 색상',eyebrows:'눈썹',nose:'코',ears:'귀',mouth:'입',skin:'피부색'};
@@ -74,6 +75,17 @@ export function setupComposer(viewer,equipment=null) {
     });
     el('portrait-selection').textContent=Object.entries(catalog.fields).filter(([field])=>!appearance.supportedFields||appearance.supportedFields.includes(field)).map(([field,group])=>catalog[group].find(x=>x.id===selectedParts[field])?.name).filter(Boolean).join(' · ');
   }
+  function externalSelectionText(){
+    const state=externalParts?.getState?.();
+    if(!state)return 'GLB 파츠 상태 없음';
+    return Object.entries(state.parts).map(([id,part])=>`${id}: ${part?.name||'없음'}`).join(' · ');
+  }
+  function refreshExternalPortrait(){
+    if(sourceMode!=='glb'||externalBusy||!enabled)return false;
+    el('portrait-selection').textContent=externalSelectionText();
+    try{el('portrait-preview').src=capturePortrait(viewer);status.textContent='현재 GLB 조합을 초상화에 반영했습니다.';return true;}
+    catch(error){status.textContent=error.message;return false;}
+  }
   function apply(fields=null){
     refresh();if(!enabled)return;
     try{appearance.apply(selectedParts,fields);equipment?.refreshOverrides?.();el('portrait-preview').src=capturePortrait(viewer);status.textContent='조합을 반영했습니다.';}
@@ -92,12 +104,27 @@ export function setupComposer(viewer,equipment=null) {
     if(!catalog.hair.some(h=>h.id===selectedParts.hair&&h.group===el('hair-group').value))selectedParts={...selectedParts,hair:catalog.hair.find(h=>h.group===el('hair-group').value).id};
     apply(['hair']);
   });
-  el('portrait-random').addEventListener('click',()=>{const previous=selectedParts;selectedParts=catalog.randomize(selectedParts,{group:el('hair-group').value,locks});
+  el('portrait-random').addEventListener('click',async()=>{
+    if(sourceMode==='glb'){
+      if(!externalParts?.randomize){status.textContent='GLB 파츠 목록을 준비하는 중입니다.';return;}
+      status.textContent='GLB 파츠 조합 중…';
+      const adapter=externalParts;
+      const result=await adapter.randomize();
+      if(sourceMode!=='glb'||adapter!==externalParts||result.stale)return;
+      const failed=result.results.filter(item=>item.status==='rejected').length;
+      el('portrait-selection').textContent=externalSelectionText();
+      if(!externalBusy)refreshExternalPortrait();
+      if(failed)status.textContent=`GLB 조합 완료 · ${failed}개 파츠 로딩 실패. 카테고리 상태를 확인하세요.`;
+      return;
+    }
+    const previous=selectedParts;selectedParts=catalog.randomize(selectedParts,{group:el('hair-group').value,locks});
     for(const [field,group] of Object.entries(catalog.fields)){const entries=availableEntries(field,group);if(entries.length&&!entries.some(x=>x.id===selectedParts[field]))selectedParts[field]=entries[Math.floor(Math.random()*entries.length)].id;}
-    el('portrait-presets').value='';apply(Object.keys(catalog.fields).filter(field=>previous[field]!==selectedParts[field]));});
+    el('portrait-presets').value='';apply(Object.keys(catalog.fields).filter(field=>previous[field]!==selectedParts[field]));
+  });
   el('portrait-default').addEventListener('click',()=>{el('portrait-presets').value='';choose(selectedParts.version===2?{...catalog.defaults,base:selectedParts.base,hair:selectedParts.base==='male'?'m1':'f1'}:catalog.defaults);});
   el('portrait-download').addEventListener('click',()=>{
-    try{const link=document.createElement('a');link.href=capturePortrait(viewer);link.download=`sd-portrait-${selectedParts.hair}-${selectedParts.eyes}.png`;link.click();status.textContent='512×512 PNG를 다운로드했습니다.';}
+    if(sourceMode==='glb'&&externalBusy){status.textContent='GLB 파츠 로딩이 끝난 뒤 초상화를 생성할 수 있습니다.';return;}
+    try{const link=document.createElement('a');link.href=capturePortrait(viewer);link.download=sourceMode==='glb'?'sd-portrait-glb.png':`sd-portrait-${selectedParts.hair}-${selectedParts.eyes}.png`;link.click();status.textContent='512×512 PNG를 다운로드했습니다.';}
     catch(error){status.textContent=error.message;}
   });
   function updatePresets(){
@@ -139,6 +166,19 @@ export function setupComposer(viewer,equipment=null) {
   }
   return {
     getSelectedParts(){return {...selectedParts};},
+    setSourceMode(mode,adapter=null){
+      sourceMode=mode==='glb'?'glb':'js';externalParts=adapter||externalParts;
+      el('portrait-apply-character').hidden=sourceMode==='glb'||!token||!window.opener;
+      if(sourceMode==='glb'){el('portrait-selection').textContent=externalSelectionText();refreshExternalPortrait();}
+      else{refresh();if(enabled)apply();}
+    },
+    setExternalBusy(busy){
+      externalBusy=Boolean(busy);el('portrait-download').disabled=externalBusy;
+      el('portrait-random').setAttribute('aria-busy',String(externalBusy));
+      if(externalBusy&&sourceMode==='glb')status.textContent='GLB 파츠 조합 중…';
+      else if(sourceMode==='glb')refreshExternalPortrait();
+    },
+    refreshPortrait(){return sourceMode==='glb'?refreshExternalPortrait():false;},
     setModel(root){enabled=appearance.setModel(root);el('portrait-controls').disabled=!enabled;
       catalog=root?.userData.sdAppearance?ImportedPortraitCatalog:PortraitCatalog;
       baldModel=Boolean(root?.userData.sdAppearance?.bald);blankModel=Boolean(root?.userData.sdAppearance?.blank);

@@ -18,7 +18,7 @@ function refreshCharacterUI() {
 
 const CHARACTER_TABLE_COLUMNS = [
   ['name', '이름'], ['role', '계열'], ['faction', '진영'],
-  ['hp', 'HP'], ['mp', 'MP'], ['st', 'ST'], ['atk', '공격력'], ['magic', '마력'],
+  ['combatPower', '종합전투력'], ['hp', 'HP'], ['mp', 'MP'], ['st', 'ST'], ['atk', '공격력'], ['magic', '마력'],
   ['speed', '이동속도'], ['attackSpeed', '공격속도'], ['castSpeed', '시전속도'],
   ['defense', '방어력'], ['resistance', '저항력'], ['attackRange', '사정거리']
 ];
@@ -27,6 +27,7 @@ const characterNameCollator = new Intl.Collator('ko', { numeric: true, sensitivi
 let characterDeletePending = false;
 
 function characterSortValue(character, key) {
+  if (key === 'combatPower') return getCharacterCombatPower(character).total;
   if (key === 'name') return String(character.name ?? '');
   if (key === 'role' || key === 'faction') {
     const value = key === 'role' ? normalizeRole(character.role) : character.faction ?? getDefaultFactionName();
@@ -72,6 +73,7 @@ function renderCharacterTable() {
       <td><div class="character-identity"><span class="character-portrait">${renderPortraitCell(character.portrait, character.name)}</span><span class="character-name">${escapeHtml(character.name)}</span></div></td>
       <td>${renderCategoryIcon("role", normalizeRole(character.role), getRoleLabel(character.role))}</td>
       <td>${renderCategoryIcon("faction", character.faction ?? getDefaultFactionName(), character.faction ?? getDefaultFactionName())}</td>
+      <td data-cp="total" title="${COMBAT_POWER_TOOLTIP}">${formatCombatPower(getCharacterCombatPower(character).total)}</td>
       <td>${character.hp}</td>
       <td>${character.mp}</td>
       <td>${character.st}</td>
@@ -85,7 +87,7 @@ function renderCharacterTable() {
       <td>${character.attackRange}</td>
       <td><button onclick="openCharacterModal(${index})">수정</button></td>
     </tr>
-  `).join("") || '<tr><td colspan="15" class="character-empty">조건에 맞는 캐릭터가 없습니다.</td></tr>';
+  `).join("") || '<tr><td colspan="16" class="character-empty">조건에 맞는 캐릭터가 없습니다.</td></tr>';
 }
 
 function changeCharacterRoleFilter(role) {

@@ -1,5 +1,13 @@
 # 아키텍처
 
+## 팀 편성 UI
+
+[team.js](../js/team.js)는 편성 초안과 클릭/native drag의 공통 추가 검사를 담당하고 viewport 가용 높이를 CSS 변수로 전달합니다. [synergy-ui.js](../js/synergy-ui.js)는 공용 평가기의 활성 결과를 표시합니다. 개인 CP는 기존 공통 계산기를 호출하며 팀 집계 공식은 추가하지 않습니다. 기존 팀 정규화·저장·전투 함수의 계약을 유지합니다. [상세](TEAM_UI.md).
+
+## 종합전투력
+
+[combat-power.js](../js/combat-power.js)는 순수 최종 스탯 계산기와 기존 applyCharacterStatAbilities를 호출하는 빌드 어댑터, 중앙 설정·버전·기여도를 제공합니다. [combat-power-ui.js](../js/combat-power-ui.js)는 포맷과 툴팁·비교 표시만 담당합니다. character/stats/equipment 화면은 같은 어댑터를 사용합니다. [보고서 CLI](../balance/simulator/combat-power-report.cjs)는 [공통 진단 로더](../balance/simulator/build-context.cjs)로 실제 엔진의 정규화 함수를 불러오며 현재 데이터·과거 입력 스냅샷의 CP를 분석합니다. 전투 실행이나 게임 저장 경로에는 CP를 삽입하지 않습니다. [상세](balance/COMBAT_POWER.md).
+
 ## 공용 스탯 시너지 연결
 
 `js/synergy.js`는 정의 로드·검증과 DOM 독립 평가를 담당하고 `js/synergy-ui.js`는 관리 모달/표와 팀 미리보기를 담당합니다. `team.js`의 편성 유닛 생성에서 평가 결과를 `character.js`로 전달하며 `ui.js`/`equipment.js`의 기존 스탯 계산을 재사용합니다. `skill.js`의 장비 loadout은 시너지/장비 무효화 조합을 복원합니다. `battle.js`/`record.js`는 활성 시너지 스냅샷을 기록합니다. Node 엔진은 동일 모듈을 로드하고 Python Job과 CLI 모두 정의를 입력 스냅샷에 포함합니다. [상세 흐름](synergy/SYNERGY_SYSTEM.md).

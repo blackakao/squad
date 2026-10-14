@@ -1,5 +1,9 @@
 # 데이터 구조
 
+## 종합전투력 파생값
+
+캐릭터·아이템 JSON과 API 스키마는 변경하지 않습니다. 종합전투력은 현재 빌드에서 재계산하며 combatPower 필드를 저장하지 않습니다. 계산 결과는 version/total/rawTotal/contributions/normalized/metrics, 빌드 어댑터는 finalStats를 추가로 반환합니다. 분석용 문서 JSON만 공식 설정·입력 해시·38명 계산 스냅샷·과거 비교를 보관합니다. [계약·제외 범위](balance/COMBAT_POWER.md), [분석 스냅샷](balance/COMBAT_POWER_RESULTS.json).
+
 ## 공용 스탯 시너지
 
 `data/synergies.json`은 `id`, `name`, `condition:{type,value}`, `stacking:highest|cumulative`, `thresholds:[{count,effects:[{type:stat,stat,value,target:team|matching}]}]` 배열이며 `GET/PUT /api/synergies`로 저장합니다. ID는 이름 수정과 독립적입니다. 조건 키는 기존 faction 문자열 또는 role 코드입니다. 캐릭터·팀 스키마는 바꾸지 않습니다.

@@ -142,7 +142,6 @@ function renderTeamPage() {
   if (selectedTeamIndex !== "" && !teamsJson[Number(selectedTeamIndex)]) {
     selectedTeamIndex = "";
     selectedTeamMemberIds = [];
-    selectedTeamSynergyRules = [];
   }
 
   renderTeamList();
@@ -152,71 +151,131 @@ function renderTeamPage() {
 function renderTeamList() {
   teamListEl.innerHTML = teamsJson.length
     ? teamsJson.map((team, index) => `
-      <button class="team-list-button ${Number(selectedTeamIndex) === index ? "selected" : ""}" onclick="selectTeamForEdit(${index})">
+      <button class="team-list-button ${selectedTeamIndex !== "" && Number(selectedTeamIndex) === index ? "selected" : ""}" onclick="selectTeamForEdit(${index})">
         ${escapeHtml(team.name)} (${getTeamCharacterIds(team).length}/${MAX_PLAYER_SQUAD})
       </button>
     `).join("")
     : '<span class="empty-text">편성된 팀 없음</span>';
 }
 
+function renderTeamCharacterIdentity(character) {
+  return `<span class="team-character-identity"><span class="team-portrait">${renderPortraitCell(character.portrait,character.name)}</span><span><strong>${escapeHtml(character.name)}</strong><small>${escapeHtml(getRoleLabel(character.role))} · 개인 전투력 ${formatCombatPower(getCharacterCombatPower(character).total)}</small></span></span>`;
+}
+
 function renderTeamEditor() {
-  if (typeof renderTeamSynergyPreview === "function") renderTeamSynergyPreview();
+  endTeamCharacterDrag();
   const team = getSelectedTeam();
+  const scrollTop = teamCharacterListEl.scrollTop;
+  selectedTeamMemberIds = selectedTeamMemberIds.filter(id=>characterJson[id]);
+  const selectedIds = new Set(team ? selectedTeamMemberIds : []);
+  teamSelectedNameEl.textContent = team?.name || '팀을 선택하세요';
+  teamMemberSummaryEl.textContent = `${selectedIds.size} / ${MAX_PLAYER_SQUAD}`;
+  document.getElementById('teamSaveButton').disabled = !team;
+  document.getElementById('teamCharacterCount').textContent = `${characterJson.length}명`;
+  teamMemberListEl.innerHTML = selectedIds.size ? [...selectedIds].map(id=>`
+    <div class="team-member-row" data-character-id="${id}">${renderTeamCharacterIdentity(characterJson[id])}
+      <button type="button" onclick="removeCharacterFromSelectedTeam(${id})" aria-label="${escapeHtml(characterJson[id].name)} 편성 제외">제외</button>
+    </div>`).join('') : `<p class="empty-text">${team ? '팀원이 없습니다. 캐릭터를 여기에 놓아주세요.' : '상단에서 팀을 선택하거나 추가해주세요.'}</p>`;
+  teamCharacterListEl.innerHTML = characterJson.map((character,id)=>`
+    <button type="button" class="team-character-button ${selectedIds.has(id) ? 'selected' : ''}"
+      data-character-id="${id}" draggable="${Boolean(team)}" aria-pressed="${selectedIds.has(id)}"
+      onclick="toggleCharacterInSelectedTeam(${id})" ondragstart="startTeamCharacterDrag(event,${id})" ondragend="endTeamCharacterDrag()">
+      ${renderTeamCharacterIdentity(character)}${selectedIds.has(id) ? '<span class="badge text-bg-secondary">편성 중</span>' : ''}
+    </button>`).join('') || '<p class="empty-text">등록된 캐릭터가 없습니다.</p>';
+  teamCharacterListEl.querySelectorAll('img').forEach(img=>{img.draggable=false;});
+  teamCharacterListEl.scrollTop = scrollTop;
+  if (typeof renderTeamSynergyPreview === 'function') renderTeamSynergyPreview();
+  requestAnimationFrame(updateTeamWorkspaceHeight);
+}
 
-  if (!team) {
-    teamSelectedNameEl.innerText = "팀을 선택하세요";
-    teamMemberSummaryEl.innerText = `0 / ${MAX_PLAYER_SQUAD}`;
-    teamMemberListEl.innerHTML = "";
-    teamBattleRulesEl.querySelectorAll("input").forEach(input => { input.value = 100; input.disabled = true; });
-    teamActiveMemberCountEl.value = 1;
-    teamActiveMemberCountEl.disabled = true;
-    teamSynergyRulesEl.querySelectorAll("button").forEach(button => { button.disabled = true; });
-    teamSynergyRuleListEl.innerHTML = '<span class="empty-text">팀을 선택해주세요.</span>';
-    teamCharacterListEl.innerHTML = characterJson.map((character, index) => `
-      <button class="team-character-button" onclick="alert('먼저 팀을 선택해주세요.')">
-        ${escapeHtml(character.name)} (${renderCategoryIcon("role", normalizeRole(character.role), getRoleLabel(character.role))})
-      </button>
-    `).join("");
-    return;
-  }
+function updateTeamWorkspaceHeight() {
+  const page = document.getElementById('teamPage');
+  if (!page || page.classList.contains('hidden')) return;
+  const workspace = page.querySelector('.team-manager'), panel = page.querySelector('.panel');
+  const bottom = parseFloat(getComputedStyle(page).paddingBottom) + parseFloat(getComputedStyle(panel).paddingBottom)
+    + parseFloat(getComputedStyle(panel).borderBottomWidth) + parseFloat(getComputedStyle(panel).marginBottom);
+  workspace.style.setProperty('--team-workspace-height',`${Math.max(0,innerHeight - (workspace.getBoundingClientRect().top + scrollY) - bottom)}px`);
+}
 
-  const selectedIds = new Set(selectedTeamMemberIds);
-  const rules = normalizeTeamBattleRules(team.battleRules);
-  teamActiveMemberCountEl.disabled = false;
-  teamActiveMemberCountEl.max = Math.max(1, selectedTeamMemberIds.length);
-  teamActiveMemberCountEl.value = Math.max(1, Math.min(selectedTeamMemberIds.length || 1, Number(team.activeMemberCount) || selectedTeamMemberIds.length || 1));
-  teamDamagePercentEl.value = rules.damagePercent;
-  teamHealingPercentEl.value = rules.healingPercent;
-  teamResourceCostPercentEl.value = rules.resourceCostPercent;
-  teamCooldownPercentEl.value = rules.cooldownPercent;
-  teamBattleRulesEl.querySelectorAll("input").forEach(input => { input.disabled = false; });
-  teamSynergyRulesEl.querySelectorAll("button").forEach(button => { button.disabled = false; });
-  renderSelectedTeamSynergies();
-  teamSelectedNameEl.innerText = team.name;
-  teamMemberSummaryEl.innerText = `${selectedTeamMemberIds.length} / ${MAX_PLAYER_SQUAD}`;
-  teamMemberListEl.innerHTML = selectedTeamMemberIds.length
-    ? selectedTeamMemberIds.map(id => {
-      const character = characterJson[id];
-      return `
-        <div class="team-member-row">
-          <span>${escapeHtml(character.name)} (${renderCategoryIcon("role", normalizeRole(character.role), getRoleLabel(character.role))})</span>
-          <button onclick="removeCharacterFromSelectedTeam(${id})">삭제</button>
-        </div>
-      `;
-    }).join("")
-    : '<span class="empty-text">팀원이 없습니다.</span>';
+function setTeamEditStatus(message) {
+  document.getElementById('teamEditStatus').textContent = message;
+}
 
-  teamCharacterListEl.innerHTML = characterJson.map((character, index) => `
-    <button class="team-character-button ${selectedIds.has(index) ? "selected" : ""}" onclick="toggleCharacterInSelectedTeam(${index})">
-      ${escapeHtml(character.name)} (${renderCategoryIcon("role", normalizeRole(character.role), getRoleLabel(character.role))})
-    </button>
-  `).join("");
+function getTeamAssignmentError(id) {
+  if (!getSelectedTeam()) return '먼저 팀을 선택해주세요.';
+  if (!Number.isInteger(id) || !characterJson[id]) return '편성할 캐릭터를 찾을 수 없습니다.';
+  if (selectedTeamMemberIds.includes(id)) return '이미 편성된 캐릭터입니다.';
+  if (selectedTeamMemberIds.length >= MAX_PLAYER_SQUAD) return `팀에는 최대 ${MAX_PLAYER_SQUAD}명까지 편성할 수 있습니다.`;
+  return '';
+}
+
+let teamCharacterDrag = null;
+function startTeamCharacterDrag(event,id) {
+  endTeamCharacterDrag();
+  if (!getSelectedTeam() || !characterJson[id]) { event.preventDefault(); return; }
+  const preview = event.currentTarget.querySelector('.team-character-identity').cloneNode(true);
+  preview.classList.add('team-drag-preview');
+  preview.querySelectorAll('small').forEach(el=>el.remove());
+  document.body.appendChild(preview);
+  teamCharacterDrag = {id,teamIndex:selectedTeamIndex,source:event.currentTarget,preview};
+  event.dataTransfer.setData('application/x-squad-character',String(id));
+  event.dataTransfer.effectAllowed = 'copy';
+  event.dataTransfer.setDragImage(preview,22,22);
+  event.currentTarget.classList.add('is-dragging');
+  const error = getTeamAssignmentError(id);
+  const target = document.getElementById('teamDropTarget');
+  target.classList.add(error ? 'drop-blocked' : 'drop-allowed');
+  setTeamEditStatus(error || '현재 팀 편성 영역에 놓아주세요.');
+}
+
+function allowTeamCharacterDrop(event) {
+  if (!teamCharacterDrag) return;
+  const allowed = teamCharacterDrag.teamIndex === selectedTeamIndex && !getTeamAssignmentError(teamCharacterDrag.id);
+  if (allowed) event.preventDefault();
+  event.dataTransfer.dropEffect = allowed ? 'copy' : 'none';
+  event.currentTarget.classList.toggle('drop-hover',allowed);
+}
+
+function leaveTeamCharacterDrop(event) {
+  if (!event.currentTarget.contains(event.relatedTarget)) event.currentTarget.classList.remove('drop-hover');
+}
+
+function dropTeamCharacter(event) {
+  event.preventDefault();
+  const drag = teamCharacterDrag;
+  const validPayload = drag && event.dataTransfer.getData('application/x-squad-character') === String(drag.id);
+  endTeamCharacterDrag();
+  if (!validPayload || drag.teamIndex !== selectedTeamIndex) return;
+  const error = getTeamAssignmentError(drag.id);
+  if (error) { setTeamEditStatus(error); return; }
+  toggleCharacterInSelectedTeam(drag.id);
+}
+
+function endTeamCharacterDrag() {
+  if (!teamCharacterDrag) return;
+  teamCharacterDrag.preview.remove();
+  teamCharacterDrag.source.classList.remove('is-dragging');
+  teamCharacterDrag = null;
+  document.getElementById('teamDropTarget')?.classList.remove('drop-allowed','drop-blocked','drop-hover');
+  setTeamEditStatus('');
+}
+
+if (typeof document !== 'undefined' && typeof document.addEventListener === 'function') {
+  window.addEventListener('resize',updateTeamWorkspaceHeight);
+  document.addEventListener('dragend',endTeamCharacterDrag);
+  document.addEventListener('drop',endTeamCharacterDrag);
+  document.addEventListener('keydown',event=>{if(event.key==='Escape') endTeamCharacterDrag();});
+  document.addEventListener('DOMContentLoaded',()=>{
+    const observer = new ResizeObserver(()=>requestAnimationFrame(updateTeamWorkspaceHeight));
+    for (const el of document.querySelectorAll('.nav, body > h2, #teamPage .team-list-panel')) observer.observe(el);
+  });
 }
 
 function selectTeamForEdit(index) {
+  endTeamCharacterDrag();
+  setTeamEditStatus('');
   selectedTeamIndex = index;
   selectedTeamMemberIds = getTeamCharacterIds(teamsJson[index]);
-  selectedTeamSynergyRules = normalizeTeamSynergyRules(teamsJson[index].synergyRules);
   renderTeamPage();
 }
 
@@ -231,7 +290,6 @@ async function addTeamFromInput() {
   teamsJson.push({ name, memberIds: [], activeMemberCount: 1, battleRules: normalizeTeamBattleRules(), synergyRules: [] });
   selectedTeamIndex = teamsJson.length - 1;
   selectedTeamMemberIds = [];
-  selectedTeamSynergyRules = [];
   teamNameEl.value = "";
 
   try {
@@ -256,7 +314,6 @@ async function deleteSelectedTeam() {
   teamsJson.splice(Number(selectedTeamIndex), 1);
   selectedTeamIndex = "";
   selectedTeamMemberIds = [];
-  selectedTeamSynergyRules = [];
   selectedBattleTeamIds.clear();
   selectedEnemyTeamIndex = "";
   rebuildPlayerSquadFromSelection();
@@ -278,71 +335,22 @@ function toggleCharacterInSelectedTeam(characterId) {
     return;
   }
 
-  selectedTeamSynergyRules = collectSelectedTeamSynergies();
   if (selectedTeamMemberIds.includes(characterId)) {
     selectedTeamMemberIds = selectedTeamMemberIds.filter(id => id !== characterId);
-  } else if (selectedTeamMemberIds.length < MAX_PLAYER_SQUAD) {
-    selectedTeamMemberIds.push(characterId);
   } else {
-    alert(`팀에는 최대 ${MAX_PLAYER_SQUAD}명까지 편성할 수 있습니다.`);
+    const error = getTeamAssignmentError(characterId);
+    if (error) { setTeamEditStatus(error); return; }
+    selectedTeamMemberIds.push(characterId);
   }
 
   renderTeamEditor();
+  setTeamEditStatus('편성이 변경되었습니다. 저장 버튼을 눌러주세요.');
 }
 
 function removeCharacterFromSelectedTeam(characterId) {
-  selectedTeamSynergyRules = collectSelectedTeamSynergies();
   selectedTeamMemberIds = selectedTeamMemberIds.filter(id => id !== characterId);
   renderTeamEditor();
-}
-
-function renderSelectedTeamSynergies() {
-  if (!selectedTeamSynergyRules.length) {
-    teamSynergyRuleListEl.innerHTML = '<span class="empty-text">설정된 시너지 없음</span>';
-    return;
-  }
-  const factionOptions = factionsJson.map(value => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`).join("");
-  const roleOptions = ROLES.map(value => `<option value="${value}">${escapeHtml(getRoleLabel(value))}</option>`).join("");
-  teamSynergyRuleListEl.innerHTML = selectedTeamSynergyRules.map((rule, index) => `
-    <div class="team-synergy-rule" data-index="${index}">
-      <label>기준<select data-field="type" onchange="changeSelectedTeamSynergyType(${index}, this.value)"><option value="faction" ${rule.type === "faction" ? "selected" : ""}>진영</option><option value="role" ${rule.type === "role" ? "selected" : ""}>계열</option></select></label>
-      <label>값<select data-field="value">${rule.type === "role" ? roleOptions : factionOptions}</select></label>
-      <label>필요 인원<input data-field="requiredCount" type="number" min="1" max="10" value="${rule.requiredCount}"></label>
-      <label>피해(%)<input data-field="damagePercent" type="number" min="0" value="${rule.damagePercent}"></label>
-      <label>치유(%)<input data-field="healingPercent" type="number" min="0" value="${rule.healingPercent}"></label>
-      <label>비용(%)<input data-field="resourceCostPercent" type="number" min="0" value="${rule.resourceCostPercent}"></label>
-      <label>쿨타임(%)<input data-field="cooldownPercent" type="number" min="0" value="${rule.cooldownPercent}"></label>
-      <button type="button" class="team-synergy-remove" onclick="removeSelectedTeamSynergy(${index})">삭제</button>
-    </div>`).join("");
-  selectedTeamSynergyRules.forEach((rule, index) => {
-    const select = teamSynergyRuleListEl.querySelector(`[data-index="${index}"] [data-field="value"]`);
-    if (select) select.value = rule.value;
-  });
-}
-
-function collectSelectedTeamSynergies() {
-  return [...teamSynergyRuleListEl.querySelectorAll(".team-synergy-rule")].map(row => {
-    const value = field => row.querySelector(`[data-field="${field}"]`)?.value;
-    return normalizeTeamSynergyRule({type:value("type"), value:value("value"), requiredCount:value("requiredCount"), damagePercent:value("damagePercent"), healingPercent:value("healingPercent"), resourceCostPercent:value("resourceCostPercent"), cooldownPercent:value("cooldownPercent")});
-  }).filter(rule => rule.value);
-}
-
-function addSelectedTeamSynergy() {
-  if (!getSelectedTeam()) return;
-  selectedTeamSynergyRules = collectSelectedTeamSynergies();
-  selectedTeamSynergyRules.push(normalizeTeamSynergyRule({value:factionsJson[0] ?? "기본 진영"}));
-  renderSelectedTeamSynergies();
-}
-
-function removeSelectedTeamSynergy(index) {
-  selectedTeamSynergyRules = collectSelectedTeamSynergies().filter((_, ruleIndex) => ruleIndex !== index);
-  renderSelectedTeamSynergies();
-}
-
-function changeSelectedTeamSynergyType(index, type) {
-  selectedTeamSynergyRules = collectSelectedTeamSynergies();
-  selectedTeamSynergyRules[index] = normalizeTeamSynergyRule({...selectedTeamSynergyRules[index], type, value:type === "role" ? ROLES[0] : factionsJson[0]});
-  renderSelectedTeamSynergies();
+  setTeamEditStatus('편성이 변경되었습니다. 저장 버튼을 눌러주세요.');
 }
 
 async function saveSelectedTeam() {
@@ -354,20 +362,13 @@ async function saveSelectedTeam() {
   }
 
   team.memberIds = [...new Set(selectedTeamMemberIds)].slice(0, MAX_PLAYER_SQUAD);
-  team.activeMemberCount = Math.max(1, Math.min(team.memberIds.length || 1, Math.floor(Number(teamActiveMemberCountEl.value) || team.memberIds.length || 1)));
-  team.battleRules = normalizeTeamBattleRules({
-    damagePercent: teamDamagePercentEl.value,
-    healingPercent: teamHealingPercentEl.value,
-    resourceCostPercent: teamResourceCostPercentEl.value,
-    cooldownPercent: teamCooldownPercentEl.value
-  });
-  team.synergyRules = collectSelectedTeamSynergies();
 
   try {
     await saveTeamJson();
     renderTeamPage();
     renderBattleTeamButtons();
     renderBattleEnemyControls();
+    setTeamEditStatus('팀 편성을 저장했습니다.');
   } catch (error) {
     logError("team", "팀 저장 처리 중 실패했습니다.", error);
     alert("팀 편성 데이터를 저장하지 못했습니다.");

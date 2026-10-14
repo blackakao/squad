@@ -660,11 +660,17 @@ function equipSelectedInventoryItem(slotKey) {
 
 function renderEquipmentAbilityPreview() {
   const character = characterJson[selectedEquipmentCharacterIndex];
+  const combatPowerEl = document.getElementById('equipmentCombatPower');
   if (!character) {
     equipmentAbilityPreviewEl.innerHTML = "";
+    combatPowerEl.innerHTML = "";
     return;
   }
 
+  combatPowerEl.innerHTML = renderCombatPowerComparison(
+    getCharacterCombatPower({...character, equipment: {}}),
+    getCharacterCombatPower(character), ['무장비', '현재']
+  );
   equipmentAbilityPreviewEl.innerHTML = renderAbilityTable(
     getCharacterBaseWithoutEquipment(character),
     applyCharacterStatAbilities(character)

@@ -1,0 +1,1610 @@
+{
+  "generatedAt": "2026-10-14T01:30:09.456Z",
+  "version": "stat-v1",
+  "config": {
+    "version": "stat-v1",
+    "scale": 1000,
+    "weights": {
+      "durability": 0.45,
+      "offense": 0.45,
+      "mobility": 0.05,
+      "range": 0.05
+    },
+    "reference": {
+      "hp": 3000,
+      "mitigation": 15,
+      "power": 100,
+      "interval": 2,
+      "speed": 1.5,
+      "range": 3
+    },
+    "physicalShare": 0.5,
+    "secondaryPower": 0.25,
+    "mitigationCap": 95,
+    "minInterval": 0.1,
+    "maxInput": 1000000000
+  },
+  "dataHash": "c08f863fb00f4ab12d51a6a0689681c92e6c7970009922f70256da5c7fa21496",
+  "distributions": {
+    "hp": {
+      "min": 2000,
+      "median": 2282,
+      "max": 4990
+    },
+    "mp": {
+      "min": 100,
+      "median": 100,
+      "max": 205
+    },
+    "st": {
+      "min": 100,
+      "median": 105,
+      "max": 170
+    },
+    "atk": {
+      "min": 10,
+      "median": 21,
+      "max": 221
+    },
+    "magic": {
+      "min": 10,
+      "median": 10,
+      "max": 560
+    },
+    "speed": {
+      "min": 1,
+      "median": 1.2,
+      "max": 2.3
+    },
+    "attackSpeed": {
+      "min": 0.5,
+      "median": 2,
+      "max": 2.5
+    },
+    "castSpeed": {
+      "min": 0,
+      "median": 0.5,
+      "max": 3
+    },
+    "defense": {
+      "min": 0,
+      "median": 5,
+      "max": 40
+    },
+    "resistance": {
+      "min": 0,
+      "median": 4.4,
+      "max": 31.4
+    },
+    "attackRange": {
+      "min": 1,
+      "median": 1,
+      "max": 7
+    }
+  },
+  "characters": [
+    {
+      "index": 0,
+      "name": "검의무희",
+      "role": "tank",
+      "version": "stat-v1",
+      "total": 1277,
+      "rawTotal": 1277.16549379497,
+      "contributions": {
+        "durability": 588.5861888096412,
+        "offense": 575.1086853804244,
+        "mobility": 63.4706196049045,
+        "range": 50
+      },
+      "metrics": {
+        "effectiveHp": 6038.060159607121,
+        "power": 122.5,
+        "interval": 1.5
+      },
+      "normalized": {
+        "durability": 1.3079693084658692,
+        "offense": 1.2780193008453875,
+        "mobility": 1.26941239209809,
+        "range": 1
+      },
+      "finalStats": {
+        "hp": 4918,
+        "mp": 115,
+        "st": 155,
+        "atk": 120,
+        "magic": 10,
+        "speed": 2.2,
+        "attackSpeed": 1.5,
+        "castSpeed": 0.5,
+        "defense": 26.4,
+        "resistance": 10.7,
+        "attackRange": 3
+      }
+    },
+    {
+      "index": 1,
+      "name": "기사",
+      "role": "tank",
+      "version": "stat-v1",
+      "total": 1181,
+      "rawTotal": 1181.1324499830284,
+      "contributions": {
+        "durability": 624.5696192597952,
+        "offense": 461.112784468182,
+        "mobility": 45.45004625505135,
+        "range": 50
+      },
+      "metrics": {
+        "effectiveHp": 6798.90560875513,
+        "power": 105,
+        "interval": 2
+      },
+      "normalized": {
+        "durability": 1.3879324872439893,
+        "offense": 1.02469507659596,
+        "mobility": 0.9090009251010269,
+        "range": 1
+      },
+      "finalStats": {
+        "hp": 4970,
+        "mp": 150,
+        "st": 105,
+        "atk": 90,
+        "magic": 60,
+        "speed": 1.3,
+        "attackSpeed": 2,
+        "castSpeed": 0.5,
+        "defense": 40,
+        "resistance": 13.8,
+        "attackRange": 3
+      }
+    },
+    {
+      "index": 2,
+      "name": "승려",
+      "role": "healer",
+      "version": "stat-v1",
+      "total": 1675,
+      "rawTotal": 1674.5920493525475,
+      "contributions": {
+        "durability": 382.5898587260253,
+        "offense": 1182.0532982907328,
+        "mobility": 59.94889233578948,
+        "range": 50
+      },
+      "metrics": {
+        "effectiveHp": 2551.1982570806103,
+        "power": 172.5,
+        "interval": 0.5
+      },
+      "normalized": {
+        "durability": 0.850199686057834,
+        "offense": 2.6267851073127395,
+        "mobility": 1.1989778467157897,
+        "range": 1
+      },
+      "finalStats": {
+        "hp": 2342,
+        "mp": 100,
+        "st": 170,
+        "atk": 170,
+        "magic": 10,
+        "speed": 2,
+        "attackSpeed": 0.5,
+        "castSpeed": 0,
+        "defense": 12.6,
+        "resistance": 3.8,
+        "attackRange": 3
+      }
+    },
+    {
+      "index": 3,
+      "name": "성직자",
+      "role": "healer",
+      "version": "stat-v1",
+      "total": 1079,
+      "rawTotal": 1079.1167395587468,
+      "contributions": {
+        "durability": 390.4114870492712,
+        "offense": 578.0354660399308,
+        "mobility": 40.48591341810474,
+        "range": 70.1838730514401
+      },
+      "metrics": {
+        "effectiveHp": 2656.5774155995346,
+        "power": 165,
+        "interval": 2
+      },
+      "normalized": {
+        "durability": 0.8675810823317138,
+        "offense": 1.284523257866513,
+        "mobility": 0.8097182683620947,
+        "range": 1.403677461028802
+      },
+      "finalStats": {
+        "hp": 2282,
+        "mp": 200,
+        "st": 105,
+        "atk": 20,
+        "magic": 160,
+        "speed": 1.1,
+        "attackSpeed": 2,
+        "castSpeed": 0,
+        "defense": 1.9,
+        "resistance": 26.3,
+        "attackRange": 6
+      }
+    },
+    {
+      "index": 4,
+      "name": "마법사",
+      "role": "ranged",
+      "version": "stat-v1",
+      "total": 1446,
+      "rawTotal": 1446.0819567620301,
+      "contributions": {
+        "durability": 390.4114870492712,
+        "offense": 957.1363539224701,
+        "mobility": 40.48591341810474,
+        "range": 58.04820237218406
+      },
+      "metrics": {
+        "effectiveHp": 2656.5774155995346,
+        "power": 565.5,
+        "interval": 2.5
+      },
+      "normalized": {
+        "durability": 0.8675810823317138,
+        "offense": 2.126969675383267,
+        "mobility": 0.8097182683620947,
+        "range": 1.160964047443681
+      },
+      "finalStats": {
+        "hp": 2282,
+        "mp": 200,
+        "st": 105,
+        "atk": 22,
+        "magic": 560,
+        "speed": 1.1,
+        "attackSpeed": 1,
+        "castSpeed": 2.5,
+        "defense": 1.9,
+        "resistance": 26.3,
+        "attackRange": 4
+      }
+    },
+    {
+      "index": 5,
+      "name": "궁사",
+      "role": "melee",
+      "version": "stat-v1",
+      "total": 1118,
+      "rawTotal": 1117.9668787984538,
+      "contributions": {
+        "durability": 382.5898587260253,
+        "offense": 601.7225274160841,
+        "mobility": 63.4706196049045,
+        "range": 70.1838730514401
+      },
+      "metrics": {
+        "effectiveHp": 2551.1982570806103,
+        "power": 223.5,
+        "interval": 2.5
+      },
+      "normalized": {
+        "durability": 0.850199686057834,
+        "offense": 1.3371611720357424,
+        "mobility": 1.26941239209809,
+        "range": 1.403677461028802
+      },
+      "finalStats": {
+        "hp": 2342,
+        "mp": 100,
+        "st": 170,
+        "atk": 221,
+        "magic": 10,
+        "speed": 2.2,
+        "attackSpeed": 2.5,
+        "castSpeed": 1.5,
+        "defense": 12.6,
+        "resistance": 3.8,
+        "attackRange": 6
+      }
+    },
+    {
+      "index": 6,
+      "name": "갑사",
+      "role": "melee",
+      "version": "stat-v1",
+      "total": 1118,
+      "rawTotal": 1117.9668787984538,
+      "contributions": {
+        "durability": 382.5898587260253,
+        "offense": 601.7225274160841,
+        "mobility": 63.4706196049045,
+        "range": 70.1838730514401
+      },
+      "metrics": {
+        "effectiveHp": 2551.1982570806103,
+        "power": 223.5,
+        "interval": 2.5
+      },
+      "normalized": {
+        "durability": 0.850199686057834,
+        "offense": 1.3371611720357424,
+        "mobility": 1.26941239209809,
+        "range": 1.403677461028802
+      },
+      "finalStats": {
+        "hp": 2342,
+        "mp": 100,
+        "st": 170,
+        "atk": 221,
+        "magic": 10,
+        "speed": 2.2,
+        "attackSpeed": 2.5,
+        "castSpeed": 1.5,
+        "defense": 12.6,
+        "resistance": 3.8,
+        "attackRange": 6
+      }
+    },
+    {
+      "index": 7,
+      "name": "드루이드",
+      "role": "healer",
+      "version": "stat-v1",
+      "total": 1183,
+      "rawTotal": 1183.2966058319694,
+      "contributions": {
+        "durability": 390.7817754701515,
+        "offense": 662.3820649745885,
+        "mobility": 59.94889233578948,
+        "range": 70.1838730514401
+      },
+      "metrics": {
+        "effectiveHp": 2661.619103086779,
+        "power": 162.5,
+        "interval": 1.5
+      },
+      "normalized": {
+        "durability": 0.8684039454892256,
+        "offense": 1.4719601443879744,
+        "mobility": 1.1989778467157897,
+        "range": 1.403677461028802
+      },
+      "finalStats": {
+        "hp": 2285,
+        "mp": 200,
+        "st": 170,
+        "atk": 10,
+        "magic": 160,
+        "speed": 2,
+        "attackSpeed": 1.5,
+        "castSpeed": 0.5,
+        "defense": 1.9,
+        "resistance": 26.4,
+        "attackRange": 6
+      }
+    },
+    {
+      "index": 8,
+      "name": "흑마법사",
+      "role": "ranged",
+      "version": "stat-v1",
+      "total": 1560,
+      "rawTotal": 1559.6272020438012,
+      "contributions": {
+        "durability": 591.9469946000922,
+        "offense": 871.8084652032234,
+        "mobility": 37.823539868301495,
+        "range": 58.04820237218406
+      },
+      "metrics": {
+        "effectiveHp": 6107.21123165284,
+        "power": 563,
+        "interval": 3
+      },
+      "normalized": {
+        "durability": 1.3154377657779828,
+        "offense": 1.937352144896052,
+        "mobility": 0.75647079736603,
+        "range": 1.160964047443681
+      },
+      "finalStats": {
+        "hp": 4785,
+        "mp": 200,
+        "st": 120,
+        "atk": 12,
+        "magic": 560,
+        "speed": 1,
+        "attackSpeed": 1,
+        "castSpeed": 3,
+        "defense": 11.9,
+        "resistance": 31.4,
+        "attackRange": 4
+      }
+    },
+    {
+      "index": 9,
+      "name": "해병",
+      "role": "tank",
+      "version": "stat-v1",
+      "total": 1296,
+      "rawTotal": 1295.8519239545444,
+      "contributions": {
+        "durability": 614.5780134080976,
+        "offense": 563.2495006655577,
+        "mobility": 43.0244098808891,
+        "range": 75
+      },
+      "metrics": {
+        "effectiveHp": 6583.11345646438,
+        "power": 117.5,
+        "interval": 1.5
+      },
+      "normalized": {
+        "durability": 1.3657289186846613,
+        "offense": 1.2516655570345725,
+        "mobility": 0.8604881976177821,
+        "range": 1.5
+      },
+      "finalStats": {
+        "hp": 4990,
+        "mp": 100,
+        "st": 123,
+        "atk": 115,
+        "magic": 10,
+        "speed": 1.2,
+        "attackSpeed": 1.5,
+        "castSpeed": 0,
+        "defense": 39.7,
+        "resistance": 8.7,
+        "attackRange": 7
+      }
+    },
+    {
+      "index": 10,
+      "name": "의무병",
+      "role": "healer",
+      "version": "stat-v1",
+      "total": 1260,
+      "rawTotal": 1260.0055933721733,
+      "contributions": {
+        "durability": 600.414679709465,
+        "offense": 522.8527517380013,
+        "mobility": 61.73816192470717,
+        "range": 75
+      },
+      "metrics": {
+        "effectiveHp": 6283.185840707965,
+        "power": 67.5,
+        "interval": 1
+      },
+      "normalized": {
+        "durability": 1.334254843798811,
+        "offense": 1.161895003862225,
+        "mobility": 1.2347632384941434,
+        "range": 1.5
+      },
+      "finalStats": {
+        "hp": 4970,
+        "mp": 105,
+        "st": 160,
+        "atk": 65,
+        "magic": 10,
+        "speed": 2.1,
+        "attackSpeed": 1,
+        "castSpeed": 0,
+        "defense": 33,
+        "resistance": 8.8,
+        "attackRange": 7
+      }
+    },
+    {
+      "index": 11,
+      "name": "제독",
+      "role": "ranged",
+      "version": "stat-v1",
+      "total": 573,
+      "rawTotal": 572.9261284693258,
+      "contributions": {
+        "durability": 338.74769371908644,
+        "offense": 171.35489488193792,
+        "mobility": 37.823539868301495,
+        "range": 25
+      },
+      "metrics": {
+        "effectiveHp": 2000,
+        "power": 14.5,
+        "interval": 2
+      },
+      "normalized": {
+        "durability": 0.752772652709081,
+        "offense": 0.3807886552931954,
+        "mobility": 0.75647079736603,
+        "range": 0.5
+      },
+      "finalStats": {
+        "hp": 2000,
+        "mp": 100,
+        "st": 100,
+        "atk": 12,
+        "magic": 10,
+        "speed": 1,
+        "attackSpeed": 2,
+        "castSpeed": 0.5,
+        "defense": 0,
+        "resistance": 0,
+        "attackRange": 1
+      }
+    },
+    {
+      "index": 12,
+      "name": "화염술사",
+      "role": "ranged",
+      "version": "stat-v1",
+      "total": 1368,
+      "rawTotal": 1368.2102066396255,
+      "contributions": {
+        "durability": 392.0030309916241,
+        "offense": 877.6730598577127,
+        "mobility": 40.48591341810474,
+        "range": 58.04820237218406
+      },
+      "metrics": {
+        "effectiveHp": 2678.281068524971,
+        "power": 475.5,
+        "interval": 2.5
+      },
+      "normalized": {
+        "durability": 0.8711178466480536,
+        "offense": 1.9503845774615838,
+        "mobility": 0.8097182683620947,
+        "range": 1.160964047443681
+      },
+      "finalStats": {
+        "hp": 2306,
+        "mp": 205,
+        "st": 113,
+        "atk": 22,
+        "magic": 470,
+        "speed": 1.1,
+        "attackSpeed": 1,
+        "castSpeed": 2.5,
+        "defense": 1.8,
+        "resistance": 26,
+        "attackRange": 4
+      }
+    },
+    {
+      "index": 13,
+      "name": "광전사",
+      "role": "tank",
+      "version": "stat-v1",
+      "total": 1114,
+      "rawTotal": 1114.3433875900669,
+      "contributions": {
+        "durability": 401.071564120383,
+        "offense": 598.1220611213066,
+        "mobility": 65.14976234837711,
+        "range": 50
+      },
+      "metrics": {
+        "effectiveHp": 2803.6322360953463,
+        "power": 132.5,
+        "interval": 1.5
+      },
+      "normalized": {
+        "durability": 0.89127014248974,
+        "offense": 1.3291601358251257,
+        "mobility": 1.302995246967542,
+        "range": 1
+      },
+      "finalStats": {
+        "hp": 2470,
+        "mp": 100,
+        "st": 155,
+        "atk": 130,
+        "magic": 10,
+        "speed": 2.3,
+        "attackSpeed": 1.5,
+        "castSpeed": 0,
+        "defense": 20,
+        "resistance": 3.8,
+        "attackRange": 3
+      }
+    },
+    {
+      "index": 14,
+      "name": "저격수",
+      "role": "melee",
+      "version": "stat-v1",
+      "total": 825,
+      "rawTotal": 824.6829278522504,
+      "contributions": {
+        "durability": 543.2047759099956,
+        "offense": 213.4537420613656,
+        "mobility": 43.0244098808891,
+        "range": 25
+      },
+      "metrics": {
+        "effectiveHp": 5142.857142857143,
+        "power": 22.5,
+        "interval": 2
+      },
+      "normalized": {
+        "durability": 1.2071217242444348,
+        "offense": 0.4743416490252569,
+        "mobility": 0.8604881976177821,
+        "range": 0.5
+      },
+      "finalStats": {
+        "hp": 4500,
+        "mp": 150,
+        "st": 100,
+        "atk": 20,
+        "magic": 10,
+        "speed": 1.2,
+        "attackSpeed": 2,
+        "castSpeed": 0,
+        "defense": 10,
+        "resistance": 15,
+        "attackRange": 1
+      }
+    },
+    {
+      "index": 15,
+      "name": "수도승",
+      "role": "melee",
+      "version": "stat-v1",
+      "total": 566,
+      "rawTotal": 565.8711293669488,
+      "contributions": {
+        "durability": 338.74769371908644,
+        "offense": 159.0990257669732,
+        "mobility": 43.0244098808891,
+        "range": 25
+      },
+      "metrics": {
+        "effectiveHp": 2000,
+        "power": 12.5,
+        "interval": 2
+      },
+      "normalized": {
+        "durability": 0.752772652709081,
+        "offense": 0.3535533905932738,
+        "mobility": 0.8604881976177821,
+        "range": 0.5
+      },
+      "finalStats": {
+        "hp": 2000,
+        "mp": 100,
+        "st": 100,
+        "atk": 10,
+        "magic": 10,
+        "speed": 1.2,
+        "attackSpeed": 2,
+        "castSpeed": 0.5,
+        "defense": 0,
+        "resistance": 0,
+        "attackRange": 1
+      }
+    },
+    {
+      "index": 16,
+      "name": "성전사",
+      "role": "tank",
+      "version": "stat-v1",
+      "total": 1001,
+      "rawTotal": 1000.9406174938822,
+      "contributions": {
+        "durability": 543.2047759099956,
+        "offense": 389.71143170299734,
+        "mobility": 43.0244098808891,
+        "range": 25
+      },
+      "metrics": {
+        "effectiveHp": 5142.857142857143,
+        "power": 75,
+        "interval": 2
+      },
+      "normalized": {
+        "durability": 1.2071217242444348,
+        "offense": 0.8660254037844386,
+        "mobility": 0.8604881976177821,
+        "range": 0.5
+      },
+      "finalStats": {
+        "hp": 4500,
+        "mp": 150,
+        "st": 100,
+        "atk": 60,
+        "magic": 60,
+        "speed": 1.2,
+        "attackSpeed": 2,
+        "castSpeed": 0.5,
+        "defense": 15,
+        "resistance": 10,
+        "attackRange": 1
+      }
+    },
+    {
+      "index": 17,
+      "name": "수호자",
+      "role": "tank",
+      "version": "stat-v1",
+      "total": 566,
+      "rawTotal": 565.8711293669488,
+      "contributions": {
+        "durability": 338.74769371908644,
+        "offense": 159.0990257669732,
+        "mobility": 43.0244098808891,
+        "range": 25
+      },
+      "metrics": {
+        "effectiveHp": 2000,
+        "power": 12.5,
+        "interval": 2
+      },
+      "normalized": {
+        "durability": 0.752772652709081,
+        "offense": 0.3535533905932738,
+        "mobility": 0.8604881976177821,
+        "range": 0.5
+      },
+      "finalStats": {
+        "hp": 2000,
+        "mp": 100,
+        "st": 100,
+        "atk": 10,
+        "magic": 10,
+        "speed": 1.2,
+        "attackSpeed": 2,
+        "castSpeed": 0.5,
+        "defense": 0,
+        "resistance": 0,
+        "attackRange": 1
+      }
+    },
+    {
+      "index": 18,
+      "name": "몽마",
+      "role": "melee",
+      "version": "stat-v1",
+      "total": 874,
+      "rawTotal": 873.9701806556026,
+      "contributions": {
+        "durability": 343.0631249381193,
+        "offense": 442.43643611257875,
+        "mobility": 63.4706196049045,
+        "range": 25
+      },
+      "metrics": {
+        "effectiveHp": 2051.2820512820513,
+        "power": 72.5,
+        "interval": 1.5
+      },
+      "normalized": {
+        "durability": 0.7623624998624874,
+        "offense": 0.983192080250175,
+        "mobility": 1.26941239209809,
+        "range": 0.5
+      },
+      "finalStats": {
+        "hp": 2000,
+        "mp": 100,
+        "st": 150,
+        "atk": 70,
+        "magic": 10,
+        "speed": 2.2,
+        "attackSpeed": 1.5,
+        "castSpeed": 0,
+        "defense": 5,
+        "resistance": 0,
+        "attackRange": 1
+      }
+    },
+    {
+      "index": 19,
+      "name": "집행가",
+      "role": "tank",
+      "version": "stat-v1",
+      "total": 566,
+      "rawTotal": 565.8711293669488,
+      "contributions": {
+        "durability": 338.74769371908644,
+        "offense": 159.0990257669732,
+        "mobility": 43.0244098808891,
+        "range": 25
+      },
+      "metrics": {
+        "effectiveHp": 2000,
+        "power": 12.5,
+        "interval": 2
+      },
+      "normalized": {
+        "durability": 0.752772652709081,
+        "offense": 0.3535533905932738,
+        "mobility": 0.8604881976177821,
+        "range": 0.5
+      },
+      "finalStats": {
+        "hp": 2000,
+        "mp": 100,
+        "st": 100,
+        "atk": 10,
+        "magic": 10,
+        "speed": 1.2,
+        "attackSpeed": 2,
+        "castSpeed": 0.5,
+        "defense": 0,
+        "resistance": 0,
+        "attackRange": 1
+      }
+    },
+    {
+      "index": 20,
+      "name": "바이킹",
+      "role": "tank",
+      "version": "stat-v1",
+      "total": 1035,
+      "rawTotal": 1034.869669874493,
+      "contributions": {
+        "durability": 535.6071321407138,
+        "offense": 410.79191812887456,
+        "mobility": 63.4706196049045,
+        "range": 25
+      },
+      "metrics": {
+        "effectiveHp": 5000.000000000001,
+        "power": 62.5,
+        "interval": 1.5
+      },
+      "normalized": {
+        "durability": 1.1902380714238086,
+        "offense": 0.9128709291752768,
+        "mobility": 1.26941239209809,
+        "range": 0.5
+      },
+      "finalStats": {
+        "hp": 4500,
+        "mp": 100,
+        "st": 150,
+        "atk": 60,
+        "magic": 10,
+        "speed": 2.2,
+        "attackSpeed": 1.5,
+        "castSpeed": 0.5,
+        "defense": 15,
+        "resistance": 5,
+        "attackRange": 1
+      }
+    },
+    {
+      "index": 21,
+      "name": "악마",
+      "role": "tank",
+      "version": "stat-v1",
+      "total": 975,
+      "rawTotal": 974.9158387760468,
+      "contributions": {
+        "durability": 551.135192126215,
+        "offense": 355.7562367689427,
+        "mobility": 43.0244098808891,
+        "range": 25
+      },
+      "metrics": {
+        "effectiveHp": 5294.117647058823,
+        "power": 62.5,
+        "interval": 2
+      },
+      "normalized": {
+        "durability": 1.224744871391589,
+        "offense": 0.7905694150420949,
+        "mobility": 0.8604881976177821,
+        "range": 0.5
+      },
+      "finalStats": {
+        "hp": 4500,
+        "mp": 200,
+        "st": 100,
+        "atk": 10,
+        "magic": 60,
+        "speed": 1.2,
+        "attackSpeed": 2,
+        "castSpeed": 0.5,
+        "defense": 10,
+        "resistance": 20,
+        "attackRange": 1
+      }
+    },
+    {
+      "index": 22,
+      "name": "요정 사냥꾼",
+      "role": "melee",
+      "version": "stat-v1",
+      "total": 566,
+      "rawTotal": 565.8711293669488,
+      "contributions": {
+        "durability": 338.74769371908644,
+        "offense": 159.0990257669732,
+        "mobility": 43.0244098808891,
+        "range": 25
+      },
+      "metrics": {
+        "effectiveHp": 2000,
+        "power": 12.5,
+        "interval": 2
+      },
+      "normalized": {
+        "durability": 0.752772652709081,
+        "offense": 0.3535533905932738,
+        "mobility": 0.8604881976177821,
+        "range": 0.5
+      },
+      "finalStats": {
+        "hp": 2000,
+        "mp": 100,
+        "st": 100,
+        "atk": 10,
+        "magic": 10,
+        "speed": 1.2,
+        "attackSpeed": 2,
+        "castSpeed": 0.5,
+        "defense": 0,
+        "resistance": 0,
+        "attackRange": 1
+      }
+    },
+    {
+      "index": 23,
+      "name": "영혼수확자",
+      "role": "healer",
+      "version": "stat-v1",
+      "total": 870,
+      "rawTotal": 870.4484533864875,
+      "contributions": {
+        "durability": 343.0631249381193,
+        "offense": 442.43643611257875,
+        "mobility": 59.94889233578948,
+        "range": 25
+      },
+      "metrics": {
+        "effectiveHp": 2051.2820512820513,
+        "power": 72.5,
+        "interval": 1.5
+      },
+      "normalized": {
+        "durability": 0.7623624998624874,
+        "offense": 0.983192080250175,
+        "mobility": 1.1989778467157897,
+        "range": 0.5
+      },
+      "finalStats": {
+        "hp": 2000,
+        "mp": 100,
+        "st": 150,
+        "atk": 70,
+        "magic": 10,
+        "speed": 2,
+        "attackSpeed": 1.5,
+        "castSpeed": 0,
+        "defense": 5,
+        "resistance": 0,
+        "attackRange": 1
+      }
+    },
+    {
+      "index": 24,
+      "name": "학자",
+      "role": "ranged",
+      "version": "stat-v1",
+      "total": 877,
+      "rawTotal": 876.5095089056904,
+      "contributions": {
+        "durability": 343.0631249381193,
+        "offense": 448.4974916317816,
+        "mobility": 59.94889233578948,
+        "range": 25
+      },
+      "metrics": {
+        "effectiveHp": 2051.2820512820513,
+        "power": 74.5,
+        "interval": 1.5
+      },
+      "normalized": {
+        "durability": 0.7623624998624874,
+        "offense": 0.9966610925150702,
+        "mobility": 1.1989778467157897,
+        "range": 0.5
+      },
+      "finalStats": {
+        "hp": 2000,
+        "mp": 100,
+        "st": 150,
+        "atk": 72,
+        "magic": 10,
+        "speed": 2,
+        "attackSpeed": 1.5,
+        "castSpeed": 0,
+        "defense": 5,
+        "resistance": 0,
+        "attackRange": 1
+      }
+    },
+    {
+      "index": 25,
+      "name": "정령술사",
+      "role": "healer",
+      "version": "stat-v1",
+      "total": 778,
+      "rawTotal": 777.8382190115764,
+      "contributions": {
+        "durability": 352.2130804698401,
+        "offense": 362.80159867343474,
+        "mobility": 37.823539868301495,
+        "range": 25
+      },
+      "metrics": {
+        "effectiveHp": 2162.162162162162,
+        "power": 65,
+        "interval": 2
+      },
+      "normalized": {
+        "durability": 0.7826957343774225,
+        "offense": 0.806225774829855,
+        "mobility": 0.75647079736603,
+        "range": 0.5
+      },
+      "finalStats": {
+        "hp": 2000,
+        "mp": 200,
+        "st": 100,
+        "atk": 20,
+        "magic": 60,
+        "speed": 1,
+        "attackSpeed": 2,
+        "castSpeed": 0,
+        "defense": 0,
+        "resistance": 15,
+        "attackRange": 1
+      }
+    },
+    {
+      "index": 26,
+      "name": "마법사냥꾼",
+      "role": "melee",
+      "version": "stat-v1",
+      "total": 874,
+      "rawTotal": 873.9701806556026,
+      "contributions": {
+        "durability": 343.0631249381193,
+        "offense": 442.43643611257875,
+        "mobility": 63.4706196049045,
+        "range": 25
+      },
+      "metrics": {
+        "effectiveHp": 2051.2820512820513,
+        "power": 72.5,
+        "interval": 1.5
+      },
+      "normalized": {
+        "durability": 0.7623624998624874,
+        "offense": 0.983192080250175,
+        "mobility": 1.26941239209809,
+        "range": 0.5
+      },
+      "finalStats": {
+        "hp": 2000,
+        "mp": 100,
+        "st": 150,
+        "atk": 70,
+        "magic": 10,
+        "speed": 2.2,
+        "attackSpeed": 1.5,
+        "castSpeed": 0,
+        "defense": 5,
+        "resistance": 0,
+        "attackRange": 1
+      }
+    },
+    {
+      "index": 27,
+      "name": "혈청형",
+      "role": "healer",
+      "version": "stat-v1",
+      "total": 970,
+      "rawTotal": 969.7149687634592,
+      "contributions": {
+        "durability": 551.135192126215,
+        "offense": 355.7562367689427,
+        "mobility": 37.823539868301495,
+        "range": 25
+      },
+      "metrics": {
+        "effectiveHp": 5294.117647058823,
+        "power": 62.5,
+        "interval": 2
+      },
+      "normalized": {
+        "durability": 1.224744871391589,
+        "offense": 0.7905694150420949,
+        "mobility": 0.75647079736603,
+        "range": 0.5
+      },
+      "finalStats": {
+        "hp": 4500,
+        "mp": 200,
+        "st": 100,
+        "atk": 10,
+        "magic": 60,
+        "speed": 1,
+        "attackSpeed": 2,
+        "castSpeed": 0.5,
+        "defense": 10,
+        "resistance": 20,
+        "attackRange": 1
+      }
+    },
+    {
+      "index": 28,
+      "name": "질병형",
+      "role": "ranged",
+      "version": "stat-v1",
+      "total": 779,
+      "rawTotal": 779.2309366035112,
+      "contributions": {
+        "durability": 352.2130804698401,
+        "offense": 364.19431626536954,
+        "mobility": 37.823539868301495,
+        "range": 25
+      },
+      "metrics": {
+        "effectiveHp": 2162.162162162162,
+        "power": 65.5,
+        "interval": 2
+      },
+      "normalized": {
+        "durability": 0.7826957343774225,
+        "offense": 0.8093207028119322,
+        "mobility": 0.75647079736603,
+        "range": 0.5
+      },
+      "finalStats": {
+        "hp": 2000,
+        "mp": 200,
+        "st": 100,
+        "atk": 22,
+        "magic": 60,
+        "speed": 1,
+        "attackSpeed": 2,
+        "castSpeed": 0,
+        "defense": 0,
+        "resistance": 15,
+        "attackRange": 1
+      }
+    },
+    {
+      "index": 29,
+      "name": "각질형",
+      "role": "tank",
+      "version": "stat-v1",
+      "total": 987,
+      "rawTotal": 986.792735254947,
+      "contributions": {
+        "durability": 535.6071321407138,
+        "offense": 383.161193233344,
+        "mobility": 43.0244098808891,
+        "range": 25
+      },
+      "metrics": {
+        "effectiveHp": 5000.000000000001,
+        "power": 72.5,
+        "interval": 2
+      },
+      "normalized": {
+        "durability": 1.1902380714238086,
+        "offense": 0.85146931829632,
+        "mobility": 0.8604881976177821,
+        "range": 0.5
+      },
+      "finalStats": {
+        "hp": 4500,
+        "mp": 100,
+        "st": 100,
+        "atk": 70,
+        "magic": 10,
+        "speed": 1.2,
+        "attackSpeed": 2,
+        "castSpeed": 0,
+        "defense": 15,
+        "resistance": 5,
+        "attackRange": 1
+      }
+    },
+    {
+      "index": 30,
+      "name": "응원가",
+      "role": "healer",
+      "version": "stat-v1",
+      "total": 860,
+      "rawTotal": 859.7436639178743,
+      "contributions": {
+        "durability": 528.31962070476,
+        "offense": 246.47515087732472,
+        "mobility": 59.94889233578948,
+        "range": 25
+      },
+      "metrics": {
+        "effectiveHp": 4864.864864864865,
+        "power": 22.5,
+        "interval": 1.5
+      },
+      "normalized": {
+        "durability": 1.1740436015661335,
+        "offense": 0.5477225575051661,
+        "mobility": 1.1989778467157897,
+        "range": 0.5
+      },
+      "finalStats": {
+        "hp": 4500,
+        "mp": 100,
+        "st": 150,
+        "atk": 20,
+        "magic": 10,
+        "speed": 2,
+        "attackSpeed": 1.5,
+        "castSpeed": 0,
+        "defense": 10,
+        "resistance": 5,
+        "attackRange": 1
+      }
+    },
+    {
+      "index": 31,
+      "name": "광대",
+      "role": "ranged",
+      "version": "stat-v1",
+      "total": 573,
+      "rawTotal": 572.9261284693258,
+      "contributions": {
+        "durability": 338.74769371908644,
+        "offense": 171.35489488193792,
+        "mobility": 37.823539868301495,
+        "range": 25
+      },
+      "metrics": {
+        "effectiveHp": 2000,
+        "power": 14.5,
+        "interval": 2
+      },
+      "normalized": {
+        "durability": 0.752772652709081,
+        "offense": 0.3807886552931954,
+        "mobility": 0.75647079736603,
+        "range": 0.5
+      },
+      "finalStats": {
+        "hp": 2000,
+        "mp": 100,
+        "st": 100,
+        "atk": 12,
+        "magic": 10,
+        "speed": 1,
+        "attackSpeed": 2,
+        "castSpeed": 0.5,
+        "defense": 0,
+        "resistance": 0,
+        "attackRange": 1
+      }
+    },
+    {
+      "index": 32,
+      "name": "조련사",
+      "role": "melee",
+      "version": "stat-v1",
+      "total": 850,
+      "rawTotal": 850.460945856092,
+      "contributions": {
+        "durability": 343.0631249381193,
+        "offense": 418.9272013130682,
+        "mobility": 63.4706196049045,
+        "range": 25
+      },
+      "metrics": {
+        "effectiveHp": 2051.2820512820513,
+        "power": 65,
+        "interval": 1.5
+      },
+      "normalized": {
+        "durability": 0.7623624998624874,
+        "offense": 0.9309493362512627,
+        "mobility": 1.26941239209809,
+        "range": 0.5
+      },
+      "finalStats": {
+        "hp": 2000,
+        "mp": 150,
+        "st": 150,
+        "atk": 20,
+        "magic": 60,
+        "speed": 2.2,
+        "attackSpeed": 1.5,
+        "castSpeed": 0,
+        "defense": 0,
+        "resistance": 5,
+        "attackRange": 1
+      }
+    },
+    {
+      "index": 33,
+      "name": "마귀",
+      "role": "ranged",
+      "version": "stat-v1",
+      "total": 573,
+      "rawTotal": 572.9261284693258,
+      "contributions": {
+        "durability": 338.74769371908644,
+        "offense": 171.35489488193792,
+        "mobility": 37.823539868301495,
+        "range": 25
+      },
+      "metrics": {
+        "effectiveHp": 2000,
+        "power": 14.5,
+        "interval": 2
+      },
+      "normalized": {
+        "durability": 0.752772652709081,
+        "offense": 0.3807886552931954,
+        "mobility": 0.75647079736603,
+        "range": 0.5
+      },
+      "finalStats": {
+        "hp": 2000,
+        "mp": 100,
+        "st": 100,
+        "atk": 12,
+        "magic": 10,
+        "speed": 1,
+        "attackSpeed": 2,
+        "castSpeed": 0.5,
+        "defense": 0,
+        "resistance": 0,
+        "attackRange": 1
+      }
+    },
+    {
+      "index": 34,
+      "name": "암살자",
+      "role": "melee",
+      "version": "stat-v1",
+      "total": 874,
+      "rawTotal": 873.9701806556026,
+      "contributions": {
+        "durability": 343.0631249381193,
+        "offense": 442.43643611257875,
+        "mobility": 63.4706196049045,
+        "range": 25
+      },
+      "metrics": {
+        "effectiveHp": 2051.2820512820513,
+        "power": 72.5,
+        "interval": 1.5
+      },
+      "normalized": {
+        "durability": 0.7623624998624874,
+        "offense": 0.983192080250175,
+        "mobility": 1.26941239209809,
+        "range": 0.5
+      },
+      "finalStats": {
+        "hp": 2000,
+        "mp": 100,
+        "st": 150,
+        "atk": 70,
+        "magic": 10,
+        "speed": 2.2,
+        "attackSpeed": 1.5,
+        "castSpeed": 0,
+        "defense": 5,
+        "resistance": 0,
+        "attackRange": 1
+      }
+    },
+    {
+      "index": 35,
+      "name": "룬술사",
+      "role": "healer",
+      "version": "stat-v1",
+      "total": 561,
+      "rawTotal": 560.6702593543612,
+      "contributions": {
+        "durability": 338.74769371908644,
+        "offense": 159.0990257669732,
+        "mobility": 37.823539868301495,
+        "range": 25
+      },
+      "metrics": {
+        "effectiveHp": 2000,
+        "power": 12.5,
+        "interval": 2
+      },
+      "normalized": {
+        "durability": 0.752772652709081,
+        "offense": 0.3535533905932738,
+        "mobility": 0.75647079736603,
+        "range": 0.5
+      },
+      "finalStats": {
+        "hp": 2000,
+        "mp": 100,
+        "st": 100,
+        "atk": 10,
+        "magic": 10,
+        "speed": 1,
+        "attackSpeed": 2,
+        "castSpeed": 0.5,
+        "defense": 0,
+        "resistance": 0,
+        "attackRange": 1
+      }
+    },
+    {
+      "index": 36,
+      "name": "공작",
+      "role": "melee",
+      "version": "stat-v1",
+      "total": 566,
+      "rawTotal": 565.8711293669488,
+      "contributions": {
+        "durability": 338.74769371908644,
+        "offense": 159.0990257669732,
+        "mobility": 43.0244098808891,
+        "range": 25
+      },
+      "metrics": {
+        "effectiveHp": 2000,
+        "power": 12.5,
+        "interval": 2
+      },
+      "normalized": {
+        "durability": 0.752772652709081,
+        "offense": 0.3535533905932738,
+        "mobility": 0.8604881976177821,
+        "range": 0.5
+      },
+      "finalStats": {
+        "hp": 2000,
+        "mp": 100,
+        "st": 100,
+        "atk": 10,
+        "magic": 10,
+        "speed": 1.2,
+        "attackSpeed": 2,
+        "castSpeed": 0.5,
+        "defense": 0,
+        "resistance": 0,
+        "attackRange": 1
+      }
+    },
+    {
+      "index": 37,
+      "name": "인형술사",
+      "role": "healer",
+      "version": "stat-v1",
+      "total": 561,
+      "rawTotal": 560.6702593543612,
+      "contributions": {
+        "durability": 338.74769371908644,
+        "offense": 159.0990257669732,
+        "mobility": 37.823539868301495,
+        "range": 25
+      },
+      "metrics": {
+        "effectiveHp": 2000,
+        "power": 12.5,
+        "interval": 2
+      },
+      "normalized": {
+        "durability": 0.752772652709081,
+        "offense": 0.3535533905932738,
+        "mobility": 0.75647079736603,
+        "range": 0.5
+      },
+      "finalStats": {
+        "hp": 2000,
+        "mp": 100,
+        "st": 100,
+        "atk": 10,
+        "magic": 10,
+        "speed": 1,
+        "attackSpeed": 2,
+        "castSpeed": 0.5,
+        "defense": 0,
+        "resistance": 0,
+        "attackRange": 1
+      }
+    }
+  ],
+  "historical": {
+    "source": "balance/results/2026-10-10T13-12-05-837Z_1000.json",
+    "startedAt": "2026-10-10T13:12:05.837Z",
+    "note": "현재 V1으로 과거 입력을 재평가한 CP와 당시 엔진 전투 결과 비교. 현재 빌드 승률이 아님.",
+    "comparison": [
+      {
+        "name": "검의무희",
+        "total": 1224,
+        "winRate": 43.62818590704648,
+        "dps": 11.733083823881254,
+        "hps": 0,
+        "battles": 667
+      },
+      {
+        "name": "기사",
+        "total": 1114,
+        "winRate": 48.7987987987988,
+        "dps": 58.63170155031618,
+        "hps": 0,
+        "battles": 666
+      },
+      {
+        "name": "승려",
+        "total": 1635,
+        "winRate": 29.87987987987988,
+        "dps": 14.248553287454776,
+        "hps": 0.9874636824979132,
+        "battles": 666
+      },
+      {
+        "name": "사제",
+        "total": 1233,
+        "winRate": 41.97901049475262,
+        "dps": 0,
+        "hps": 53.97172479514149,
+        "battles": 667
+      },
+      {
+        "name": "마법사",
+        "total": 1405,
+        "winRate": 99.55022488755623,
+        "dps": 206.49265002308903,
+        "hps": 0,
+        "battles": 667
+      },
+      {
+        "name": "궁사",
+        "total": 987,
+        "winRate": 38.68065967016492,
+        "dps": 38.708100149891706,
+        "hps": 0,
+        "battles": 667
+      },
+      {
+        "name": "갑사",
+        "total": 1078,
+        "winRate": 45.94594594594595,
+        "dps": 52.129185614365376,
+        "hps": 0,
+        "battles": 666
+      },
+      {
+        "name": "드루이드",
+        "total": 1145,
+        "winRate": 42.27886056971514,
+        "dps": 0,
+        "hps": 54.421725774065294,
+        "battles": 667
+      },
+      {
+        "name": "흑마법사",
+        "total": 1267,
+        "winRate": 56.07196401799101,
+        "dps": 80.9542109218086,
+        "hps": 0,
+        "battles": 667
+      }
+    ]
+  }
+}

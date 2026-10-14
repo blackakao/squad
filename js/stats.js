@@ -116,7 +116,10 @@ function renderStatAbilityPreview() {
     ["사정거리", "attackRange"]
   ];
 
-  statAbilityPreviewEl.innerHTML = `
+  statAbilityPreviewEl.innerHTML = renderCombatPowerComparison(
+    getCharacterCombatPower(character),
+    getCharacterCombatPower({...character, attributes: statDraftAttributes})
+  ) + `
     <table class="stat-ability-table">
       <thead>
         <tr>

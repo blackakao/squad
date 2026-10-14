@@ -51,16 +51,16 @@ class SynergyUI(unittest.TestCase):
         # Isolated in-browser roster fixture; only synergy CRUD is persisted.
         self.js("""characterJson[1]={...characterJson[1],faction:characterJson[0].faction,role:characterJson[0].role};
           teamsJson=[{name:'검증 팀',memberIds:[0],battleRules:{},synergyRules:[]}];selectTeamForEdit(0);""")
-        self.assertIn('1 / 2', self.driver.find_element(By.ID, 'teamSynergyPreview').text)
+        self.assertIn('활성 시너지가 없습니다', self.driver.find_element(By.ID, 'teamSynergyPreview').text)
         self.driver.find_element(By.CSS_SELECTOR, '#teamCharacterList button[onclick="toggleCharacterInSelectedTeam(1)"]').click()
-        self.assertIn('2 / 2', self.driver.find_element(By.ID, 'teamSynergyPreview').text)
+        self.assertIn('2명 효과', self.driver.find_element(By.ID, 'teamSynergyPreview').text)
         self.assertEqual(self.js("return document.querySelectorAll('#teamSynergyPreview .active').length"), 2)
         if os.environ.get('SYNERGY_SCREENSHOTS'):
             self.js("document.getElementById('teamSynergyPreview').scrollIntoView({block:'start',behavior:'instant'})")
             self.driver.save_screenshot(str(harness.ROOT / '.tmp-synergy-team.png'))
             self.js("window.scrollTo({top:0,behavior:'instant'})")
         self.driver.find_element(By.CSS_SELECTOR, '#teamMemberList button[onclick="removeCharacterFromSelectedTeam(1)"]').click()
-        self.assertIn('1 / 2', self.driver.find_element(By.ID, 'teamSynergyPreview').text)
+        self.assertIn('활성 시너지가 없습니다', self.driver.find_element(By.ID, 'teamSynergyPreview').text)
         values = self.js("""selectedBattleTeamIds.clear();selectedBattleCharacterIds=new Set([0,1]);battleMode='team';selectedEnemyTeamIndex='';
           const original=JSON.stringify(characterJson);const base=createCharacter(characterJson[0],0);
           enemySquad=createSquadFromCharacterIds([2,3],'enemy');startBattle();

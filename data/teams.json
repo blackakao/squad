@@ -21,7 +21,8 @@
     "memberIds": [
       0,
       6,
-      7
+      7,
+      1
     ],
     "activeMemberCount": 3
   },
@@ -37,7 +38,8 @@
     "memberIds": [
       2,
       5,
-      4
+      4,
+      3
     ],
     "activeMemberCount": 3
   },
