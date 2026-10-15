@@ -586,6 +586,7 @@ function normalizeSkillJson(skills) {
     .map((skill, index) => ({
       id: String(skill?.id ?? `skill_${Date.now()}_${index}`),
       name: String(skill?.name ?? "").trim(),
+      ...(typeof skill?.icon === 'string' && skill.icon ? {icon: skill.icon} : {}),
       description: String(skill?.description ?? ""),
       slot: normalizeSkillSlot(String(skill?.slot ?? "active").trim()),
       cooldown: normalizeSkillCooldown(skill?.cooldown ?? skill?.reuseCooldown ?? skill?.reuse_cooldown),
@@ -1052,7 +1053,7 @@ function renderSkillPage() {
   skillTableBodyEl.innerHTML = skillsJson.map((skill, index) => `
     <tr>
       <td><input type="checkbox" class="skill-check" value="${index}" ${isDefaultSkill(skill.id) ? "disabled" : ""}></td>
-      <td>${escapeHtml(skill.name)}</td>
+      <td>${renderRecordImageName(skill)}</td>
       <td>${renderCategoryIcon("skill", skill.slot, getSkillSlotLabel(skill.slot))}</td>
       <td>${skill.cooldown}<br>${skill.slot === "passive" ? `패시브 · ${escapeHtml(PASSIVE_TRIGGER_LABELS[skill.passiveTrigger?.event] ?? "조건 미설정")} · ${skill.passiveTrigger?.chance ?? 100}%` : `시전 ${skill.castTime == null ? "유닛 기준" : `${skill.castTime}초`}${skill.channel?.duration > 0 ? `<br>채널링 ${skill.channel.duration}초 · ${skill.channel.interval}초 간격` : ""}`}</td>
       <td class="skill-description" title="${escapeHtml(getSkillDescription(skill))}">${escapeHtml(summarizeSkillDescription(skill))}
@@ -1068,6 +1069,7 @@ function openSkillModal(index = "") {
   skillModalTitleEl.innerText = skill ? "스킬 수정" : "스킬 추가";
   skillEditIndexEl.value = skill ? index : "";
   skillNameEl.value = skill?.name ?? "";
+  openRecordImageEditor('skills', skill?.icon);
   skillDescriptionEl.value = skill?.description ?? "";
   skillSlotEl.value = skill?.slot ?? "active";
   skillCooldownEl.value = skill?.cooldown ?? 0;
@@ -1580,6 +1582,7 @@ async function saveSkillFromForm(event) {
     skill = {
       id: previous?.id ?? `skill_${Date.now()}`,
       name: skillNameEl.value.trim(),
+      icon: getRecordImageSelection('skills'),
       description: skillDescriptionEl.value.trim(),
       slot: normalizeSkillSlot(skillSlotEl.value),
       cooldown: normalizeSkillCooldown(skillCooldownEl.value),
@@ -1601,7 +1604,7 @@ async function saveSkillFromForm(event) {
     }, null, 2));
   } catch (error) {
     logError("skill", "스킬 저장 폼을 읽는 중 실패했습니다.", error);
-    alert("스킬 입력값을 읽는 중 문제가 발생했습니다. 로그를 확인하세요.");
+    alert(`스킬 입력값을 확인해주세요: ${error.message}`);
     return;
   }
 

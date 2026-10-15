@@ -195,12 +195,14 @@ export class CharacterPartPreview {
       if (this.tokens.get(category.id) !== token || !this.root) { gltf.scenes.forEach(disposeObject); return null; }
       const source = gltf.scene;
       const embeddedBase = category.id === 'clothes' ? hideEmbeddedBaseBody(source) : [];
-      const binding = category.id === 'clothes'
+      const binding = category.id === 'clothes' || category.rebindSkeleton
         ? rebindSkinnedMeshes(source, this.root)
         : { rebound: [], failures: [] };
       const info = { ...inspectPart(source), embeddedBase, binding };
       if (!info.meshes) throw new Error('표시할 Mesh가 없는 GLB입니다.');
       const owner = this.createOwner(category);
+      owner.userData.externalPartCategory = category.id;
+      if (category.slot) owner.userData.externalEquipmentSlot = category.slot;
       const adjustment = new THREE.Group(); adjustment.name = `ExternalPart_Adjustment_${category.id}`; owner.add(adjustment);
       const coordinateFix = new THREE.Group(); coordinateFix.name = `ExternalPart_CoordinateFix_${category.id}`;
       source.updateMatrix(); const sharedTransform = commonTopLevelTransform(source);

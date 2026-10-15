@@ -10,7 +10,7 @@ function renderSynergyPage() {
   synergyEl('synergyTableBody').innerHTML = synergiesJson.map((s,i) => {
     let error = ''; try { validateSynergies([s]); } catch(e) { error = e.message; }
     const label = getSynergyConditionOptions(s.condition?.type).find(o => o.key === s.condition.value)?.label || s.condition?.value || '조건 없음';
-    return `<tr><td>${escapeHtml(s.name || '')}${error ? `<p role="alert">${escapeHtml(error)}</p>` : ''}</td><td>${escapeHtml(label)}</td><td>${s.stacking === 'cumulative' ? '충족 단계 합산' : '최고 단계만'}</td><td>${(s.thresholds || []).map(t => `${t.count}명: ${escapeHtml(synergyEffectsText(t.effects || []))}`).join('<br>')}</td><td><button onclick="openSynergyModal(${i})">수정</button></td></tr>`;
+    return `<tr><td>${renderRecordImageName(s)}${error ? `<p role="alert">${escapeHtml(error)}</p>` : ''}</td><td>${escapeHtml(label)}</td><td>${s.stacking === 'cumulative' ? '충족 단계 합산' : '최고 단계만'}</td><td>${(s.thresholds || []).map(t => `${t.count}명: ${escapeHtml(synergyEffectsText(t.effects || []))}`).join('<br>')}</td><td><button onclick="openSynergyModal(${i})">수정</button></td></tr>`;
   }).join('') || '<tr><td colspan="5">등록된 시너지가 없습니다. 시너지를 추가해주세요.</td></tr>';
 }
 
@@ -23,6 +23,7 @@ function openSynergyModal(index = null) {
   const s = index === null ? null : synergiesJson[index];
   synergyEditingId = s?.id || null;
   synergyEl('synergyName').value = s?.name || '';
+  openRecordImageEditor('synergies', s?.icon);
   synergyEl('synergyType').value = s?.condition?.type || 'faction';
   updateSynergyConditionOptions(s?.condition?.value);
   synergyEl('synergyStacking').value = s?.stacking || 'highest';
@@ -78,7 +79,11 @@ async function persistSynergies(next) {
 
 async function saveSynergyForm(event) {
   event.preventDefault();
+  let icon;
+  try { icon = getRecordImageSelection('synergies'); }
+  catch (error) { synergyEl('synergyError').textContent = error.message; return; }
   const row = {
+    icon,
     id:synergyEditingId || `synergy_${crypto.randomUUID()}`,
     name:synergyEl('synergyName').value.trim(),
     condition:{type:synergyEl('synergyType').value,value:synergyEl('synergyValue').value},
@@ -104,5 +109,5 @@ function renderTeamSynergyPreview() {
   if (!getSelectedTeam()) { el.innerHTML = '<p>팀을 선택해주세요.</p>'; return; }
   const result = evaluateSynergies([...new Set(selectedTeamMemberIds)].map(id => characterJson[id]));
   const active = result.states.filter(s=>s.active.length);
-  el.innerHTML = '<h5>활성 시너지</h5>' + (active.map(s=>`<div class="synergy-preview active"><strong>${escapeHtml(s.definition.name)}</strong>${s.active.map(t=>`<p>${t.count}명 효과 · ${escapeHtml(synergyEffectsText(t.effects))}</p>`).join('')}</div>`).join('') || '<p class="empty-text">활성 시너지가 없습니다.</p>');
+  el.innerHTML = '<h5>활성 시너지</h5>' + (active.map(s=>`<div class="synergy-preview active"><strong>${renderRecordImageName(s.definition)}</strong>${s.active.map(t=>`<p>${t.count}명 효과 · ${escapeHtml(synergyEffectsText(t.effects))}</p>`).join('')}</div>`).join('') || '<p class="empty-text">활성 시너지가 없습니다.</p>');
 }

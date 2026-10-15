@@ -2,12 +2,16 @@
 import { setupEquipment } from './equipment.js?v=20261010-visual12';
 import { setupComposer } from '../portrait/composer.js?v=20261014-glbrandom1';
 import { setupCharacterParts } from './character-parts.js?v=20261014-gender1';
+import { setupGlbEquipment } from './glb-equipment.js?v=20261016-equipment1';
 
 const byId = id => document.getElementById(id);
 let viewer;
 let equipment;
 let composer;
 let characterParts;
+let glbEquipment;
+const externalBusy = { parts: false, equipment: false };
+const updateExternalBusy = () => composer?.setExternalBusy?.(externalBusy.parts || externalBusy.equipment);
 let files = [];
 let clipNames = [];
 let modelRows = [];
@@ -43,6 +47,7 @@ function updateInfo(label, value) {
 function onState(event) {
   if (event.type === 'unloading') {
     characterParts?.clear();
+    glbEquipment?.clear();
     composer?.clear();
     equipment?.clear();
   } else if (event.type === 'loading') {
@@ -67,6 +72,7 @@ function onState(event) {
     composer?.setModel(viewer.model);
     equipment?.setModel(viewer.model);
     characterParts?.setModel(viewer.model);
+    glbEquipment?.setModel(viewer.model);
     const { info, clips } = event;
     byId('load-status').textContent = `${event.name} 로딩 완료`;
     byId('empty-hint').hidden = true;
@@ -109,11 +115,15 @@ try {
   characterParts = setupCharacterParts(viewer, {
     getJsClothesNodes: () => equipment?.preview?.attached?.get('body') || [],
     onModeChange: mode => composer?.setSourceMode?.(mode, characterParts),
-    onBusyChange: busy => composer?.setExternalBusy?.(busy),
+    onBusyChange: busy => { externalBusy.parts = busy; updateExternalBusy(); },
+    onCombinationChange: () => composer?.refreshPortrait?.(),
+  });
+  glbEquipment = setupGlbEquipment(viewer, {
+    onBusyChange: busy => { externalBusy.equipment = busy; updateExternalBusy(); },
     onCombinationChange: () => composer?.refreshPortrait?.(),
   });
   composer.setSourceMode?.('js', characterParts);
-  globalThis.characterViewerDebug={viewer,composer,equipment,characterParts};
+  globalThis.characterViewerDebug={viewer,composer,equipment,characterParts,glbEquipment};
   byId('source-controls').disabled = false;
   byId('load-status').textContent = '준비 완료 · 모델을 선택하세요.';
 } catch (error) {
@@ -185,7 +195,7 @@ byId('model-scale').addEventListener('change', event => {
 byId('show-skeleton').addEventListener('change', event => {
   if (viewer.skeletonHelper) viewer.skeletonHelper.visible = event.target.checked;
 });
-window.addEventListener('pagehide', event => { if (!event.persisted){characterParts?.dispose();viewer?.dispose();} });
+window.addEventListener('pagehide', event => { if (!event.persisted){glbEquipment?.dispose();characterParts?.dispose();viewer?.dispose();} });
 
 // No implicit nonexistent default asset; query loading is explicitly requested by the URL.
 const requestedModel = new URLSearchParams(location.search).get('model');

@@ -1,5 +1,9 @@
 # 데이터 구조
 
+## 스킬·시너지 개별 그림
+
+`data/skills.json`과 `data/synergies.json` 레코드는 선택적 `icon` 문자열을 가진다. 값은 `assets/images/skills/파일명` 또는 `assets/images/synergies/파일명`이며 빈 문자열/필드 생략은 그림 없음이다. 스킬 정규화는 이 필드를 보존한다. 기존 데이터를 일괄 수정하지 않는다. 공통 `iconMappings`와는 별개이며 전투 계산 필드가 아니다. [그림 API·수명](RECORD_IMAGES.md).
+
 ## 종합전투력 파생값
 
 캐릭터·아이템 JSON과 API 스키마는 변경하지 않습니다. 종합전투력은 현재 빌드에서 재계산하며 combatPower 필드를 저장하지 않습니다. 계산 결과는 version/total/rawTotal/contributions/normalized/metrics, 빌드 어댑터는 finalStats를 추가로 반환합니다. 분석용 문서 JSON만 공식 설정·입력 해시·38명 계산 스냅샷·과거 비교를 보관합니다. [계약·제외 범위](balance/COMBAT_POWER.md), [분석 스냅샷](balance/COMBAT_POWER_RESULTS.json).
@@ -213,3 +217,12 @@
 `data/icon-mappings.json`은 `{ group, key, label, icon, removeBackground, backgroundTolerance }` 객체 배열입니다. `group`은 `role`, `slot`, `weapon`, `armor`, `skill`, `faction` 중 하나이며 `key`는 해당 분류의 내부 키(진영은 이름)입니다. `label`은 대체 표시명, `icon`은 원본 로컬 이미지 경로이며 두 필드는 빈 문자열을 허용합니다. `(group, key)`당 하나의 설정을 관리합니다. 초기값은 `[]`이며 기존 게임 데이터의 마이그레이션은 없습니다. [아이콘 관리](ICONS.md)를 참고합니다.
 
 2026-10-09 추가된 `removeBackground`는 배경 자동 제거 여부이며 생략 시 `true`입니다. `backgroundTolerance`는 제거 강도(8~100 정수, 기본 48)입니다. 기존 행은 조회 시 기본값을 사용하며 저장 시 옵션을 포함합니다. 원본 이미지와 `icon` 경로를 유지하고 표시용 투명 PNG는 브라우저 메모리에서만 생성합니다.
+# CharacterViewer GLB 조합 저장 (2026-10-16)
+
+브라우저 로컬 저장소 키 `sdCharacterAssembler.v1`은 개발용 조합 프리셋 하나를 저장한다. 게임 캐릭터 JSON과 분리된다.
+
+- `version`, `name`, `gender`, `savedAt`
+- `bodyParts[category]`: `{ assetId, name }` 또는 `null`
+- `equipment[slot]`: `{ assetId, name }` 또는 `null`
+
+`assetId`는 자동 카탈로그의 파일 stem이며 파일 경로는 저장 데이터의 핵심 식별자로 사용하지 않는다. 복원 시 ID가 사라졌으면 해당 카테고리만 `없음`으로 처리한다.

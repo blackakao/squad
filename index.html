@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Squad Auto Battle Prototype</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=20261014-team-ui">
+<link rel="stylesheet" href="css/style.css?v=20261015-record-images">
 </head>
 <body>
 
@@ -132,6 +132,7 @@
     <p>보정값은 기존 스탯 단위의 고정 가산입니다. 공격속도·시전속도는 시간 값이므로 증가하면 느려집니다.</p>
     <form onsubmit="saveSynergyForm(event)"><fieldset id="synergyFormFields">
       <label>이름<input id="synergyName" required maxlength="100"></label>
+      <div id="synergiesImageEditor"></div>
       <div class="synergy-fields"><label>조건 유형<select id="synergyType" onchange="updateSynergyConditionOptions()"><option value="faction">진영</option><option value="role">계열</option></select></label><label>조건 대상<select id="synergyValue" required></select></label></div>
       <label>단계 적용 방식<select id="synergyStacking"><option value="highest">충족한 최고 단계만 적용</option><option value="cumulative">충족한 모든 단계 합산</option></select></label>
       <div id="synergyThresholds"></div><button type="button" onclick="addSynergyThreshold()">+ 단계 추가</button>
@@ -824,6 +825,7 @@
           <div class="skill-form-grid">
             <div class="form-row"><label for="skillName">이름</label><input id="skillName" required placeholder="스킬 이름"></div>
             <div class="form-row"><label for="skillSlot">슬롯</label><select id="skillSlot" required onchange="updatePassiveSkillFields()"><option value="basic">베이직</option><option value="active">액티브</option><option value="passive">패시브</option></select></div>
+            <div id="skillsImageEditor" class="skill-form-field-wide"></div>
             <div class="form-row skill-form-field-wide"><label for="skillDescription">설명</label><textarea id="skillDescription" rows="3" placeholder="스킬 효과와 특징을 입력하세요. 목록에는 요약해서 표시됩니다."></textarea></div>
           </div>
         </section>
@@ -992,12 +994,13 @@
 <script src="js/ui.js?v=20261014-team-ui"></script>
 <script src="js/portrait/bridge.js?v=20260929-bald1"></script>
 <script src="js/api.js?v=20260914-image-assets"></script>
+<script src="js/record-images.js?v=20261015-record-images"></script>
 <script src="js/category.js?v=20261005-icons"></script>
 <script src="js/battle-events.js?v=20261012-contributions"></script>
 <script src="js/skill-channel.js?v=20260929-team-rules"></script>
 <script src="js/skill-passives.js?v=20261011-item-modifiers"></script>
 <script src="js/skill-effects.js?v=20261001-field-effects"></script>
-  <script src="js/skill.js?v=20261011-synergy-v1"></script>
+  <script src="js/skill.js?v=20261015-record-images"></script>
 <script src="js/entity.js?v=20261001-summon-inheritance"></script>
 <script src="js/layout.js?v=20260817-layout"></script>
 <script src="js/combat-power.js?v=20261014-v1"></script>
@@ -1007,7 +1010,7 @@
 <script src="js/faction.js?v=20261005-icons"></script>
 <script src="js/character.js?v=20261014-cp-v1"></script>
 <script src="js/synergy.js?v=20261011-v1"></script>
-<script src="js/synergy-ui.js?v=20261014-team-ui"></script>
+<script src="js/synergy-ui.js?v=20261015-record-images"></script>
 <script src="js/team.js?v=20261014-team-ui"></script>
 <script src="js/stats.js?v=20261014-cp-v1"></script>
 <script src="js/record.js?v=20261012-contributions"></script>

@@ -1,5 +1,13 @@
 # TODO
 
+## 2026-10-15 스킬·시너지 개별 그림
+
+- [x] 공통 아이콘 매핑과 분리된 개별 그림 편집·미리보기·선택 해제
+- [x] 스킬/시너지별 보관함 조회와 기존 업로드 API 재사용
+- [x] 선택적 icon 저장, 스킬 정규화 보존, 관리 표·활성 시너지 표시
+- [x] JS/Python 정적 문법·저장 경로 검토 및 관련 문서 갱신
+- 자동 테스트/실제 브라우저 검증은 최신 Validation Rules에 따라 수행하지 않음.
+
 ## 2026-10-14 팀 편성 UI
 
 - [x] 기존 DOM·목록 높이·장비 드래그·시너지·CP 경로 조사
@@ -283,3 +291,17 @@
 - [ ] 완료/중단 가능성이 있는 작업 후 `docs/resume.md` 갱신
 - [ ] 서버 변경 시 `python -m py_compile server.py` 실행
 - [ ] 저장 기능 변경 시 `python server.py` 기반 수동 확인
+
+## 2026-10-16 외부 GLB 장비
+
+- [x] 외부 GLB 장비 58개 자동 탐색, 슬롯별 독립 장착·해제, Base Skeleton 재바인딩, 비동기 최신 요청 보호, 남녀 Base 전환 복원
+- [ ] 장비별 체형 적합성, 투구 Hair 부분 숨김, Body 부위 마스크는 metadata 규격 확정 후 추가
+
+## 2026-10-16 GLB Character Assembler UI
+
+- [x] 메인 CharacterViewer를 GLB 전용 신체·장비 조립 화면으로 축소
+- [x] JS/GLB Source 선택 제거 및 기존 JS 절차형 시스템 Legacy 페이지 보존
+- [x] 성별 Base, 레지스트리 UI, GLB 전용 무작위, Preview 초상화, assetId 조합 저장/복원
+- [x] 동작 테스트·보기 설정·개발 정보를 접는 보조 도구로 이동
+- [x] 1920·1280·640 반응형, 20회 무작위, 남녀 필터, 저장 복원, Legacy 진입 검증
+- [ ] GLB Eyebrows, Body, Hands 폴더는 현재 비어 있으므로 제작 자산 추가 필요

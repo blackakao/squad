@@ -336,6 +336,21 @@ button.selected,
   padding: var(--page-padding-top) var(--page-padding-x) var(--page-padding-bottom);
 }
 
+.record-image-name { display: inline-flex; align-items: center; gap: 8px; }
+.record-image-thumb { width: 36px; height: 36px; object-fit: contain; flex: 0 0 36px; }
+.record-image-editor { min-width: 0; border: 1px solid var(--bs-border-color); border-radius: 6px; padding: 12px; margin: 8px 0; }
+.record-image-editor legend { float: none; width: auto; font-size: 1rem; margin: 0 0 8px; }
+.record-image-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.record-image-controls label { min-width: 0; max-width: 100%; }
+.record-image-controls input { max-width: 100%; }
+.record-image-preview { width: 72px; height: 72px; object-fit: contain; }
+.record-image-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 8px; max-height: 240px; overflow-y: auto; margin-top: 8px; }
+.record-image-gallery button { min-width: 0; padding: 6px; }
+.record-image-gallery button[aria-pressed="true"] { outline: 2px solid var(--bs-primary); outline-offset: -2px; }
+.record-image-gallery img { width: 48px; height: 48px; object-fit: contain; }
+.record-image-gallery span { display: block; overflow-wrap: anywhere; font-size: 12px; }
+.record-image-status { font-size: 13px; margin: 8px 0 0; }
+
 .team-manager {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(220px, var(--team-right-width));

@@ -1,5 +1,9 @@
 # 아키텍처
 
+## 스킬·시너지 그림 편집
+
+[record-images.js](../js/record-images.js)는 개별 그림 미리보기·보관함·업로드 UI를 공유한다. 스킬/시너지 편집기는 선택 경로만 각 레코드의 icon에 저장하고 [api.js](../js/api.js)의 업로드 함수를 재사용한다. [server.py](../server.py)는 허용된 skills/synergies 이미지 보관함의 읽기 전용 목록을 제공하며 공통 단어 아이콘 매핑과 분리한다. [상세](RECORD_IMAGES.md).
+
 ## 팀 편성 UI
 
 [team.js](../js/team.js)는 편성 초안과 클릭/native drag의 공통 추가 검사를 담당하고 viewport 가용 높이를 CSS 변수로 전달합니다. [synergy-ui.js](../js/synergy-ui.js)는 공용 평가기의 활성 결과를 표시합니다. 개인 CP는 기존 공통 계산기를 호출하며 팀 집계 공식은 추가하지 않습니다. 기존 팀 정규화·저장·전투 함수의 계약을 유지합니다. [상세](TEAM_UI.md).
@@ -111,3 +115,10 @@
 - `js/icon-background.js`: 가장자리 연결 배경색 제거, 알파 보존, 최대 384px Canvas 변환과 경로·강도별 64개 Promise 캐시. `icons.js`보다 먼저 로드하고 목록 이미지 로드 이벤트와 편집 미리보기에서 공통 사용합니다.
 - `js/main.js`에서 초기 설정을 조회하고 `js/ui.js`에서 아이콘 관리 화면을 전환합니다. 각 도메인의 목록 렌더러가 공통 표시 함수를 호출합니다.
 - 저장은 기존 범용 JSON API와 이미지 업로드 API를 사용합니다. 상세 범위는 [아이콘 관리](ICONS.md)를 참고합니다.
+# GLB Character Assembler (2026-10-16)
+
+- `character-viewer.html`은 현재 GLB 전용 조립 UI다.
+- `js/character-viewer/main-assembler.js`가 Base, 애니메이션, 상단 작업을 연결한다.
+- `js/character-viewer/assembler.js`가 레지스트리 기반 신체/장비 선택 상태, 무작위 조합, 저장/복원을 관리한다.
+- `CharacterPartPreview`는 신체와 장비가 공유하는 GLTFLoader, attachment, Skeleton 재바인딩, token 경쟁 방지, dispose 계층이다.
+- `character-viewer-legacy.html`과 `main-legacy.js`는 이전 JS 절차형 제작 환경을 보존한다.

@@ -36,6 +36,7 @@ IMAGE_SETTINGS_PATH = DATA_DIR / "image-generator-settings.json"
 ASSET_IMAGE_DIRS = {
     "portraits": ROOT / "assets" / "images" / "portraits",
     "skills": ROOT / "assets" / "images" / "skills",
+    "synergies": ROOT / "assets" / "images" / "synergies",
     "items": ROOT / "assets" / "images" / "items",
     "icons": ROOT / "assets" / "images" / "icons",
     "generated": ROOT / "assets" / "images" / "generated",
@@ -43,9 +44,18 @@ ASSET_IMAGE_DIRS = {
 CHARACTER_PART_CATEGORIES = (
     {"id": "hair", "label": "Hair", "folder": "assets/characters/hair/imported", "attachment": "head-root-space", "hideNodes": ["Hair_Anchor", "Independent_Hair"], "randomAllowNone": False},
     {"id": "eyes", "label": "Eyes", "folder": "assets/characters/parts/eyes", "attachment": "head-root-space", "hideNodes": ["Independent_Eyes"], "randomAllowNone": False},
+    {"id": "eyebrows", "label": "Eyebrows", "folder": "assets/characters/parts/eyebrows", "attachment": "head-root-space", "hideNodes": ["Independent_Eyebrows"], "randomAllowNone": False},
     {"id": "mouth", "label": "Mouth", "folder": "assets/characters/parts/mouth", "attachment": "head-root-space", "hideNodes": ["Independent_Mouth"], "randomAllowNone": False},
     {"id": "nose", "label": "Nose", "folder": "assets/characters/parts/nose", "attachment": "head-root-space", "hideNodes": ["Independent_Nose"], "randomAllowNone": False},
     {"id": "clothes", "label": "Clothes", "folder": "assets/characters/parts/clothes", "attachment": "character-root", "hideNodes": [], "randomAllowNone": False},
+)
+EQUIPMENT_PART_CATEGORIES = (
+    {"id": "equipmentHead", "slot": "head", "label": "머리 장비", "folder": "assets/characters/equipment/head", "attachment": "character-root", "rebindSkeleton": True, "randomAllowNone": True},
+    {"id": "equipmentBody", "slot": "body", "label": "몸 장비", "folder": "assets/characters/equipment/body", "attachment": "character-root", "rebindSkeleton": True, "randomAllowNone": True},
+    {"id": "equipmentHands", "slot": "hands", "label": "손 장비", "folder": "assets/characters/equipment/hands", "attachment": "character-root", "rebindSkeleton": True, "randomAllowNone": True},
+    {"id": "equipmentFeet", "slot": "feet", "label": "발 장비", "folder": "assets/characters/equipment/feet", "attachment": "character-root", "rebindSkeleton": True, "randomAllowNone": True},
+    {"id": "equipmentMainHand", "slot": "mainHand", "label": "주무기 · 오른손", "folder": "assets/characters/equipment/mainHand", "attachment": "character-root", "rebindSkeleton": True, "randomAllowNone": True},
+    {"id": "equipmentOffHand", "slot": "offHand", "label": "보조무기 · 왼손", "folder": "assets/characters/equipment/offHand", "attachment": "character-root", "rebindSkeleton": True, "randomAllowNone": True},
 )
 CHARACTER_HAIR_IMPORT_DIR = ROOT / CHARACTER_PART_CATEGORIES[0]["folder"]
 API_NAME_RE = re.compile(r"^[a-zA-Z0-9_-]+$")
@@ -86,25 +96,32 @@ def list_imported_character_hair():
 
 def list_character_parts():
     """Build the development catalog from the fixed character-part registry."""
-    categories = []
-    for definition in CHARACTER_PART_CATEGORIES:
-        folder = ROOT / definition["folder"]
-        folder.mkdir(parents=True, exist_ok=True)
-        files = []
-        for file_path in folder.iterdir():
-            if not file_path.is_file() or file_path.suffix.lower() != ".glb":
-                continue
-            stat = file_path.stat()
-            files.append({
-                "name": file_path.name,
-                "displayName": file_path.stem,
-                "path": file_path.relative_to(ROOT).as_posix(),
-                "bytes": stat.st_size,
-                "modified": datetime.fromtimestamp(stat.st_mtime).isoformat(timespec="seconds"),
-            })
-        files.sort(key=lambda item: (item["name"].casefold(), item["name"]))
-        categories.append({**definition, "files": files, "supportsNone": True})
-    return {"categories": categories}
+    def list_categories(registry):
+        categories = []
+        for definition in registry:
+            folder = ROOT / definition["folder"]
+            folder.mkdir(parents=True, exist_ok=True)
+            files = []
+            for file_path in folder.iterdir():
+                if not file_path.is_file() or file_path.suffix.lower() != ".glb":
+                    continue
+                stat = file_path.stat()
+                files.append({
+                    "id": file_path.stem,
+                    "name": file_path.name,
+                    "displayName": file_path.stem,
+                    "path": file_path.relative_to(ROOT).as_posix(),
+                    "bytes": stat.st_size,
+                    "modified": datetime.fromtimestamp(stat.st_mtime).isoformat(timespec="seconds"),
+                })
+            files.sort(key=lambda item: (item["name"].casefold(), item["name"]))
+            categories.append({**definition, "files": files, "supportsNone": True})
+        return categories
+
+    return {
+        "categories": list_categories(CHARACTER_PART_CATEGORIES),
+        "equipmentCategories": list_categories(EQUIPMENT_PART_CATEGORIES),
+    }
 
 
 def server_log(message):
@@ -222,6 +239,21 @@ class BattleHandler(SimpleHTTPRequestHandler):
         if path == "/api/character-assets/parts":
             server_log(f"GET {path} -> character part registry")
             self.send_json(list_character_parts())
+            return
+
+        if path.startswith("/api/assets/"):
+            kind = path.removeprefix("/api/assets/").strip("/")
+            if kind not in {"skills", "synergies"}:
+                self.send_json_error(404, "Unknown image library")
+                return
+            folder = ASSET_IMAGE_DIRS[kind]
+            try:
+                paths = sorted(folder.iterdir(), key=lambda p: p.name.casefold()) if folder.exists() else []
+                self.send_json([{"name": p.name, "path": p.relative_to(ROOT).as_posix()}
+                                for p in paths if p.is_file() and not p.is_symlink()
+                                and p.suffix.lower() in {".png", ".jpg", ".jpeg", ".webp", ".gif"}])
+            except OSError as error:
+                self.send_json_error(500, str(error))
             return
 
         api_file_path = get_api_file_path(path)

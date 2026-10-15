@@ -1,5 +1,12 @@
 # 변경 기록
 
+## 2026-10-15 · 스킬·시너지 개별 그림 관리
+
+- 각 추가/수정 창에 선택 미리보기·이미지 보관함·파일 추가·선택 해제를 제공했습니다. 스킬/시너지 보관함을 분리하고 공통 아이콘 매핑을 변경하지 않았습니다.
+- 선택적 icon 경로를 저장하고 스킬 정규화에서 보존합니다. 관리 표와 팀 활성 시너지 이름 옆에 그림을 표시합니다. 기존 사용자 JSON 일괄 변경과 전투 계산 변경은 없습니다.
+- 서버의 기존 이미지 업로드를 재사용하고 skills/synergies 허용 폴더 목록 API를 추가했습니다. 파일은 업로드 즉시 보관하며 항목 연결은 저장 시 반영합니다. 서버 재시작이 필요합니다.
+- JS/Python 문법·DOM·저장 경로를 정적으로 확인했습니다. 최신 작업 규칙에 따라 자동 테스트/실제 브라우저 검증은 수행하지 않았습니다. [상세](RECORD_IMAGES.md).
+
 ## 2026-10-14 · 팀 편성 UI 정리
 
 - 팀 선택을 상단에 배치하고 현재 팀/캐릭터 목록을 2열로 구성했습니다. viewport 가용 높이와 내부 스크롤을 사용하며 좁은 화면은 1열입니다.
@@ -300,3 +307,18 @@
 - GLB 파츠 모드가 선택되지 않은 머리·눈·코·입까지 숨기던 문제를 수정했다. 이제 실제 GLB가 선택된 카테고리만 JS 파츠를 대체한다.
 - 브라우저에서 `female_underwear_skinned_new.glb` 6 Mesh와 `male_underwear_skinned_new.glb` 2 Mesh가 각각 Base Skeleton 28 Bone을 참조하고 Running 애니메이션을 따라가는 것을 확인했다.
 - 구형 `female_underwear_preview.glb`는 로딩 중 `Invalid typed array length: 20` 오류가 발생해 재출력이 필요한 기존 자산으로 남겼다.
+
+## 2026-10-16 CharacterViewer 외부 GLB 장비
+
+- `head` 12개, `feet` 8개, `mainHand` 22개, `offHand` 16개를 슬롯 폴더에서 자동 발견하도록 추가했다.
+- 기존 Clothes 로더의 Base Skeleton 이름 재바인딩과 슬롯별 load token/dispose 흐름을 재사용하고 기존 JS 장비 및 외형 파츠와 상태·수명을 분리했다.
+- 브라우저에서 4슬롯 동시 장착, 남녀 Base 전환 복원, 50회 장착/해제 후 owner 수 안정, 3개 동시 요청의 마지막 선택 우선, 공유 Bone 연결을 확인했다.
+- `docs/GLB_EQUIPMENT_GUIDE.md`에 제작·등록 규격과 현재 한계를 기록했다.
+
+## 2026-10-16 GLB Character Assembler 전환
+
+- 메인 CharacterViewer를 `신체 | 3D Preview | 장비` 3열 GLB 조립 화면으로 교체하고 JS/GLB 소스 전환과 절차형 전용 컨트롤을 제거했다.
+- 기존 페이지와 JS 파츠는 `character-viewer-legacy.html`, `main-legacy.js`에 보존했다.
+- Clothes를 장비 영역으로 이동하고 Eyebrows, Body, Hands 빈 레지스트리를 추가했다. 새 GLB는 폴더 새로고침만으로 나타난다.
+- GLB 카탈로그만 사용하는 남녀 무작위 조합, 현재 WebGL Preview PNG, assetId 기반 로컬 저장·복원을 구현했다.
+- 여성 무작위 20회, 남성 전환·무작위, Scene owner 안정, 저장/복원 일치, 실제 AnimationClip, 1920·1280·640 레이아웃과 Legacy 페이지를 브라우저에서 확인했다.
