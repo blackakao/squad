@@ -22,7 +22,7 @@ function renderPassiveTriggerForm(skill = null) {
   select.value = trigger?.event ?? "";
   document.getElementById("skillPassiveChance").value = trigger?.chance ?? 100;
   document.getElementById("skillPassivePeriodic").checked = trigger?.includePeriodic ?? false;
-  updatePassiveSkillFields();
+  updateSkillTypeFields();
 }
 
 function updatePassiveSkillFields() {
@@ -30,6 +30,14 @@ function updatePassiveSkillFields() {
   document.getElementById("skillPassiveFields").classList.toggle("hidden",!passive);
   document.getElementById("skillCastTime").disabled = passive;
   document.getElementById("skillChannelFields").classList.toggle("hidden",passive);
+}
+
+function updateSkillTypeFields() {
+  updatePassiveSkillFields();
+  const choice = isChoiceSkill(document.getElementById("skillSlot").value);
+  document.getElementById("skillChoiceFields").classList.toggle("hidden", !choice);
+  document.getElementById("skillActions").closest("section").classList.toggle("hidden", choice);
+  document.getElementById("skillResourceCosts").closest("section").classList.toggle("hidden", choice);
 }
 
 function readPassiveTriggerForm() {
@@ -47,7 +55,7 @@ function handlePassiveBattleEvent(event, context) {
   if (!owner?.alive || owner.isEntityPreview) return;
   if (triggerType === "kill" && (!context.target || context.target.side === owner.side || event.reason !== "HP 소진")) return;
   const preferred = event.type === "damaged" ? context.source : context.target;
-  const skills = [...new Set(owner.skillIds ?? [])].map(getSkillById).filter(skill => skill?.slot === "passive" && isSkillExecutable(skill) && !isUnitSkillDisabled(owner,skill)).map(skill => getRuntimeItemSkill(owner,skill));
+  const skills = resolveSelectedSkillIds(owner.skillIds, owner.skillSelections).map(getSkillById).filter(skill => skill?.slot === "passive" && isSkillExecutable(skill) && !isUnitSkillDisabled(owner,skill)).map(skill => getRuntimeItemSkill(owner,skill));
   for (const skill of skills) {
     if (!owner.alive) break;
     const trigger = skill.passiveTrigger;

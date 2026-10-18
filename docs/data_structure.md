@@ -129,7 +129,8 @@
 - `name`, `description`
 - `className`: 스킬 소속 클래스 표시명. 기존 데이터는 `클래스 · 스킬명` 접두어를 임시 호환값으로 읽으며 기본 스킬은 `공용`이다.
 - `icon`: `assets/images/skills/` 아래의 선택적 개별 그림 경로
-- `slot`: `basic`, `active`, `passive`
+- `slot`: `basic`, `active`, `passive`, `choice_team`, `choice_prebattle`
+- `choice`: 선택 타입 전용 `{ defaultOptionId, options[] }`. 각 option은 `{ id, label, skillId }`이며 `skillId`로 기존 실행 스킬을 참조한다.
 - `cooldown`: 초 단위 쿨다운
 - `castTime`: 초 단위 시전 시간, 비어 있으면 유닛 기본 시전 속도 사용
 - `channel`: 채널링 설정
@@ -157,6 +158,8 @@
 ### Team
 
 파일: `data/teams.json`
+
+- `skillSelections`: `{ [characterId]: { [choiceSkillId]: optionId } }`. 팀편성 선택 스킬의 팀별 선택값이며, 값이 없거나 유효하지 않으면 스킬의 기본 선택지를 사용한다.
 
 - `name`
 - `memberIds`: `characters.json` 배열 인덱스 참조

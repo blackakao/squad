@@ -343,6 +343,15 @@ button.selected,
   padding: var(--page-padding-top) var(--page-padding-x) var(--page-padding-bottom);
 }
 
+.duel-character-buttons, #characters { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 0; }
+.duel-character-button { display: inline-flex; align-items: center; gap: 4px; width: auto; max-width: 100%; margin: 0; text-align: left; }
+.duel-character-button.selected { background: lightblue; }
+.duel-class-icon { display: inline-flex; flex: 0 0 20px; }
+.duel-class-icon .portrait-thumb, .duel-class-icon .skill-class-placeholder { width: 20px; height: 20px; flex: 0 0 20px; object-fit: cover; border-radius: 50%; }
+.duel-character-button .category-icon img { width: 20px; height: 20px; }
+.duel-character-button .category-icon { flex-shrink: 0; }
+.duel-character-name { min-width: 0; overflow-wrap: anywhere; }
+
 .record-image-name { display: inline-flex; align-items: center; gap: 8px; }
 .record-image-thumb { width: 36px; height: 36px; object-fit: contain; flex: 0 0 36px; }
 .record-image-editor { min-width: 0; border: 1px solid var(--bs-border-color); border-radius: 6px; padding: 12px; margin: 8px 0; }
@@ -1476,6 +1485,15 @@ button.selected,
   table-layout: fixed;
   font-size: var(--member-table-font-size);
 }
+
+.skill-choice-options { display: grid; gap: 8px; margin: 10px 0; }
+.skill-choice-option-row { display: grid; grid-template-columns: auto minmax(120px, .7fr) minmax(180px, 1fr) auto; gap: 8px; align-items: center; }
+.skill-choice-option-row label { display: flex; flex-direction: row; align-items: center; gap: 4px; white-space: nowrap; }
+.battle-skill-choice-list { display: grid; gap: 8px; margin-top: 10px; }
+.battle-skill-choice-row { display: grid; grid-template-columns: minmax(120px, 1fr) minmax(140px, 1fr); gap: 8px; align-items: center; }
+.team-skill-choices { display: grid; gap: 6px; flex: 1 1 260px; }
+.team-skill-choice { display: grid; grid-template-columns: minmax(100px, 1fr) minmax(120px, 1fr); gap: 8px; align-items: center; }
+@media (max-width: 720px) { .skill-choice-option-row, .battle-skill-choice-row { grid-template-columns: 1fr; } }
 
 .member-table th:nth-child(1), .member-table td:nth-child(1) { width: 34%; }
 .member-table th:nth-child(2), .member-table td:nth-child(2) { width: 24%; }

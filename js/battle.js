@@ -580,9 +580,16 @@ function prepareBattleSession({ openScreen = true } = {}) {
   enemySquad = enemySquad.filter(unit => !unit.isSummon);
   projectiles = [];
   rebuildPlayerSquadFromSelection();
+  if (battleMode === 'duel') {
+    enemySquad = createDuelSquad('enemy');
+    if (playerSquad.length !== 1 || enemySquad.length !== 1) {
+      alert('1:1 대결은 양쪽 캐릭터를 한 명씩 선택해주세요.');
+      return false;
+    }
+  }
   if (battleMode === "team" && selectedEnemyTeamIndex !== "") {
     const enemyTeam = teamsJson[Number(selectedEnemyTeamIndex)];
-    enemySquad = createSquadFromCharacterIds(getTeamCharacterIds(enemyTeam), "enemy", enemyTeam?.activeMemberCount);
+    enemySquad = createSquadFromCharacterIds(getTeamCharacterIds(enemyTeam), "enemy", enemyTeam?.activeMemberCount, enemyTeam?.skillSelections);
   }
 
   if (playerSquad.length < 1) {
@@ -1535,6 +1542,8 @@ function resetGame() {
   selectedBattleTeamIds.clear();
   selectedBattleCharacterIds.clear();
   selectedEnemyTeamIndex = "";
+  duelCharacterIds = {player:'',enemy:''};
+  duelSkillChoices = {player:{},enemy:{}};
   projectiles = [];
   battleStartedAt = null;
   battleStartedAtText = "";

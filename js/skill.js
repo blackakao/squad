@@ -22,7 +22,9 @@ const SUMMON_INHERIT_STATS = ["hp","mp","st","atk","magic","defense","resistance
 const SKILL_SLOT_OPTIONS = [
   { key: "basic", label: "베이직" },
   { key: "active", label: "액티브" },
-  { key: "passive", label: "패시브" }
+  { key: "passive", label: "패시브" },
+  { key: "choice_team", label: "팀편성 선택" },
+  { key: "choice_prebattle", label: "전투 직전 선택" }
 ];
 const ACTION_TYPE_LABELS = {
   deal_damage: "피해",
@@ -221,6 +223,43 @@ function getSkillSlotLabel(slot) {
   return SKILL_SLOT_OPTIONS.find(option => option.key === slot)?.label ?? slot;
 }
 
+function isChoiceSkill(skillOrSlot) {
+  const slot = typeof skillOrSlot === "string" ? skillOrSlot : skillOrSlot?.slot;
+  return slot === "choice_team" || slot === "choice_prebattle";
+}
+
+function normalizeSkillChoice(choice = {}) {
+  const options = (Array.isArray(choice.options) ? choice.options : []).map((option, index) => ({
+    id: String(option?.id ?? `option_${index + 1}`),
+    label: String(option?.label ?? "").trim(),
+    skillId: String(option?.skillId ?? "").trim()
+  })).filter(option => option.label && option.skillId);
+  const requested = String(choice.defaultOptionId ?? "");
+  return { defaultOptionId: options.some(option => option.id === requested) ? requested : (options[0]?.id ?? ""), options };
+}
+
+function getChoiceSkillOption(skill, optionId = "") {
+  const choice = normalizeSkillChoice(skill?.choice);
+  return choice.options.find(option => option.id === optionId)
+    ?? choice.options.find(option => option.id === choice.defaultOptionId)
+    ?? choice.options[0] ?? null;
+}
+
+function resolveSelectedSkillIds(skillIds, selections = {}) {
+  const resolved = [];
+  const visit = (skillId, seen = new Set()) => {
+    if (!skillId || seen.has(skillId)) return;
+    const skill = getSkillById(skillId);
+    if (!skill) return;
+    if (!isChoiceSkill(skill)) { resolved.push(skillId); return; }
+    const nextSeen = new Set(seen); nextSeen.add(skillId);
+    const option = getChoiceSkillOption(skill, selections?.[skillId]);
+    if (option) visit(option.skillId, nextSeen);
+  };
+  (Array.isArray(skillIds) ? skillIds : []).forEach(id => visit(String(id)));
+  return [...new Set(resolved)];
+}
+
 function getActionTargetsForType(type) {
   if (type === "command_summon") return ["summon"];
   if (["transform","deploy_reserve"].includes(type)) return ["self"];
@@ -252,6 +291,7 @@ function getUnsupportedActionNames(skill) {
 }
 
 function isSkillExecutable(skill) {
+  if (isChoiceSkill(skill)) return Boolean(getChoiceSkillOption(skill));
   return Boolean(skill?.actions?.length) && skill.actions.every(isSkillActionSupported)
     && (skill.slot !== "passive" || isPassiveTriggerConfigured(skill)) && isSkillChannelConfigured(skill);
 }
@@ -594,8 +634,9 @@ function normalizeSkillJson(skills) {
       castTime: normalizeSkillCastTime(skill?.castTime),
       channel:normalizeSkillChannel(skill?.channel),
       ...(skill?.slot === "passive" || skill?.passiveTrigger ? {passiveTrigger:normalizePassiveTrigger(skill?.passiveTrigger)} : {}),
+      ...(isChoiceSkill(skill?.slot) ? {choice:normalizeSkillChoice(skill?.choice)} : {}),
       resourceCosts: normalizeSkillResourceCosts(skill),
-      actions: Array.isArray(skill?.actions) && skill.actions.length ? skill.actions.map(normalizeSkillAction) : [createDefaultAction()]
+      actions: isChoiceSkill(skill?.slot) ? [] : (Array.isArray(skill?.actions) && skill.actions.length ? skill.actions.map(normalizeSkillAction) : [createDefaultAction()])
     }))
     .filter(skill => skill.id && skill.name);
 
@@ -733,7 +774,7 @@ function getUnitIncomingRulePercent(unit,key) {
 function getEquippedSkills(unit) {
   const transform=(unit?.activeEffects ?? []).find(effect=>effect.kind === "transform");
   const equippedIds=transform?.skillIds?.length ? transform.skillIds : unit?.skillIds;
-  const equipped = (Array.isArray(equippedIds) ? equippedIds : [])
+  const equipped = resolveSelectedSkillIds(equippedIds, unit?.skillSelections)
     .map(getSkillById)
     .filter(skill => skill && !isDefaultSkill(skill.id) && skill.slot !== "passive" && isSkillExecutable(skill) && !isUnitSkillDisabled(unit,skill));
   const copied = (Array.isArray(unit?.runtimeCopiedSkills) ? unit.runtimeCopiedSkills : [])
@@ -1017,6 +1058,10 @@ function formatActionSummary(action) {
 }
 
 function getSkillDescription(skill) {
+  if (isChoiceSkill(skill)) {
+    const labels = normalizeSkillChoice(skill.choice).options.map(option => option.label);
+    return String(skill.description ?? "").trim() || `${getSkillSlotLabel(skill.slot)}: ${labels.join(", ")}`;
+  }
   if (String(skill.description ?? "").trim()) return skill.description;
   return skill.actions.map(action => {
     const target = ACTION_TARGET_LABELS[action.target] ?? "대상";
@@ -1056,6 +1101,11 @@ function renderSkillClassIdentity(skill) {
 }
 
 function formatSkillValueSummary(skill) {
+  if (isChoiceSkill(skill)) {
+    const choice = normalizeSkillChoice(skill.choice);
+    const selected = getChoiceSkillOption(skill);
+    return `<span class="skill-value-summary"><span><strong>선택지</strong> ${choice.options.length}개</span><span><strong>기본</strong> ${escapeHtml(selected?.label ?? "미설정")}</span></span>`;
+  }
   const costs = formatResourceCostsSummary(skill.resourceCosts ?? normalizeSkillResourceCosts(skill)) || "소모 없음";
   const coefficients = (skill.actions ?? []).flatMap(action => action.coefficients ?? []).map(formatCoefficientSummary);
   const coefficientText = coefficients.length ? [...new Set(coefficients)].slice(0, 3).join(" + ") + (coefficients.length > 3 ? ` 외 ${coefficients.length - 3}개` : "") : "계수 없음";
@@ -1125,6 +1175,7 @@ function openSkillModal(index = "") {
   skillCooldownEl.value = skill?.cooldown ?? 0;
   skillCastTimeEl.value = skill?.castTime ?? "";
   renderPassiveTriggerForm(skill);
+  renderSkillChoiceOptions(skill?.choice);
   renderSkillChannelForm(skill);
   const channelDisclosure = document.getElementById("skillChannelDisclosure");
   if (channelDisclosure) channelDisclosure.open = Number(skill?.channel?.duration ?? 0) > 0;
@@ -1133,6 +1184,44 @@ function openSkillModal(index = "") {
   skillDeleteButtonEl?.classList.toggle("hidden", !skill || isDefaultSkill(skill.id));
   skillModalEl.classList.remove("hidden");
   skillFormInitialState = captureSkillFormState();
+}
+
+function getChoiceTargetSkillOptions(selected = "") {
+  const editingId = skillEditIndexEl.value !== "" ? skillsJson[Number(skillEditIndexEl.value)]?.id : "";
+  return skillsJson.filter(skill => skill.id !== editingId && !isChoiceSkill(skill) && isSkillExecutable(skill))
+    .map(skill => `<option value="${escapeHtml(skill.id)}" ${skill.id === selected ? "selected" : ""}>${escapeHtml(skill.name)} (${escapeHtml(getSkillSlotLabel(skill.slot))})</option>`).join("");
+}
+
+function renderSkillChoiceOptions(choice = {}) {
+  const normalized = normalizeSkillChoice(choice);
+  const rows = normalized.options.length ? normalized.options : [{id:"option_1",label:"선택지 1",skillId:""}];
+  document.getElementById("skillChoiceOptions").innerHTML = rows.map((option, index) => `
+    <div class="skill-choice-option-row">
+      <label><input type="radio" name="skillChoiceDefault" value="${escapeHtml(option.id)}" ${option.id === normalized.defaultOptionId || (!normalized.defaultOptionId && index === 0) ? "checked" : ""}> 기본</label>
+      <input class="skill-choice-label" value="${escapeHtml(option.label)}" placeholder="선택지 이름">
+      <select class="skill-choice-skill"><option value="">적용 스킬 선택</option>${getChoiceTargetSkillOptions(option.skillId)}</select>
+      <button type="button" onclick="this.closest('.skill-choice-option-row').remove()">삭제</button>
+      <input class="skill-choice-id" type="hidden" value="${escapeHtml(option.id)}">
+    </div>`).join("");
+  updateSkillTypeFields();
+}
+
+function addSkillChoiceOptionRow() {
+  const current = readSkillChoiceForm(false);
+  current.options.push({id:`option_${Date.now()}`,label:`선택지 ${current.options.length + 1}`,skillId:""});
+  renderSkillChoiceOptions(current);
+}
+
+function readSkillChoiceForm(strict = true) {
+  const rows = [...document.querySelectorAll("#skillChoiceOptions .skill-choice-option-row")];
+  const options = rows.map((row, index) => ({
+    id: row.querySelector(".skill-choice-id").value || `option_${index + 1}`,
+    label: row.querySelector(".skill-choice-label").value.trim(),
+    skillId: row.querySelector(".skill-choice-skill").value
+  }));
+  if (strict && options.some(option => !option.label || !option.skillId)) throw new Error("모든 선택지의 이름과 적용 스킬을 선택하세요.");
+  const checked = document.querySelector('input[name="skillChoiceDefault"]:checked')?.value;
+  return normalizeSkillChoice({defaultOptionId:checked,options});
 }
 
 async function closeSkillModal(force = false) {
@@ -1640,7 +1729,8 @@ async function saveSkillFromForm(event) {
   try {
     editIndex = skillEditIndexEl.value;
     const previous = editIndex !== "" ? skillsJson[Number(editIndex)] : null;
-    const actions = readSkillActionsFromForm();
+    const choiceType = isChoiceSkill(skillSlotEl.value);
+    const actions = choiceType ? [] : readSkillActionsFromForm();
     const resourceCosts = readSkillResourceCostsFromForm();
     skill = {
       id: previous?.id ?? `skill_${Date.now()}`,
@@ -1653,6 +1743,7 @@ async function saveSkillFromForm(event) {
       castTime: normalizeSkillCastTime(skillCastTimeEl.value),
       channel:readSkillChannelForm(),
       ...(skillSlotEl.value === "passive" ? {passiveTrigger:readPassiveTriggerForm()} : {}),
+      ...(choiceType ? {choice:readSkillChoiceForm()} : {}),
       resourceCosts,
       actions
     };
@@ -1672,7 +1763,7 @@ async function saveSkillFromForm(event) {
     return;
   }
 
-  if (!skill.name || !skill.actions.length) {
+  if (!skill.name || (!isChoiceSkill(skill) && !skill.actions.length)) {
     logError("skill", "스킬 저장 검증에 실패했습니다.", JSON.stringify({
       hasName: Boolean(skill.name),
       actionCount: skill.actions.length
@@ -1737,6 +1828,12 @@ async function deleteSkillFromModal() {
   const index = Number(skillEditIndexEl.value);
   const skill = skillsJson[index];
   if (!skill || isDefaultSkill(skill.id)) return;
+  const choiceUsers = skillsJson.filter(candidate => isChoiceSkill(candidate)
+    && normalizeSkillChoice(candidate.choice).options.some(option => option.skillId === skill.id));
+  if (choiceUsers.length) {
+    alert(`이 스킬은 선택 스킬 ${choiceUsers.length}개에서 사용 중입니다.\n\n${choiceUsers.map(candidate => `- ${candidate.name}`).join("\n")}`);
+    return;
+  }
   if (!confirm(`'${skill.name}' 스킬을 삭제할까요?`)) return;
   const skillsBeforeDelete = skillsJson.slice();
   const itemSkillIdsBeforeDelete = itemsJson.map(item => item.attackSkillId);

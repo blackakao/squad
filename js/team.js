@@ -64,7 +64,7 @@ function getUnitTeamBattleRules(unit) {
 
 function snapshotActiveBattleSideRules() {
   const playerTeamIndexes = [...selectedBattleTeamIds];
-  const pureSingleTeam = playerTeamIndexes.length === 1 && selectedBattleCharacterIds.size === 0;
+  const pureSingleTeam = battleMode !== 'duel' && playerTeamIndexes.length === 1 && selectedBattleCharacterIds.size === 0;
   activeBattleSideBaseRules = {
     player: pureSingleTeam ? normalizeTeamBattleRules(teamsJson[playerTeamIndexes[0]]?.battleRules) : normalizeTeamBattleRules(),
     enemy: battleMode === "team" && selectedEnemyTeamIndex !== "" ? normalizeTeamBattleRules(teamsJson[Number(selectedEnemyTeamIndex)]?.battleRules) : normalizeTeamBattleRules()
@@ -89,6 +89,11 @@ function normalizeTeamJson(teams) {
         name: String(team.name ?? "").trim(),
         battleRules: normalizeTeamBattleRules(team.battleRules),
         synergyRules: normalizeTeamSynergyRules(team.synergyRules),
+        skillSelections: Object.fromEntries(Object.entries(team.skillSelections ?? {}).map(([characterId, selections]) => [characterId,
+          Object.fromEntries(Object.entries(selections ?? {}).filter(([skillId, optionId]) => {
+            const skill = getSkillById(skillId);
+            return skill?.slot === "choice_team" && normalizeSkillChoice(skill.choice).options.some(option => option.id === String(optionId));
+          }).map(([skillId, optionId]) => [String(skillId), String(optionId)]))])),
         memberIds: [...new Set(memberIds.map(id => Number(id)))]
           .filter(id => Number.isInteger(id) && characterJson[id])
           .slice(0, MAX_PLAYER_SQUAD),
@@ -120,7 +125,13 @@ function syncTeamsAfterCharacterDeletion(deletedIndexes) {
       .filter(id => Number.isInteger(id))
       .filter(id => !deletedSet.has(id))
       .map(id => id - deletedIndexes.filter(deletedIndex => deletedIndex < id).length)
-      .filter(id => characterJson[id])
+      .filter(id => characterJson[id]),
+    skillSelections: Object.fromEntries(Object.entries(team.skillSelections ?? {}).flatMap(([rawId, selections]) => {
+      const id = Number(rawId);
+      if (!Number.isInteger(id) || deletedSet.has(id)) return [];
+      const shifted = id - deletedIndexes.filter(deletedIndex => deletedIndex < id).length;
+      return characterJson[shifted] ? [[shifted, selections]] : [];
+    }))
   }));
 
   selectedTeamMemberIds = selectedTeamMemberIds
@@ -174,6 +185,7 @@ function renderTeamEditor() {
   document.getElementById('teamCharacterCount').textContent = `${characterJson.length}명`;
   teamMemberListEl.innerHTML = selectedIds.size ? [...selectedIds].map(id=>`
     <div class="team-member-row" data-character-id="${id}">${renderTeamCharacterIdentity(characterJson[id])}
+      ${renderTeamSkillChoices(id, team)}
       <button type="button" onclick="removeCharacterFromSelectedTeam(${id})" aria-label="${escapeHtml(characterJson[id].name)} 편성 제외">제외</button>
     </div>`).join('') : `<p class="empty-text">${team ? '팀원이 없습니다. 캐릭터를 여기에 놓아주세요.' : '상단에서 팀을 선택하거나 추가해주세요.'}</p>`;
   teamCharacterListEl.innerHTML = characterJson.map((character,id)=>`
@@ -186,6 +198,33 @@ function renderTeamEditor() {
   teamCharacterListEl.scrollTop = scrollTop;
   if (typeof renderTeamSynergyPreview === 'function') renderTeamSynergyPreview();
   requestAnimationFrame(updateTeamWorkspaceHeight);
+}
+
+function getCharacterChoiceSkills(characterId, slot) {
+  return (characterJson[characterId]?.skillIds ?? []).map(getSkillById).filter(skill => skill?.slot === slot && isSkillExecutable(skill));
+}
+
+function renderChoiceSelect(skill, selectedOptionId, onchange) {
+  const choice = normalizeSkillChoice(skill.choice);
+  const selected = getChoiceSkillOption(skill, selectedOptionId)?.id;
+  return `<label class="team-skill-choice"><span>${escapeHtml(skill.name)}</span><select onchange="${onchange}">${choice.options.map(option =>
+    `<option value="${escapeHtml(option.id)}" ${option.id === selected ? "selected" : ""}>${escapeHtml(option.label)}</option>`).join("")}</select></label>`;
+}
+
+function renderTeamSkillChoices(characterId, team) {
+  const skills = getCharacterChoiceSkills(characterId, "choice_team");
+  if (!skills.length) return "";
+  return `<div class="team-skill-choices">${skills.map(skill => renderChoiceSelect(skill, team?.skillSelections?.[characterId]?.[skill.id],
+    `setTeamSkillChoice(${characterId},'${escapeHtml(skill.id)}',this.value)`)).join("")}</div>`;
+}
+
+function setTeamSkillChoice(characterId, skillId, optionId) {
+  const team = getSelectedTeam();
+  if (!team) return;
+  team.skillSelections ??= {};
+  team.skillSelections[characterId] ??= {};
+  team.skillSelections[characterId][skillId] = optionId;
+  setTeamEditStatus("선택 스킬 설정이 변경되었습니다. 저장 버튼을 눌러주세요.");
 }
 
 function updateTeamWorkspaceHeight() {
@@ -375,12 +414,13 @@ async function saveSelectedTeam() {
   }
 }
 
-function createSquadFromCharacterIds(ids, side = "player", activeMemberCount = null) {
+function createSquadFromCharacterIds(ids, side = "player", activeMemberCount = null, skillSelections = {}) {
   const uniqueIds = [...new Set(ids)].filter(id => characterJson[id]).slice(0, MAX_PLAYER_SQUAD);
   const activeLimit = Math.max(1, Math.min(uniqueIds.length || 1, Math.floor(Number(activeMemberCount) || uniqueIds.length || 1)));
   const evaluation = typeof evaluateSynergies === "function" ? evaluateSynergies(uniqueIds.map(id => characterJson[id])) : null;
   return uniqueIds.map((id, index) => {
     const unit = createCharacter(characterJson[id], id, side, evaluation?.modifiers[index]);
+    unit.skillSelections = {...(skillSelections[id] ?? {})};
     unit.synergySources = evaluation?.sources[index] || [];
     unit.startsInReserve = index >= activeLimit;
     unit.squadActiveLimit = activeLimit;
@@ -390,6 +430,7 @@ function createSquadFromCharacterIds(ids, side = "player", activeMemberCount = n
 }
 
 function getSelectedBattleCharacterIds() {
+  if (battleMode === 'duel') return getDuelCharacterIds('player');
   const ids = [];
 
   selectedBattleTeamIds.forEach(teamIndex => {
@@ -401,9 +442,18 @@ function getSelectedBattleCharacterIds() {
 }
 
 function rebuildPlayerSquadFromSelection() {
+  if (battleMode === 'duel') {
+    playerSquad = createDuelSquad('player');
+    return;
+  }
   const teamIndexes = [...selectedBattleTeamIds];
   const pureTeam = teamIndexes.length === 1 && selectedBattleCharacterIds.size === 0 ? teamsJson[teamIndexes[0]] : null;
-  playerSquad = createSquadFromCharacterIds(getSelectedBattleCharacterIds(), "player", pureTeam?.activeMemberCount);
+  const selections = {};
+  getSelectedBattleCharacterIds().forEach(id => {
+    const teamSelections = teamIndexes.map(index => teamsJson[index]?.skillSelections?.[id]).find(Boolean) ?? {};
+    selections[id] = {...teamSelections, ...(selectedPreBattleSkillChoices[id] ?? {})};
+  });
+  playerSquad = createSquadFromCharacterIds(getSelectedBattleCharacterIds(), "player", pureTeam?.activeMemberCount, selections);
 }
 
 function renderBattleMemberList(title, members, emptyText = "선택 없음") {
@@ -460,6 +510,10 @@ function renderBattleSelectionSummary() {
   if (!battleSelectionSummaryEl) {
     return;
   }
+  if (battleMode === 'duel') {
+    battleSelectionSummaryEl.innerHTML = `<p>양쪽에서 한 명씩 선택해 1:1 대결을 시작하세요. 같은 캐릭터끼리도 대결할 수 있습니다.</p><div class="battle-selection-grid">${['player','enemy'].map(side => renderBattleMemberList(side === 'player' ? '아군 캐릭터' : '상대 캐릭터', getDuelCharacterIds(side).map(id=>characterJson[id]), '캐릭터를 선택해주세요.')).join('')}</div>${renderDuelSkillChoices()}`;
+    return;
+  }
 
   const selectedTeamNames = getSelectedBattleTeamNames();
   const playerMembers = getSelectedPlayerCharacters();
@@ -494,7 +548,26 @@ function renderBattleSelectionSummary() {
       ${renderBattleMemberList("아군 멤버", playerMembers, "아군 팀 또는 캐릭터를 선택해주세요.")}
       ${renderBattleMemberList(isTeamBattle ? "상대 팀 멤버" : "몬스터 멤버", enemyMembers, isTeamBattle ? "상대 팀을 선택해주세요." : "몬스터를 추가해주세요.")}
     </div>
+    ${renderPreBattleSkillChoices()}
   `;
+}
+
+function renderPreBattleSkillChoices() {
+  const rows = getSelectedBattleCharacterIds().flatMap(characterId => getCharacterChoiceSkills(characterId, "choice_prebattle").map(skill => ({characterId,skill})));
+  if (!rows.length) return "";
+  return `<section class="battle-selection-section"><div class="battle-selection-section-title">전투 직전 선택 스킬 <span>${rows.length}개</span></div>
+    <div class="battle-skill-choice-list">${rows.map(({characterId,skill}) => {
+      const choice = normalizeSkillChoice(skill.choice);
+      const selected = getChoiceSkillOption(skill, selectedPreBattleSkillChoices[characterId]?.[skill.id])?.id;
+      return `<label class="battle-skill-choice-row"><span>${escapeHtml(characterJson[characterId].name)} · ${escapeHtml(skill.name)}</span><select onchange="setPreBattleSkillChoice(${characterId},'${escapeHtml(skill.id)}',this.value)">${choice.options.map(option =>
+        `<option value="${escapeHtml(option.id)}" ${option.id === selected ? "selected" : ""}>${escapeHtml(option.label)}</option>`).join("")}</select></label>`;
+    }).join("")}</div></section>`;
+}
+
+function setPreBattleSkillChoice(characterId, skillId, optionId) {
+  selectedPreBattleSkillChoices[characterId] ??= {};
+  selectedPreBattleSkillChoices[characterId][skillId] = optionId;
+  rebuildPlayerSquadFromSelection();
 }
 
 function renderBattleTeamButtons() {
@@ -513,6 +586,7 @@ function renderBattleTeamButtons() {
 }
 
 function toggleBattleTeam(index) {
+  if (battleMode === 'duel') return;
   if (selectedBattleTeamIds.has(index)) {
     selectedBattleTeamIds.delete(index);
   } else {
@@ -540,9 +614,11 @@ function toggleBattleTeam(index) {
 }
 
 function changeBattleMode(mode) {
-  battleMode = mode === "team" ? "team" : "monster";
-  enemySquad = [];
+  if (isBattleRunning) { document.querySelectorAll('input[name="battleMode"]').forEach(el=>{el.checked=el.value===battleMode;}); return; }
+  battleMode = ['team','duel'].includes(mode) ? mode : 'monster';
+  enemySquad = battleMode === 'duel' ? createDuelSquad('enemy') : [];
   selectedEnemyTeamIndex = "";
+  rebuildPlayerSquadFromSelection();
   renderBattleEnemyControls();
   renderBattleSelectionSummary();
   updateStatusUI();
@@ -550,6 +626,17 @@ function changeBattleMode(mode) {
 
 function renderBattleEnemyControls() {
   if (!enemyButtonsEl) {
+    return;
+  }
+  const duel = battleMode === 'duel';
+  document.getElementById('battleGroupSelection')?.classList.toggle('hidden',duel);
+  document.getElementById('battleDuelPlayer')?.classList.toggle('hidden',!duel);
+  if (duel) {
+    document.getElementById('battleDuelPlayer').innerHTML = renderDuelPicker('player');
+    enemyControlTitleEl.innerText = '상대 캐릭터';
+    enemyStatusTitleEl.innerText = '상대 캐릭터 상태';
+    enemyButtonsEl.innerHTML = renderDuelPicker('enemy');
+    renderBattleSelectionSummary();
     return;
   }
 
@@ -575,9 +662,62 @@ function renderBattleEnemyControls() {
 }
 
 function selectEnemyTeam(index) {
+  if (battleMode !== 'team') return;
   selectedEnemyTeamIndex = index;
   enemySquad = createSquadFromCharacterIds(getTeamCharacterIds(teamsJson[index]), "enemy", teamsJson[index]?.activeMemberCount);
   renderBattleEnemyControls();
   renderBattleSelectionSummary();
   updateStatusUI();
+}
+
+function getDuelCharacterIds(side) {
+  const id = duelCharacterIds[side];
+  return Number.isInteger(id) && characterJson[id] ? [id] : [];
+}
+
+function createDuelSquad(side) {
+  const ids = getDuelCharacterIds(side);
+  return createSquadFromCharacterIds(ids,side,1,ids.length ? {[ids[0]]:duelSkillChoices[side]} : {});
+}
+
+function renderDuelPicker(side) {
+  const label = side === 'player' ? '아군 캐릭터' : '상대 캐릭터';
+  return `<div id="duel-${side}" class="duel-character-buttons" role="group" aria-label="${label} 선택">${characterJson.map((character,id)=>{
+    const selected = duelCharacterIds[side] === id;
+    return `<button type="button" class="duel-character-button ${selected ? 'selected' : ''}" data-character-id="${id}" aria-pressed="${selected}" onclick="selectDuelCharacter('${side}',${id})">${renderBattleCharacterButtonContent(character)}</button>`;
+  }).join('') || '<p class="empty-text">등록된 캐릭터가 없습니다.</p>'}</div>`;
+}
+
+function selectDuelCharacter(side,value) {
+  if (isBattleRunning || battleMode !== 'duel' || !['player','enemy'].includes(side)) return;
+  const id = value === '' ? '' : Number(value);
+  duelCharacterIds[side] = Number.isInteger(id) && characterJson[id] ? id : '';
+  document.querySelectorAll(`#duel-${side} [data-character-id]`).forEach(button => {
+    const selected = Number(button.dataset.characterId) === duelCharacterIds[side];
+    button.classList.toggle('selected', selected);
+    button.setAttribute('aria-pressed', String(selected));
+  });
+  duelSkillChoices[side] = {};
+  playerSquad = createDuelSquad('player');
+  enemySquad = createDuelSquad('enemy');
+  renderBattleSelectionSummary();
+  updateStatusUI();
+}
+
+function renderDuelSkillChoices() {
+  return ['player','enemy'].map(side=>getDuelCharacterIds(side).map(id=>{
+    const skills = ['choice_team','choice_prebattle'].flatMap(slot=>getCharacterChoiceSkills(id,slot));
+    if (!skills.length) return '';
+    return `<section class="battle-selection-section"><h5>${side==='player' ? '아군' : '상대'} 선택 스킬</h5>${skills.map(skill=>{
+      const selected=getChoiceSkillOption(skill,duelSkillChoices[side][skill.id])?.id;
+      return `<label class="battle-skill-choice-row">${escapeHtml(skill.name)}<select onchange="setDuelSkillChoice('${side}','${escapeHtml(skill.id)}',this.value)">${normalizeSkillChoice(skill.choice).options.map(option=>`<option value="${escapeHtml(option.id)}" ${selected===option.id?'selected':''}>${escapeHtml(option.label)}</option>`).join('')}</select></label>`;
+    }).join('')}</section>`;
+  }).join('')).join('');
+}
+
+function setDuelSkillChoice(side,skillId,optionId) {
+  if (isBattleRunning || !['player','enemy'].includes(side)) return;
+  duelSkillChoices[side][skillId]=optionId;
+  playerSquad=createDuelSquad('player');
+  enemySquad=createDuelSquad('enemy');
 }

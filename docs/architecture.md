@@ -1,5 +1,9 @@
 # 아키텍처
 
+## 캐릭터 1:1 전투
+
+[team.js](../js/team.js)는 duel 모드의 양측 단일 선택·별도 선택 스킬을 관리하며 기존 createSquadFromCharacterIds로 각각 한 명을 생성한다. [battle.js](../js/battle.js)는 시작 시 양측을 다시 구성하고 미선택을 차단한다. 팀 모드의 선택/배율은 적용하지 않으며 전투 루프·저장된 캐릭터·팀 스키마는 유지한다. 검증은 [duel.test.cjs](../tests/duel.test.cjs)에 있다.
+
 ## 스킬·시너지 그림 편집
 
 [record-images.js](../js/record-images.js)는 개별 그림 미리보기·보관함·업로드 UI를 공유한다. 스킬/시너지 편집기는 선택 경로만 각 레코드의 icon에 저장하고 [api.js](../js/api.js)의 업로드 함수를 재사용한다. [server.py](../server.py)는 허용된 skills/synergies 이미지 보관함의 읽기 전용 목록을 제공하며 공통 단어 아이콘 매핑과 분리한다. [상세](RECORD_IMAGES.md).
@@ -67,7 +71,7 @@
 - `js/equipment.js`: 아이템 데이터, 장비 착용, 장비 세트, 장비 능력치 합산을 담당합니다. 인벤토리 선택·검색·아이콘 드래그 미리보기·슬롯 강조는 UI 상태로만 유지하며 기존 판정/저장 함수를 호출합니다. `equipmentItemTableBody` ID는 호환을 유지하지만 현재는 표 본문이 아닌 그리드 컨테이너입니다. [장비 UI](EQUIPMENT_UI.md)를 참고하세요.
 - `js/category.js`: 무기/방어구 카테고리 관리와 카테고리 기반 무기 전투 속성을 담당합니다.
 - `js/stats.js`: 캐릭터 기본 스탯 배분과 파생 능력치 계산을 담당합니다.
-- `js/skill.js`: 스킬 데이터, 액션 편집, 스킬 정규화, 스킬 실행 대상/계수 계산을 담당합니다.
+- `js/skill.js`: 스킬 데이터, 액션·선택지 편집, 스킬 정규화, 선택 스킬 치환, 스킬 실행 대상/계수 계산을 담당합니다. 팀편성 선택값은 `team.js`가 저장하고 전투 직전 선택값은 전투 준비 상태에서 관리합니다.
 - `js/skill-effects.js`: 상태와 버프 계열의 지속 효과를 담당합니다.
 - `js/skill-passives.js`: 패시브 스킬 발동 조건과 트리거를 담당합니다.
 - `js/skill-channel.js`: 채널링 스킬의 지속 시전 처리를 담당합니다.

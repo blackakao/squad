@@ -9,7 +9,7 @@ async function saveMonsterJson() {
 }
 
 function refreshMonsterUI() {
-  if (battleMode === "team") {
+  if (battleMode !== "monster") {
     renderBattleEnemyControls();
   } else {
     renderEnemyButtons();
@@ -202,7 +202,7 @@ function createEnemy(monsterIndex) {
 }
 
 function selectEnemy(monsterIndex) {
-  if (battleMode === "team") {
+  if (battleMode !== "monster") {
     return;
   }
 

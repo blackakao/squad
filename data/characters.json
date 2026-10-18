@@ -623,7 +623,7 @@
       "skill_class_marine_bash",
       "skill_class_marine_boomerang"
     ],
-    "portrait": "",
+    "portrait": "assets/images/portraits/image-20261018142752687048.png",
     "attributes": {
       "str": 50,
       "vit": 50,
@@ -692,7 +692,7 @@
       "skill_class_medic_first_aid",
       "skill_class_medic_endurance"
     ],
-    "portrait": "",
+    "portrait": "assets/images/portraits/image-20261018142815345651.png",
     "attributes": {
       "str": 0,
       "vit": 50,
@@ -757,7 +757,7 @@
     "attackRange": 1,
     "role": "ranged",
     "skillIds": [],
-    "portrait": "",
+    "portrait": "assets/images/portraits/image-20261018142831313519.png",
     "attributes": {
       "str": 0,
       "vit": 0,
@@ -891,7 +891,7 @@
     "attackRange": 3,
     "role": "tank",
     "skillIds": [],
-    "portrait": "",
+    "portrait": "assets/images/portraits/image-20261018143144779692.png",
     "attributes": {
       "str": 50,
       "vit": 0,
@@ -958,7 +958,7 @@
     "skillIds": [
       "skill_class_sniper_shot"
     ],
-    "portrait": "",
+    "portrait": "assets/images/portraits/image-20261018144259496185.png",
     "attributes": {
       "str": 0,
       "vit": 50,
@@ -1088,7 +1088,7 @@
     "attackRange": 1,
     "role": "tank",
     "skillIds": [],
-    "portrait": "",
+    "portrait": "assets/images/portraits/image-20261018143037514085.png",
     "attributes": {
       "str": 50,
       "vit": 50,
@@ -1155,7 +1155,7 @@
     "skillIds": [
       "skill_class_guardian_whirl"
     ],
-    "portrait": "",
+    "portrait": "assets/images/portraits/image-20261018143206679619.png",
     "attributes": {
       "str": 0,
       "vit": 0,
@@ -1220,7 +1220,7 @@
     "attackRange": 1,
     "role": "melee",
     "skillIds": [],
-    "portrait": "",
+    "portrait": "assets/images/portraits/image-20261018143018253538.png",
     "attributes": {
       "str": 50,
       "vit": 0,
@@ -1350,7 +1350,7 @@
     "attackRange": 1,
     "role": "tank",
     "skillIds": [],
-    "portrait": "",
+    "portrait": "assets/images/portraits/image-20261018143216522505.png",
     "attributes": {
       "str": 50,
       "vit": 50,
@@ -1480,7 +1480,7 @@
     "attackRange": 1,
     "role": "melee",
     "skillIds": [],
-    "portrait": "",
+    "portrait": "assets/images/portraits/image-20261018143227844910.png",
     "attributes": {
       "str": 0,
       "vit": 0,
@@ -1677,7 +1677,7 @@
     "skillIds": [
       "skill_class_spirit_summon"
     ],
-    "portrait": "",
+    "portrait": "assets/images/portraits/image-20261018142930583045.png",
     "attributes": {
       "str": 0,
       "vit": 0,
@@ -1742,7 +1742,7 @@
     "attackRange": 1,
     "role": "melee",
     "skillIds": [],
-    "portrait": "",
+    "portrait": "assets/images/portraits/image-20261018144341983764.png",
     "attributes": {
       "str": 50,
       "vit": 0,
@@ -1810,7 +1810,7 @@
       "skill_class_serum_drain",
       "skill_class_serum_transfusion"
     ],
-    "portrait": "",
+    "portrait": "assets/images/portraits/image-20261018142952761675.png",
     "attributes": {
       "str": 0,
       "vit": 50,
@@ -2123,18 +2123,18 @@
   },
   {
     "name": "조련사",
-    "hp": 2000,
-    "mp": 150,
-    "st": 150,
+    "hp": 2418,
+    "mp": 165,
+    "st": 160,
     "bp": 0,
-    "atk": 20,
+    "atk": 171,
     "magic": 60,
     "speed": 2.2,
-    "attackSpeed": 1.5,
-    "castSpeed": 0,
-    "defense": 0,
-    "resistance": 5,
-    "attackRange": 1,
+    "attackSpeed": 2.5,
+    "castSpeed": 1.5,
+    "defense": 11.4,
+    "resistance": 10.7,
+    "attackRange": 6,
     "role": "melee",
     "skillIds": [
       "skill_class_tamer_beast"
@@ -2164,10 +2164,10 @@
       "revivePosition": "death"
     },
     "equipment": {
-      "mainWeapon": "",
-      "subWeapon": "",
-      "top": "",
-      "bottom": "",
+      "mainWeapon": "item_gen_20261010_06_01",
+      "subWeapon": "item_gen_20261010_06_01",
+      "top": "item_gen_20261010_12_01",
+      "bottom": "item_gen_20261010_12_08",
       "accessory": "",
       "special": ""
     },
@@ -2175,10 +2175,10 @@
       {
         "name": "세트 1",
         "equipment": {
-          "mainWeapon": "",
-          "subWeapon": "",
-          "top": "",
-          "bottom": "",
+          "mainWeapon": "item_gen_20261010_06_01",
+          "subWeapon": "item_gen_20261010_06_01",
+          "top": "item_gen_20261010_12_01",
+          "bottom": "item_gen_20261010_12_08",
           "accessory": "",
           "special": ""
         }
@@ -2339,7 +2339,7 @@
     "attackRange": 1,
     "role": "healer",
     "skillIds": [],
-    "portrait": "",
+    "portrait": "assets/images/portraits/image-20261018143242049865.png",
     "attributes": {
       "str": 0,
       "vit": 0,
@@ -2404,7 +2404,7 @@
     "attackRange": 1,
     "role": "melee",
     "skillIds": [],
-    "portrait": "",
+    "portrait": "assets/images/portraits/image-20261018142851901914.png",
     "attributes": {
       "str": 0,
       "vit": 0,
@@ -2471,7 +2471,7 @@
     "skillIds": [
       "skill_class_puppet_heal"
     ],
-    "portrait": "",
+    "portrait": "assets/images/portraits/image-20261018142844386332.png",
     "attributes": {
       "str": 0,
       "vit": 0,

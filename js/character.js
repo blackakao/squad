@@ -226,6 +226,8 @@ async function deleteCharacterFromModal() {
   playerSquad = [];
   enemySquad = [];
   selectedEnemyTeamIndex = "";
+  duelCharacterIds = {player:'',enemy:''};
+  duelSkillChoices = {player:{},enemy:{}};
   selectedBattleCharacterIds.clear();
   selectedBattleTeamIds.clear();
   if (typeof syncTeamsAfterCharacterDeletion === "function") {
@@ -337,6 +339,13 @@ function createCharacter(characterData, index, side = "player", synergyModifiers
   };
 }
 
+function renderBattleCharacterButtonContent(character) {
+  const portrait = normalizePortrait(character.portrait)
+    ? renderPortraitCell(character.portrait, character.name)
+    : `<span class="skill-class-placeholder">${escapeHtml(character.name?.slice(0,1) || '?')}</span>`;
+  return `<span class="duel-class-icon">${portrait}</span>${renderCategoryIcon('role',normalizeRole(character.role),getRoleLabel(character.role))}<span class="duel-character-name">${escapeHtml(character.name)}</span>`;
+}
+
 function initCharacters() {
   charactersEl.innerHTML = "";
   allCharacters = [];
@@ -346,7 +355,10 @@ function initCharacters() {
     const button = document.createElement("button");
 
     allCharacters.push(character);
-    button.innerText = character.name;
+    button.type = 'button';
+    button.className = 'duel-character-button';
+    button.innerHTML = renderBattleCharacterButtonContent(characterData);
+    button.setAttribute('aria-pressed', String(selectedBattleCharacterIds.has(character.id)));
     button.onclick = () => toggleSelect(character.id);
     button.style.background = selectedBattleCharacterIds.has(character.id) ? "lightblue" : "";
 
@@ -355,6 +367,7 @@ function initCharacters() {
 }
 
 function toggleSelect(characterId) {
+  if (battleMode === 'duel') { selectDuelCharacter('player',characterId); return; }
   if (selectedBattleCharacterIds.has(characterId)) {
     selectedBattleCharacterIds.delete(characterId);
   } else {
