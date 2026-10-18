@@ -74,7 +74,7 @@ function handlePassiveBattleEvent(event, context) {
     if (!owner.alive) continue;
     addBattleEventLog(owner,`${owner.name}: 패시브 ${skill.name} 발동 (${PASSIVE_TRIGGER_LABELS[triggerType]})`);
     showSkillBubble(owner,skill.name);
-    applySkill(owner,preferred,{...skill,triggered:true},createSkillExecutionContext(resourceSpent));
+    applySkill(owner,preferred,{...skill,triggered:true},createSkillExecutionContext(resourceSpent,event));
   }
 }
 

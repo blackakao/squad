@@ -131,12 +131,19 @@
 - `icon`: `assets/images/skills/` 아래의 선택적 개별 그림 경로
 - `slot`: `basic`, `active`, `passive`, `choice_team`, `choice_prebattle`
 - `choice`: 선택 타입 전용 `{ defaultOptionId, options[] }`. 각 option은 `{ id, label, skillId }`이며 `skillId`로 기존 실행 스킬을 참조한다.
+- 액션 대상 재적용 제한: `targetCooldown`은 초 단위이며 `targetCooldownScope`는 `caster`(기본, 시전자별) 또는 `global`(모든 시전자 공유)이다. `global`은 `targetCooldownEffectId`와 `targetCooldownEffectName`으로 대상 상태에 표시되는 제한 효과를 만든다.
+- 액션의 `allowSelfTarget`은 아군 대상에 시전자 자신을 포함할지 정한다. 생략 기본값은 `true`다.
+- 주기 효과의 `periodic.coefficient`는 고정값 또는 시전자 능력치 계수이며 적용 순간 기준값을 보관한다. `growthInterval`과 `growthValue`는 시간에 따른 계수 증가를 정의한다. `effect.stackMode: reject`는 같은 효과 ID가 있는 대상을 선택하지 않는다.
 - `cooldown`: 초 단위 쿨다운
 - `castTime`: 초 단위 시전 시간, 비어 있으면 유닛 기본 시전 속도 사용
-- `channel`: 채널링 설정
+- `castReceivedDamagePercent`: 시전 중 받는 피해 배율, 기본값 100
+- `channel`: 채널링 설정 `{ duration, interval, interruptOnDamage, lockTarget, receivedDamagePercent }`. 대상 고정과 채널 중 받는 피해 비율을 선택적으로 저장한다.
 - `passiveTrigger`: 패시브 발동 조건
+- 계산계수의 `field: triggerActualDamage`는 패시브를 발동시킨 실제 피해량을 참조한다. `field: customResourceCurrent`는 `resourceId`에 지정한 시전자 커스텀 자원의 현재값을 참조한다.
 - `resourceCosts`: HP/MP/ST/BP 또는 `custom:<id>` 비용
 - `actions`: 실행 액션 배열
+- 액션의 `rangeMultiplier`는 주무기 사거리 배율이며 `chainOrigin`은 추가 대상 거리 기준이다.
+- 변신의 `receivedDamagePercent`, `immobile`, `exitHpBelow`, `retreatHpBelow`는 모드형 형태의 피해·이동·자동 해제·후퇴 규칙이다.
 
 캐릭터의 `skillIds`는 스킬 ID만 참조한다. 관리 UI는 현재 별도 클래스 DB가 없으므로 캐릭터 `name`과 스킬 `className`이 같은 항목만 장착 후보로 표시한다.
 

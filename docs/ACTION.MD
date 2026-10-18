@@ -50,6 +50,8 @@
 
 - `rangeMode`: `mainWeapon` 또는 `custom`
 - `rangeValue`: `rangeMode`가 `custom`일 때 사용할 거리 수치
+- `rangeMultiplier`: `rangeMode`가 `mainWeapon`일 때 주무기 사거리에 곱할 백분율, 기본값 100
+- `chainOrigin`: `previous`는 직전 대상 기준, `primary`는 최초 주 대상 기준으로 추가 대상을 찾는다.
 
 ### 계수
 
@@ -64,10 +66,13 @@
 
 - 스탯: 힘, 체력, 민첩, 집중, 지능, 지혜
 - 자원: HP, MP, ST, BP
+- 대상 자원: 대상의 최대 HP
 - 공격력
 - 마력
 - 방어력
 - 저항력
+- 패시브 발동 이벤트의 실제 피해량
+- 지정 커스텀 자원의 현재값 (`resourceId`로 자원 ID 지정)
 
 계산계수의 값계산 방식은 다음과 같다.
 
@@ -105,6 +110,12 @@
 - `skill.resourceCosts[].resource`: 기본 자원 또는 `custom:<id>`
 - `skill.resourceCosts[].mode`: `fixed`, `maxPercent`, `currentPercent`
 - `skill.resourceCosts[].value`: 소모 수치 또는 비율
+
+### 대상별 재적용 제한
+
+액션은 같은 대상에게 다시 적용될 수 있는 간격을 `targetCooldown` 초로 제한할 수 있다. `targetCooldownScope`가 `caster`이면 기존처럼 같은 시전자·스킬·액션만 제한한다. `global`이면 `targetCooldownEffectId`가 대상에게 남아 있는 동안 모든 시전자의 같은 효과 ID 액션을 제한한다. 공유 제한은 `targetCooldownEffectName`과 남은 시간이 전투 상태에 표시되며 해제 또는 만료되면 다시 적용할 수 있다.
+
+`allowSelfTarget`이 `false`이면 아군 대상 풀에서 시전자 자신을 제외한다. 효과의 `stackMode`가 `reject`이면 같은 효과 ID가 이미 있는 유닛을 대상 선택 단계에서 제외하므로 자원과 시전을 소비하지 않는다.
 
 ### 회복대상값
 
@@ -182,9 +193,9 @@
 
 ### 버프 추가
 
-현재 `effect.id`, `name`, `stat`, `mode`(`flat`/`percent`), `value`, `stackMode`(`refresh`/`stack`), `maxStacks`를 사용한다. `duration`은 초 단위이며 0은 전투 종료까지다. 제거 액션은 `effect.id`로 일치하는 종류의 효과를 모든 시전자에 대해 해제한다. 효과 정의가 없는 과거 액션은 잠금 상태로 보존한다.
+현재 `effect.id`, `name`, `stat`, `mode`(`flat`/`percent`), `value`, `stackMode`(`refresh`/`stack`/`reject`), `maxStacks`를 사용한다. `duration`은 초 단위이며 0은 전투 종료까지다. `reject`는 시전자와 관계없이 같은 ID가 남아 있는 대상을 제외한다. 제거 액션은 `effect.id`로 일치하는 종류의 효과를 모든 시전자에 대해 해제한다. 효과 정의가 없는 과거 액션은 잠금 상태로 보존한다.
 
-상태·버프에는 선택적으로 `effect.periodic`을 추가해 주기 피해·회복을 실행한다. `type`, `interval`, `value`, `damageType`, `resource`를 편집하며, 버프의 `mode` 또는 상태의 `state`를 `periodic`으로 선택하면 능력치·행동 제한 없이 주기 효과만 실행한다.
+상태·버프에는 선택적으로 `effect.periodic`을 추가해 주기 피해·회복을 실행한다. `type`, `interval`, `coefficient`, `growthInterval`, `growthValue`, `damageType`, `resource`를 편집한다. 계산계수의 기준 능력치는 효과를 부여할 때 고정하고, 증가 간격마다 계수 입력값에 증가값을 더한다. 버프의 `mode` 또는 상태의 `state`를 `periodic`으로 선택하면 능력치·행동 제한 없이 주기 효과만 실행한다. 기존 `value`만 있는 데이터는 고정계수로 호환한다.
 
 - 코드: `add_buff`
 - 설명: 대상에게 지속 효과를 추가한다.
@@ -221,4 +232,4 @@
 앞으로 스킬 관리 UI에서 액션 입력 항목, 슬롯 종류, 액션 의미가 바뀌면 이 문서에도 같은 내용을 반영한다.
 ## 구현된 채널링 공통값
 
-Skill의 `channel: {duration: 0, interval: 1, interruptOnDamage: true}`로 설정한다. 유지시간 0은 단발 실행, 양수는 일반 시전 후 지정 간격마다 전체 액션 반복이다. 매 반복마다 독립 대상을 검증한다. 자원은 최초 한 번 소모하고 완료·중단 시 쿨타임을 적용한다. 패시브에는 적용하지 않는다. 상세 중단 규칙과 이벤트는 [스킬 엔진 안내](SKILL_ENGINE.md)를 참고한다.
+Skill의 `channel: {duration: 0, interval: 1, interruptOnDamage: true, lockTarget: false, receivedDamagePercent: 100}`로 설정한다. 유지시간 0은 단발 실행, 양수는 일반 시전 후 지정 간격마다 전체 액션 반복이다. `lockTarget`이 참이면 최초 대상을 유지하고 유효하지 않을 때 다른 대상으로 교체하지 않는다. `receivedDamagePercent`는 채널링 중 시전자가 받는 피해에만 곱하며 완료·중단 즉시 해제된다. 자원은 최초 한 번 소모하고 완료·중단 시 쿨타임을 적용한다. 패시브에는 적용하지 않는다. 상세 중단 규칙과 이벤트는 [스킬 엔진 안내](SKILL_ENGINE.md)를 참고한다.

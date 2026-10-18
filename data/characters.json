@@ -354,7 +354,10 @@
     "resistance": 3.8,
     "attackRange": 6,
     "role": "melee",
-    "skillIds": [],
+    "skillIds": [
+      "skill_class_archer_multishot",
+      "skill_class_archer_power_shot"
+    ],
     "portrait": "assets/images/portraits/character-006.png",
     "attributes": {
       "str": 50,
@@ -942,21 +945,22 @@
   },
   {
     "name": "저격수",
-    "hp": 4500,
+    "hp": 4838,
     "mp": 150,
-    "st": 100,
+    "st": 105,
     "bp": 0,
-    "atk": 20,
+    "atk": 171,
     "magic": 10,
-    "speed": 1.2,
-    "attackSpeed": 2,
-    "castSpeed": 0,
-    "defense": 10,
-    "resistance": 15,
-    "attackRange": 1,
+    "speed": 1.3,
+    "attackSpeed": 3,
+    "castSpeed": 1.5,
+    "defense": 17.5,
+    "resistance": 18.8,
+    "attackRange": 6,
     "role": "melee",
     "skillIds": [
-      "skill_class_sniper_shot"
+      "skill_class_sniper_shot",
+      "skill_class_sniper_mode"
     ],
     "portrait": "assets/images/portraits/image-20261018144259496185.png",
     "attributes": {
@@ -983,10 +987,10 @@
       "revivePosition": "death"
     },
     "equipment": {
-      "mainWeapon": "",
-      "subWeapon": "",
-      "top": "",
-      "bottom": "",
+      "mainWeapon": "item_1781162923001",
+      "subWeapon": "item_1781162923001",
+      "top": "item_gen_20261010_13_01",
+      "bottom": "item_gen_20261010_13_06",
       "accessory": "",
       "special": ""
     },
@@ -994,10 +998,10 @@
       {
         "name": "세트 1",
         "equipment": {
-          "mainWeapon": "",
-          "subWeapon": "",
-          "top": "",
-          "bottom": "",
+          "mainWeapon": "item_1781162923001",
+          "subWeapon": "item_1781162923001",
+          "top": "item_gen_20261010_13_01",
+          "bottom": "item_gen_20261010_13_06",
           "accessory": "",
           "special": ""
         }
@@ -1139,28 +1143,30 @@
   },
   {
     "name": "수호자",
-    "hp": 2000,
+    "hp": 4970,
     "mp": 100,
-    "st": 100,
+    "st": 105,
     "bp": 0,
-    "atk": 10,
+    "atk": 100,
     "magic": 10,
-    "speed": 1.2,
+    "speed": 1.3,
     "attackSpeed": 2,
-    "castSpeed": 0.5,
-    "defense": 0,
-    "resistance": 0,
-    "attackRange": 1,
+    "castSpeed": 0,
+    "defense": 40,
+    "resistance": 8.8,
+    "attackRange": 3,
     "role": "tank",
     "skillIds": [
-      "skill_class_guardian_whirl"
+      "skill_class_guardian_whirl",
+      "skill_class_guardian_effort_strike",
+      "skill_class_guardian_endurance"
     ],
     "portrait": "assets/images/portraits/image-20261018143206679619.png",
     "attributes": {
-      "str": 0,
-      "vit": 0,
+      "str": 50,
+      "vit": 50,
       "agi": 0,
-      "focus": 0,
+      "focus": 50,
       "int": 0,
       "wis": 0
     },
@@ -1180,10 +1186,10 @@
       "revivePosition": "death"
     },
     "equipment": {
-      "mainWeapon": "",
-      "subWeapon": "",
-      "top": "",
-      "bottom": "",
+      "mainWeapon": "item_1781164504281",
+      "subWeapon": "item_1781164461051",
+      "top": "item_gen_20261010_11_01",
+      "bottom": "item_gen_20261010_11_06",
       "accessory": "",
       "special": ""
     },
@@ -1191,10 +1197,10 @@
       {
         "name": "세트 1",
         "equipment": {
-          "mainWeapon": "",
-          "subWeapon": "",
-          "top": "",
-          "bottom": "",
+          "mainWeapon": "item_1781164504281",
+          "subWeapon": "item_1781164461051",
+          "top": "item_gen_20261010_11_01",
+          "bottom": "item_gen_20261010_11_06",
           "accessory": "",
           "special": ""
         }
@@ -1793,18 +1799,18 @@
   },
   {
     "name": "혈청형",
-    "hp": 4500,
-    "mp": 200,
-    "st": 100,
+    "hp": 4773,
+    "mp": 205,
+    "st": 105,
     "bp": 0,
     "atk": 10,
-    "magic": 60,
-    "speed": 1,
-    "attackSpeed": 2,
-    "castSpeed": 0.5,
-    "defense": 10,
-    "resistance": 20,
-    "attackRange": 1,
+    "magic": 560,
+    "speed": 1.1,
+    "attackSpeed": 1,
+    "castSpeed": 3,
+    "defense": 11.8,
+    "resistance": 30.9,
+    "attackRange": 4,
     "role": "healer",
     "skillIds": [
       "skill_class_serum_drain",
@@ -1835,10 +1841,10 @@
       "revivePosition": "death"
     },
     "equipment": {
-      "mainWeapon": "",
-      "subWeapon": "",
-      "top": "",
-      "bottom": "",
+      "mainWeapon": "item_1781186124129",
+      "subWeapon": "item_1781186124129",
+      "top": "item_gen_20261010_14_01",
+      "bottom": "item_gen_20261010_14_10",
       "accessory": "",
       "special": ""
     },
@@ -1846,10 +1852,10 @@
       {
         "name": "세트 1",
         "equipment": {
-          "mainWeapon": "",
-          "subWeapon": "",
-          "top": "",
-          "bottom": "",
+          "mainWeapon": "item_1781186124129",
+          "subWeapon": "item_1781186124129",
+          "top": "item_gen_20261010_14_01",
+          "bottom": "item_gen_20261010_14_10",
           "accessory": "",
           "special": ""
         }
@@ -1857,24 +1863,27 @@
     ],
     "activeEquipmentSet": 0,
     "faction": "돌연변이",
-    "attackType": "physical"
+    "attackType": "magic"
   },
   {
     "name": "질병형",
-    "hp": 2000,
+    "hp": 2282,
     "mp": 200,
-    "st": 100,
+    "st": 105,
     "bp": 0,
     "atk": 22,
-    "magic": 60,
-    "speed": 1,
-    "attackSpeed": 2,
-    "castSpeed": 0,
-    "defense": 0,
-    "resistance": 15,
-    "attackRange": 1,
+    "magic": 560,
+    "speed": 1.1,
+    "attackSpeed": 1,
+    "castSpeed": 2.5,
+    "defense": 1.9,
+    "resistance": 26.3,
+    "attackRange": 4,
     "role": "ranged",
-    "skillIds": [],
+    "skillIds": [
+      "skill_class_disease_virus",
+      "skill_class_disease_open_wound"
+    ],
     "portrait": "",
     "attributes": {
       "str": 0,
@@ -1900,10 +1909,10 @@
       "revivePosition": "death"
     },
     "equipment": {
-      "mainWeapon": "",
-      "subWeapon": "",
-      "top": "",
-      "bottom": "",
+      "mainWeapon": "item_1781186124129",
+      "subWeapon": "item_1781186124129",
+      "top": "item_gen_20261010_14_01",
+      "bottom": "item_gen_20261010_14_06",
       "accessory": "",
       "special": ""
     },
@@ -1911,10 +1920,10 @@
       {
         "name": "세트 1",
         "equipment": {
-          "mainWeapon": "",
-          "subWeapon": "",
-          "top": "",
-          "bottom": "",
+          "mainWeapon": "item_1781186124129",
+          "subWeapon": "item_1781186124129",
+          "top": "item_gen_20261010_14_01",
+          "bottom": "item_gen_20261010_14_06",
           "accessory": "",
           "special": ""
         }
@@ -1922,7 +1931,7 @@
     ],
     "activeEquipmentSet": 0,
     "faction": "돌연변이",
-    "attackType": "physical"
+    "attackType": "magic"
   },
   {
     "name": "각질형",

@@ -41,8 +41,11 @@ function isEffectActionConfigured(action) {
 }
 
 function isPeriodicEffectConfigured(periodic) {
+  const coefficient=periodic.coefficient ?? {type:"fixed",value:periodic.value};
   return ["damage","heal"].includes(periodic.type) && Number.isFinite(Number(periodic.interval)) && Number(periodic.interval) > 0
-    && Number.isFinite(Number(periodic.value)) && Number(periodic.value) >= 0
+    && ["fixed","calculated"].includes(coefficient.type) && Number.isFinite(Number(coefficient.value)) && Number(coefficient.value) >= 0
+    && Number.isFinite(Number(periodic.growthInterval ?? 0)) && Number(periodic.growthInterval ?? 0) >= 0
+    && Number.isFinite(Number(periodic.growthValue ?? 0)) && Number(periodic.growthValue ?? 0) >= 0
     && (periodic.type === "damage" ? ["physical","magic","fixed"].includes(periodic.damageType) : Boolean(getResourceField(periodic.resource)));
 }
 
@@ -65,14 +68,17 @@ function normalizeSkillEffect(effect,type = "add_buff") {
     consumeOn:effect.mode === "damage_immunity" ? "damaged" : Object.hasOwn(EFFECT_CONSUME_LABELS,effect.consumeOn) ? effect.consumeOn : "hit",
     consumePeriodic:effect.consumePeriodic === true,
     maxStacks:Math.max(1, Math.min(20, Math.floor(Number(effect.maxStacks) || 1))),
-    stackMode:effect.stackMode === "stack" ? "stack" : "refresh",
+    stackMode:["refresh","stack","reject"].includes(effect.stackMode) ? effect.stackMode : "refresh",
     ...(effect.periodic ? {periodic:{type:effect.periodic.type,interval:Math.max(1/60,Number(effect.periodic.interval)),
-      value:Number(effect.periodic.value),damageType:effect.periodic.damageType ?? "magic",resource:normalizeResourceReference(effect.periodic.resource,"HP")}} : {})};
+      value:Number(effect.periodic.value),coefficient:normalizeCoefficient(effect.periodic.coefficient ?? {type:"fixed",value:effect.periodic.value}),
+      growthInterval:Math.max(0,Number(effect.periodic.growthInterval) || 0),growthValue:Math.max(0,Number(effect.periodic.growthValue) || 0),
+      damageType:effect.periodic.damageType ?? "magic",resource:normalizeResourceReference(effect.periodic.resource,"HP")}} : {})};
 }
 
 function renderTimedEffectFields(action) {
   const effect = action.effect ?? createDefaultSkillEffect(action.type);
-  const periodic = effect.periodic ?? {type:"", interval:1, value:10, damageType:"magic", resource:"HP"};
+  const periodic = effect.periodic ?? {type:"", interval:1, value:10, coefficient:{type:"fixed",value:10}, growthInterval:0, growthValue:0, damageType:"magic", resource:"HP"};
+  const periodicCoefficient=normalizeCoefficient(periodic.coefficient ?? {type:"fixed",value:periodic.value});
   const options = (labels, selected) => Object.entries(labels).map(([key,label]) => `<option value="${key}" ${key === selected ? "selected" : ""}>${label}</option>`).join("");
   return `<div data-action-field="timedEffect">
     <label>효과 ID<input class="skill-effect-id" value="${escapeHtml(effect.id)}"></label>
@@ -89,7 +95,7 @@ function renderTimedEffectFields(action) {
       <label><input class="skill-effect-dispellable" type="checkbox" ${effect.dispellable !== false ? "checked" : ""}>해제 가능</label>
       <label>효과 이름<input class="skill-effect-name" value="${escapeHtml(effect.name)}"></label>
       <label>지속시간 (초, 0: 전투 종료까지)<input class="skill-effect-duration" type="number" min="0" step="0.1" value="${action.duration ?? 5}"></label>
-      <label>재적용 방식<select class="skill-effect-stack-mode"><option value="refresh" ${effect.stackMode === "refresh" ? "selected" : ""}>시간 갱신</option><option value="stack" ${effect.stackMode === "stack" ? "selected" : ""}>중첩 증가 + 시간 갱신</option></select></label>
+      <label>재적용 방식<select class="skill-effect-stack-mode"><option value="refresh" ${effect.stackMode === "refresh" ? "selected" : ""}>시간 갱신</option><option value="stack" ${effect.stackMode === "stack" ? "selected" : ""}>중첩 증가 + 시간 갱신</option><option value="reject" ${effect.stackMode === "reject" ? "selected" : ""}>효과가 있으면 대상 선택 제외</option></select></label>
       <label>최대 중첩<input class="skill-effect-max-stacks" type="number" min="1" max="20" value="${effect.maxStacks}"></label>
       <label>사용 횟수 (0: 횟수 제한 없음)<input class="skill-effect-uses" type="number" min="0" max="100" step="1" value="${effect.uses ?? 0}"></label>
       <label>횟수 소모 조건<select class="skill-effect-consume-on">${options(EFFECT_CONSUME_LABELS,effect.consumeOn ?? "hit")}</select></label>
@@ -131,7 +137,12 @@ function renderTimedEffectFields(action) {
       <div>
         <label>주기 효과<select class="skill-effect-periodic-type">${options({"":"없음",damage:"주기 피해",heal:"주기 회복"},periodic.type)}</select></label>
         <label>적용 간격 (초)<input class="skill-effect-periodic-interval" type="number" min="${1/60}" step="any" value="${periodic.interval}"></label>
-        <label>중첩당 회당 수치<input class="skill-effect-periodic-value" type="number" min="0" step="0.1" value="${periodic.value}"></label>
+        <label>회당 계산 기준<select class="skill-effect-periodic-coefficient-type"><option value="fixed" ${periodicCoefficient.type === "fixed" ? "selected" : ""}>고정값</option><option value="calculated" ${periodicCoefficient.type === "calculated" ? "selected" : ""}>능력치 계수</option></select></label>
+        <label>기준 능력치<select class="skill-effect-periodic-coefficient-field">${COEFFICIENT_FIELDS.map(field=>`<option value="${field}" ${periodicCoefficient.field === field ? "selected" : ""}>${COEFFICIENT_FIELD_LABELS[field] ?? field}</option>`).join("")}</select></label>
+        <label>계산 방식<select class="skill-effect-periodic-coefficient-calc"><option value="percent" ${periodicCoefficient.calc === "percent" ? "selected" : ""}>퍼센트</option><option value="flat" ${periodicCoefficient.calc === "flat" ? "selected" : ""}>고정 가산</option></select></label>
+        <label>중첩당 회당 값<input class="skill-effect-periodic-value" type="number" min="0" step="0.1" value="${periodicCoefficient.value}"></label>
+        <label>증가 간격 (초, 0: 증가 없음)<input class="skill-effect-periodic-growth-interval" type="number" min="0" step="0.1" value="${periodic.growthInterval ?? 0}"></label>
+        <label>간격당 값 증가<input class="skill-effect-periodic-growth-value" type="number" min="0" step="0.1" value="${periodic.growthValue ?? 0}"></label>
         <label>피해 타입<select class="skill-effect-periodic-damage">${options({physical:"물리",magic:"마법",fixed:"고정"},periodic.damageType)}</select></label>
         <label>회복 자원<select class="skill-effect-periodic-resource">${renderResourceOptions(periodic.resource)}</select></label>
         <small>첫 적용은 한 간격 뒤입니다. 갱신해도 다음 적용까지의 시간은 유지하며, 중첩 수만큼 회당 수치가 증가합니다. 능력치·행동 제한 없이 쓰려면 위에서 ‘주기 효과만 적용’을 선택하세요.</small>
@@ -148,7 +159,9 @@ function readSkillEffectFromRow(row) {
     ...(value("immunity-scope") && (row.querySelector('.skill-action-type')?.value === "add_buff" || row.querySelector('.skill-action-field-effect')?.value === "add_buff") ? {immunity:{scope:value("immunity-scope"),category:value("immunity-category"),state:value("immunity-state")}} : {}),
     value:Number(value("value")),nextCastTimePercent:Number(value("next-cast-time-percent")),nextResourceCostPercent:Number(value("next-resource-cost-percent")),nextCooldownPercent:Number(value("next-cooldown-percent")),reflectPercent:Number(value("reflect-percent")),reflectScope:value("reflect-scope"),reflectDamageType:value("reflect-damage-type"),proxyPercent:Number(value("proxy-percent")),proxyPriority:Number(value("proxy-priority")),proxyScope:value("proxy-scope"),maxStacks:Number(value("max-stacks")),stackMode:value("stack-mode"),
     uses:Number(value("uses")),consumeOn:value("consume-on"),consumePeriodic:row.querySelector('.skill-effect-consume-periodic')?.checked ?? false,
-    ...(value("periodic-type") ? {periodic:{type:value("periodic-type"),interval:Number(value("periodic-interval")),value:Number(value("periodic-value")),damageType:value("periodic-damage"),resource:value("periodic-resource")}} : {})};
+    ...(value("periodic-type") ? {periodic:{type:value("periodic-type"),interval:Number(value("periodic-interval")),value:Number(value("periodic-value")),
+      coefficient:{type:value("periodic-coefficient-type"),field:value("periodic-coefficient-field"),calc:value("periodic-coefficient-calc"),value:Number(value("periodic-value"))},
+      growthInterval:Number(value("periodic-growth-interval")),growthValue:Number(value("periodic-growth-value")),damageType:value("periodic-damage"),resource:value("periodic-resource")}} : {})};
 }
 
 function updateSkillEffectModeVisibility(select) {
@@ -293,10 +306,14 @@ function applyTimedEffectAction(source,target,action,skill) {
     addBattleEventLog(source,`${source.name} → ${target.name}: ${config.name} 부여 차단 (면역)`);
     return;
   }
+  const existingAny = target.activeEffects.find(effect => effect.kind === kind && effect.id === config.id);
+  if (config.stackMode === "reject" && existingAny) return;
   const existing = target.activeEffects.find(effect => effect.kind === kind && effect.id === config.id && effect.casterId === source.effectCasterId);
   const stacks = config.stackMode === "stack" ? Math.min(config.maxStacks,(existing?.stacks ?? 0)+1) : 1;
   const sourceBase=(target.effectBaseStats?.[config.sourceStat]?.value ?? Number(target[config.sourceStat])) || 0;
-  const instance = {...config,periodic:config.periodic,immunity:config.immunity,kind,stacks,casterId:source.effectCasterId,casterName:source.name,
+  const periodicCoefficient=config.periodic?.coefficient;
+  const periodicSourceBase=periodicCoefficient?.type === "calculated" ? getCoefficientBaseValue(periodicCoefficient,source,target) : 0;
+  const instance = {...config,periodic:config.periodic,periodicSourceBase,periodicElapsedTicks:0,immunity:config.immunity,kind,stacks,casterId:source.effectCasterId,casterName:source.name,
     ...(config.mode === "convert" ? {conversionBase:sourceBase} : {}),
     skillId:skill?.id,triggered:Boolean(skill?.triggered),remainingTicks:action.duration > 0 ? Math.max(1,Math.ceil(action.duration * BASE_ATTACK_COOLDOWN)) : null,
     usesRemaining:config.mode === "next_skill_modifier" ? 1 : config.uses > 0 ? config.uses : null,
@@ -312,7 +329,13 @@ function applyPeriodicEffect(target,effect) {
   const source = [...playerSquad,...enemySquad].find(unit => unit.effectCasterId === effect.casterId);
   if (!source || !target.alive) return;
   const periodic = effect.periodic;
-  const action = {coefficients:[{type:"fixed",value:periodic.value * effect.stacks}],damageType:periodic.damageType,healResource:periodic.resource,periodic:true};
+  const coefficient=periodic.coefficient ?? {type:"fixed",value:periodic.value};
+  const growthTicks=periodic.growthInterval > 0 ? periodic.growthInterval * BASE_ATTACK_COOLDOWN : 0;
+  const growthSteps=growthTicks > 0 ? Math.floor((effect.periodicElapsedTicks ?? 0)/growthTicks) : 0;
+  const inputValue=Number(coefficient.value) + growthSteps * (Number(periodic.growthValue) || 0);
+  const base=Number(effect.periodicSourceBase) || 0;
+  const amount=(coefficient.type === "fixed" ? inputValue : coefficient.calc === "percent" ? base*inputValue/100 : base+inputValue) * effect.stacks;
+  const action = {coefficients:[{type:"fixed",value:amount}],damageType:periodic.damageType,healResource:periodic.resource,periodic:true};
   const skill = {id:effect.skillId,name:`${effect.name} (주기)`,triggered:effect.triggered};
   if (periodic.type === "damage") applyActionDamage(source,target,action,skill);
   else applyActionHeal(source,target,action,skill);
@@ -325,7 +348,8 @@ function applyTransformation(source,target,action,skill) {
   target.activeEffects=(target.activeEffects ?? []).filter(effect=>effect.kind !== "transform");
   recalculateBattleBuffs(target);
   const instance={kind:"transform",id:transform.id,name:transform.name,mode:transform.mode,modifiers:transform.modifiers,
-    skillIds:transform.skillIds,attackSkillId:transform.attackSkillId,stacks:1,
+    skillIds:transform.skillIds,attackSkillId:transform.attackSkillId,receivedDamagePercent:transform.receivedDamagePercent,
+    immobile:transform.immobile,exitHpBelow:transform.exitHpBelow,retreatHpBelow:transform.retreatHpBelow,stacks:1,
     remainingTicks:action.duration>0 ? Math.max(1,Math.ceil(action.duration*BASE_ATTACK_COOLDOWN)) : null,usesRemaining:null,skillId:skill?.id};
   target.activeEffects.push(instance);
   recalculateBattleBuffs(target);
@@ -340,6 +364,13 @@ function updateBattleEffects() {
     const previousLength = unit.activeEffects.length;
     unit.activeEffects = unit.activeEffects.filter(effect => {
       if (!unit.alive) return false;
+      if (effect.kind === "transform" && effect.exitHpBelow > 0 && unit.maxHp > 0 && unit.hp / unit.maxHp * 100 <= effect.exitHpBelow) {
+        unit.retreatHpBelow=Math.max(Number(unit.retreatHpBelow) || 0,Number(effect.retreatHpBelow) || 0);
+        addBattleEventLog(unit,`${unit.name}: ${effect.name} 저체력 자동 해제`);
+        publishBattleEvents([{type:"transform_end",source:unit,target:unit,skill:{id:effect.skillId,name:effect.name},reason:"저체력 자동 해제"}]);
+        return false;
+      }
+      if (effect.periodic) effect.periodicElapsedTicks=(effect.periodicElapsedTicks ?? 0)+1;
       if (effect.periodic && --effect.nextPeriodicTick <= 0) {
         applyPeriodicEffect(unit,effect);
         effect.nextPeriodicTick = Math.max(1,Math.ceil(effect.periodic.interval * BASE_ATTACK_COOLDOWN));

@@ -14,7 +14,7 @@ const ACTION_MOVE_TYPES = ["Walk", "Dash", "Teleport", "Knockback", "Pull", "Pus
 const MOVE_ACTION_TYPES = ["Dash", "Teleport", "Knockback", "Pull", "Push"];
 const RANGE_MODES = ["mainWeapon", "custom"];
 const COEFFICIENT_TYPES = ["fixed", "calculated"];
-const COEFFICIENT_FIELDS = ["str", "vit", "agi", "focus", "int", "wis", "hp", "mp", "st", "bp", "atk", "magic", "defense", "resistance", "actualDamageTotal", "moveDistanceTotal", "targetEffectStacks", "targetEffectIdStacks", "ownedSummonCount", "previousActualDamage", "executionActualDamage", "previousActualHealing", "executionActualHealing", "previousResourceDrained", "executionResourceDrained", "resourceSpentTotal", "hpResourceSpent", "mpResourceSpent", "stResourceSpent", "bpResourceSpent"];
+const COEFFICIENT_FIELDS = ["str", "vit", "agi", "focus", "int", "wis", "hp", "targetMaxHp", "mp", "st", "bp", "atk", "magic", "defense", "resistance", "actualDamageTotal", "moveDistanceTotal", "targetEffectStacks", "targetEffectIdStacks", "ownedSummonCount", "triggerActualDamage", "customResourceCurrent", "previousActualDamage", "executionActualDamage", "previousActualHealing", "executionActualHealing", "previousResourceDrained", "executionResourceDrained", "resourceSpentTotal", "hpResourceSpent", "mpResourceSpent", "stResourceSpent", "bpResourceSpent"];
 const COEFFICIENT_CALCS = ["flat", "percent"];
 const RESOURCE_COST_MODES = ["fixed", "maxPercent", "currentPercent"];
 const TRANSFORM_STATS = ["atk","magic","defense","resistance","speed","attackRange","attackSpeed","castSpeed"];
@@ -75,11 +75,14 @@ const COEFFICIENT_TYPE_LABELS = {
   calculated: "계산계수"
 };
 const COEFFICIENT_FIELD_LABELS = {
+  targetMaxHp: "대상의 최대 HP",
   actualDamageTotal: "전투 누적 실제 피해량 (HP+BP)",
   moveDistanceTotal: "전투 누적 이동 거리 (사거리 단위)",
   targetEffectStacks: "대상의 전체 효과 중첩 합계",
   targetEffectIdStacks: "대상의 특정 효과 ID 중첩 합계",
   ownedSummonCount: "살아 있는 자기 소환수 수",
+  triggerActualDamage: "발동 이벤트의 실제 피해량",
+  customResourceCurrent: "지정 커스텀 자원의 현재값",
   previousActualDamage: "직전 액션의 실제 피해량",
   executionActualDamage: "현재 스킬 실행의 누적 실제 피해량",
   previousActualHealing: "직전 액션의 실제 치유량",
@@ -149,6 +152,7 @@ function createDefaultAction(type = "deal_damage") {
     rangeMode: "mainWeapon",
     rangeValue: 1,
     minRange: 0,
+    allowSelfTarget: true,
     chainCount: 0,
     chainRange: 3,
     coefficients: [coefficient],
@@ -207,7 +211,11 @@ function normalizeTransformation(transform = {}) {
   return {id:String(transform.id ?? "battle_form").trim(),name:String(transform.name ?? "전투 형태").trim(),
     mode:transform.mode === "percent" ? "percent" : "flat",modifiers,
     skillIds:[...new Set(Array.isArray(transform.skillIds) ? transform.skillIds.map(String).filter(Boolean) : [])].slice(0,10),
-    attackSkillId:String(transform.attackSkillId ?? "")};
+    attackSkillId:String(transform.attackSkillId ?? ""),
+    receivedDamagePercent:Math.max(0,Number(transform.receivedDamagePercent ?? 100) || 0),
+    immobile:transform.immobile === true,
+    exitHpBelow:Math.max(0,Math.min(100,Number(transform.exitHpBelow) || 0)),
+    retreatHpBelow:Math.max(0,Math.min(100,Number(transform.retreatHpBelow) || 0))};
 }
 
 function isTransformationConfigured(transform) {
@@ -274,6 +282,7 @@ function normalizeActionType(type) {
 
 function isSkillActionSupported(action) {
   if (!ACTIVE_ACTION_TYPES.includes(action?.type)) return false;
+  if (action.targetCooldownScope === "global" && Number(action.targetCooldown) > 0 && !String(action.targetCooldownEffectId ?? "").trim()) return false;
   if (TIMED_EFFECT_ACTIONS.includes(action.type)) return isEffectActionConfigured(action);
   if (action.type === "create_field") return ["deal_damage","heal","drain_resource","move","add_buff","add_state"].includes(action.fieldEffect ?? "deal_damage")
     && Number(action.fieldRadius) > 0 && Number(action.fieldInterval) > 0
@@ -340,7 +349,8 @@ function normalizeCoefficient(coefficient = {}) {
       field,
       calc,
       value: Number.isFinite(value) ? value : type === "fixed" ? 1 : 100,
-      effectId: String(coefficient.effectId ?? coefficient.effect_id ?? "").trim()
+      effectId: String(coefficient.effectId ?? coefficient.effect_id ?? "").trim(),
+      ...(field === "customResourceCurrent" ? {resourceId:normalizeCustomResourceId(coefficient.resourceId ?? coefficient.resource_id)} : {})
     };
   }
 
@@ -357,12 +367,14 @@ function normalizeCoefficient(coefficient = {}) {
     };
   }
 
+  const field = COEFFICIENT_FIELDS.includes(source) ? source : source === "stat" ? coefficient.stat ?? "str" : "atk";
   return {
     type: "calculated",
-    field: COEFFICIENT_FIELDS.includes(source) ? source : source === "stat" ? coefficient.stat ?? "str" : "atk",
+    field,
     calc: oldMode === "percent" ? "percent" : "percent",
     value: oldMode === "percent" ? Number.isFinite(oldValue) ? oldValue : 100 : Number.isFinite(oldValue) ? oldValue * 100 : 100,
-    effectId: String(coefficient.effectId ?? coefficient.effect_id ?? "").trim()
+    effectId: String(coefficient.effectId ?? coefficient.effect_id ?? "").trim(),
+    ...(field === "customResourceCurrent" ? {resourceId:normalizeCustomResourceId(coefficient.resourceId ?? coefficient.resource_id)} : {})
   };
 }
 
@@ -540,12 +552,18 @@ function normalizeSkillAction(action = {}) {
     target: normalizeActionTarget(action.target, type),
     rangeMode: range.rangeMode,
     rangeValue: range.rangeValue,
+    rangeMultiplier:Math.max(0,Number(action.rangeMultiplier ?? 100) || 0),
     minRange: normalizeSkillCooldown(action.minRange),
+    allowSelfTarget: action.allowSelfTarget !== false,
     targetHpBelow: Math.min(100, normalizeSkillCooldown(action.targetHpBelow ?? 100)),
     targetCooldown: normalizeSkillCooldown(action.targetCooldown),
+    targetCooldownScope: action.targetCooldownScope === "global" ? "global" : "caster",
+    targetCooldownEffectId: String(action.targetCooldownEffectId ?? "").trim(),
+    targetCooldownEffectName: String(action.targetCooldownEffectName ?? "").trim(),
     ...(TIMED_EFFECT_ACTIONS.includes(type) ? {effect:normalizeSkillEffect(action.effect,type)} : {}),
     chainCount: Math.min(20, Math.floor(normalizeSkillCooldown(action.chainCount))),
     chainRange: normalizeSkillCooldown(action.chainRange ?? 3),
+    chainOrigin:action.chainOrigin === "primary" ? "primary" : "previous",
     coefficients: normalizeActionCoefficients({ ...action, type }),
     healResource: normalizeResourceReference(healResourceValue, "HP"),
     drainResource: normalizeResourceReference(action.drainResource ?? action.drain_resource, "MP"),
@@ -632,6 +650,7 @@ function normalizeSkillJson(skills) {
       slot: normalizeSkillSlot(String(skill?.slot ?? "active").trim()),
       cooldown: normalizeSkillCooldown(skill?.cooldown ?? skill?.reuseCooldown ?? skill?.reuse_cooldown),
       castTime: normalizeSkillCastTime(skill?.castTime),
+      castReceivedDamagePercent:Math.max(0,Number(skill?.castReceivedDamagePercent ?? 100) || 0),
       channel:normalizeSkillChannel(skill?.channel),
       ...(skill?.slot === "passive" || skill?.passiveTrigger ? {passiveTrigger:normalizePassiveTrigger(skill?.passiveTrigger)} : {}),
       ...(isChoiceSkill(skill?.slot) ? {choice:normalizeSkillChoice(skill?.choice)} : {}),
@@ -768,7 +787,14 @@ function isUnitSkillDisabled(unit, skillOrId) {
 }
 
 function getUnitIncomingRulePercent(unit,key) {
-  return (unit?.runtimeRuleOverrides ?? []).reduce((percent,rule)=>percent * (Number.isFinite(Number(rule[key])) ? Math.max(0,Number(rule[key])) : 100) / 100,100);
+  let percent=(unit?.runtimeRuleOverrides ?? []).reduce((value,rule)=>value * (Number.isFinite(Number(rule[key])) ? Math.max(0,Number(rule[key])) : 100) / 100,100);
+  if (key === "receivedDamagePercent" && unit?.channelAction) percent*=normalizeSkillChannel(unit.channelAction.skill?.channel).receivedDamagePercent/100;
+  if (key === "receivedDamagePercent" && unit?.pendingAction?.skill) percent*=Math.max(0,Number(unit.pendingAction.skill.castReceivedDamagePercent ?? 100) || 0)/100;
+  if (key === "receivedDamagePercent") {
+    const transform=(unit?.activeEffects ?? []).find(effect=>effect.kind === "transform");
+    if (transform) percent*=Math.max(0,Number(transform.receivedDamagePercent ?? 100) || 0)/100;
+  }
+  return percent;
 }
 
 function getEquippedSkills(unit) {
@@ -847,7 +873,7 @@ function getActionRangePixels(source, action) {
   if (action.rangeMode === "custom") {
     return Math.max(1, Number(action.rangeValue) || 1) * ATTACK_RANGE_UNIT;
   }
-  return getUnitRange(source);
+  return getUnitRange(source) * Math.max(0,Number(action.rangeMultiplier ?? 100) || 0) / 100;
 }
 
 function isChainAction(action) {
@@ -992,7 +1018,9 @@ function formatCoefficientSummary(coefficient) {
   if (coefficient.type === "fixed") {
     return `고정 ${coefficient.value}`;
   }
-  return `${COEFFICIENT_FIELD_LABELS[coefficient.field] ?? coefficient.field}${coefficient.field === "targetEffectIdStacks" ? ` (${coefficient.effectId || "ID 미설정"})` : ""} ${COEFFICIENT_CALC_LABELS[coefficient.calc] ?? coefficient.calc} ${coefficient.value}`;
+  const reference = coefficient.field === "targetEffectIdStacks" ? coefficient.effectId || "ID 미설정"
+    : coefficient.field === "customResourceCurrent" ? coefficient.resourceId || "자원 ID 미설정" : "";
+  return `${COEFFICIENT_FIELD_LABELS[coefficient.field] ?? coefficient.field}${reference ? ` (${reference})` : ""} ${COEFFICIENT_CALC_LABELS[coefficient.calc] ?? coefficient.calc} ${coefficient.value}`;
 }
 
 function formatResourceCostSummary(resourceCost) {
@@ -1004,7 +1032,7 @@ function formatResourceCostsSummary(resourceCosts) {
 }
 
 function formatRangeSummary(action) {
-  const maximum = action.rangeMode === "mainWeapon" ? "주장비 사정거리" : `사정거리 ${action.rangeValue}`;
+  const maximum = action.rangeMode === "mainWeapon" ? `주장비 사정거리${Number(action.rangeMultiplier ?? 100) !== 100 ? ` ${action.rangeMultiplier}%` : ""}` : `사정거리 ${action.rangeValue}`;
   return getActionMinimumRangePixels(action) > 0 ? `최소 거리 ${action.minRange} / ${maximum}` : maximum;
 }
 
@@ -1036,7 +1064,7 @@ function formatActionSummary(action) {
   if (action.type === "heal") {
     return `회복 / ${ACTION_TARGET_LABELS[action.target]} / ${getResourceLabel(action.healResource)} / ${rangeText} / ${coefficientText}`;
   }
-  if(action.type === "transform") return `변신 / ${action.transform.name} / ${action.duration || "무제한"}초 / ${action.transform.mode === "percent" ? "%" : "고정값"} 능력치 변경${action.transform.skillIds.length ? ` / 액티브 ${action.transform.skillIds.length}개 교체` : ""}${action.transform.attackSkillId ? " / 기본 공격 교체" : ""}`;
+  if(action.type === "transform") return `변신 / ${action.transform.name} / ${action.duration || "무제한"}초 / ${action.transform.mode === "percent" ? "%" : "고정값"} 능력치 변경 / 받는 피해 ${action.transform.receivedDamagePercent}%${action.transform.immobile ? " / 이동 불가" : ""}${action.transform.exitHpBelow > 0 ? ` / HP ${action.transform.exitHpBelow}% 이하 자동 해제` : ""}${action.transform.skillIds.length ? ` / 액티브 ${action.transform.skillIds.length}개 교체` : ""}${action.transform.attackSkillId ? " / 기본 공격 교체" : ""}`;
   if(action.type === "copy_skill") return `스킬 복제 / 아군의 ${action.copySourceIndex}번째 액티브 / 내 복제 슬롯 ${action.copySlot}`;
   if(action.type === "command_summon") return `소환수 명령 / ${{hold:"정지",release:"행동 재개",recall:"복귀",dismiss:"소환 해제"}[action.summonCommand]} / ${rangeText}`;
   if(action.type === "revive_ally") return `아군 부활 / HP ${action.reviveHpPercent}% · MP ${action.reviveMpPercent}% · ST ${action.reviveStPercent}% / 무적 ${action.reviveInvulnerable}초 / ${action.revivePosition === "start" ? "시작" : "사망"} 위치`;
@@ -1174,6 +1202,7 @@ function openSkillModal(index = "") {
   skillSlotEl.value = skill?.slot ?? "active";
   skillCooldownEl.value = skill?.cooldown ?? 0;
   skillCastTimeEl.value = skill?.castTime ?? "";
+  skillCastReceivedDamagePercentEl.value = skill?.castReceivedDamagePercent ?? 100;
   renderPassiveTriggerForm(skill);
   renderSkillChoiceOptions(skill?.choice);
   renderSkillChannelForm(skill);
@@ -1239,7 +1268,7 @@ async function closeSkillModal(force = false) {
   skillFormInitialState = "";
 }
 
-skillModalEl?.addEventListener("click", event => {
+if (typeof skillModalEl !== "undefined") skillModalEl?.addEventListener("click", event => {
   if (event.target === skillModalEl) closeSkillModal();
 });
 
@@ -1282,9 +1311,13 @@ function renderSkillActionRow(action, index) {
         <small>각 액션의 사거리 안에서 대상을 찾습니다. 회복은 해당 자원이 부족한 대상을 우선합니다.</small>
       </label>
       <div class="skill-action-condition-field">
+        <label class="skill-check-field"><input class="skill-action-allow-self" type="checkbox" ${action.allowSelfTarget !== false ? "checked" : ""}>시전자 자신도 대상 허용</label>
         <label class="skill-action-field"><span>대상 HP 이하 (%) · 100: 제한 없음</span><input class="skill-action-target-hp" type="number" min="0" max="100" step="1" value="${action.targetHpBelow ?? 100}"></label>
         <label class="skill-action-field"><span>대상별 쿨타임 (초) · 0: 제한 없음</span><input class="skill-action-target-cooldown" type="number" min="0" step="0.1" value="${action.targetCooldown ?? 0}"></label>
-        <small>동일 시전자의 같은 스킬·액션 기준입니다. 효과 적용 시 쿨타임을 시작하며, 광역·연쇄도 각 대상을 검사합니다.</small>
+        <label class="skill-action-field"><span>대상 제한 범위</span><select class="skill-action-target-cooldown-scope"><option value="caster" ${action.targetCooldownScope !== "global" ? "selected" : ""}>같은 시전자·스킬·액션</option><option value="global" ${action.targetCooldownScope === "global" ? "selected" : ""}>모든 시전자 공유 효과</option></select></label>
+        <label class="skill-action-field"><span>공유 효과 ID</span><input class="skill-action-target-cooldown-effect-id" value="${escapeHtml(action.targetCooldownEffectId ?? "")}" placeholder="예: overdose_lock"></label>
+        <label class="skill-action-field"><span>공유 효과 이름</span><input class="skill-action-target-cooldown-effect-name" value="${escapeHtml(action.targetCooldownEffectName ?? "")}" placeholder="예: 과다투약 금지"></label>
+        <small>시전자별은 같은 시전자의 같은 스킬·액션만 제한합니다. 전체 공유는 대상에게 표시되는 효과를 부여해 모든 시전자의 같은 효과 ID를 제한합니다.</small>
       </div>
       <label class="skill-action-field" data-action-field="damageType">
         <span>피해 타입</span>
@@ -1327,6 +1360,7 @@ function renderSkillActionRow(action, index) {
         <div data-action-field="chain">
           <label>추가 연쇄 횟수 (0: 사용 안 함)<input class="skill-action-chain-count" type="number" min="0" max="20" step="1" value="${action.chainCount}" onchange="updateSkillActionFieldVisibility(this)"></label>
           <label>연쇄 거리<input class="skill-action-chain-range" type="number" min="0" step="0.1" value="${action.chainRange}"></label>
+          <label>추가 대상 거리 기준<select class="skill-action-chain-origin"><option value="previous" ${action.chainOrigin !== "primary" ? "selected" : ""}>직전 대상</option><option value="primary" ${action.chainOrigin === "primary" ? "selected" : ""}>최초 주 대상</option></select></label>
           <small>연쇄 사용 시 원형 광역 대신 첫 대상부터 가까운 다음 대상으로 이어집니다. 같은 대상은 한 번만 적용하며, 횟수 2는 최대 3명입니다. 회복은 부족한 자원이 있는 대상만 이어집니다.</small>
         </div>
         <div data-action-field="area">
@@ -1345,6 +1379,7 @@ function renderSkillActionRow(action, index) {
             <input class="skill-range-value" type="number" step="0.1" value="${action.rangeValue}" placeholder="사정거리">
           </label>
         </div>
+        <label class="skill-action-field"><span>주장비 사거리 배율 (%)</span><input class="skill-action-range-multiplier" type="number" min="0" step="1" value="${action.rangeMultiplier ?? 100}"></label>
       </div>
       <div class="skill-coefficients" data-action-field="coefficients">
         <div class="skill-coefficient-header">
@@ -1391,6 +1426,8 @@ function renderSkillCoefficientRow(coefficient) {
   const normalized = normalizeCoefficient(coefficient);
   const effectIdField = normalized.type === "calculated" && normalized.field === "targetEffectIdStacks"
     ? `<label class="skill-coefficient-effect-id">효과 ID<input class="skill-coefficient-effect-id-input" value="${escapeHtml(normalized.effectId)}" placeholder="예: bleed"></label>` : "";
+  const resourceIdField = normalized.type === "calculated" && normalized.field === "customResourceCurrent"
+    ? `<label class="skill-coefficient-effect-id">커스텀 자원 ID<input class="skill-coefficient-resource-id-input" value="${escapeHtml(normalized.resourceId)}" placeholder="예: effort_magic"></label>` : "";
   const detailFields = normalized.type === "calculated" ? `
       <select class="skill-coefficient-field" onchange="refreshSkillCoefficientRow(this)">
         ${COEFFICIENT_FIELDS.map(field => `<option value="${field}" ${field === normalized.field ? "selected" : ""}>${COEFFICIENT_FIELD_LABELS[field] ?? field}</option>`).join("")}
@@ -1411,6 +1448,7 @@ function renderSkillCoefficientRow(coefficient) {
       <input class="skill-coefficient-value" type="number" step="0.1" value="${normalized.value}" placeholder="1">
       <button type="button" onclick="removeSkillCoefficientRow(this)">삭제</button>
       ${effectIdField}
+      ${resourceIdField}
     </div>
   `;
 }
@@ -1567,6 +1605,7 @@ function refreshSkillCoefficientRow(select) {
     field: row.querySelector(".skill-coefficient-field")?.value,
     calc: row.querySelector(".skill-coefficient-calc")?.value,
     effectId: row.querySelector(".skill-coefficient-effect-id-input")?.value,
+    resourceId: row.querySelector(".skill-coefficient-resource-id-input")?.value,
     value: Number(row.querySelector(".skill-coefficient-value").value)
   });
 }
@@ -1600,6 +1639,7 @@ function readSkillCoefficientsFromRow(row) {
     field: coefficientRow.querySelector(".skill-coefficient-field")?.value,
     calc: coefficientRow.querySelector(".skill-coefficient-calc")?.value,
     effectId: coefficientRow.querySelector(".skill-coefficient-effect-id-input")?.value,
+    resourceId: coefficientRow.querySelector(".skill-coefficient-resource-id-input")?.value,
     value: Number(coefficientRow.querySelector(".skill-coefficient-value")?.value)
   }));
   return coefficients.length ? coefficients : [createDefaultCoefficient()];
@@ -1642,13 +1682,21 @@ function readSkillActionsFromForm() {
       rangeMode: range.rangeMode,
       rangeValue: range.rangeValue,
       minRange: Number(row.querySelector(".skill-action-min-range")?.value ?? 0),
+      allowSelfTarget: row.querySelector(".skill-action-allow-self")?.checked ?? true,
       targetHpBelow: Number(row.querySelector(".skill-action-target-hp")?.value ?? 100),
       targetCooldown: Number(row.querySelector(".skill-action-target-cooldown")?.value ?? 0),
+      targetCooldownScope: row.querySelector(".skill-action-target-cooldown-scope")?.value ?? "caster",
+      targetCooldownEffectId: row.querySelector(".skill-action-target-cooldown-effect-id")?.value ?? "",
+      targetCooldownEffectName: row.querySelector(".skill-action-target-cooldown-effect-name")?.value ?? "",
       ...(TIMED_EFFECT_ACTIONS.includes(type) || (type === "create_field" && ["add_buff","add_state"].includes(row.querySelector('.skill-action-field-effect')?.value)) ? {effect:readSkillEffectFromRow(row)} : {}),
       ...(type === "transform" ? {transform:{id:row.querySelector('.skill-transform-id')?.value,name:row.querySelector('.skill-transform-name')?.value,
         mode:row.querySelector('.skill-transform-mode')?.value,modifiers:Object.fromEntries([...row.querySelectorAll('.skill-transform-stat')].map(input=>[input.dataset.stat,Number(input.value)])),
         skillIds:[...row.querySelectorAll('.skill-transform-skills option:checked')].map(option=>option.value),
-        attackSkillId:row.querySelector('.skill-transform-attack-skill')?.value ?? ""}} : {}),
+        attackSkillId:row.querySelector('.skill-transform-attack-skill')?.value ?? "",
+        receivedDamagePercent:Number(row.querySelector('.skill-transform-received-damage')?.value ?? 100),
+        immobile:Boolean(row.querySelector('.skill-transform-immobile')?.checked),
+        exitHpBelow:Number(row.querySelector('.skill-transform-exit-hp')?.value ?? 0),
+        retreatHpBelow:Number(row.querySelector('.skill-transform-retreat-hp')?.value ?? 0)}} : {}),
       ...(type === "copy_skill" ? {
         copySourceIndex:Number(row.querySelector('.skill-copy-source-index')?.value ?? 1),
         copySlot:Number(row.querySelector('.skill-copy-slot')?.value ?? 1)
@@ -1682,6 +1730,8 @@ function readSkillActionsFromForm() {
       }} : {}),
       chainCount: Number(row.querySelector(".skill-action-chain-count")?.value ?? 0),
       chainRange: Number(row.querySelector(".skill-action-chain-range")?.value ?? 3),
+      chainOrigin:row.querySelector(".skill-action-chain-origin")?.value ?? "previous",
+      rangeMultiplier:Number(row.querySelector(".skill-action-range-multiplier")?.value ?? 100),
       coefficients: type === "move" ? [] : readSkillCoefficientsFromRow(row),
       healResource: row.querySelector(".skill-action-heal-resource")?.value ?? "HP",
       drainResource: row.querySelector(".skill-action-drain-resource")?.value ?? "MP",
@@ -1741,6 +1791,7 @@ async function saveSkillFromForm(event) {
       slot: normalizeSkillSlot(skillSlotEl.value),
       cooldown: normalizeSkillCooldown(skillCooldownEl.value),
       castTime: normalizeSkillCastTime(skillCastTimeEl.value),
+      castReceivedDamagePercent:Math.max(0,Number(skillCastReceivedDamagePercentEl.value) || 0),
       channel:readSkillChannelForm(),
       ...(skillSlotEl.value === "passive" ? {passiveTrigger:readPassiveTriggerForm()} : {}),
       ...(choiceType ? {choice:readSkillChoiceForm()} : {}),
@@ -1834,6 +1885,10 @@ async function deleteSkillFromModal() {
     alert(`이 스킬은 선택 스킬 ${choiceUsers.length}개에서 사용 중입니다.\n\n${choiceUsers.map(candidate => `- ${candidate.name}`).join("\n")}`);
     return;
   }
+  if (skill.actions.some(action => action.coefficients?.some(coefficient => coefficient.field === "customResourceCurrent" && !coefficient.resourceId))) {
+    alert("커스텀 자원 현재값 계수의 자원 ID를 입력하세요.");
+    return;
+  }
   if (!confirm(`'${skill.name}' 스킬을 삭제할까요?`)) return;
   const skillsBeforeDelete = skillsJson.slice();
   const itemSkillIdsBeforeDelete = itemsJson.map(item => item.attackSkillId);
@@ -1889,7 +1944,7 @@ function getUnitSkill(unit, fallbackSkillId = DEFAULT_ATTACK_SKILL_ID) {
     ?? createDefaultSkillJson()[0]);
 }
 
-function resolveSkillActionTarget(source, action, preferredTarget = null, skill = null) {
+function resolveSkillActionTarget(source, action, preferredTarget = null, skill = null, requirePreferred = false) {
   if (!source?.alive || !isSkillActionSupported(action)) return null;
   const forcedMovement = action.type === "move" && ["Knockback","Pull","Push"].includes(action.moveType);
   if (action.type === "move" && !forcedMovement && (hasBattleState(source,"stun") || hasBattleState(source,"root"))) return null;
@@ -1940,7 +1995,7 @@ function resolveSkillActionTarget(source, action, preferredTarget = null, skill 
     if (drainedResource) candidates = candidates.filter(unit => getUnitResourceCurrent(unit, action.drainResource) > 0);
     candidates.sort((a, b) => distance(source, a) - distance(source, b));
   }
-  return candidates.includes(preferredTarget) ? preferredTarget : candidates[0] ?? null;
+  return candidates.includes(preferredTarget) ? preferredTarget : requirePreferred ? null : candidates[0] ?? null;
 }
 
 function getCoefficientBaseValue(coefficient, source, target = null, execution = null) {
@@ -1949,6 +2004,9 @@ function getCoefficientBaseValue(coefficient, source, target = null, execution =
   if (coefficient.field === "targetEffectStacks") return (target?.activeEffects ?? []).reduce((sum, effect) => sum + (effect.stacks || 0), 0);
   if (coefficient.field === "targetEffectIdStacks") return (target?.activeEffects ?? []).filter(effect => effect.id === coefficient.effectId).reduce((sum, effect) => sum + (effect.stacks || 0), 0);
   if (coefficient.field === "ownedSummonCount") return [...playerSquad, ...enemySquad].filter(unit => unit.alive && unit.isSummon && unit.summoner === source).length;
+  if (coefficient.field === "targetMaxHp") return Number(target?.maxHp) || 0;
+  if (coefficient.field === "triggerActualDamage") return execution?.triggerActualDamage ?? 0;
+  if (coefficient.field === "customResourceCurrent") return getUnitResourceCurrent(source, `${CUSTOM_RESOURCE_PREFIX}${coefficient.resourceId}`);
   if (coefficient.field === "previousActualDamage") return execution?.previousActualDamage ?? 0;
   if (coefficient.field === "executionActualDamage") return execution?.actualDamage ?? 0;
   if (coefficient.field === "previousActualHealing") return execution?.previousActualHealing ?? 0;
@@ -1991,6 +2049,10 @@ function renderTransformActionArea(action) {
     <label>지속시간 (초, 0: 전투 종료까지)<input class="skill-transform-duration" type="number" min="0" step="0.1" value="${action.duration ?? 5}"></label>
     <label>형태 액티브 스킬<select class="skill-transform-skills" multiple size="5">${skillsJson.filter(skill=>skill.slot === "active" && isSkillExecutable(skill)).map(skill=>`<option value="${escapeHtml(skill.id)}" ${selectedSkills.has(skill.id) ? "selected" : ""}>${escapeHtml(skill.name)}</option>`).join("")}</select></label>
     <label>형태 기본 공격<select class="skill-transform-attack-skill">${getSkillOptionsHtml(transform.attackSkillId)}</select></label>
+    <label>받는 피해 (%)<input class="skill-transform-received-damage" type="number" min="0" step="1" value="${transform.receivedDamagePercent}"></label>
+    <label class="skill-check-field"><input class="skill-transform-immobile" type="checkbox" ${transform.immobile ? "checked" : ""}>형태 유지 중 이동 불가</label>
+    <label>자동 해제 HP 이하 (%)<input class="skill-transform-exit-hp" type="number" min="0" max="100" step="1" value="${transform.exitHpBelow}"></label>
+    <label>해제 후 후퇴 HP 이하 (%)<input class="skill-transform-retreat-hp" type="number" min="0" max="100" step="1" value="${transform.retreatHpBelow}"></label>
     <div class="skill-transform-modifiers">${TRANSFORM_STATS.map(stat=>`<label>${BUFF_STAT_LABELS[stat] ?? stat}<input class="skill-transform-stat" data-stat="${stat}" type="number" step="0.1" value="${transform.modifiers[stat]}"></label>`).join("")}</div>
     <small>형태 스킬을 하나 이상 선택하면 변신 중 원래 액티브 목록을 교체합니다. 새 변신은 기존 변신을 교체하며 만료·사망·전투 종료 시 원래 능력치와 스킬로 복원합니다.</small>
   </div>`;
@@ -2148,8 +2210,9 @@ function renderRuleOverrideActionArea(action) {
   </div>`;
 }
 
-function createSkillExecutionContext(resourceSpent = null) {
+function createSkillExecutionContext(resourceSpent = null, triggerEvent = null) {
   return {previousActualDamage:0,actualDamage:0,previousActualHealing:0,actualHealing:0,previousResourceDrained:0,resourceDrained:0,
+    triggerActualDamage:Math.max(0,Number(triggerEvent?.amount) || 0),
     resourceSpent:resourceSpent ?? {total:0,HP:0,MP:0,ST:0,BP:0}};
 }
 
@@ -2279,7 +2342,7 @@ function getSkillActionTargets(source, target, action, skill = null) {
     const limit = Math.min(1 + Math.min(20, Math.floor(action.chainCount)), action.maxTargets > 0 ? action.maxTargets : Infinity);
     const resource = action.type === "heal" ? getResourceField(action.healResource ?? "HP") : null;
     while (selected.length < limit) {
-      const previous = selected[selected.length - 1];
+      const previous = action.chainOrigin === "primary" ? first : selected[selected.length - 1];
       const next = candidates.filter(unit => unit.alive && !selected.includes(unit)
         && distance(previous, unit) <= action.chainRange * ATTACK_RANGE_UNIT
         && (!resource || normalizeResourceReference(action.healResource) === "BP" || (getUnitResourceState(unit, action.healResource) && getUnitResourceCurrent(unit, action.healResource) < getUnitResourceMax(unit, action.healResource)))
@@ -2548,13 +2611,29 @@ function actionTargetCooldownKey(action, skill) {
   return skill ? `${skill.id}:${action._actionIndex ?? skill.actions.indexOf(action)}` : action;
 }
 function isActionTargetEligible(source, target, action, skill) {
+  if (action.allowSelfTarget === false && source === target) return false;
+  if (action.effect?.stackMode === "reject" && action.effect.id
+    && (target.activeEffects ?? []).some(effect => effect.id === action.effect.id)) return false;
   const threshold = action.targetHpBelow ?? 100;
   if (threshold < 100 && (!(target.maxHp > 0) || target.hp / target.maxHp * 100 > threshold)) return false;
+  if (action.targetCooldownScope === "global" && action.targetCooldownEffectId
+    && (target.activeEffects ?? []).some(effect => effect.id === action.targetCooldownEffectId)) return false;
   const until = actionTargetCooldowns.get(source)?.get(actionTargetCooldownKey(action, skill))?.get(target) ?? 0;
   return combatEventTick >= until;
 }
 function markActionTargetCooldown(source, target, action, skill) {
   if (!(action.targetCooldown > 0)) return;
+  if (action.targetCooldownScope === "global" && action.targetCooldownEffectId) {
+    target.activeEffects ??= [];
+    const remainingTicks = Math.max(1,Math.ceil(action.targetCooldown * BASE_ATTACK_COOLDOWN));
+    const existing = target.activeEffects.find(effect => effect.id === action.targetCooldownEffectId);
+    const marker = {kind:"state",id:action.targetCooldownEffectId,name:action.targetCooldownEffectName || action.targetCooldownEffectId,
+      state:"periodic",category:"general",polarity:"harmful",dispellable:true,stacks:1,remainingTicks,usesRemaining:null,
+      skillId:skill?.id,casterName:source?.name};
+    if (existing) Object.assign(existing,marker); else target.activeEffects.push(marker);
+    addBattleEventLog(source,`${source.name} → ${target.name}: ${marker.name} (${action.targetCooldown}초)`);
+    return;
+  }
   if (!actionTargetCooldowns.has(source)) actionTargetCooldowns.set(source, new Map());
   const actions = actionTargetCooldowns.get(source), key = actionTargetCooldownKey(action, skill);
   if (!actions.has(key)) actions.set(key, new WeakMap());

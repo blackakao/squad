@@ -846,6 +846,7 @@
           <div class="skill-form-grid">
             <div class="form-row"><label for="skillCooldown">재사용대기 시간</label><input id="skillCooldown" type="number" min="0" step="0.1" value="0" required></div>
             <div class="form-row"><label for="skillCastTime">시전시간(초)</label><input id="skillCastTime" type="number" min="0" step="0.1" placeholder="비워두면 유닛 시전시간, 0은 즉시시전"></div>
+            <div class="form-row"><label for="skillCastReceivedDamagePercent">시전 중 받는 피해 (%)</label><input id="skillCastReceivedDamagePercent" type="number" min="0" step="1" value="100"></div>
           </div>
           <div id="skillPassiveFields" class="skill-settings-card hidden">
             <div class="skill-settings-card-title">패시브 발동 조건</div>
@@ -869,9 +870,11 @@
               <div class="skill-form-grid">
                 <label>유지시간 (초, 0: 사용 안 함)<input id="skillChannelDuration" type="number" min="0" step="0.1" value="0"></label>
                 <label>적용 간격 (초)<input id="skillChannelInterval" type="number" min="0.01" step="0.01" value="1"></label>
+                <label>받는 피해 비율 (%)<input id="skillChannelReceivedDamagePercent" type="number" min="0" step="1" value="100"></label>
                 <label class="skill-check-field skill-form-field-wide"><input id="skillChannelDamage" type="checkbox" checked>피해를 받으면 채널링 중단</label>
+                <label class="skill-check-field skill-form-field-wide"><input id="skillChannelLockTarget" type="checkbox">처음 선택한 대상을 채널링 종료까지 고정</label>
               </div>
-              <small>일반 시전 후 첫 간격이 지나면 액션을 반복합니다. 자원은 시작 시 한 번 소모하며, 쿨타임은 완료·중단 시 시작합니다. 기절·사망은 항상 중단하며 침묵은 장착 스킬의 채널링을 중단합니다.</small>
+              <small>일반 시전 후 첫 간격이 지나면 액션을 반복합니다. 자원은 시작 시 한 번 소모하며, 쿨타임은 완료·중단 시 시작합니다. 받는 피해 비율은 채널링 중에만 적용됩니다. 기절·사망은 항상 중단하며 침묵은 장착 스킬의 채널링을 중단합니다.</small>
             </fieldset>
           </details>
         </section>

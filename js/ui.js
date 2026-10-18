@@ -134,6 +134,7 @@ const skillSlotEl = document.getElementById("skillSlot");
 const skillCooldownEl = document.getElementById("skillCooldown");
 const skillDescriptionEl = document.getElementById("skillDescription");
 const skillCastTimeEl = document.getElementById("skillCastTime");
+const skillCastReceivedDamagePercentEl = document.getElementById("skillCastReceivedDamagePercent");
 const skillResourceCostsEl = document.getElementById("skillResourceCosts");
 const skillActionsEl = document.getElementById("skillActions");
 const layoutPageFilterEl = document.getElementById("layoutPageFilter");

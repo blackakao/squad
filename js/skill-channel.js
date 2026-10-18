@@ -1,6 +1,9 @@
 function normalizeSkillChannel(channel) {
-  if (!channel || typeof channel !== "object") return {duration:0,interval:1,interruptOnDamage:true};
-  return {duration:normalizeSkillCooldown(channel.duration),interval:channel.interval == null ? 1 : Number(channel.interval),interruptOnDamage:channel.interruptOnDamage !== false};
+  if (!channel || typeof channel !== "object") return {duration:0,interval:1,interruptOnDamage:true,lockTarget:false,receivedDamagePercent:100};
+  const receivedDamagePercent=Number(channel.receivedDamagePercent);
+  return {duration:normalizeSkillCooldown(channel.duration),interval:channel.interval == null ? 1 : Number(channel.interval),
+    interruptOnDamage:channel.interruptOnDamage !== false,lockTarget:channel.lockTarget === true,
+    receivedDamagePercent:Number.isFinite(receivedDamagePercent) ? Math.max(0,receivedDamagePercent) : 100};
 }
 
 function isSkillChannelConfigured(skill) {
@@ -13,11 +16,15 @@ function renderSkillChannelForm(skill) {
   document.getElementById("skillChannelDuration").value = channel.duration;
   document.getElementById("skillChannelInterval").value = channel.interval;
   document.getElementById("skillChannelDamage").checked = channel.interruptOnDamage;
+  document.getElementById("skillChannelLockTarget").checked = channel.lockTarget;
+  document.getElementById("skillChannelReceivedDamagePercent").value = channel.receivedDamagePercent;
 }
 
 function readSkillChannelForm() {
   return normalizeSkillChannel({duration:document.getElementById("skillChannelDuration").value,
-    interval:document.getElementById("skillChannelInterval").value,interruptOnDamage:document.getElementById("skillChannelDamage").checked});
+    interval:document.getElementById("skillChannelInterval").value,interruptOnDamage:document.getElementById("skillChannelDamage").checked,
+    lockTarget:document.getElementById("skillChannelLockTarget").checked,
+    receivedDamagePercent:document.getElementById("skillChannelReceivedDamagePercent").value});
 }
 
 function clearBattleChannel(unit) {

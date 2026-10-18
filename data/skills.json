@@ -28,6 +28,9 @@
         "minRange": 0,
         "targetHpBelow": 100,
         "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "chainCount": 0,
         "chainRange": 3,
         "coefficients": [
@@ -91,6 +94,9 @@
         "minRange": 0,
         "targetHpBelow": 100,
         "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "chainCount": 0,
         "chainRange": 3,
         "coefficients": [
@@ -108,6 +114,148 @@
         "area": 0,
         "areaCenter": "target",
         "maxTargets": 0,
+        "critical": 0,
+        "penetration": 0,
+        "moveType": "Walk",
+        "moveSpeed": 1,
+        "distance": 0,
+        "duration": 0,
+        "fieldShape": "circle",
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
+      }
+    ]
+  },
+  {
+    "id": "skill_class_archer_multishot",
+    "name": "궁사 · 멀티샷",
+    "className": "궁사",
+    "icon": "assets/images/skills/궁사_멀티샷.png",
+    "description": "주 대상과 그 주변 5m 이내의 적 최대 2명에게 공격력 125%의 물리 피해를 줍니다.",
+    "slot": "active",
+    "cooldown": 5,
+    "castTime": 0,
+    "castReceivedDamagePercent": 100,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true
+    },
+    "resourceCosts": [
+      {
+        "resource": "ST",
+        "mode": "fixed",
+        "value": 10
+      }
+    ],
+    "actions": [
+      {
+        "type": "deal_damage",
+        "target": "enemy",
+        "rangeMode": "mainWeapon",
+        "rangeValue": 1,
+        "rangeMultiplier": 100,
+        "minRange": 0,
+        "allowSelfTarget": true,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
+        "chainCount": 2,
+        "chainRange": 5,
+        "chainOrigin": "primary",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "atk",
+            "calc": "percent",
+            "value": 125,
+            "effectId": ""
+          }
+        ],
+        "healResource": "HP",
+        "drainResource": "MP",
+        "damageType": "physical",
+        "area": 0,
+        "areaCenter": "target",
+        "maxTargets": 3,
+        "critical": 0,
+        "penetration": 0,
+        "moveType": "Walk",
+        "moveSpeed": 1,
+        "distance": 0,
+        "duration": 0,
+        "fieldShape": "circle",
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
+      }
+    ]
+  },
+  {
+    "id": "skill_class_archer_power_shot",
+    "name": "궁사 · 강한사격",
+    "className": "궁사",
+    "icon": "assets/images/skills/궁사_멀티샷.png",
+    "description": "적 하나에게 공격력 200%의 물리 피해를 줍니다.",
+    "slot": "active",
+    "cooldown": 5,
+    "castTime": 0,
+    "castReceivedDamagePercent": 100,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true
+    },
+    "resourceCosts": [
+      {
+        "resource": "ST",
+        "mode": "fixed",
+        "value": 10
+      }
+    ],
+    "actions": [
+      {
+        "type": "deal_damage",
+        "target": "enemy",
+        "rangeMode": "mainWeapon",
+        "rangeValue": 1,
+        "rangeMultiplier": 100,
+        "minRange": 0,
+        "allowSelfTarget": true,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
+        "chainCount": 0,
+        "chainRange": 3,
+        "chainOrigin": "previous",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "atk",
+            "calc": "percent",
+            "value": 200,
+            "effectId": ""
+          }
+        ],
+        "healResource": "HP",
+        "drainResource": "MP",
+        "damageType": "physical",
+        "area": 0,
+        "areaCenter": "target",
+        "maxTargets": 1,
         "critical": 0,
         "penetration": 0,
         "moveType": "Walk",
@@ -155,6 +303,9 @@
         "minRange": 0,
         "targetHpBelow": 100,
         "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "chainCount": 0,
         "chainRange": 3,
         "coefficients": [],
@@ -187,6 +338,9 @@
         "minRange": 0,
         "targetHpBelow": 100,
         "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "chainCount": 0,
         "chainRange": 3,
         "coefficients": [
@@ -251,6 +405,9 @@
         "minRange": 0,
         "targetHpBelow": 100,
         "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "chainCount": 0,
         "chainRange": 3,
         "coefficients": [
@@ -315,6 +472,9 @@
         "minRange": 0,
         "targetHpBelow": 100,
         "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "chainCount": 0,
         "chainRange": 3,
         "coefficients": [
@@ -378,6 +538,9 @@
         "minRange": 0,
         "targetHpBelow": 100,
         "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "chainCount": 0,
         "chainRange": 3,
         "coefficients": [
@@ -441,6 +604,9 @@
         "minRange": 0,
         "targetHpBelow": 100,
         "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "chainCount": 0,
         "chainRange": 3,
         "coefficients": [
@@ -504,6 +670,9 @@
         "minRange": 0,
         "targetHpBelow": 100,
         "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "chainCount": 0,
         "chainRange": 3,
         "coefficients": [
@@ -568,6 +737,9 @@
         "minRange": 0,
         "targetHpBelow": 100,
         "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "chainCount": 0,
         "chainRange": 3,
         "coefficients": [
@@ -632,6 +804,9 @@
         "minRange": 0,
         "targetHpBelow": 100,
         "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "chainCount": 0,
         "chainRange": 3,
         "coefficients": [
@@ -668,13 +843,13 @@
   },
   {
     "id": "skill_class_medic_inargansin",
-    "name": "의무병 · 이나르간신 (기본형)",
+    "name": "의무병 · 이나르 간신",
     "className": "의무병",
     "icon": "assets/images/skills/의무병_이나르간신.png",
-    "description": "",
+    "description": "가장 체력이 부족한 아군 1명을 즉시 2000 회복합니다. 투약받은 대상은 15초간 과다투약 금지 상태가 되어 모든 의무병의 이나르 간신을 다시 받을 수 없습니다.",
     "slot": "active",
-    "cooldown": 8,
-    "castTime": 0.5,
+    "cooldown": 1,
+    "castTime": 0,
     "channel": {
       "duration": 0,
       "interval": 1,
@@ -691,19 +866,22 @@
       {
         "type": "heal",
         "target": "ally",
-        "rangeMode": "custom",
+        "rangeMode": "mainWeapon",
         "rangeValue": 1,
         "minRange": 0,
         "targetHpBelow": 100,
-        "targetCooldown": 0,
+        "targetCooldown": 15,
+        "targetCooldownScope": "global",
+        "targetCooldownEffectId": "medic_inargansin_overdose_lock",
+        "targetCooldownEffectName": "과다투약 금지",
         "chainCount": 0,
         "chainRange": 3,
         "coefficients": [
           {
-            "type": "calculated",
-            "field": "magic",
+            "type": "fixed",
+            "field": "atk",
             "calc": "percent",
-            "value": 150,
+            "value": 2000,
             "effectId": ""
           }
         ],
@@ -712,17 +890,17 @@
         "damageType": "physical",
         "area": 0,
         "areaCenter": "target",
-        "maxTargets": 0,
+        "maxTargets": 1,
         "critical": 0,
         "penetration": 0,
-        "moveType": "Walk",
+        "moveType": "Dash",
         "moveSpeed": 1,
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
         "fieldRadius": 0,
         "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 5,
+        "fieldEffectDuration": 0,
         "fieldMoveType": "Push",
         "fieldDistance": 1,
         "fieldCenter": "target",
@@ -735,14 +913,16 @@
     "name": "의무병 · 응급처치",
     "className": "의무병",
     "icon": "assets/images/skills/의무병_응급처치.png",
-    "description": "",
+    "description": "자신을 제외한 아군 1명을 고정해 3초 동안 1초마다 대상 최대 HP의 1/12을 회복합니다. 채널링 중 받는 피해가 30% 감소합니다.",
     "slot": "active",
-    "cooldown": 8,
-    "castTime": 0.5,
+    "cooldown": 5,
+    "castTime": 0,
     "channel": {
-      "duration": 0,
+      "duration": 3,
       "interval": 1,
-      "interruptOnDamage": true
+      "interruptOnDamage": false,
+      "lockTarget": true,
+      "receivedDamagePercent": 70
     },
     "resourceCosts": [
       {
@@ -760,14 +940,17 @@
         "minRange": 0,
         "targetHpBelow": 100,
         "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "chainCount": 0,
         "chainRange": 3,
         "coefficients": [
           {
             "type": "calculated",
-            "field": "magic",
+            "field": "targetMaxHp",
             "calc": "percent",
-            "value": 100,
+            "value": 8.333333333333334,
             "effectId": ""
           }
         ],
@@ -790,7 +973,8 @@
         "fieldMoveType": "Push",
         "fieldDistance": 1,
         "fieldCenter": "target",
-        "fieldInterval": 1
+        "fieldInterval": 1,
+        "allowSelfTarget": false
       }
     ]
   },
@@ -824,6 +1008,9 @@
         "minRange": 0,
         "targetHpBelow": 100,
         "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "chainCount": 0,
         "chainRange": 3,
         "coefficients": [
@@ -888,6 +1075,9 @@
         "minRange": 0,
         "targetHpBelow": 100,
         "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "chainCount": 0,
         "chainRange": 3,
         "coefficients": [
@@ -952,6 +1142,9 @@
         "minRange": 0,
         "targetHpBelow": 100,
         "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "chainCount": 0,
         "chainRange": 3,
         "coefficients": [
@@ -992,6 +1185,9 @@
         "minRange": 0,
         "targetHpBelow": 100,
         "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "chainCount": 0,
         "chainRange": 3,
         "coefficients": [
@@ -1032,6 +1228,9 @@
         "minRange": 0,
         "targetHpBelow": 100,
         "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "chainCount": 0,
         "chainRange": 3,
         "coefficients": [
@@ -1072,6 +1271,9 @@
         "minRange": 0,
         "targetHpBelow": 100,
         "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "chainCount": 0,
         "chainRange": 3,
         "coefficients": [
@@ -1112,6 +1314,9 @@
         "minRange": 0,
         "targetHpBelow": 100,
         "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "chainCount": 0,
         "chainRange": 3,
         "coefficients": [
@@ -1152,6 +1357,9 @@
         "minRange": 0,
         "targetHpBelow": 100,
         "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "chainCount": 0,
         "chainRange": 3,
         "coefficients": [
@@ -1216,6 +1424,9 @@
         "minRange": 0,
         "targetHpBelow": 100,
         "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "chainCount": 0,
         "chainRange": 3,
         "coefficients": [
@@ -1256,6 +1467,9 @@
         "minRange": 0,
         "targetHpBelow": 100,
         "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "chainCount": 0,
         "chainRange": 3,
         "coefficients": [
@@ -1296,6 +1510,9 @@
         "minRange": 0,
         "targetHpBelow": 100,
         "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "chainCount": 0,
         "chainRange": 3,
         "coefficients": [
@@ -1336,6 +1553,9 @@
         "minRange": 0,
         "targetHpBelow": 100,
         "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "chainCount": 0,
         "chainRange": 3,
         "coefficients": [
@@ -1344,70 +1564,6 @@
             "field": "atk",
             "calc": "percent",
             "value": 25,
-            "effectId": ""
-          }
-        ],
-        "healResource": "HP",
-        "drainResource": "MP",
-        "damageType": "physical",
-        "area": 0,
-        "areaCenter": "target",
-        "maxTargets": 0,
-        "critical": 0,
-        "penetration": 0,
-        "moveType": "Walk",
-        "moveSpeed": 1,
-        "distance": 0,
-        "duration": 0,
-        "fieldShape": "circle",
-        "fieldRadius": 0,
-        "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 5,
-        "fieldMoveType": "Push",
-        "fieldDistance": 1,
-        "fieldCenter": "target",
-        "fieldInterval": 1
-      }
-    ]
-  },
-  {
-    "id": "skill_class_sniper_shot",
-    "name": "저격수 · 저격",
-    "className": "저격수",
-    "icon": "assets/images/skills/저격수_저격.png",
-    "description": "",
-    "slot": "active",
-    "cooldown": 8,
-    "castTime": 0.5,
-    "channel": {
-      "duration": 0,
-      "interval": 1,
-      "interruptOnDamage": true
-    },
-    "resourceCosts": [
-      {
-        "resource": "ST",
-        "mode": "fixed",
-        "value": 10
-      }
-    ],
-    "actions": [
-      {
-        "type": "deal_damage",
-        "target": "enemy",
-        "rangeMode": "custom",
-        "rangeValue": 10,
-        "minRange": 0,
-        "targetHpBelow": 100,
-        "targetCooldown": 0,
-        "chainCount": 0,
-        "chainRange": 3,
-        "coefficients": [
-          {
-            "type": "calculated",
-            "field": "atk",
-            "calc": "percent",
-            "value": 150,
             "effectId": ""
           }
         ],
@@ -1464,6 +1620,9 @@
         "minRange": 0,
         "targetHpBelow": 100,
         "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "chainCount": 0,
         "chainRange": 3,
         "coefficients": [
@@ -1528,6 +1687,9 @@
         "minRange": 0,
         "targetHpBelow": 100,
         "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "chainCount": 0,
         "chainRange": 3,
         "coefficients": [
@@ -1592,6 +1754,9 @@
         "minRange": 0,
         "targetHpBelow": 100,
         "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "chainCount": 0,
         "chainRange": 3,
         "coefficients": [
@@ -1656,6 +1821,9 @@
         "minRange": 0,
         "targetHpBelow": 100,
         "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "chainCount": 0,
         "chainRange": 3,
         "coefficients": [
@@ -1719,6 +1887,9 @@
         "minRange": 0,
         "targetHpBelow": 100,
         "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "chainCount": 0,
         "chainRange": 3,
         "coefficients": [
@@ -1783,6 +1954,9 @@
         "minRange": 0,
         "targetHpBelow": 100,
         "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "chainCount": 0,
         "chainRange": 3,
         "coefficients": [
@@ -1819,12 +1993,12 @@
   },
   {
     "id": "skill_class_serum_drain",
-    "name": "혈청형 · 피흡기 (기본형)",
+    "name": "혈청형 · 흡혈",
     "className": "혈청형",
-    "description": "",
+    "description": "적에게 마력의 100% 마법 피해를 주고, 실제 피해량의 60%만큼 자신의 HP를 회복합니다.",
     "slot": "active",
-    "cooldown": 8,
-    "castTime": 0.5,
+    "cooldown": 5,
+    "castTime": 1.5,
     "channel": {
       "duration": 0,
       "interval": 1,
@@ -1841,11 +2015,14 @@
       {
         "type": "deal_damage",
         "target": "enemy",
-        "rangeMode": "custom",
+        "rangeMode": "mainWeapon",
         "rangeValue": 5,
         "minRange": 0,
         "targetHpBelow": 100,
         "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "chainCount": 0,
         "chainRange": 3,
         "coefficients": [
@@ -1881,19 +2058,22 @@
       {
         "type": "heal",
         "target": "self",
-        "rangeMode": "custom",
+        "rangeMode": "mainWeapon",
         "rangeValue": 5,
         "minRange": 0,
         "targetHpBelow": 100,
         "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "chainCount": 0,
         "chainRange": 3,
         "coefficients": [
           {
             "type": "calculated",
-            "field": "magic",
+            "field": "previousActualDamage",
             "calc": "percent",
-            "value": 50,
+            "value": 60,
             "effectId": ""
           }
         ],
@@ -1918,20 +2098,23 @@
         "fieldCenter": "target",
         "fieldInterval": 1
       }
-    ]
+    ],
+    "icon": "assets/images/skills/혈청형_생명흡수.png"
   },
   {
     "id": "skill_class_serum_transfusion",
-    "name": "혈청형 · 수혈기 (기본형)",
+    "name": "혈청형 · 헌혈",
     "className": "혈청형",
-    "description": "",
+    "description": "5초 동안 1초마다 아군의 HP를 마력의 50%만큼 회복하고, 실제 회복량의 30%만큼 자신의 HP를 소모합니다.",
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
     "channel": {
-      "duration": 0,
+      "duration": 5,
       "interval": 1,
-      "interruptOnDamage": true
+      "interruptOnDamage": true,
+      "lockTarget": true,
+      "receivedDamagePercent": 100
     },
     "resourceCosts": [
       {
@@ -1944,11 +2127,14 @@
       {
         "type": "heal",
         "target": "ally",
-        "rangeMode": "custom",
+        "rangeMode": "mainWeapon",
         "rangeValue": 5,
         "minRange": 0,
         "targetHpBelow": 100,
         "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "chainCount": 0,
         "chainRange": 3,
         "coefficients": [
@@ -1956,7 +2142,7 @@
             "type": "calculated",
             "field": "magic",
             "calc": "percent",
-            "value": 100,
+            "value": 50,
             "effectId": ""
           }
         ],
@@ -1979,9 +2165,54 @@
         "fieldMoveType": "Push",
         "fieldDistance": 1,
         "fieldCenter": "target",
+        "fieldInterval": 1,
+        "allowSelfTarget": false
+      },
+      {
+        "type": "drain_resource",
+        "target": "self",
+        "rangeMode": "mainWeapon",
+        "rangeValue": 5,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
+        "chainCount": 0,
+        "chainRange": 3,
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "previousActualHealing",
+            "calc": "percent",
+            "value": 30,
+            "effectId": ""
+          }
+        ],
+        "healResource": "HP",
+        "drainResource": "HP",
+        "damageType": "physical",
+        "area": 0,
+        "areaCenter": "target",
+        "maxTargets": 0,
+        "critical": 0,
+        "penetration": 0,
+        "moveType": "Walk",
+        "moveSpeed": 1,
+        "distance": 0,
+        "duration": 0,
+        "fieldShape": "circle",
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
         "fieldInterval": 1
       }
-    ]
+    ],
+    "icon": "assets/images/skills/혈청형_생명수혈.png"
   },
   {
     "id": "skill_class_warlock_bite",
@@ -2013,6 +2244,9 @@
         "minRange": 0,
         "targetHpBelow": 100,
         "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "chainCount": 0,
         "chainRange": 3,
         "coefficients": [
@@ -2053,6 +2287,9 @@
         "minRange": 0,
         "targetHpBelow": 100,
         "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "chainCount": 0,
         "chainRange": 3,
         "coefficients": [
@@ -2116,6 +2353,9 @@
         "minRange": 0,
         "targetHpBelow": 100,
         "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "chainCount": 0,
         "chainRange": 3,
         "coefficients": [
@@ -2180,6 +2420,9 @@
         "minRange": 0,
         "targetHpBelow": 100,
         "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "chainCount": 0,
         "chainRange": 3,
         "coefficients": [
@@ -2244,6 +2487,9 @@
         "minRange": 0,
         "targetHpBelow": 100,
         "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "chainCount": 0,
         "chainRange": 3,
         "coefficients": [
@@ -2307,6 +2553,9 @@
         "minRange": 0,
         "targetHpBelow": 100,
         "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "chainCount": 0,
         "chainRange": 3,
         "coefficients": [
@@ -2370,6 +2619,9 @@
         "minRange": 0,
         "targetHpBelow": 100,
         "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "chainCount": 0,
         "chainRange": 3,
         "coefficients": [
@@ -2433,6 +2685,9 @@
         "minRange": 0,
         "targetHpBelow": 100,
         "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "chainCount": 0,
         "chainRange": 3,
         "coefficients": [
@@ -2496,6 +2751,9 @@
         "minRange": 0,
         "targetHpBelow": 100,
         "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "chainCount": 0,
         "chainRange": 3,
         "coefficients": [
@@ -2560,6 +2818,9 @@
         "minRange": 0,
         "targetHpBelow": 100,
         "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "chainCount": 0,
         "chainRange": 3,
         "coefficients": [
@@ -2624,6 +2885,9 @@
         "minRange": 0,
         "targetHpBelow": 100,
         "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "chainCount": 0,
         "chainRange": 3,
         "coefficients": [
@@ -2641,6 +2905,138 @@
         "area": 2,
         "areaCenter": "self",
         "maxTargets": 0,
+        "critical": 0,
+        "penetration": 0,
+        "moveType": "Walk",
+        "moveSpeed": 1,
+        "distance": 0,
+        "duration": 0,
+        "fieldShape": "circle",
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
+      }
+    ]
+  },
+  {
+    "id": "skill_class_guardian_effort_strike",
+    "name": "수호자 · 노력의 일격",
+    "className": "수호자",
+    "icon": "assets/images/skills/수호자_노력의 일격.png",
+    "description": "적 하나에게 공격력과 현재 누적된 노력[마법]만큼 물리 피해를 줍니다. 노력[마법]은 소모하지 않습니다.",
+    "slot": "active",
+    "cooldown": 10,
+    "castTime": 0,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true
+    },
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "deal_damage",
+        "target": "enemy",
+        "rangeMode": "mainWeapon",
+        "rangeValue": 1,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
+        "chainCount": 0,
+        "chainRange": 3,
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "atk",
+            "calc": "percent",
+            "value": 100,
+            "effectId": "",
+            "resourceId": ""
+          },
+          {
+            "type": "calculated",
+            "field": "customResourceCurrent",
+            "calc": "percent",
+            "value": 100,
+            "effectId": "",
+            "resourceId": "effort_magic"
+          }
+        ],
+        "healResource": "HP",
+        "drainResource": "MP",
+        "damageType": "physical",
+        "area": 0,
+        "areaCenter": "target",
+        "maxTargets": 1,
+        "critical": 0,
+        "penetration": 0,
+        "moveType": "Walk",
+        "moveSpeed": 1,
+        "distance": 0,
+        "duration": 0,
+        "fieldShape": "circle",
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
+      }
+    ]
+  },
+  {
+    "id": "skill_class_guardian_endurance",
+    "name": "수호자 · 인내",
+    "className": "수호자",
+    "icon": "assets/images/skills/수호자_노력의 일격.png",
+    "description": "피해를 받을 때마다 실제 받은 피해의 5%를 노력[마법]으로 영구 누적합니다.",
+    "slot": "passive",
+    "cooldown": 0,
+    "castTime": 0,
+    "passiveTrigger": {
+      "event": "damaged",
+      "chance": 100,
+      "includePeriodic": true
+    },
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "heal",
+        "target": "self",
+        "rangeMode": "mainWeapon",
+        "rangeValue": 1,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
+        "chainCount": 0,
+        "chainRange": 3,
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "triggerActualDamage",
+            "calc": "percent",
+            "value": 5,
+            "effectId": "",
+            "resourceId": ""
+          }
+        ],
+        "healResource": "custom:effort_magic",
+        "drainResource": "MP",
+        "damageType": "physical",
+        "area": 0,
+        "areaCenter": "target",
+        "maxTargets": 1,
         "critical": 0,
         "penetration": 0,
         "moveType": "Walk",
@@ -2688,6 +3084,9 @@
         "minRange": 0,
         "targetHpBelow": 100,
         "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "chainCount": 0,
         "chainRange": 3,
         "coefficients": [
@@ -2751,6 +3150,9 @@
         "minRange": 0,
         "targetHpBelow": 100,
         "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "chainCount": 0,
         "chainRange": 3,
         "coefficients": [
@@ -2834,6 +3236,9 @@
         "minRange": 0,
         "targetHpBelow": 100,
         "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "chainCount": 0,
         "chainRange": 3,
         "coefficients": [
@@ -2916,6 +3321,9 @@
         "minRange": 0,
         "targetHpBelow": 100,
         "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "chainCount": 0,
         "chainRange": 3,
         "coefficients": [
@@ -2966,6 +3374,387 @@
         "fieldDistance": 1,
         "fieldCenter": "target",
         "fieldInterval": 1
+      }
+    ]
+  },
+  {
+    "id": "skill_class_disease_virus",
+    "name": "질병형 · 바이러스",
+    "className": "질병형",
+    "icon": "assets/images/skills/질병형_마법성 질병.png",
+    "description": "적에게 바이러스를 감염시켜 10초 동안 1초마다 마력의 40%, 총 마력의 400%만큼 마법 피해를 줍니다.",
+    "slot": "active",
+    "cooldown": 8,
+    "castTime": 1.5,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true
+    },
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 10
+      }
+    ],
+    "actions": [
+      {
+        "type": "add_state",
+        "target": "enemy",
+        "rangeMode": "mainWeapon",
+        "rangeValue": 1,
+        "minRange": 0,
+        "allowSelfTarget": true,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
+        "effect": {
+          "id": "disease_virus",
+          "name": "바이러스",
+          "state": "periodic",
+          "category": "magic",
+          "polarity": "harmful",
+          "dispellable": true,
+          "dispelMode": "id",
+          "dispelCategory": "magic",
+          "dispelPolarity": "harmful",
+          "stat": "atk",
+          "sourceStat": "magic",
+          "mode": "flat",
+          "value": 0,
+          "nextCastTimePercent": 100,
+          "nextResourceCostPercent": 100,
+          "nextCooldownPercent": 100,
+          "reflectPercent": 20,
+          "reflectScope": "all",
+          "reflectDamageType": "fixed",
+          "proxyPercent": 20,
+          "proxyPriority": 100,
+          "proxyScope": "all",
+          "uses": 0,
+          "consumeOn": "hit",
+          "consumePeriodic": false,
+          "maxStacks": 1,
+          "stackMode": "refresh",
+          "periodic": {
+            "type": "damage",
+            "interval": 1,
+            "value": 40,
+            "coefficient": {
+              "type": "calculated",
+              "field": "magic",
+              "calc": "percent",
+              "value": 40,
+              "effectId": ""
+            },
+            "growthInterval": 0,
+            "growthValue": 0,
+            "damageType": "magic",
+            "resource": "HP"
+          }
+        },
+        "chainCount": 0,
+        "chainRange": 3,
+        "coefficients": [
+          {
+            "type": "fixed",
+            "field": "atk",
+            "calc": "percent",
+            "value": 1,
+            "effectId": ""
+          }
+        ],
+        "healResource": "HP",
+        "drainResource": "MP",
+        "damageType": "physical",
+        "area": 0,
+        "areaCenter": "target",
+        "maxTargets": 0,
+        "critical": 0,
+        "penetration": 0,
+        "moveType": "Walk",
+        "moveSpeed": 1,
+        "distance": 0,
+        "duration": 10,
+        "fieldShape": "circle",
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
+      }
+    ]
+  },
+  {
+    "id": "skill_class_disease_open_wound",
+    "name": "질병형 · 벌어지는 상처",
+    "className": "질병형",
+    "icon": "assets/images/skills/질병형_악화되는 상처.png",
+    "description": "아직 출혈이 없는 적에게 죽을 때까지 지속되는 출혈을 부여합니다. 1초마다 마력의 5% 물리 피해를 주며 10초마다 계수가 1%p 증가합니다.",
+    "slot": "active",
+    "cooldown": 8,
+    "castTime": 1.5,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true
+    },
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 10
+      }
+    ],
+    "actions": [
+      {
+        "type": "add_state",
+        "target": "enemy",
+        "rangeMode": "mainWeapon",
+        "rangeValue": 1,
+        "minRange": 0,
+        "allowSelfTarget": true,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
+        "effect": {
+          "id": "disease_open_wound",
+          "name": "벌어지는 상처",
+          "state": "periodic",
+          "category": "physical",
+          "polarity": "harmful",
+          "dispellable": true,
+          "dispelMode": "id",
+          "dispelCategory": "physical",
+          "dispelPolarity": "harmful",
+          "stat": "atk",
+          "sourceStat": "magic",
+          "mode": "flat",
+          "value": 0,
+          "nextCastTimePercent": 100,
+          "nextResourceCostPercent": 100,
+          "nextCooldownPercent": 100,
+          "reflectPercent": 20,
+          "reflectScope": "all",
+          "reflectDamageType": "fixed",
+          "proxyPercent": 20,
+          "proxyPriority": 100,
+          "proxyScope": "all",
+          "uses": 0,
+          "consumeOn": "hit",
+          "consumePeriodic": false,
+          "maxStacks": 1,
+          "stackMode": "reject",
+          "periodic": {
+            "type": "damage",
+            "interval": 1,
+            "value": 5,
+            "coefficient": {
+              "type": "calculated",
+              "field": "magic",
+              "calc": "percent",
+              "value": 5,
+              "effectId": ""
+            },
+            "growthInterval": 10,
+            "growthValue": 1,
+            "damageType": "physical",
+            "resource": "HP"
+          }
+        },
+        "chainCount": 0,
+        "chainRange": 3,
+        "coefficients": [
+          {
+            "type": "fixed",
+            "field": "atk",
+            "calc": "percent",
+            "value": 1,
+            "effectId": ""
+          }
+        ],
+        "healResource": "HP",
+        "drainResource": "MP",
+        "damageType": "physical",
+        "area": 0,
+        "areaCenter": "target",
+        "maxTargets": 0,
+        "critical": 0,
+        "penetration": 0,
+        "moveType": "Walk",
+        "moveSpeed": 1,
+        "distance": 0,
+        "duration": 0,
+        "fieldShape": "circle",
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
+      }
+    ]
+  },
+  {
+    "id": "skill_class_sniper_shot",
+    "name": "저격수 · 저격",
+    "className": "저격수",
+    "icon": "assets/images/skills/저격수_저격.png",
+    "description": "3초 동안 저격하며 시전 중 받는 피해가 30% 증가합니다. 주무기 사거리 200%에서 공격력 300%의 물리 피해를 줍니다.",
+    "slot": "active",
+    "cooldown": 8,
+    "castTime": 3,
+    "castReceivedDamagePercent": 130,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true
+    },
+    "resourceCosts": [
+      {
+        "resource": "ST",
+        "mode": "fixed",
+        "value": 10
+      }
+    ],
+    "actions": [
+      {
+        "type": "deal_damage",
+        "target": "enemy",
+        "rangeMode": "mainWeapon",
+        "rangeValue": 1,
+        "rangeMultiplier": 200,
+        "minRange": 0,
+        "allowSelfTarget": true,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
+        "chainCount": 0,
+        "chainRange": 3,
+        "chainOrigin": "previous",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "atk",
+            "calc": "percent",
+            "value": 300,
+            "effectId": ""
+          }
+        ],
+        "healResource": "HP",
+        "drainResource": "MP",
+        "damageType": "physical",
+        "area": 0,
+        "areaCenter": "target",
+        "maxTargets": 1,
+        "critical": 0,
+        "penetration": 0,
+        "moveType": "Walk",
+        "moveSpeed": 1,
+        "distance": 0,
+        "duration": 0,
+        "fieldShape": "circle",
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
+      }
+    ]
+  },
+  {
+    "id": "skill_class_sniper_mode",
+    "name": "저격수 · 저격모드",
+    "className": "저격수",
+    "icon": "assets/images/skills/저격수_저격.png",
+    "description": "저격모드로 전환해 공격력과 사거리가 30% 증가하고 이동할 수 없으며, 받는 피해가 30% 증가합니다. HP 30% 이하에서 모드를 해제하고 적에게서 후퇴합니다.",
+    "slot": "active",
+    "cooldown": 8,
+    "castTime": 0.5,
+    "castReceivedDamagePercent": 100,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true
+    },
+    "resourceCosts": [
+      {
+        "resource": "ST",
+        "mode": "fixed",
+        "value": 10
+      }
+    ],
+    "actions": [
+      {
+        "type": "transform",
+        "target": "self",
+        "rangeMode": "mainWeapon",
+        "rangeValue": 1,
+        "rangeMultiplier": 100,
+        "minRange": 0,
+        "allowSelfTarget": true,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
+        "chainCount": 0,
+        "chainRange": 3,
+        "chainOrigin": "previous",
+        "coefficients": [],
+        "healResource": "HP",
+        "drainResource": "MP",
+        "damageType": "physical",
+        "area": 0,
+        "areaCenter": "target",
+        "maxTargets": 1,
+        "critical": 0,
+        "penetration": 0,
+        "moveType": "Walk",
+        "moveSpeed": 1,
+        "distance": 0,
+        "duration": 0,
+        "fieldShape": "circle",
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1,
+        "transform": {
+          "id": "sniper_mode",
+          "name": "저격모드",
+          "mode": "percent",
+          "modifiers": {
+            "atk": 30,
+            "magic": 0,
+            "defense": 0,
+            "resistance": 0,
+            "speed": 0,
+            "attackRange": 30,
+            "attackSpeed": 0,
+            "castSpeed": 0
+          },
+          "skillIds": [],
+          "attackSkillId": "",
+          "receivedDamagePercent": 130,
+          "immobile": true,
+          "exitHpBelow": 30,
+          "retreatHpBelow": 30
+        }
       }
     ]
   }

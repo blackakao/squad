@@ -47,6 +47,7 @@
   unit.effectTimer = 0;
   unit.skillBubbleText = "";
   unit.skillBubbleTimer = 0;
+  unit.retreatHpBelow = 0;
 }
 
 let nextSummonId = 1;
@@ -743,7 +744,10 @@ function moveUnit(unit, targets) {
     return;
   }
 
-  if (unit.castTimer > 0 || unit.channelAction || hasBattleState(unit,"stun") || hasBattleState(unit,"root")) {
+  const hpPercent=unit.maxHp > 0 ? unit.hp/unit.maxHp*100 : 0;
+  if (unit.retreatHpBelow > 0 && hpPercent > unit.retreatHpBelow) unit.retreatHpBelow=0;
+  const transform=(unit.activeEffects ?? []).find(effect=>effect.kind === "transform");
+  if (unit.castTimer > 0 || unit.channelAction || transform?.immobile || hasBattleState(unit,"stun") || hasBattleState(unit,"root")) {
     unit.vx = 0;
     unit.vy = 0;
     unit.isMoving = false;
@@ -769,7 +773,10 @@ function moveUnit(unit, targets) {
   const speed = (unit.speed ?? ROLE_STATS[unit.role]?.speedMultiplier ?? 1) * (unit.exhausted ? EXHAUSTED_MOVE_MULTIPLIER : 1);
   const desiredRange = getUnitRange(unit);
 
-  if (dist > desiredRange) {
+  if (unit.retreatHpBelow > 0 && hpPercent <= unit.retreatHpBelow) {
+    unit.vx = -(dx / dist) * speed;
+    unit.vy = -(dy / dist) * speed;
+  } else if (dist > desiredRange) {
     unit.vx = (dx / dist) * speed;
     unit.vy = (dy / dist) * speed;
   } else if (dist < desiredRange - 5 && ["ranged", "healer"].includes(unit.ai ?? unit.role)) {
@@ -842,6 +849,7 @@ function updateCombat() {
 function takeAction(unit, allies, enemies) {
   if (!unit.alive) return;
   tickSkillCooldowns(unit);
+  if (unit.retreatHpBelow > 0 && unit.maxHp > 0 && unit.hp/unit.maxHp*100 <= unit.retreatHpBelow) return;
   if (hasBattleState(unit,"stun")) return;
   const hasIndependentWeapons=(unit.weaponAttackStates?.length ?? 0)>1;
   if (hasIndependentWeapons) updateIndependentWeaponAttacks(unit,enemies);
@@ -1171,7 +1179,8 @@ function dispatchSkillActions(source, preferredTarget, skill, allowProjectiles, 
   const hasMovement = skill.actions.some(action => action.type === "move");
   skill.actions.forEach(action => {
     if (!source.alive || (channelAction && source.channelAction !== channelAction)) return;
-    const target = resolveSkillActionTarget(source, action, preferredTarget, skill);
+    const lockTarget=Boolean(channelAction && normalizeSkillChannel(skill.channel).lockTarget && action.target !== "self");
+    const target = resolveSkillActionTarget(source, action, preferredTarget, skill, lockTarget);
     if (!target) return;
     const ranged = allowProjectiles && !hasMovement && ["deal_damage", "heal", "drain_resource"].includes(action.type)
       && target !== source && (forceProjectile || distance(source, target) > ATTACK_RANGE_UNIT)
@@ -1190,7 +1199,8 @@ function dispatchSkillActionSequence(source, preferredTarget, skill, allowProjec
   for (let index=startIndex; index<skill.actions.length; index++) {
     if (!source.alive || (channelAction && source.channelAction !== channelAction)) return;
     const action=skill.actions[index];
-    const target=resolveSkillActionTarget(source,action,preferredTarget,skill);
+    const lockTarget=Boolean(channelAction && normalizeSkillChannel(skill.channel).lockTarget && action.target !== "self");
+    const target=resolveSkillActionTarget(source,action,preferredTarget,skill,lockTarget);
     if (!target) {
       execution.previousActualDamage=0;
       execution.previousActualHealing=0;

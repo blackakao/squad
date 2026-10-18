@@ -150,6 +150,7 @@ function engine() {
   const context = {
     window: {}, performance, structuredClone, playerSquad: [], enemySquad: [], projectiles: [],
     BASE_ATTACK_COOLDOWN: 60, ATTACK_RANGE_UNIT: 10, COLLISION_DISTANCE: 20, UNIT_RADIUS: 5, PROJECTILE_SPEED: 1000,
+    ROLE_STATS:{melee:{speedMultiplier:1},ranged:{speedMultiplier:1},healer:{speedMultiplier:1},tank:{speedMultiplier:1}},EXHAUSTED_MOVE_MULTIPLIER:.5,
     canvas: {width: 1000, height: 1000}, DEFAULT_RESOURCE_VALUE: 100, MP_ACTION_COST:5, ST_PHYSICAL_ATTACK_COST:10,
     EFFECT_DURATION: 5, skillsJson: [],
     createStats: () => ({damage: 0, taken: 0, heal: 0}),
@@ -1035,6 +1036,17 @@ test('target cooldown separates targets, casters and actions and expires at its 
  vm.runInContext('combatEventTick=59',e);assert.equal(e.resolveSkillActionTarget(s,sk.actions[0],t,sk),null);
  vm.runInContext('combatEventTick=60',e);e.applySkill(s,t,sk);assert.equal(t.hp,70);
  e.resetUnitForBattle(s);assert.equal(e.resolveSkillActionTarget(s,sk.actions[0],t,sk),t);
+});
+test('global target cooldown blocks every caster and exposes a named expiring effect',()=>{
+ const e=engine(),medic=unit(e),otherMedic=unit(e),ally=unit(e);ally.hp=10;
+ const sk=skill(e,{type:'heal',target:'ally',healResource:'HP',targetCooldown:15,targetCooldownScope:'global',
+  targetCooldownEffectId:'medic_inargansin_overdose_lock',targetCooldownEffectName:'과다투약 금지',coefficients:[{type:'fixed',value:2000}]});
+ e.applySkillAction(medic,ally,sk.actions[0],sk);assert.equal(ally.hp,100);assert.equal(ally.activeEffects[0].name,'과다투약 금지');
+ ally.hp=10;e.applySkillAction(otherMedic,ally,sk.actions[0],sk);assert.equal(ally.hp,10);
+ for(let i=0;i<900;i++)e.updateBattleEffects();assert.equal(ally.activeEffects.length,0);
+ e.applySkillAction(otherMedic,ally,sk.actions[0],sk);assert.equal(ally.hp,100);
+ const round=e.normalizeSkillJson([sk]).find(item=>item.id===sk.id).actions[0];
+ assert.equal(round.targetCooldownScope,'global');assert.equal(round.targetCooldownEffectId,'medic_inargansin_overdose_lock');
 });
 test('area filters conditions before target cap and rechecks them at impact',()=>{
  const e=engine(),s=unit(e),t=unit(e,'enemy',105),t2=unit(e,'enemy',106);t2.hp=40;
@@ -1925,4 +1937,138 @@ test('battle records preserve normalized event snapshots and cap legacy payloads
  const normalized=e.normalizeRecordJson([raw])[0];
  assert.equal(normalized.events.length,1000);assert.equal(normalized.events[0].id,2);assert.equal(normalized.events.at(-1).type,'heal');assert.equal(normalized.events.at(-1).amount,3);
  assert.match(e.renderRecordEvents(normalized.events.slice(-1)),/1건 보기/);
+});
+
+test('target maximum HP coefficients calculate healing from the selected target',()=>{
+ const e=engine(),source=unit(e),target=unit(e);target.maxHp=120;target.hp=30;
+ const action=e.createDefaultAction('heal');action.coefficients=[{type:'calculated',field:'targetMaxHp',calc:'percent',value:25}];
+ assert.equal(e.applyActionHeal(source,target,action),30);assert.equal(target.hp,60);
+});
+
+test('channel damage scaling only applies while channeling and clears on finish',()=>{
+ const e=engine(),source=unit(e),attacker=unit(e,'enemy',105);source.maxHp=source.hp=300;
+ const s=skill(e,{type:'heal',target:'self',coefficients:[{type:'fixed',value:1}]});
+ s.channel={duration:2,interval:1,interruptOnDamage:false,lockTarget:false,receivedDamagePercent:70};
+ e.startBattleChannel(source,{type:'skill',target:source,skill:s},s);
+ const damage={type:'deal_damage',damageType:'fixed',coefficients:[{type:'fixed',value:100}]};
+ e.applyActionDamage(attacker,source,damage);assert.equal(source.hp,230);
+ e.finishBattleChannel(source);e.applyActionDamage(attacker,source,damage);assert.equal(source.hp,130);
+});
+
+test('locked channels keep their first target instead of selecting another ally',()=>{
+ const e=engine(),source=unit(e),first=unit(e,'player',105),other=unit(e,'player',106);
+ first.hp=50;other.hp=10;const action=e.createDefaultAction('heal');action.target='ally';action.coefficients=[{type:'fixed',value:50}];
+ const s=skill(e,action);s.channel={duration:2,interval:1,interruptOnDamage:false,lockTarget:true,receivedDamagePercent:100};
+ const running={type:'skill',target:first,skill:s};e.startBattleChannel(source,running,s);
+ for(let i=0;i<120;i++)e.updateBattleChannel(source);
+ assert.equal(first.hp,100);assert.equal(other.hp,10);
+});
+
+test('medic and serum skill data use the approved channel and result-linked rules',()=>{
+ const data=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8'));
+ const find=id=>data.find(item=>item.id===id);
+ const firstAid=find('skill_class_medic_first_aid'),drain=find('skill_class_serum_drain'),donation=find('skill_class_serum_transfusion');
+ assert.deepEqual(firstAid.channel,{duration:3,interval:1,interruptOnDamage:false,lockTarget:true,receivedDamagePercent:70});
+ assert.equal(firstAid.actions[0].coefficients[0].field,'targetMaxHp');assert.equal(firstAid.actions[0].target,'ally');
+ assert.equal(drain.name,'혈청형 · 흡혈');assert.equal(drain.actions[1].coefficients[0].field,'previousActualDamage');assert.equal(drain.actions[1].coefficients[0].value,60);
+ assert.equal(donation.name,'혈청형 · 헌혈');assert.equal(donation.channel.duration,5);assert.equal(donation.channel.lockTarget,true);
+ assert.equal(donation.actions[1].drainResource,'HP');assert.equal(donation.actions[1].coefficients[0].field,'previousActualHealing');assert.equal(donation.actions[1].coefficients[0].value,30);
+});
+
+test('actions can exclude their caster from allied target selection',()=>{
+ const e=engine(),source=unit(e),ally=unit(e);source.hp=20;ally.hp=100;
+ const action=e.createDefaultAction('heal');action.target='ally';action.allowSelfTarget=false;action.coefficients=[{type:'fixed',value:20}];
+ const normalized=e.normalizeSkillAction(action);assert.equal(normalized.allowSelfTarget,false);
+ assert.equal(e.resolveSkillActionTarget(source,normalized,source),null);
+ ally.hp=50;assert.equal(e.resolveSkillActionTarget(source,normalized,source),ally);
+});
+
+test('periodic coefficients snapshot caster stats, grow by interval and reject reapplication',()=>{
+ const e=engine(),source=unit(e),otherCaster=unit(e),target=unit(e,'enemy',105);target.maxHp=target.hp=1000;
+ const action=e.createDefaultAction('add_state');action.target='enemy';action.duration=0;
+ Object.assign(action.effect,{id:'growing_wound',name:'growing wound',state:'periodic',category:'physical',polarity:'harmful',stackMode:'reject',
+   periodic:{type:'damage',interval:1,value:5,coefficient:{type:'calculated',field:'magic',calc:'percent',value:5},growthInterval:10,growthValue:1,damageType:'physical',resource:'HP'}});
+ const s=e.normalizeSkillJson([{id:'growing_wound_skill',name:'growing wound',actions:[action]}]).find(item=>item.id==='growing_wound_skill');
+ e.applySkill(source,target,s);source.magic=200;e.applySkill(otherCaster,target,s);assert.equal(target.activeEffects.length,1);
+ for(let i=0;i<660;i++)e.updateBattleEffects();
+ assert.ok(Math.abs(target.hp-988.6)<1e-9);assert.equal(target.activeEffects.length,1);
+});
+
+test('disease skill data and self exclusions match their class rules',()=>{
+ const data=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8'));
+ const find=id=>data.find(item=>item.id===id);
+ assert.equal(find('skill_class_medic_first_aid').actions[0].allowSelfTarget,false);
+ assert.equal(find('skill_class_serum_transfusion').actions[0].allowSelfTarget,false);
+ const virus=find('skill_class_disease_virus'),wound=find('skill_class_disease_open_wound');
+ assert.equal(virus.castTime,1.5);assert.equal(virus.actions[0].duration,10);assert.equal(virus.actions[0].effect.periodic.coefficient.value,40);
+ assert.equal(wound.castTime,1.5);assert.equal(wound.actions[0].duration,0);assert.equal(wound.actions[0].effect.stackMode,'reject');
+ assert.equal(wound.actions[0].effect.periodic.growthInterval,10);assert.equal(wound.actions[0].effect.periodic.growthValue,1);
+ const characters=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','characters.json'),'utf8'));
+ assert.deepEqual(characters.find(character=>character.name==='질병형').skillIds,[virus.id,wound.id]);
+});
+
+test('damage-trigger and custom-resource coefficients preserve references and calculate from runtime values',()=>{
+ const e=engine(),source=unit(e),attacker=unit(e,'enemy',105);
+ source.customResources=e.createBattleCustomResources([{id:'effort_magic',name:'effort',initial:0,max:999}]);
+ const enduranceAction=e.createDefaultAction('heal');enduranceAction.target='self';enduranceAction.healResource='custom:effort_magic';
+ enduranceAction.coefficients=[{type:'calculated',field:'triggerActualDamage',calc:'percent',value:5}];
+ equipPassive(e,source,'damaged',enduranceAction);
+ const incoming=e.createDefaultAction('deal_damage');incoming.target='enemy';incoming.coefficients=[{type:'fixed',value:40}];
+ e.applySkill(attacker,source,skill(e,incoming));
+ assert.equal(source.hp,60);assert.equal(source.customResources.effort_magic.current,2);
+ const strike=e.createDefaultAction('deal_damage');strike.target='enemy';strike.coefficients=[
+   {type:'calculated',field:'atk',calc:'percent',value:100},
+   {type:'calculated',field:'customResourceCurrent',resourceId:'effort_magic',calc:'percent',value:100}
+ ];
+ attacker.maxHp=attacker.hp=100;e.applySkill(source,attacker,skill(e,strike));
+ assert.equal(attacker.hp,88);assert.equal(source.customResources.effort_magic.current,2);
+ const normalized=e.normalizeCoefficient({type:'calculated',field:'customResourceCurrent',resourceId:' Effort Magic! ',calc:'percent',value:100});
+ assert.equal(normalized.resourceId,'effortmagic');
+});
+
+test('guardian effort skills and custom resource match their class rules',()=>{
+ const skills=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8'));
+ const characters=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','characters.json'),'utf8'));
+ const find=id=>skills.find(item=>item.id===id);
+ const strike=find('skill_class_guardian_effort_strike'),endurance=find('skill_class_guardian_endurance');
+ assert.equal(strike.castTime,0);assert.equal(strike.cooldown,10);assert.equal(strike.actions[0].rangeMode,'mainWeapon');
+ assert.deepEqual(Array.from(strike.actions[0].coefficients,c=>[c.field,c.value]),[['atk',100],['customResourceCurrent',100]]);
+ assert.equal(strike.actions[0].coefficients[1].resourceId,'effort_magic');
+ assert.deepEqual(endurance.passiveTrigger,{event:'damaged',chance:100,includePeriodic:true});
+ assert.equal(endurance.actions[0].healResource,'custom:effort_magic');assert.equal(endurance.actions[0].coefficients[0].field,'triggerActualDamage');
+ const guardian=characters.find(character=>character.skillIds?.includes(strike.id));
+ assert.deepEqual(guardian.skillIds,['skill_class_guardian_whirl',strike.id,endurance.id]);
+ assert.deepEqual(guardian.customResources.find(resource=>resource.id==='effort_magic'),{id:'effort_magic',name:'노력[마법]',initial:0,max:999999});
+});
+
+test('primary-anchored chains select only additional targets around the first target',()=>{
+ const e=engine(),source=unit(e),primary=unit(e,'enemy',200),near=unit(e,'enemy',240),hopOnly=unit(e,'enemy',280),nearer=unit(e,'enemy',230);
+ const action=e.createDefaultAction('deal_damage');Object.assign(action,{target:'enemy',rangeMode:'custom',rangeValue:20,chainCount:2,chainRange:5,chainOrigin:'primary',maxTargets:3});
+ action.coefficients=[{type:'fixed',value:10}];const s=skill(e,action);e.applySkill(source,primary,s);
+ assert.equal(primary.hp,90);assert.equal(near.hp,90);assert.equal(nearer.hp,90);assert.equal(hopOnly.hp,100);
+ const legacy={...action,chainOrigin:'previous'};primary.hp=near.hp=nearer.hp=hopOnly.hp=100;e.applySkill(source,primary,skill(e,legacy));
+ assert.equal(primary.hp,90);assert.equal(nearer.hp,90);
+});
+
+test('weapon range multiplier cast vulnerability and conditional sniper retreat execute at runtime',()=>{
+ const e=engine(),sniper=unit(e),enemy=unit(e,'enemy',200);sniper.maxHp=sniper.hp=200;
+ const shot=e.createDefaultAction('deal_damage');Object.assign(shot,{target:'enemy',rangeMode:'mainWeapon',rangeMultiplier:200});shot.coefficients=[{type:'fixed',value:10}];
+ assert.equal(e.resolveSkillActionTarget(sniper,shot,enemy),enemy);
+ sniper.pendingAction={skill:{castReceivedDamagePercent:130}};const hit=e.createDefaultAction('deal_damage');hit.coefficients=[{type:'fixed',value:10}];e.applyActionDamage(enemy,sniper,hit);assert.equal(sniper.hp,187);sniper.pendingAction=null;
+ const mode=e.createDefaultAction('transform');mode.target='self';mode.duration=0;Object.assign(mode.transform,{id:'sniper_mode',name:'sniper mode',mode:'percent',receivedDamagePercent:130,immobile:true,exitHpBelow:30,retreatHpBelow:30});mode.transform.modifiers.atk=30;mode.transform.modifiers.attackRange=30;
+ e.applySkill(sniper,sniper,skill(e,mode));assert.equal(sniper.atk,13);assert.equal(sniper.attackRange,6.5);
+ const before=sniper.x;e.moveUnit(sniper,[enemy]);assert.equal(sniper.x,before);
+ sniper.hp=60;e.updateBattleEffects();assert.equal(sniper.activeEffects.some(effect=>effect.kind==='transform'),false);assert.equal(sniper.retreatHpBelow,30);
+ e.moveUnit(sniper,[enemy]);assert.ok(sniper.x<before);
+});
+
+test('archer and sniper skill data match their class rules',()=>{
+ const skills=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8'));
+ const characters=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','characters.json'),'utf8'));
+ const find=id=>skills.find(item=>item.id===id),multi=find('skill_class_archer_multishot'),power=find('skill_class_archer_power_shot'),shot=find('skill_class_sniper_shot'),mode=find('skill_class_sniper_mode');
+ assert.deepEqual([multi.castTime,multi.cooldown,multi.actions[0].chainCount,multi.actions[0].chainRange,multi.actions[0].chainOrigin,multi.actions[0].maxTargets],[0,5,2,5,'primary',3]);
+ assert.equal(multi.actions[0].coefficients[0].value,125);assert.equal(power.actions[0].coefficients[0].value,200);
+ assert.deepEqual([shot.castTime,shot.castReceivedDamagePercent,shot.actions[0].rangeMultiplier,shot.actions[0].coefficients[0].value],[3,130,200,300]);
+ assert.deepEqual([mode.actions[0].transform.receivedDamagePercent,mode.actions[0].transform.immobile,mode.actions[0].transform.exitHpBelow,mode.actions[0].transform.retreatHpBelow],[130,true,30,30]);
+ assert.deepEqual(characters.find(c=>c.name==='궁사').skillIds,[multi.id,power.id]);assert.deepEqual(characters.find(c=>c.name==='저격수').skillIds,[shot.id,mode.id]);
 });
