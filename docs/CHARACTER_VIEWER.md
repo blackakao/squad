@@ -52,7 +52,7 @@ python server.py
 4. XYZ 위치, XYZ 회전(도), 배율로 fit을 조정한다. `Transform 초기화`는 모두 0과 배율 1로 되돌린다.
 5. `외부 머리 제거`는 GLB instance를 dispose하고 기존 선택 머리를 복원한다.
 
-등록된 첫 샘플은 [female_hair_ref01.glb](../assets/characters/hair/imported/female_hair_ref01.glb)이다. 파일 제작 규격은 [외부 머리 GLB 규격](../assets/characters/hair/README.md)을 따른다. 최상위 Mesh 전체에 동일한 Blender 축 transform이 중복 저장된 파일은 공통 역행렬로 자동 보정한다. 이 기능은 개발용 fit 미리보기이며, 외부 머리 ID와 transform을 조합 저장소에 기록하는 정식 catalog 등록은 아직 지원하지 않는다.
+등록된 첫 샘플은 [여성_머리_01.glb](../assets/characters/hair/imported/여성_머리_01.glb)이다. 파일 제작 규격은 [외부 머리 GLB 규격](../assets/characters/hair/README.md)을 따른다. 최상위 Mesh 전체에 동일한 Blender 축 transform이 중복 저장된 파일은 공통 역행렬로 자동 보정한다. 이 기능은 개발용 fit 미리보기이며, 외부 머리 ID와 transform을 조합 저장소에 기록하는 정식 catalog 등록은 아직 지원하지 않는다.
 
 ## 조작과 정보
 

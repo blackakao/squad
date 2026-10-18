@@ -3,6 +3,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { disposeObject, inspectModel } from './CharacterViewer.js?v=20261010-visual12';
 import { capturePartSpace } from '../portrait/PartSpace.js?v=20261007-parts2';
 import { createRandomPartPlan } from './part-randomizer.js?v=20261014-gender1';
+import { applyPartColor } from './part-colors.js?v=20261017-color1';
 
 const API = '/api/character-assets/parts';
 const DEFAULT_TRANSFORM = Object.freeze({ position: [0, 0, 0], rotation: [0, 0, 0], scale: 1 });
@@ -98,6 +99,7 @@ export class CharacterPartPreview {
     this.instances = new Map();
     this.selections = new Map();
     this.transforms = new Map();
+    this.colors = new Map();
     this.tokens = new Map();
     this.hidden = new Map();
     this.pendingLoads = 0;
@@ -149,7 +151,7 @@ export class CharacterPartPreview {
     for (const [node, visible] of this.hidden) node.visible = visible;
     this.hidden.clear();
     const showGlb = this.mode === 'glb';
-    for (const record of this.instances.values()) record.owner.visible = showGlb;
+    for (const record of this.instances.values()) record.owner.visible = showGlb && !record.owner.userData.equipmentVisibilityHidden;
     if (!showGlb || !this.root) return;
     for (const category of this.categories) {
       for (const name of category.hideNodes || []) {
@@ -216,6 +218,8 @@ export class CharacterPartPreview {
       this.instances.set(category.id, { owner, adjustment, source, info, path: sourcePath, modified, name });
       if (previous) { previous.owner.removeFromParent(); disposeObject(previous.owner); }
       this.selections.set(category.id, sourcePath);
+      const selectedColor = this.colors.get(category.id);
+      if (selectedColor && category.colorProfile) applyPartColor(source, category.colorProfile, selectedColor);
       this.syncVisibility();
       const bindingStatus = binding.rebound.length
         ? ` | Base Skeleton bound: ${binding.rebound.length}`
@@ -263,6 +267,14 @@ export class CharacterPartPreview {
     adjustment.position.set(...value.position);
     adjustment.rotation.set(...value.rotation.map(THREE.MathUtils.degToRad));
     adjustment.scale.setScalar(value.scale);
+  }
+
+  setColor(categoryId, value) {
+    if (value) this.colors.set(categoryId, value);
+    else this.colors.delete(categoryId);
+    const record = this.instances.get(categoryId);
+    const category = this.categories.find(item => item.id === categoryId);
+    return record && category?.colorProfile ? applyPartColor(record.source, category.colorProfile, value) : 0;
   }
 
   clearInstances() {

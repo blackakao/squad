@@ -236,6 +236,8 @@ function interruptBattleCast(unit, reason = "상태 효과") {
   if (pending.type === "skill") {
     unit.skillCooldowns ??= {};
     unit.skillCooldowns[pending.skill.id] = getModifiedSkillCooldownTicks(pending.skill,unit,pending.skillModifier);
+    unit.skillCooldownTotals ??= {};
+    unit.skillCooldownTotals[pending.skill.id] = unit.skillCooldowns[pending.skill.id];
   } else unit.attackCooldown = getAttackCooldown(unit);
   unit.pendingAction = null;unit.castTimer=0;unit.castDuration=0;
   publishBattleEvents([{type:"cast_interrupt",source:unit,target:pending.target,skill:pending.skill,reason}]);

@@ -119,6 +119,7 @@
 
 - `character-viewer.html`은 현재 GLB 전용 조립 UI다.
 - `js/character-viewer/main-assembler.js`가 Base, 애니메이션, 상단 작업을 연결한다.
-- `js/character-viewer/assembler.js`가 레지스트리 기반 신체/장비 선택 상태, 무작위 조합, 저장/복원을 관리한다.
+- `js/character-viewer/assembler.js`가 성별로 필터링한 레지스트리 기반 신체/장비 선택 상태, 파츠 색상, 무작위 조합, 저장/복원을 관리한다. `part-colors.js`는 머리·눈·의류·발 장비·머리 장비별 팔레트와 색상 변경 대상 머티리얼을 분리한다.
 - `CharacterPartPreview`는 신체와 장비가 공유하는 GLTFLoader, attachment, Skeleton 재바인딩, token 경쟁 방지, dispose 계층이다.
+- `js/character-viewer/equipment-visibility.js`는 GLB `hideHair`/`bodyHide` 메타데이터를 읽어 Hair 렌더링과 기본 신체 triangle mask를 적용한다. 선택 상태는 바꾸지 않으며 의류 해제 시 원본 Geometry를 복원한다.
 - `character-viewer-legacy.html`과 `main-legacy.js`는 이전 JS 절차형 제작 환경을 보존한다.

@@ -6,8 +6,8 @@ function pickIndex(length, random) {
 
 function fileGender(file) {
   const name = String(file?.name || file?.displayName || file?.path?.split('/').pop() || '').toLowerCase();
-  if (name.startsWith('female')) return 'female';
-  if (name.startsWith('male')) return 'male';
+  if (file?.gender === 'female' || name.startsWith('female') || name.startsWith('여성')) return 'female';
+  if (file?.gender === 'male' || name.startsWith('male') || name.startsWith('남성')) return 'male';
   return null;
 }
 

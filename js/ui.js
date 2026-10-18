@@ -125,9 +125,11 @@ const itemAttackSkillEl = document.getElementById("itemAttackSkill");
 const skillTableBodyEl = document.getElementById("skillTableBody");
 const skillModalEl = document.getElementById("skillModal");
 const skillModalTitleEl = document.getElementById("skillModalTitle");
+const skillDeleteButtonEl = document.getElementById("skillDeleteButton");
 const skillFormEl = document.getElementById("skillForm");
 const skillEditIndexEl = document.getElementById("skillEditIndex");
 const skillNameEl = document.getElementById("skillName");
+const skillClassNameEl = document.getElementById("skillClassName");
 const skillSlotEl = document.getElementById("skillSlot");
 const skillCooldownEl = document.getElementById("skillCooldown");
 const skillDescriptionEl = document.getElementById("skillDescription");
@@ -948,6 +950,7 @@ async function showPage(pageName) {
     renderCategoryPage();
   } else if (pageName === "skill") {
     await loadSkillJson();
+    await loadCharacterJson();
     await loadItemJson();
     renderSkillPage();
   } else if (pageName === "image") {
@@ -987,6 +990,28 @@ function initRoleOptions() {
 
 function renderCharacterFactionOptions() {
   characterFactionEl.innerHTML = factionsJson.map(faction => `<option value="${escapeHtml(faction)}">${escapeHtml(faction)}</option>`).join("");
+}
+
+function renderBattleSkillRow(unit) {
+  if (typeof getSkillById !== "function") return "";
+  const transform = (unit?.activeEffects ?? []).find(effect => effect.kind === "transform");
+  const ids = transform?.skillIds?.length ? transform.skillIds : unit?.skillIds;
+  const skills = [
+    ...(Array.isArray(ids) ? ids.map(getSkillById).filter(Boolean) : []),
+    ...(Array.isArray(unit?.runtimeCopiedSkills) ? unit.runtimeCopiedSkills : [])
+  ].filter(skill => !isDefaultSkill(skill.id));
+  if (!skills.length) return "";
+  return `<div class="battle-skill-row" aria-label="${escapeHtml(unit.name)} 장착 스킬">${skills.map(skill => {
+    const remaining = Math.max(0, Number(unit.skillCooldowns?.[skill.id]) || 0);
+    const total = Math.max(remaining, Number(unit.skillCooldownTotals?.[skill.id]) || 0);
+    const angle = total > 0 ? Math.max(0, Math.min(360, remaining / total * 360)) : 0;
+    const seconds = remaining > 0 ? Math.ceil(remaining / BASE_ATTACK_COOLDOWN * 10) / 10 : 0;
+    const icon = recordImagePath(skill.icon);
+    return `<span class="battle-skill-icon" title="${escapeHtml(skill.name)}${remaining > 0 ? ` · ${seconds}초` : ""}">
+      ${icon ? `<img src="${escapeHtml(icon)}" alt="" onerror="this.hidden=true">` : `<span class="battle-skill-placeholder">${escapeHtml(String(skill.name).slice(0, 1))}</span>`}
+      ${remaining > 0 ? `<span class="battle-skill-cooldown" style="--cooldown-angle:${angle}deg"></span><span class="battle-skill-time">${seconds}</span>` : ""}
+    </span>`;
+  }).join("")}</div>`;
 }
 
 function renderStatus(units, colorResolver) {
@@ -1041,6 +1066,7 @@ function renderStatus(units, colorResolver) {
           <div class="cast-fill" style="width:${castRatio}%;"></div>
           <div class="hp-label">${castText}</div>
         </div>
+        ${renderBattleSkillRow(unit)}
       </div>
     `;
   }).join("");

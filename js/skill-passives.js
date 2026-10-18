@@ -59,6 +59,8 @@ function handlePassiveBattleEvent(event, context) {
     if (trigger.chance <= 0 || (trigger.chance < 100 && Math.random()*100 >= trigger.chance)) continue;
     owner.passiveLastTriggerTick[skill.id] = event.tick;
     owner.skillCooldowns[skill.id] = getSkillCooldownTicks(skill,owner);
+    owner.skillCooldownTotals ??= {};
+    owner.skillCooldownTotals[skill.id] = owner.skillCooldowns[skill.id];
     const resourceSpent=spendSkillResourceCosts(owner,skill);
     syncAliveState(owner,{source:owner,skill:{...skill,triggered:true},reason:"패시브 자원 소모"});
     if (!owner.alive) continue;

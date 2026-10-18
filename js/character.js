@@ -108,9 +108,7 @@ function openCharacterModal(index = "") {
   characterRoleEl.value = character?.role ?? "melee";
   renderCharacterFactionOptions();
   characterFactionEl.value = character?.faction ?? getDefaultFactionName();
-  characterSkillsEl.innerHTML = typeof getCharacterSkillOptionsHtml === "function"
-    ? getCharacterSkillOptionsHtml(character?.skillIds ?? [])
-    : "";
+  renderCharacterSkillPicker(character?.skillIds ?? []);
   const equipmentRules = normalizeEquipmentRules(character?.equipmentRules);
   characterExtraWeaponSlotsEl.value = equipmentRules.extraWeaponSlots;
   characterTwoHandSingleSlotEl.checked = equipmentRules.twoHandSingleSlot;
@@ -147,7 +145,7 @@ async function saveCharacterFromForm(event) {
     name: characterNameEl.value.trim(),
     role: characterRoleEl.value,
     faction: characterFactionEl.value,
-    skillIds: [...characterSkillsEl.selectedOptions].map(option => option.value),
+    skillIds: [...characterSkillsEl.querySelectorAll('input[type="checkbox"]:checked')].map(input => input.value),
     equipmentRules: normalizeEquipmentRules({
       extraWeaponSlots: characterExtraWeaponSlotsEl.value,
       twoHandSingleSlot: characterTwoHandSingleSlotEl.checked,
@@ -192,6 +190,23 @@ async function saveCharacterFromForm(event) {
     logError("character", "캐릭터 저장 처리 중 실패했습니다.", error);
     alert("캐릭터 데이터를 저장하지 못했습니다.");
   }
+}
+
+function renderCharacterSkillPicker(selectedSkillIds = null) {
+  if (!characterSkillsEl) return;
+  const classSkills = typeof getSkillsForClass === "function" ? getSkillsForClass(characterNameEl.value.trim()) : [];
+  const selected = new Set(selectedSkillIds ?? [...characterSkillsEl.querySelectorAll('input[type="checkbox"]:checked')].map(input => input.value));
+  characterSkillsEl.innerHTML = classSkills.map(skill => `
+    <label class="character-skill-option">
+      <input type="checkbox" value="${escapeHtml(skill.id)}" ${selected.has(skill.id) ? "checked" : ""}>
+      ${recordImagePath(skill.icon) ? `<img src="${escapeHtml(skill.icon)}" alt="" onerror="this.hidden=true">` : `<span class="character-skill-placeholder">${escapeHtml(getSkillShortName(skill).slice(0, 1) || "S")}</span>`}
+      <span><strong>${escapeHtml(getSkillShortName(skill))}</strong><small>${escapeHtml(getSkillSlotLabel(skill.slot))}</small></span>
+    </label>`).join("") || '<div class="empty-text">이 클래스에 등록된 스킬이 없습니다.</div>';
+}
+
+function refreshCharacterSkillPicker(selectAll = false) {
+  const classSkills = typeof getSkillsForClass === "function" ? getSkillsForClass(characterNameEl.value.trim()) : [];
+  renderCharacterSkillPicker(selectAll ? classSkills.map(skill => skill.id) : null);
 }
 
 async function deleteCharacterFromModal() {

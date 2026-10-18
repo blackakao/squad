@@ -586,6 +586,7 @@ function normalizeSkillJson(skills) {
     .map((skill, index) => ({
       id: String(skill?.id ?? `skill_${Date.now()}_${index}`),
       name: String(skill?.name ?? "").trim(),
+      className: inferSkillClassName(skill),
       ...(typeof skill?.icon === 'string' && skill.icon ? {icon: skill.icon} : {}),
       description: String(skill?.description ?? ""),
       slot: normalizeSkillSlot(String(skill?.slot ?? "active").trim()),
@@ -777,6 +778,8 @@ function copyUnitSkill(source, target, action) {
   source.runtimeCopiedSkills = (source.runtimeCopiedSkills ?? []).filter(skill => skill.copySlot !== slot);
   source.runtimeCopiedSkills.push(copy);
   source.skillCooldowns[copy.id] = 0;
+  source.skillCooldownTotals ??= {};
+  source.skillCooldownTotals[copy.id] = 0;
   publishBattleEvents([{type:"skill_copy",source,target,skill:copy,reason:original.name}]);
   addBattleEventLog(source,`${source.name}: ${target.name}의 ${original.name} 복제`);
   return copy;
@@ -1045,23 +1048,66 @@ function summarizeSkillDescription(skill) {
   return description.length > 120 ? description.slice(0, 120) + "…" : description;
 }
 
+function renderSkillClassIdentity(skill) {
+  const className = inferSkillClassName(skill) || "미지정";
+  const character = Array.isArray(characterJson) ? characterJson.find(item => String(item?.name ?? "").trim() === className) : null;
+  const icon = character?.portrait ? renderPortraitCell(character.portrait, className) : `<span class="skill-class-placeholder">${escapeHtml(className === "공용" ? "공" : className.slice(0, 1) || "?")}</span>`;
+  return `<span class="skill-class-identity">${icon}<span>${escapeHtml(className)}</span></span>`;
+}
+
+function formatSkillValueSummary(skill) {
+  const costs = formatResourceCostsSummary(skill.resourceCosts ?? normalizeSkillResourceCosts(skill)) || "소모 없음";
+  const coefficients = (skill.actions ?? []).flatMap(action => action.coefficients ?? []).map(formatCoefficientSummary);
+  const coefficientText = coefficients.length ? [...new Set(coefficients)].slice(0, 3).join(" + ") + (coefficients.length > 3 ? ` 외 ${coefficients.length - 3}개` : "") : "계수 없음";
+  const castTime = skill.castTime == null ? "유닛 기준" : Number(skill.castTime) === 0 ? "즉시" : `${skill.castTime}초`;
+  return `<span class="skill-value-summary"><span><strong>소모</strong> ${escapeHtml(costs)}</span><span><strong>계수</strong> ${escapeHtml(coefficientText)}</span><span><strong>대기</strong> ${escapeHtml(String(skill.cooldown ?? 0))}초 · <strong>시전</strong> ${escapeHtml(castTime)}</span></span>`;
+}
+
 function renderSkillPage() {
   if (!skillTableBodyEl) {
     return;
   }
 
-  skillTableBodyEl.innerHTML = skillsJson.map((skill, index) => `
-    <tr>
-      <td><input type="checkbox" class="skill-check" value="${index}" ${isDefaultSkill(skill.id) ? "disabled" : ""}></td>
+  const classFilter = document.getElementById("skillClassFilter");
+  const selectedClass = classFilter?.value ?? "all";
+  if (classFilter) {
+    const options = ["all", ...getSkillClassNames()];
+    classFilter.innerHTML = options.map(value => `<option value="${escapeHtml(value)}" ${value === selectedClass ? "selected" : ""}>${value === "all" ? "전체 클래스" : escapeHtml(value)}</option>`).join("");
+  }
+  const query = String(document.getElementById("skillSearch")?.value ?? "").trim().toLocaleLowerCase("ko");
+  const slotFilter = document.getElementById("skillSlotFilter")?.value ?? "all";
+  const rows = skillsJson.map((skill, index) => ({ skill, index })).filter(({skill}) =>
+    (selectedClass === "all" || inferSkillClassName(skill) === selectedClass)
+    && (slotFilter === "all" || skill.slot === slotFilter)
+    && (!query || `${skill.name} ${getSkillDescription(skill)}`.toLocaleLowerCase("ko").includes(query)));
+  skillTableBodyEl.innerHTML = rows.map(({skill, index}) => `
+    <tr class="skill-table-row" tabindex="0" role="button" aria-label="${escapeHtml(skill.name)} 수정" onclick="openSkillModal(${index})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openSkillModal(${index});}">
       <td>${renderRecordImageName(skill)}</td>
+      <td>${renderSkillClassIdentity(skill)}</td>
       <td>${renderCategoryIcon("skill", skill.slot, getSkillSlotLabel(skill.slot))}</td>
-      <td>${skill.cooldown}<br>${skill.slot === "passive" ? `패시브 · ${escapeHtml(PASSIVE_TRIGGER_LABELS[skill.passiveTrigger?.event] ?? "조건 미설정")} · ${skill.passiveTrigger?.chance ?? 100}%` : `시전 ${skill.castTime == null ? "유닛 기준" : `${skill.castTime}초`}${skill.channel?.duration > 0 ? `<br>채널링 ${skill.channel.duration}초 · ${skill.channel.interval}초 간격` : ""}`}</td>
+      <td>${formatSkillValueSummary(skill)}</td>
       <td class="skill-description" title="${escapeHtml(getSkillDescription(skill))}">${escapeHtml(summarizeSkillDescription(skill))}
         ${!isSkillExecutable(skill) ? `<div class="skill-support-warning">전투 사용 불가 · ${skill.slot === "passive" && !isPassiveTriggerConfigured(skill) ? "패시브 조건 설정 필요" : `미지원: ${escapeHtml(getUnsupportedActionNames(skill).join(", "))}`}</div>` : ""}
       </td>
-      <td><button type="button" onclick="openSkillModal(${index})">수정</button></td>
     </tr>
-  `).join("");
+  `).join("") || '<tr><td colspan="5" class="empty-text">조건에 맞는 스킬이 없습니다.</td></tr>';
+}
+
+let skillFormInitialState = "";
+
+function captureSkillFormState() {
+  const fields = [...skillFormEl.querySelectorAll("input, select, textarea")].map((field, index) => ({
+    key: field.id || field.name || `${field.tagName}:${index}`,
+    type: field.type,
+    value: field.value,
+    checked: field.checked,
+    selected: field instanceof HTMLSelectElement && field.multiple ? [...field.selectedOptions].map(option => option.value) : undefined
+  }));
+  return JSON.stringify({ fields, icon: getRecordImageSelection("skills") });
+}
+
+function isSkillFormDirty() {
+  return !skillModalEl.classList.contains("hidden") && Boolean(skillFormInitialState) && captureSkillFormState() !== skillFormInitialState;
 }
 
 function openSkillModal(index = "") {
@@ -1069,6 +1115,10 @@ function openSkillModal(index = "") {
   skillModalTitleEl.innerText = skill ? "스킬 수정" : "스킬 추가";
   skillEditIndexEl.value = skill ? index : "";
   skillNameEl.value = skill?.name ?? "";
+  const classNames = getAssignableSkillClassNames();
+  const selectedClass = inferSkillClassName(skill) || "공용";
+  skillClassNameEl.innerHTML = [...new Set(["공용", ...classNames, selectedClass])].map(className => `<option value="${escapeHtml(className)}">${escapeHtml(className)}</option>`).join("");
+  skillClassNameEl.value = selectedClass;
   openRecordImageEditor('skills', skill?.icon);
   skillDescriptionEl.value = skill?.description ?? "";
   skillSlotEl.value = skill?.slot ?? "active";
@@ -1080,16 +1130,29 @@ function openSkillModal(index = "") {
   if (channelDisclosure) channelDisclosure.open = Number(skill?.channel?.duration ?? 0) > 0;
   renderSkillResourceCostsToForm(skill?.resourceCosts ?? normalizeSkillResourceCosts(skill));
   renderSkillActionRows(skill?.actions ?? [createDefaultAction()]);
+  skillDeleteButtonEl?.classList.toggle("hidden", !skill || isDefaultSkill(skill.id));
   skillModalEl.classList.remove("hidden");
+  skillFormInitialState = captureSkillFormState();
 }
 
-function closeSkillModal() {
+async function closeSkillModal(force = false) {
   if (document.getElementById('entityEditorModal')) closeEntityEditor();
+  if (!force && isSkillFormDirty()) {
+    if (confirm("수정된 내용이 있습니다. 저장하고 닫을까요?\n취소를 누르면 변경사항을 버리고 닫습니다.")) {
+      await saveSkillFromForm();
+      return;
+    }
+  }
   skillModalEl.classList.add("hidden");
   skillFormEl.reset();
   skillResourceCostsEl.innerHTML = "";
   skillActionsEl.innerHTML = "";
+  skillFormInitialState = "";
 }
+
+skillModalEl?.addEventListener("click", event => {
+  if (event.target === skillModalEl) closeSkillModal();
+});
 
 function renderSkillActionRows(actions) {
   skillActionsEl.innerHTML = actions.map((action, index) => renderSkillActionRow(normalizeSkillAction(action), index)).join("");
@@ -1582,6 +1645,7 @@ async function saveSkillFromForm(event) {
     skill = {
       id: previous?.id ?? `skill_${Date.now()}`,
       name: skillNameEl.value.trim(),
+      className: skillClassNameEl.value.trim(),
       icon: getRecordImageSelection('skills'),
       description: skillDescriptionEl.value.trim(),
       slot: normalizeSkillSlot(skillSlotEl.value),
@@ -1661,25 +1725,25 @@ async function saveSkillFromForm(event) {
   try {
     renderSkillPage();
     renderItemPage();
-    closeSkillModal();
+    skillFormInitialState = captureSkillFormState();
+    closeSkillModal(true);
   } catch (error) {
     logError("skill", "스킬은 저장됐지만 화면 갱신 중 실패했습니다.", error);
     alert("스킬은 저장됐지만 화면 갱신 중 문제가 발생했습니다. 로그를 확인하세요.");
   }
 }
 
-async function deleteSelectedSkills() {
-  const checkedIndexes = [...document.querySelectorAll(".skill-check:checked")]
-    .map(input => Number(input.value))
-    .sort((a, b) => b - a);
-
-  if (!checkedIndexes.length) {
-    alert("삭제할 스킬을 선택하세요.");
-    return;
-  }
-
-  const deletedIds = checkedIndexes.map(index => skillsJson[index]?.id).filter(Boolean);
-  checkedIndexes.forEach(index => skillsJson.splice(index, 1));
+async function deleteSkillFromModal() {
+  const index = Number(skillEditIndexEl.value);
+  const skill = skillsJson[index];
+  if (!skill || isDefaultSkill(skill.id)) return;
+  if (!confirm(`'${skill.name}' 스킬을 삭제할까요?`)) return;
+  const skillsBeforeDelete = skillsJson.slice();
+  const itemSkillIdsBeforeDelete = itemsJson.map(item => item.attackSkillId);
+  const characterSkillIdsBeforeDelete = characterJson.map(character => Array.isArray(character.skillIds) ? [...character.skillIds] : character.skillIds);
+  const monsterSkillIdsBeforeDelete = monsterJson.map(monster => Array.isArray(monster.skillIds) ? [...monster.skillIds] : monster.skillIds);
+  const deletedIds = [skill.id];
+  skillsJson.splice(index, 1);
   itemsJson.forEach(item => {
     if (deletedIds.includes(item.attackSkillId)) {
       item.attackSkillId = "";
@@ -1703,7 +1767,12 @@ async function deleteSelectedSkills() {
     await saveMonsterJson();
     renderSkillPage();
     renderItemPage();
+    closeSkillModal(true);
   } catch (error) {
+    skillsJson = skillsBeforeDelete;
+    itemsJson.forEach((item, itemIndex) => { item.attackSkillId = itemSkillIdsBeforeDelete[itemIndex]; });
+    characterJson.forEach((character, characterIndex) => { character.skillIds = characterSkillIdsBeforeDelete[characterIndex]; });
+    monsterJson.forEach((monster, monsterIndex) => { monster.skillIds = monsterSkillIdsBeforeDelete[monsterIndex]; });
     logError("skill", "스킬 삭제 처리 중 실패했습니다.", error);
     alert("스킬 데이터를 삭제하지 못했습니다.");
   }
@@ -1879,6 +1948,40 @@ function renderEquipmentSetSwapActionArea(action) {
 function getRuntimeModifierSuppression(unit) {
   return (unit.runtimeRuleOverrides ?? []).reduce((state, rule) => state
     | (rule.disableEquipmentEffects ? 1 : 0) | (rule.disableTeamSynergies ? 2 : 0), 0);
+}
+
+function inferSkillClassName(skill) {
+  const explicit = String(skill?.className ?? "").trim();
+  if (explicit) return explicit;
+  if (isDefaultSkill(skill?.id)) return "공용";
+  const separator = String(skill?.name ?? "").indexOf("·");
+  return separator > 0 ? String(skill.name).slice(0, separator).trim() : "";
+}
+
+function getSkillClassNames() {
+  return [...new Set([
+    ...(Array.isArray(characterJson) ? characterJson.map(character => String(character.name ?? "").trim()) : []),
+    ...skillsJson.map(inferSkillClassName)
+  ].filter(Boolean))].sort((left, right) => left.localeCompare(right, "ko"));
+}
+
+function getAssignableSkillClassNames() {
+  return [...new Set([
+    "공용",
+    ...(Array.isArray(characterJson) ? characterJson.map(character => String(character.name ?? "").trim()) : [])
+  ].filter(Boolean))].sort((left, right) => left.localeCompare(right, "ko"));
+}
+
+function getSkillShortName(skill) {
+  const className = inferSkillClassName(skill);
+  let name = String(skill?.name ?? "").trim();
+  if (className && name.startsWith(`${className} ·`)) name = name.slice(name.indexOf("·") + 1).trim();
+  return name.replace(/\s*\(기본형\)\s*$/, "");
+}
+
+function getSkillsForClass(className) {
+  const normalized = String(className ?? "").trim();
+  return skillsJson.filter(skill => !isDefaultSkill(skill.id) && inferSkillClassName(skill) === normalized && isSkillExecutable(skill));
 }
 
 function applyBattleEquipmentLoadout(target,loadout,index) {

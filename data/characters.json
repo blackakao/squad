@@ -83,7 +83,7 @@
     "attackRange": 3,
     "role": "tank",
     "skillIds": [
-      "skill_1786977113991"
+      "skill_class_knight_charge"
     ],
     "portrait": "assets/images/portraits/character-002.png",
     "attributes": {
@@ -486,9 +486,7 @@
     "resistance": 26.4,
     "attackRange": 6,
     "role": "healer",
-    "skillIds": [
-      "skill_class_spirit_summon"
-    ],
+    "skillIds": [],
     "portrait": "assets/images/portraits/character-008.png",
     "attributes": {
       "str": 0,
@@ -540,12 +538,32 @@
   },
   {
     "name": "흑마법사",
+    "hp": 4785,
+    "mp": 200,
+    "st": 120,
+    "bp": 0,
+    "atk": 12,
+    "magic": 560,
+    "speed": 1,
+    "attackSpeed": 1,
+    "castSpeed": 3,
+    "defense": 11.9,
+    "resistance": 31.4,
+    "attackRange": 4,
     "role": "ranged",
-    "faction": "철엘프",
     "skillIds": [
       "skill_class_warlock_bite",
       "skill_class_warlock_barrier"
     ],
+    "portrait": "assets/images/portraits/character-009.png",
+    "attributes": {
+      "str": 0,
+      "vit": 50,
+      "agi": 0,
+      "focus": 0,
+      "int": 50,
+      "wis": 50
+    },
     "equipmentRules": {
       "extraWeaponSlots": 0,
       "twoHandSingleSlot": false,
@@ -560,15 +578,6 @@
       "reviveStPercent": 100,
       "reviveInvulnerable": 0,
       "revivePosition": "death"
-    },
-    "customResources": [],
-    "attributes": {
-      "str": 0,
-      "vit": 50,
-      "agi": 0,
-      "focus": 0,
-      "int": 50,
-      "wis": 50
     },
     "equipment": {
       "mainWeapon": "item_1781186124129",
@@ -592,20 +601,8 @@
       }
     ],
     "activeEquipmentSet": 0,
-    "portrait": "assets/images/portraits/character-009.png",
-    "hp": 4785,
-    "mp": 200,
-    "st": 120,
-    "bp": 0,
-    "atk": 12,
-    "magic": 560,
-    "speed": 1,
-    "attackSpeed": 1,
-    "castSpeed": 3,
-    "attackType": "magic",
-    "defense": 11.9,
-    "resistance": 31.4,
-    "attackRange": 4
+    "faction": "철엘프",
+    "attackType": "magic"
   },
   {
     "name": "해병",
@@ -958,7 +955,9 @@
     "resistance": 15,
     "attackRange": 1,
     "role": "melee",
-    "skillIds": [],
+    "skillIds": [
+      "skill_class_sniper_shot"
+    ],
     "portrait": "",
     "attributes": {
       "str": 0,
@@ -1153,7 +1152,9 @@
     "resistance": 0,
     "attackRange": 1,
     "role": "tank",
-    "skillIds": [],
+    "skillIds": [
+      "skill_class_guardian_whirl"
+    ],
     "portrait": "",
     "attributes": {
       "str": 0,
@@ -1673,7 +1674,9 @@
     "resistance": 15,
     "attackRange": 1,
     "role": "healer",
-    "skillIds": [],
+    "skillIds": [
+      "skill_class_spirit_summon"
+    ],
     "portrait": "",
     "attributes": {
       "str": 0,
@@ -1803,7 +1806,10 @@
     "resistance": 20,
     "attackRange": 1,
     "role": "healer",
-    "skillIds": [],
+    "skillIds": [
+      "skill_class_serum_drain",
+      "skill_class_serum_transfusion"
+    ],
     "portrait": "",
     "attributes": {
       "str": 0,
@@ -1998,7 +2004,9 @@
     "resistance": 5,
     "attackRange": 1,
     "role": "healer",
-    "skillIds": [],
+    "skillIds": [
+      "skill_class_cheer_medkit"
+    ],
     "portrait": "",
     "attributes": {
       "str": 0,
@@ -2128,7 +2136,9 @@
     "resistance": 5,
     "attackRange": 1,
     "role": "melee",
-    "skillIds": [],
+    "skillIds": [
+      "skill_class_tamer_beast"
+    ],
     "portrait": "",
     "attributes": {
       "str": 0,
@@ -2193,7 +2203,9 @@
     "resistance": 0,
     "attackRange": 1,
     "role": "ranged",
-    "skillIds": [],
+    "skillIds": [
+      "skill_class_fiend_armageddon"
+    ],
     "portrait": "",
     "attributes": {
       "str": 0,
@@ -2258,7 +2270,10 @@
     "resistance": 0,
     "attackRange": 1,
     "role": "melee",
-    "skillIds": [],
+    "skillIds": [
+      "skill_class_assassin_backstab",
+      "skill_class_assassin_smite"
+    ],
     "portrait": "",
     "attributes": {
       "str": 50,
@@ -2453,7 +2468,9 @@
     "resistance": 0,
     "attackRange": 1,
     "role": "healer",
-    "skillIds": [],
+    "skillIds": [
+      "skill_class_puppet_heal"
+    ],
     "portrait": "",
     "attributes": {
       "str": 0,

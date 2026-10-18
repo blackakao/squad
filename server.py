@@ -42,12 +42,12 @@ ASSET_IMAGE_DIRS = {
     "generated": ROOT / "assets" / "images" / "generated",
 }
 CHARACTER_PART_CATEGORIES = (
-    {"id": "hair", "label": "Hair", "folder": "assets/characters/hair/imported", "attachment": "head-root-space", "hideNodes": ["Hair_Anchor", "Independent_Hair"], "randomAllowNone": False},
-    {"id": "eyes", "label": "Eyes", "folder": "assets/characters/parts/eyes", "attachment": "head-root-space", "hideNodes": ["Independent_Eyes"], "randomAllowNone": False},
-    {"id": "eyebrows", "label": "Eyebrows", "folder": "assets/characters/parts/eyebrows", "attachment": "head-root-space", "hideNodes": ["Independent_Eyebrows"], "randomAllowNone": False},
-    {"id": "mouth", "label": "Mouth", "folder": "assets/characters/parts/mouth", "attachment": "head-root-space", "hideNodes": ["Independent_Mouth"], "randomAllowNone": False},
-    {"id": "nose", "label": "Nose", "folder": "assets/characters/parts/nose", "attachment": "head-root-space", "hideNodes": ["Independent_Nose"], "randomAllowNone": False},
-    {"id": "clothes", "label": "Clothes", "folder": "assets/characters/parts/clothes", "attachment": "character-root", "hideNodes": [], "randomAllowNone": False},
+    {"id": "hair", "label": "머리", "folder": "assets/characters/hair/imported", "attachment": "head-root-space", "hideNodes": ["Hair_Anchor", "Independent_Hair"], "randomAllowNone": False},
+    {"id": "eyes", "label": "눈", "folder": "assets/characters/parts/eyes", "attachment": "head-root-space", "hideNodes": ["Independent_Eyes"], "randomAllowNone": False},
+    {"id": "eyebrows", "label": "눈썹", "folder": "assets/characters/parts/eyebrows", "attachment": "head-root-space", "hideNodes": ["Independent_Eyebrows"], "randomAllowNone": False},
+    {"id": "mouth", "label": "입", "folder": "assets/characters/parts/mouth", "attachment": "head-root-space", "hideNodes": ["Independent_Mouth"], "randomAllowNone": False},
+    {"id": "nose", "label": "코", "folder": "assets/characters/parts/nose", "attachment": "head-root-space", "hideNodes": ["Independent_Nose"], "randomAllowNone": False},
+    {"id": "clothes", "label": "의류", "folder": "assets/characters/parts/clothes", "attachment": "character-root", "hideNodes": [], "randomAllowNone": False},
 )
 EQUIPMENT_PART_CATEGORIES = (
     {"id": "equipmentHead", "slot": "head", "label": "머리 장비", "folder": "assets/characters/equipment/head", "attachment": "character-root", "rebindSkeleton": True, "randomAllowNone": True},
@@ -58,6 +58,7 @@ EQUIPMENT_PART_CATEGORIES = (
     {"id": "equipmentOffHand", "slot": "offHand", "label": "보조무기 · 왼손", "folder": "assets/characters/equipment/offHand", "attachment": "character-root", "rebindSkeleton": True, "randomAllowNone": True},
 )
 CHARACTER_HAIR_IMPORT_DIR = ROOT / CHARACTER_PART_CATEGORIES[0]["folder"]
+CHARACTER_ASSET_ALIASES_PATH = ROOT / "assets" / "characters" / "asset-id-aliases.json"
 API_NAME_RE = re.compile(r"^[a-zA-Z0-9_-]+$")
 ASSET_NAME_RE = re.compile(r"[^a-zA-Z0-9_-]+")
 DATA_URL_RE = re.compile(r"^data:image/(?P<ext>png|jpeg|jpg|webp|gif);base64,(?P<data>.+)$", re.DOTALL)
@@ -96,6 +97,11 @@ def list_imported_character_hair():
 
 def list_character_parts():
     """Build the development catalog from the fixed character-part registry."""
+    try:
+        asset_aliases = json.loads(CHARACTER_ASSET_ALIASES_PATH.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        asset_aliases = {}
+
     def list_categories(registry):
         categories = []
         for definition in registry:
@@ -113,6 +119,8 @@ def list_character_parts():
                     "path": file_path.relative_to(ROOT).as_posix(),
                     "bytes": stat.st_size,
                     "modified": datetime.fromtimestamp(stat.st_mtime).isoformat(timespec="seconds"),
+                    "gender": "female" if file_path.stem.casefold().startswith(("female", "여성")) else ("male" if file_path.stem.casefold().startswith(("male", "남성")) else None),
+                    "aliases": asset_aliases.get(file_path.stem, []),
                 })
             files.sort(key=lambda item: (item["name"].casefold(), item["name"]))
             categories.append({**definition, "files": files, "supportsNone": True})

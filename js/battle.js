@@ -29,6 +29,7 @@
   unit.attackCooldown = 0;
   unit.weaponAttackStates = (unit.weaponAttacks ?? []).map(weapon=>({weapon,cooldown:0,castTimer:0,target:null}));
   unit.skillCooldowns = {};
+  unit.skillCooldownTotals = {};
   unit.runtimeCopiedSkills = [];
   unit.runtimeRuleOverrides = [];
   unit.temporaryReserveTicks = null;
@@ -1011,6 +1012,7 @@ function resolveSkillCast(unit, action) {
   }
 
   unit.skillCooldowns[skill.id] = getModifiedSkillCooldownTicks(skill,unit,action.skillModifier);
+  unit.skillCooldownTotals[skill.id] = unit.skillCooldowns[skill.id];
   dispatchSkillActions(unit, action.target, skill, true, false, null, action.resourceSpent);
 }
 

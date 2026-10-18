@@ -34,3 +34,9 @@ test('male and female prefixes are restricted to the matching base gender', () =
   assert.equal(createRandomPartPlan(categories, {}, () => 0.999, 'male').hair.path, 'common_hair.glb');
   assert.equal(createRandomPartPlan(categories, {}, () => 0.999, 'female').hair.path, 'common_hair.glb');
 });
+
+test('Korean gender prefixes are restricted to the matching base gender', () => {
+  const categories = [{ id: 'hair', files: [file('여성_머리_01'), file('남성_머리_01')] }];
+  assert.equal(createRandomPartPlan(categories, {}, () => 0, 'male').hair.path, '남성_머리_01.glb');
+  assert.equal(createRandomPartPlan(categories, {}, () => 0, 'female').hair.path, '여성_머리_01.glb');
+});

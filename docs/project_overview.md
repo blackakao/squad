@@ -74,5 +74,5 @@
 # SD 캐릭터 제작 경로 (2026-10-16)
 
 - 현재 표준 제작 방식은 외부 제작 GLB를 Base Character에 조합하는 방식이다.
-- 메인 CharacterViewer는 신체 GLB와 시각 장비 GLB, 무작위 조합, 초상화 캡처, 로컬 조합 저장을 제공한다.
+- 메인 CharacterViewer는 현재 Base 성별에 맞는 신체·시각 장비 GLB만 표시하고, 형태 옆 팔레트 기반 파츠 색상, 색상을 포함한 무작위 조합·초상화 캡처·로컬 조합 저장을 제공한다.
 - JavaScript 절차형 파츠와 테스트 장비는 Legacy CharacterViewer에서만 접근한다. 게임 전투 화면은 기존 Canvas 2D를 유지한다.

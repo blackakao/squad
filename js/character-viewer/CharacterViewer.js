@@ -161,7 +161,11 @@ export class CharacterViewer {
       this.frameModel();
       this.onState({ type: 'loaded', name, info: inspectModel(this.model), clips: this.clips,
         sourceScale: this.model.scale.toArray() });
-      if (this.clips.length) this.selectClip(0);
+      if (this.clips.length) {
+        const idleNames = new Set(['idle', '대기']);
+        const idleIndex = this.clips.findIndex(clip => idleNames.has(clip.name?.trim().toLowerCase()));
+        this.selectClip(idleIndex >= 0 ? idleIndex : 0);
+      }
     } catch (error) {
       if (gltf) {
         if (this.model === gltf.scene) this.clearModel();

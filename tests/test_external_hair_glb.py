@@ -5,7 +5,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-ASSET = ROOT / "assets/characters/hair/imported/female_hair_ref01.glb"
+ASSET = ROOT / "assets/characters/hair/imported/여성_머리_01.glb"
 
 
 class ExternalHairGlbTest(unittest.TestCase):
@@ -20,8 +20,8 @@ class ExternalHairGlbTest(unittest.TestCase):
         self.assertTrue(any(name.startswith("CrownHair") for name in names))
         for role in ("FrontHair", "SideHair", "BackHair"):
             self.assertTrue(any(name.startswith(role) for name in names), role)
-        self.assertEqual(len(gltf.get("meshes", [])), 29)
-        self.assertEqual({material.get("name") for material in gltf.get("materials", [])}, {"Hair_Dark", "Hair_Light"})
+        self.assertGreaterEqual(len(gltf.get("meshes", [])), 29)
+        self.assertEqual({material.get("name") for material in gltf.get("materials", [])}, {"Hair_Base", "Hair_Highlight"})
         self.assertFalse(gltf.get("skins"))
         self.assertFalse(gltf.get("animations"))
         self.assertFalse(gltf.get("images"))

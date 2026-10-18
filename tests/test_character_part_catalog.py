@@ -22,6 +22,9 @@ class CharacterPartCatalogTests(unittest.TestCase):
                 self.assertEqual(Path(item["path"]).parent.as_posix(), category["folder"])
                 self.assertEqual(item["displayName"], Path(item["name"]).stem)
                 self.assertEqual(item["id"], Path(item["name"]).stem)
+                if item["gender"]:
+                    self.assertTrue(item["id"].startswith("남성_") or item["id"].startswith("여성_"))
+                    self.assertTrue(item["aliases"])
 
         equipment = {item["slot"]: item for item in catalog["equipmentCategories"]}
         self.assertEqual(set(equipment), {"head", "body", "hands", "feet", "mainHand", "offHand"})
@@ -31,6 +34,7 @@ class CharacterPartCatalogTests(unittest.TestCase):
             if slot not in {"body", "hands"}:
                 self.assertTrue(category["files"], slot)
             self.assertTrue(all(Path(item["path"]).parent.as_posix() == category["folder"] for item in category["files"]))
+            self.assertTrue(all(item["gender"] in {"male", "female"} for item in category["files"]))
 
 
 if __name__ == "__main__":

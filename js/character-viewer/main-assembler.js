@@ -1,5 +1,5 @@
-﻿import { CharacterViewer } from './CharacterViewer.js?v=20261010-visual12';
-import { setupAssembler } from './assembler.js?v=20261016-assembler2';
+import { CharacterViewer } from './CharacterViewer.js?v=20261017-color1';
+import { setupAssembler } from './assembler.js?v=20261017-rules2';
 
 const byId = id => document.getElementById(id);
 const BASE = { male: 'assets/characters/base/대머리 블랭크 얼굴 남자.glb', female: 'assets/characters/base/대머리 블랭크 얼굴 여자.glb' };
@@ -8,9 +8,11 @@ let viewer, assembler;
 
 function setMessage(message, error = false) { byId('assembly-status').textContent = message; byId('assembly-status').dataset.error = String(error); }
 function loadGender(gender, restore = false) {
-  assembler.state.gender = gender; pendingRestore = restore;
+  assembler.setGender(gender); pendingRestore = restore;
   document.querySelectorAll('[data-gender]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.gender === gender)));
-  viewer.load(new URL(BASE[gender], document.baseURI).href, `${gender} Base`);
+  const baseUrl = new URL(BASE[gender], document.baseURI);
+  baseUrl.searchParams.set('reload', String(Date.now()));
+  viewer.load(baseUrl.href, `${gender} Base`);
 }
 function downloadPortrait() {
   if (assembler.bodyPreview.pendingLoads || assembler.equipmentPreview.pendingLoads) return setMessage('GLB 로딩이 끝난 뒤 초상화를 생성하세요.', true);
@@ -27,7 +29,10 @@ function onState(event) {
     byId('debug-info').textContent = [`Model: ${event.name}`, `Triangles: ${event.info.triangles.toLocaleString()}`, `Mesh / Material: ${event.info.meshes} / ${event.info.materials}`, `Texture / Bone: ${event.info.textures.length} / ${event.info.bones.length}`, `AnimationClip: ${clips.length}`].join('\n');
     assembler.setModel(viewer.model).then(async () => { if (pendingRestore) await assembler.restore(); pendingRestore = false; setMessage(`${event.name} 준비 완료`); });
   }
-  if (event.type === 'playback') byId('playback-status').textContent = `${clipNames[event.index]} · ${event.state}`;
+  if (event.type === 'playback') {
+    byId('clip-select').value = String(event.index);
+    byId('playback-status').textContent = `${clipNames[event.index]} · ${event.state}`;
+  }
   if (event.type === 'error' || event.type === 'fatal') setMessage(event.message || event.error?.message || '모델 로딩 실패', true);
 }
 

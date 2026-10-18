@@ -2,10 +2,16 @@
   {
     "id": "skill_basic_weapon_attack",
     "name": "기본 무기 공격",
+    "className": "공용",
     "description": "",
     "slot": "basic",
     "cooldown": 0,
     "castTime": null,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true
+    },
     "resourceCosts": [
       {
         "resource": "ST",
@@ -19,15 +25,22 @@
         "target": "enemy",
         "rangeMode": "mainWeapon",
         "rangeValue": 1,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "chainCount": 0,
+        "chainRange": 3,
         "coefficients": [
           {
             "type": "calculated",
             "field": "atk",
             "calc": "percent",
-            "value": 100
+            "value": 100,
+            "effectId": ""
           }
         ],
         "healResource": "HP",
+        "drainResource": "MP",
         "damageType": "physical",
         "area": 0,
         "areaCenter": "target",
@@ -39,17 +52,29 @@
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
-        "fieldRadius": 0
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       }
     ]
   },
   {
     "id": "skill_basic_heal",
     "name": "기본 회복",
+    "className": "공용",
     "description": "",
     "slot": "basic",
     "cooldown": 0,
     "castTime": null,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true
+    },
     "resourceCosts": [
       {
         "resource": "MP",
@@ -63,15 +88,22 @@
         "target": "ally",
         "rangeMode": "mainWeapon",
         "rangeValue": 1,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "chainCount": 0,
+        "chainRange": 3,
         "coefficients": [
           {
             "type": "calculated",
             "field": "magic",
             "calc": "percent",
-            "value": 100
+            "value": 100,
+            "effectId": ""
           }
         ],
         "healResource": "HP",
+        "drainResource": "MP",
         "damageType": "magic",
         "area": 0,
         "areaCenter": "target",
@@ -83,81 +115,30 @@
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
-        "fieldRadius": 0
-      }
-    ]
-  },
-  {
-    "id": "skill_1786977113991",
-    "name": "돌진",
-    "description": "",
-    "slot": "active",
-    "cooldown": 5,
-    "castTime": null,
-    "resourceCosts": [
-      {
-        "resource": "ST",
-        "mode": "fixed",
-        "value": 10
-      }
-    ],
-    "actions": [
-      {
-        "type": "move",
-        "target": "enemy",
-        "rangeMode": "mainWeapon",
-        "rangeValue": 1,
-        "coefficients": [],
-        "healResource": "HP",
-        "damageType": "physical",
-        "area": 0,
-        "areaCenter": "target",
-        "maxTargets": 0,
-        "critical": 0,
-        "penetration": 0,
-        "moveType": "Dash",
-        "moveSpeed": 3,
-        "distance": 10,
-        "duration": 0,
-        "fieldShape": "circle",
-        "fieldRadius": 0
-      },
-      {
-        "type": "deal_damage",
-        "target": "enemy",
-        "rangeMode": "custom",
-        "rangeValue": 10,
-        "coefficients": [
-          {
-            "type": "calculated",
-            "field": "atk",
-            "calc": "percent",
-            "value": 150
-          }
-        ],
-        "healResource": "HP",
-        "damageType": "physical",
-        "area": 0,
-        "areaCenter": "target",
-        "maxTargets": 0,
-        "critical": 0,
-        "penetration": 0,
-        "moveType": "Dash",
-        "moveSpeed": 1,
-        "distance": 0,
-        "duration": 0,
-        "fieldShape": "circle",
-        "fieldRadius": 0
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       }
     ]
   },
   {
     "id": "skill_class_knight_charge",
     "name": "기사 · 돌진 (기본형)",
+    "className": "기사",
+    "icon": "assets/images/skills/기사_돌진.png",
     "description": "",
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true
+    },
     "resourceCosts": [
       {
         "resource": "ST",
@@ -171,8 +152,14 @@
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 5,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "chainCount": 0,
+        "chainRange": 3,
         "coefficients": [],
         "healResource": "HP",
+        "drainResource": "MP",
         "damageType": "physical",
         "area": 0,
         "areaCenter": "target",
@@ -184,22 +171,35 @@
         "distance": 10,
         "duration": 0,
         "fieldShape": "circle",
-        "fieldRadius": 0
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       },
       {
         "type": "deal_damage",
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 1,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "chainCount": 0,
+        "chainRange": 3,
         "coefficients": [
           {
             "type": "calculated",
             "field": "atk",
             "calc": "percent",
-            "value": 100
+            "value": 100,
+            "effectId": ""
           }
         ],
         "healResource": "HP",
+        "drainResource": "MP",
         "damageType": "physical",
         "area": 0,
         "areaCenter": "target",
@@ -211,17 +211,30 @@
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
-        "fieldRadius": 0
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       }
     ]
   },
   {
     "id": "skill_class_mage_arrow",
     "name": "마법사 · 마법화살",
+    "className": "마법사",
+    "icon": "assets/images/skills/마법사_마법화살.png",
     "description": "",
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true
+    },
     "resourceCosts": [
       {
         "resource": "MP",
@@ -235,15 +248,22 @@
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 5,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "chainCount": 0,
+        "chainRange": 3,
         "coefficients": [
           {
             "type": "calculated",
             "field": "magic",
             "calc": "percent",
-            "value": 100
+            "value": 100,
+            "effectId": ""
           }
         ],
         "healResource": "HP",
+        "drainResource": "MP",
         "damageType": "magic",
         "area": 0,
         "areaCenter": "target",
@@ -255,17 +275,30 @@
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
-        "fieldRadius": 0
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       }
     ]
   },
   {
     "id": "skill_class_mage_barrier",
     "name": "마법사 · 보호막",
+    "className": "마법사",
+    "icon": "assets/images/skills/마법사_보호막.png",
     "description": "",
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true
+    },
     "resourceCosts": [
       {
         "resource": "MP",
@@ -279,15 +312,22 @@
         "target": "self",
         "rangeMode": "custom",
         "rangeValue": 5,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "chainCount": 0,
+        "chainRange": 3,
         "coefficients": [
           {
             "type": "calculated",
             "field": "magic",
             "calc": "percent",
-            "value": 100
+            "value": 100,
+            "effectId": ""
           }
         ],
         "healResource": "BP",
+        "drainResource": "MP",
         "damageType": "physical",
         "area": 0,
         "areaCenter": "target",
@@ -299,17 +339,29 @@
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
-        "fieldRadius": 0
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       }
     ]
   },
   {
     "id": "skill_class_mage_quick",
     "name": "마법사 · 즉시시전 공격 (기본형)",
+    "className": "마법사",
     "description": "",
     "slot": "active",
     "cooldown": 8,
     "castTime": 0,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true
+    },
     "resourceCosts": [
       {
         "resource": "MP",
@@ -323,15 +375,22 @@
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 5,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "chainCount": 0,
+        "chainRange": 3,
         "coefficients": [
           {
             "type": "calculated",
             "field": "magic",
             "calc": "percent",
-            "value": 100
+            "value": 100,
+            "effectId": ""
           }
         ],
         "healResource": "HP",
+        "drainResource": "MP",
         "damageType": "magic",
         "area": 0,
         "areaCenter": "target",
@@ -343,17 +402,29 @@
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
-        "fieldRadius": 0
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       }
     ]
   },
   {
     "id": "skill_class_priest_smite",
     "name": "성직자 · 마법 강타",
+    "className": "성직자",
     "description": "",
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true
+    },
     "resourceCosts": [
       {
         "resource": "MP",
@@ -367,15 +438,22 @@
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 5,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "chainCount": 0,
+        "chainRange": 3,
         "coefficients": [
           {
             "type": "calculated",
             "field": "magic",
             "calc": "percent",
-            "value": 100
+            "value": 100,
+            "effectId": ""
           }
         ],
         "healResource": "HP",
+        "drainResource": "MP",
         "damageType": "magic",
         "area": 0,
         "areaCenter": "target",
@@ -387,17 +465,29 @@
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
-        "fieldRadius": 0
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       }
     ]
   },
   {
     "id": "skill_class_priest_barrier",
     "name": "성직자 · 보호막",
+    "className": "성직자",
     "description": "",
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true
+    },
     "resourceCosts": [
       {
         "resource": "MP",
@@ -411,15 +501,22 @@
         "target": "ally",
         "rangeMode": "custom",
         "rangeValue": 5,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "chainCount": 0,
+        "chainRange": 3,
         "coefficients": [
           {
             "type": "calculated",
             "field": "magic",
             "calc": "percent",
-            "value": 100
+            "value": 100,
+            "effectId": ""
           }
         ],
         "healResource": "BP",
+        "drainResource": "MP",
         "damageType": "physical",
         "area": 0,
         "areaCenter": "target",
@@ -431,17 +528,30 @@
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
-        "fieldRadius": 0
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       }
     ]
   },
   {
     "id": "skill_class_marine_bash",
     "name": "해병 · 쉴드배쉬 (기본형)",
+    "className": "해병",
+    "icon": "assets/images/skills/해병_쉴드배쉬.png",
     "description": "",
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true
+    },
     "resourceCosts": [
       {
         "resource": "ST",
@@ -455,15 +565,22 @@
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 1,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "chainCount": 0,
+        "chainRange": 3,
         "coefficients": [
           {
             "type": "calculated",
             "field": "atk",
             "calc": "percent",
-            "value": 100
+            "value": 100,
+            "effectId": ""
           }
         ],
         "healResource": "HP",
+        "drainResource": "MP",
         "damageType": "physical",
         "area": 0,
         "areaCenter": "target",
@@ -475,17 +592,30 @@
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
-        "fieldRadius": 0
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       }
     ]
   },
   {
     "id": "skill_class_marine_boomerang",
     "name": "해병 · 쉴드 부메랑 (기본형)",
+    "className": "해병",
+    "icon": "assets/images/skills/해병_쉴드 부메랑.png",
     "description": "",
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true
+    },
     "resourceCosts": [
       {
         "resource": "ST",
@@ -499,15 +629,22 @@
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 5,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "chainCount": 0,
+        "chainRange": 3,
         "coefficients": [
           {
             "type": "calculated",
             "field": "atk",
             "calc": "percent",
-            "value": 100
+            "value": 100,
+            "effectId": ""
           }
         ],
         "healResource": "HP",
+        "drainResource": "MP",
         "damageType": "physical",
         "area": 0,
         "areaCenter": "target",
@@ -519,17 +656,30 @@
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
-        "fieldRadius": 0
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       }
     ]
   },
   {
     "id": "skill_class_medic_inargansin",
     "name": "의무병 · 이나르간신 (기본형)",
+    "className": "의무병",
+    "icon": "assets/images/skills/의무병_이나르간신.png",
     "description": "",
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true
+    },
     "resourceCosts": [
       {
         "resource": "MP",
@@ -543,15 +693,22 @@
         "target": "ally",
         "rangeMode": "custom",
         "rangeValue": 1,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "chainCount": 0,
+        "chainRange": 3,
         "coefficients": [
           {
             "type": "calculated",
             "field": "magic",
             "calc": "percent",
-            "value": 150
+            "value": 150,
+            "effectId": ""
           }
         ],
         "healResource": "HP",
+        "drainResource": "MP",
         "damageType": "physical",
         "area": 0,
         "areaCenter": "target",
@@ -563,17 +720,30 @@
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
-        "fieldRadius": 0
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       }
     ]
   },
   {
     "id": "skill_class_medic_first_aid",
     "name": "의무병 · 응급처치",
+    "className": "의무병",
+    "icon": "assets/images/skills/의무병_응급처치.png",
     "description": "",
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true
+    },
     "resourceCosts": [
       {
         "resource": "MP",
@@ -587,15 +757,22 @@
         "target": "ally",
         "rangeMode": "custom",
         "rangeValue": 1,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "chainCount": 0,
+        "chainRange": 3,
         "coefficients": [
           {
             "type": "calculated",
             "field": "magic",
             "calc": "percent",
-            "value": 100
+            "value": 100,
+            "effectId": ""
           }
         ],
         "healResource": "HP",
+        "drainResource": "MP",
         "damageType": "physical",
         "area": 0,
         "areaCenter": "target",
@@ -607,17 +784,30 @@
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
-        "fieldRadius": 0
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       }
     ]
   },
   {
     "id": "skill_class_medic_endurance",
     "name": "의무병 · 야전지구력 (기본형)",
+    "className": "의무병",
+    "icon": "assets/images/skills/의무병_야전지구력.png",
     "description": "",
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true
+    },
     "resourceCosts": [
       {
         "resource": "MP",
@@ -631,15 +821,22 @@
         "target": "self",
         "rangeMode": "custom",
         "rangeValue": 1,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "chainCount": 0,
+        "chainRange": 3,
         "coefficients": [
           {
             "type": "fixed",
             "field": "atk",
             "calc": "percent",
-            "value": 20
+            "value": 20,
+            "effectId": ""
           }
         ],
         "healResource": "ST",
+        "drainResource": "MP",
         "damageType": "physical",
         "area": 0,
         "areaCenter": "target",
@@ -651,17 +848,30 @@
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
-        "fieldRadius": 0
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       }
     ]
   },
   {
     "id": "skill_class_dancer_scatter",
     "name": "검의무희 · 검 흩뿌리기 (기본형)",
+    "className": "검의무희",
+    "icon": "assets/images/skills/검의무희_검 흩뿌리기.png",
     "description": "",
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true
+    },
     "resourceCosts": [
       {
         "resource": "ST",
@@ -675,15 +885,22 @@
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 5,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "chainCount": 0,
+        "chainRange": 3,
         "coefficients": [
           {
             "type": "calculated",
             "field": "magic",
             "calc": "percent",
-            "value": 100
+            "value": 100,
+            "effectId": ""
           }
         ],
         "healResource": "HP",
+        "drainResource": "MP",
         "damageType": "magic",
         "area": 0,
         "areaCenter": "target",
@@ -695,17 +912,30 @@
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
-        "fieldRadius": 0
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       }
     ]
   },
   {
     "id": "skill_class_dancer_focus",
     "name": "검의무희 · 검무 집중 (기본형)",
+    "className": "검의무희",
+    "icon": "assets/images/skills/검의무희_검무 집중.png",
     "description": "",
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true
+    },
     "resourceCosts": [
       {
         "resource": "ST",
@@ -719,15 +949,22 @@
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 1,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "chainCount": 0,
+        "chainRange": 3,
         "coefficients": [
           {
             "type": "calculated",
             "field": "atk",
             "calc": "percent",
-            "value": 25
+            "value": 25,
+            "effectId": ""
           }
         ],
         "healResource": "HP",
+        "drainResource": "MP",
         "damageType": "physical",
         "area": 0,
         "areaCenter": "target",
@@ -739,22 +976,35 @@
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
-        "fieldRadius": 0
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       },
       {
         "type": "deal_damage",
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 1,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "chainCount": 0,
+        "chainRange": 3,
         "coefficients": [
           {
             "type": "calculated",
             "field": "atk",
             "calc": "percent",
-            "value": 25
+            "value": 25,
+            "effectId": ""
           }
         ],
         "healResource": "HP",
+        "drainResource": "MP",
         "damageType": "physical",
         "area": 0,
         "areaCenter": "target",
@@ -766,22 +1016,35 @@
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
-        "fieldRadius": 0
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       },
       {
         "type": "deal_damage",
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 1,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "chainCount": 0,
+        "chainRange": 3,
         "coefficients": [
           {
             "type": "calculated",
             "field": "atk",
             "calc": "percent",
-            "value": 25
+            "value": 25,
+            "effectId": ""
           }
         ],
         "healResource": "HP",
+        "drainResource": "MP",
         "damageType": "physical",
         "area": 0,
         "areaCenter": "target",
@@ -793,22 +1056,35 @@
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
-        "fieldRadius": 0
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       },
       {
         "type": "deal_damage",
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 1,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "chainCount": 0,
+        "chainRange": 3,
         "coefficients": [
           {
             "type": "calculated",
             "field": "atk",
             "calc": "percent",
-            "value": 25
+            "value": 25,
+            "effectId": ""
           }
         ],
         "healResource": "HP",
+        "drainResource": "MP",
         "damageType": "physical",
         "area": 0,
         "areaCenter": "target",
@@ -820,22 +1096,35 @@
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
-        "fieldRadius": 0
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       },
       {
         "type": "deal_damage",
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 1,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "chainCount": 0,
+        "chainRange": 3,
         "coefficients": [
           {
             "type": "calculated",
             "field": "atk",
             "calc": "percent",
-            "value": 25
+            "value": 25,
+            "effectId": ""
           }
         ],
         "healResource": "HP",
+        "drainResource": "MP",
         "damageType": "physical",
         "area": 0,
         "areaCenter": "target",
@@ -847,22 +1136,35 @@
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
-        "fieldRadius": 0
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       },
       {
         "type": "deal_damage",
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 1,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "chainCount": 0,
+        "chainRange": 3,
         "coefficients": [
           {
             "type": "calculated",
             "field": "atk",
             "calc": "percent",
-            "value": 25
+            "value": 25,
+            "effectId": ""
           }
         ],
         "healResource": "HP",
+        "drainResource": "MP",
         "damageType": "physical",
         "area": 0,
         "areaCenter": "target",
@@ -874,17 +1176,30 @@
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
-        "fieldRadius": 0
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       }
     ]
   },
   {
     "id": "skill_class_monk_combo",
     "name": "승려 · 사연격 (기본형)",
+    "className": "승려",
+    "icon": "assets/images/skills/승려_사연격.png",
     "description": "",
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true
+    },
     "resourceCosts": [
       {
         "resource": "ST",
@@ -898,15 +1213,22 @@
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 1,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "chainCount": 0,
+        "chainRange": 3,
         "coefficients": [
           {
             "type": "calculated",
             "field": "atk",
             "calc": "percent",
-            "value": 25
+            "value": 25,
+            "effectId": ""
           }
         ],
         "healResource": "HP",
+        "drainResource": "MP",
         "damageType": "physical",
         "area": 0,
         "areaCenter": "target",
@@ -918,22 +1240,35 @@
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
-        "fieldRadius": 0
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       },
       {
         "type": "deal_damage",
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 1,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "chainCount": 0,
+        "chainRange": 3,
         "coefficients": [
           {
             "type": "calculated",
             "field": "atk",
             "calc": "percent",
-            "value": 25
+            "value": 25,
+            "effectId": ""
           }
         ],
         "healResource": "HP",
+        "drainResource": "MP",
         "damageType": "physical",
         "area": 0,
         "areaCenter": "target",
@@ -945,22 +1280,35 @@
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
-        "fieldRadius": 0
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       },
       {
         "type": "deal_damage",
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 1,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "chainCount": 0,
+        "chainRange": 3,
         "coefficients": [
           {
             "type": "calculated",
             "field": "atk",
             "calc": "percent",
-            "value": 25
+            "value": 25,
+            "effectId": ""
           }
         ],
         "healResource": "HP",
+        "drainResource": "MP",
         "damageType": "physical",
         "area": 0,
         "areaCenter": "target",
@@ -972,22 +1320,35 @@
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
-        "fieldRadius": 0
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       },
       {
         "type": "deal_damage",
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 1,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "chainCount": 0,
+        "chainRange": 3,
         "coefficients": [
           {
             "type": "calculated",
             "field": "atk",
             "calc": "percent",
-            "value": 25
+            "value": 25,
+            "effectId": ""
           }
         ],
         "healResource": "HP",
+        "drainResource": "MP",
         "damageType": "physical",
         "area": 0,
         "areaCenter": "target",
@@ -999,17 +1360,30 @@
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
-        "fieldRadius": 0
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       }
     ]
   },
   {
     "id": "skill_class_sniper_shot",
     "name": "저격수 · 저격",
+    "className": "저격수",
+    "icon": "assets/images/skills/저격수_저격.png",
     "description": "",
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true
+    },
     "resourceCosts": [
       {
         "resource": "ST",
@@ -1023,15 +1397,22 @@
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 10,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "chainCount": 0,
+        "chainRange": 3,
         "coefficients": [
           {
             "type": "calculated",
             "field": "atk",
             "calc": "percent",
-            "value": 150
+            "value": 150,
+            "effectId": ""
           }
         ],
         "healResource": "HP",
+        "drainResource": "MP",
         "damageType": "physical",
         "area": 0,
         "areaCenter": "target",
@@ -1043,17 +1424,30 @@
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
-        "fieldRadius": 0
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       }
     ]
   },
   {
     "id": "skill_class_fire_ignite",
     "name": "화염술사 · 점화 (기본형)",
+    "className": "화염술사",
+    "icon": "assets/images/skills/화염술사_점화.png",
     "description": "",
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true
+    },
     "resourceCosts": [
       {
         "resource": "MP",
@@ -1067,15 +1461,22 @@
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 5,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "chainCount": 0,
+        "chainRange": 3,
         "coefficients": [
           {
             "type": "calculated",
             "field": "magic",
             "calc": "percent",
-            "value": 100
+            "value": 100,
+            "effectId": ""
           }
         ],
         "healResource": "HP",
+        "drainResource": "MP",
         "damageType": "magic",
         "area": 0,
         "areaCenter": "target",
@@ -1087,17 +1488,30 @@
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
-        "fieldRadius": 0
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       }
     ]
   },
   {
     "id": "skill_class_fire_meditation",
     "name": "화염술사 · 불꽃 명상 (기본형)",
+    "className": "화염술사",
+    "icon": "assets/images/skills/화염술사_불꽃 명상.png",
     "description": "",
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true
+    },
     "resourceCosts": [
       {
         "resource": "ST",
@@ -1111,15 +1525,22 @@
         "target": "self",
         "rangeMode": "custom",
         "rangeValue": 1,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "chainCount": 0,
+        "chainRange": 3,
         "coefficients": [
           {
             "type": "fixed",
             "field": "atk",
             "calc": "percent",
-            "value": 20
+            "value": 20,
+            "effectId": ""
           }
         ],
         "healResource": "MP",
+        "drainResource": "MP",
         "damageType": "physical",
         "area": 0,
         "areaCenter": "target",
@@ -1131,17 +1552,30 @@
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
-        "fieldRadius": 0
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       }
     ]
   },
   {
     "id": "skill_class_fire_drunken",
     "name": "화염술사 · 드렁큰 올리지 (기본형)",
+    "className": "화염술사",
+    "icon": "assets/images/skills/화염술사_드렁큰 올리지.png",
     "description": "",
     "slot": "active",
     "cooldown": 8,
     "castTime": 0,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true
+    },
     "resourceCosts": [
       {
         "resource": "MP",
@@ -1155,15 +1589,22 @@
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 5,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "chainCount": 0,
+        "chainRange": 3,
         "coefficients": [
           {
             "type": "calculated",
             "field": "magic",
             "calc": "percent",
-            "value": 150
+            "value": 150,
+            "effectId": ""
           }
         ],
         "healResource": "HP",
+        "drainResource": "MP",
         "damageType": "magic",
         "area": 0,
         "areaCenter": "target",
@@ -1175,17 +1616,30 @@
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
-        "fieldRadius": 0
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       }
     ]
   },
   {
     "id": "skill_class_assassin_backstab",
     "name": "암살자 · 백스탭 (기본형)",
+    "className": "암살자",
+    "icon": "assets/images/skills/암살자_백스탭.png",
     "description": "",
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true
+    },
     "resourceCosts": [
       {
         "resource": "ST",
@@ -1199,15 +1653,22 @@
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 1,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "chainCount": 0,
+        "chainRange": 3,
         "coefficients": [
           {
             "type": "calculated",
             "field": "atk",
             "calc": "percent",
-            "value": 100
+            "value": 100,
+            "effectId": ""
           }
         ],
         "healResource": "HP",
+        "drainResource": "MP",
         "damageType": "physical",
         "area": 0,
         "areaCenter": "target",
@@ -1219,17 +1680,29 @@
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
-        "fieldRadius": 0
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       }
     ]
   },
   {
     "id": "skill_class_assassin_smite",
     "name": "암살자 · 강타 (기본형)",
+    "className": "암살자",
     "description": "",
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true
+    },
     "resourceCosts": [
       {
         "resource": "ST",
@@ -1243,15 +1716,22 @@
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 1,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "chainCount": 0,
+        "chainRange": 3,
         "coefficients": [
           {
             "type": "calculated",
             "field": "atk",
             "calc": "percent",
-            "value": 150
+            "value": 150,
+            "effectId": ""
           }
         ],
         "healResource": "HP",
+        "drainResource": "MP",
         "damageType": "physical",
         "area": 0,
         "areaCenter": "target",
@@ -1263,17 +1743,30 @@
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
-        "fieldRadius": 0
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       }
     ]
   },
   {
     "id": "skill_class_cheer_medkit",
     "name": "응원가 · 만능 구급상자 (기본형)",
+    "className": "응원가",
+    "icon": "assets/images/skills/응원가_만능 구급상자.png",
     "description": "",
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true
+    },
     "resourceCosts": [
       {
         "resource": "ST",
@@ -1287,15 +1780,22 @@
         "target": "ally",
         "rangeMode": "custom",
         "rangeValue": 5,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "chainCount": 0,
+        "chainRange": 3,
         "coefficients": [
           {
             "type": "calculated",
             "field": "atk",
             "calc": "percent",
-            "value": 100
+            "value": 100,
+            "effectId": ""
           }
         ],
         "healResource": "HP",
+        "drainResource": "MP",
         "damageType": "physical",
         "area": 0,
         "areaCenter": "target",
@@ -1307,17 +1807,29 @@
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
-        "fieldRadius": 0
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       }
     ]
   },
   {
     "id": "skill_class_serum_drain",
     "name": "혈청형 · 피흡기 (기본형)",
+    "className": "혈청형",
     "description": "",
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true
+    },
     "resourceCosts": [
       {
         "resource": "MP",
@@ -1331,15 +1843,22 @@
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 5,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "chainCount": 0,
+        "chainRange": 3,
         "coefficients": [
           {
             "type": "calculated",
             "field": "magic",
             "calc": "percent",
-            "value": 100
+            "value": 100,
+            "effectId": ""
           }
         ],
         "healResource": "HP",
+        "drainResource": "MP",
         "damageType": "magic",
         "area": 0,
         "areaCenter": "target",
@@ -1351,22 +1870,35 @@
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
-        "fieldRadius": 0
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       },
       {
         "type": "heal",
         "target": "self",
         "rangeMode": "custom",
         "rangeValue": 5,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "chainCount": 0,
+        "chainRange": 3,
         "coefficients": [
           {
             "type": "calculated",
             "field": "magic",
             "calc": "percent",
-            "value": 50
+            "value": 50,
+            "effectId": ""
           }
         ],
         "healResource": "HP",
+        "drainResource": "MP",
         "damageType": "physical",
         "area": 0,
         "areaCenter": "target",
@@ -1378,17 +1910,29 @@
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
-        "fieldRadius": 0
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       }
     ]
   },
   {
     "id": "skill_class_serum_transfusion",
     "name": "혈청형 · 수혈기 (기본형)",
+    "className": "혈청형",
     "description": "",
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true
+    },
     "resourceCosts": [
       {
         "resource": "MP",
@@ -1402,15 +1946,22 @@
         "target": "ally",
         "rangeMode": "custom",
         "rangeValue": 5,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "chainCount": 0,
+        "chainRange": 3,
         "coefficients": [
           {
             "type": "calculated",
             "field": "magic",
             "calc": "percent",
-            "value": 100
+            "value": 100,
+            "effectId": ""
           }
         ],
         "healResource": "HP",
+        "drainResource": "MP",
         "damageType": "physical",
         "area": 0,
         "areaCenter": "target",
@@ -1422,17 +1973,30 @@
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
-        "fieldRadius": 0
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       }
     ]
   },
   {
     "id": "skill_class_warlock_bite",
     "name": "흑마법사 · 암흑물기",
+    "className": "흑마법사",
+    "icon": "assets/images/skills/흑마법사_암흑물기.png",
     "description": "",
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true
+    },
     "resourceCosts": [
       {
         "resource": "MP",
@@ -1446,15 +2010,22 @@
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 5,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "chainCount": 0,
+        "chainRange": 3,
         "coefficients": [
           {
             "type": "calculated",
             "field": "magic",
             "calc": "percent",
-            "value": 100
+            "value": 100,
+            "effectId": ""
           }
         ],
         "healResource": "HP",
+        "drainResource": "MP",
         "damageType": "magic",
         "area": 0,
         "areaCenter": "target",
@@ -1466,22 +2037,35 @@
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
-        "fieldRadius": 0
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       },
       {
         "type": "heal",
         "target": "self",
         "rangeMode": "custom",
         "rangeValue": 5,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "chainCount": 0,
+        "chainRange": 3,
         "coefficients": [
           {
             "type": "calculated",
             "field": "magic",
             "calc": "percent",
-            "value": 50
+            "value": 50,
+            "effectId": ""
           }
         ],
         "healResource": "HP",
+        "drainResource": "MP",
         "damageType": "physical",
         "area": 0,
         "areaCenter": "target",
@@ -1493,17 +2077,29 @@
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
-        "fieldRadius": 0
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       }
     ]
   },
   {
     "id": "skill_class_warlock_barrier",
     "name": "흑마법사 · 보호막",
+    "className": "흑마법사",
     "description": "",
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true
+    },
     "resourceCosts": [
       {
         "resource": "MP",
@@ -1517,15 +2113,22 @@
         "target": "self",
         "rangeMode": "custom",
         "rangeValue": 5,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "chainCount": 0,
+        "chainRange": 3,
         "coefficients": [
           {
             "type": "calculated",
             "field": "magic",
             "calc": "percent",
-            "value": 100
+            "value": 100,
+            "effectId": ""
           }
         ],
         "healResource": "BP",
+        "drainResource": "MP",
         "damageType": "physical",
         "area": 0,
         "areaCenter": "target",
@@ -1537,17 +2140,30 @@
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
-        "fieldRadius": 0
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       }
     ]
   },
   {
     "id": "skill_class_taboo_attack",
     "name": "금기술사 · 금기-공격",
+    "className": "금기술사",
+    "icon": "assets/images/skills/금기술사_금기 공격.png",
     "description": "",
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true
+    },
     "resourceCosts": [
       {
         "resource": "MP",
@@ -1561,15 +2177,22 @@
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 5,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "chainCount": 0,
+        "chainRange": 3,
         "coefficients": [
           {
             "type": "fixed",
             "field": "atk",
             "calc": "percent",
-            "value": 20
+            "value": 20,
+            "effectId": ""
           }
         ],
         "healResource": "HP",
+        "drainResource": "MP",
         "damageType": "fixed",
         "area": 0,
         "areaCenter": "target",
@@ -1581,17 +2204,30 @@
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
-        "fieldRadius": 0
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       }
     ]
   },
   {
     "id": "skill_class_puppet_heal",
     "name": "인형술사 · 악귀치유 (기본형)",
+    "className": "인형술사",
+    "icon": "assets/images/skills/인형술사_악귀치유.png",
     "description": "",
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true
+    },
     "resourceCosts": [
       {
         "resource": "MP",
@@ -1605,15 +2241,22 @@
         "target": "ally",
         "rangeMode": "custom",
         "rangeValue": 5,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "chainCount": 0,
+        "chainRange": 3,
         "coefficients": [
           {
             "type": "calculated",
             "field": "magic",
             "calc": "percent",
-            "value": 100
+            "value": 100,
+            "effectId": ""
           }
         ],
         "healResource": "HP",
+        "drainResource": "MP",
         "damageType": "physical",
         "area": 0,
         "areaCenter": "target",
@@ -1625,17 +2268,29 @@
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
-        "fieldRadius": 0
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       }
     ]
   },
   {
     "id": "skill_class_spellblade_strike",
     "name": "마검사 · 근접강공 (기본형)",
+    "className": "마검사",
     "description": "",
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true
+    },
     "resourceCosts": [
       {
         "resource": "ST",
@@ -1649,15 +2304,22 @@
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 1,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "chainCount": 0,
+        "chainRange": 3,
         "coefficients": [
           {
             "type": "calculated",
             "field": "atk",
             "calc": "percent",
-            "value": 150
+            "value": 150,
+            "effectId": ""
           }
         ],
         "healResource": "HP",
+        "drainResource": "MP",
         "damageType": "physical",
         "area": 0,
         "areaCenter": "target",
@@ -1669,17 +2331,29 @@
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
-        "fieldRadius": 0
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       }
     ]
   },
   {
     "id": "skill_class_spellblade_ranged",
     "name": "마검사 · 원거리공격 (기본형)",
+    "className": "마검사",
     "description": "",
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true
+    },
     "resourceCosts": [
       {
         "resource": "MP",
@@ -1693,15 +2367,22 @@
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 5,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "chainCount": 0,
+        "chainRange": 3,
         "coefficients": [
           {
             "type": "calculated",
             "field": "magic",
             "calc": "percent",
-            "value": 100
+            "value": 100,
+            "effectId": ""
           }
         ],
         "healResource": "HP",
+        "drainResource": "MP",
         "damageType": "magic",
         "area": 0,
         "areaCenter": "target",
@@ -1713,17 +2394,29 @@
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
-        "fieldRadius": 0
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       }
     ]
   },
   {
     "id": "skill_class_spellblade_heal",
     "name": "마검사 · 개인 치유",
+    "className": "마검사",
     "description": "",
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true
+    },
     "resourceCosts": [
       {
         "resource": "MP",
@@ -1737,15 +2430,22 @@
         "target": "ally",
         "rangeMode": "custom",
         "rangeValue": 5,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "chainCount": 0,
+        "chainRange": 3,
         "coefficients": [
           {
             "type": "calculated",
             "field": "magic",
             "calc": "percent",
-            "value": 100
+            "value": 100,
+            "effectId": ""
           }
         ],
         "healResource": "HP",
+        "drainResource": "MP",
         "damageType": "physical",
         "area": 0,
         "areaCenter": "target",
@@ -1757,17 +2457,29 @@
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
-        "fieldRadius": 0
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       }
     ]
   },
   {
     "id": "skill_class_mage_area",
     "name": "마법사 · 마력 폭발",
+    "className": "마법사",
     "description": "",
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true
+    },
     "resourceCosts": [
       {
         "resource": "MP",
@@ -1781,15 +2493,22 @@
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 5,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "chainCount": 0,
+        "chainRange": 3,
         "coefficients": [
           {
             "type": "calculated",
             "field": "magic",
             "calc": "percent",
-            "value": 100
+            "value": 100,
+            "effectId": ""
           }
         ],
         "healResource": "HP",
+        "drainResource": "MP",
         "damageType": "magic",
         "area": 2,
         "areaCenter": "target",
@@ -1801,17 +2520,30 @@
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
-        "fieldRadius": 0
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       }
     ]
   },
   {
     "id": "skill_class_monk_area_heal",
     "name": "승려 · 치유의 파동",
+    "className": "승려",
+    "icon": "assets/images/skills/승려_치유의 파동.png",
     "description": "",
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true
+    },
     "resourceCosts": [
       {
         "resource": "MP",
@@ -1825,15 +2557,22 @@
         "target": "ally",
         "rangeMode": "custom",
         "rangeValue": 5,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "chainCount": 0,
+        "chainRange": 3,
         "coefficients": [
           {
             "type": "calculated",
             "field": "magic",
             "calc": "percent",
-            "value": 100
+            "value": 100,
+            "effectId": ""
           }
         ],
         "healResource": "HP",
+        "drainResource": "MP",
         "damageType": "magic",
         "area": 10,
         "areaCenter": "self",
@@ -1845,17 +2584,30 @@
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
-        "fieldRadius": 0
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       }
     ]
   },
   {
     "id": "skill_class_guardian_whirl",
     "name": "수호자 · 회전베기",
+    "className": "수호자",
+    "icon": "assets/images/skills/수호자_회전베기.png",
     "description": "",
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true
+    },
     "resourceCosts": [
       {
         "resource": "MP",
@@ -1869,15 +2621,22 @@
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 5,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "chainCount": 0,
+        "chainRange": 3,
         "coefficients": [
           {
             "type": "calculated",
             "field": "atk",
             "calc": "percent",
-            "value": 100
+            "value": 100,
+            "effectId": ""
           }
         ],
         "healResource": "HP",
+        "drainResource": "MP",
         "damageType": "physical",
         "area": 2,
         "areaCenter": "self",
@@ -1889,17 +2648,30 @@
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
-        "fieldRadius": 0
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       }
     ]
   },
   {
     "id": "skill_class_fiend_armageddon",
     "name": "마귀 · 아마겟돈",
+    "className": "마귀",
+    "icon": "assets/images/skills/마귀_아마겟돈.png",
     "description": "",
     "slot": "active",
     "cooldown": 8,
     "castTime": 1,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true
+    },
     "resourceCosts": [
       {
         "resource": "MP",
@@ -1913,15 +2685,22 @@
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 5,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "chainCount": 0,
+        "chainRange": 3,
         "coefficients": [
           {
             "type": "calculated",
             "field": "magic",
             "calc": "percent",
-            "value": 100
+            "value": 100,
+            "effectId": ""
           }
         ],
         "healResource": "HP",
+        "drainResource": "MP",
         "damageType": "magic",
         "area": 3,
         "areaCenter": "target",
@@ -1933,17 +2712,29 @@
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
-        "fieldRadius": 0
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       }
     ]
   },
   {
     "id": "skill_class_tamer_beast",
     "name": "조련사 · 야수 소환 (기본형)",
+    "className": "조련사",
     "description": "",
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true
+    },
     "resourceCosts": [
       {
         "resource": "MP",
@@ -1957,22 +2748,45 @@
         "target": "self",
         "rangeMode": "mainWeapon",
         "rangeValue": 1,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "chainCount": 0,
+        "chainRange": 3,
         "coefficients": [
           {
             "type": "fixed",
             "field": "atk",
             "calc": "percent",
-            "value": 1
+            "value": 1,
+            "effectId": ""
           }
         ],
         "healResource": "HP",
+        "drainResource": "MP",
         "damageType": "physical",
         "area": 0,
         "areaCenter": "target",
         "maxTargets": 0,
         "entityId": "legacy_4ac380c5973655c4",
+        "summonCenter": "self",
+        "inheritStats": {
+          "hp": 0,
+          "mp": 0,
+          "st": 0,
+          "atk": 0,
+          "magic": 0,
+          "defense": 0,
+          "resistance": 0,
+          "speed": 0
+        },
         "count": 1,
         "limit": 1,
+        "protectOwnerPercent": 0,
+        "protectOwnerScope": "all",
+        "protectOwnerPriority": 0,
+        "transferStateScope": "none",
+        "transferStatePriority": 0,
         "critical": 0,
         "penetration": 0,
         "moveType": "Walk",
@@ -1980,17 +2794,30 @@
         "distance": 0,
         "duration": 20,
         "fieldShape": "circle",
-        "fieldRadius": 0
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       }
     ]
   },
   {
     "id": "skill_class_engineer_ballista",
     "name": "갑사 · 노포설치 (기본형)",
+    "className": "갑사",
+    "icon": "assets/images/skills/갑사_노포설치.png",
     "description": "",
     "slot": "active",
     "cooldown": 8,
     "castTime": 1,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true
+    },
     "resourceCosts": [
       {
         "resource": "MP",
@@ -2004,22 +2831,45 @@
         "target": "self",
         "rangeMode": "mainWeapon",
         "rangeValue": 1,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "chainCount": 0,
+        "chainRange": 3,
         "coefficients": [
           {
             "type": "fixed",
             "field": "atk",
             "calc": "percent",
-            "value": 1
+            "value": 1,
+            "effectId": ""
           }
         ],
         "healResource": "HP",
+        "drainResource": "MP",
         "damageType": "physical",
         "area": 0,
         "areaCenter": "target",
         "maxTargets": 0,
         "entityId": "legacy_7485c24755d256a5",
+        "summonCenter": "self",
+        "inheritStats": {
+          "hp": 0,
+          "mp": 0,
+          "st": 0,
+          "atk": 0,
+          "magic": 0,
+          "defense": 0,
+          "resistance": 0,
+          "speed": 0
+        },
         "count": 1,
         "limit": 5,
+        "protectOwnerPercent": 0,
+        "protectOwnerScope": "all",
+        "protectOwnerPriority": 0,
+        "transferStateScope": "none",
+        "transferStatePriority": 0,
         "critical": 0,
         "penetration": 0,
         "moveType": "Dash",
@@ -2027,17 +2877,29 @@
         "distance": 0,
         "duration": 20,
         "fieldShape": "circle",
-        "fieldRadius": 0
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       }
     ]
   },
   {
     "id": "skill_class_spirit_summon",
     "name": "정령술사 · 치유 정령 소환 (기본형)",
+    "className": "정령술사",
     "description": "",
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true
+    },
     "resourceCosts": [
       {
         "resource": "MP",
@@ -2051,22 +2913,45 @@
         "target": "self",
         "rangeMode": "mainWeapon",
         "rangeValue": 1,
+        "minRange": 0,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "chainCount": 0,
+        "chainRange": 3,
         "coefficients": [
           {
             "type": "fixed",
             "field": "atk",
             "calc": "percent",
-            "value": 1
+            "value": 1,
+            "effectId": ""
           }
         ],
         "healResource": "HP",
+        "drainResource": "MP",
         "damageType": "physical",
         "area": 0,
         "areaCenter": "target",
         "maxTargets": 0,
         "entityId": "legacy_bbbcdbbdb4595aa3",
+        "summonCenter": "self",
+        "inheritStats": {
+          "hp": 0,
+          "mp": 0,
+          "st": 0,
+          "atk": 0,
+          "magic": 0,
+          "defense": 0,
+          "resistance": 0,
+          "speed": 0
+        },
         "count": 1,
         "limit": 1,
+        "protectOwnerPercent": 0,
+        "protectOwnerScope": "all",
+        "protectOwnerPriority": 0,
+        "transferStateScope": "none",
+        "transferStatePriority": 0,
         "critical": 0,
         "penetration": 0,
         "moveType": "Walk",
@@ -2074,7 +2959,13 @@
         "distance": 0,
         "duration": 20,
         "fieldShape": "circle",
-        "fieldRadius": 0
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       }
     ]
   }

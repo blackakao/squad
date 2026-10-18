@@ -127,6 +127,8 @@
 
 - `id`: 스킬 고유 ID
 - `name`, `description`
+- `className`: 스킬 소속 클래스 표시명. 기존 데이터는 `클래스 · 스킬명` 접두어를 임시 호환값으로 읽으며 기본 스킬은 `공용`이다.
+- `icon`: `assets/images/skills/` 아래의 선택적 개별 그림 경로
 - `slot`: `basic`, `active`, `passive`
 - `cooldown`: 초 단위 쿨다운
 - `castTime`: 초 단위 시전 시간, 비어 있으면 유닛 기본 시전 속도 사용
@@ -134,6 +136,8 @@
 - `passiveTrigger`: 패시브 발동 조건
 - `resourceCosts`: HP/MP/ST/BP 또는 `custom:<id>` 비용
 - `actions`: 실행 액션 배열
+
+캐릭터의 `skillIds`는 스킬 ID만 참조한다. 관리 UI는 현재 별도 클래스 DB가 없으므로 캐릭터 `name`과 스킬 `className`이 같은 항목만 장착 후보로 표시한다.
 
 주요 액션 타입:
 
@@ -222,7 +226,7 @@
 브라우저 로컬 저장소 키 `sdCharacterAssembler.v1`은 개발용 조합 프리셋 하나를 저장한다. 게임 캐릭터 JSON과 분리된다.
 
 - `version`, `name`, `gender`, `savedAt`
-- `bodyParts[category]`: `{ assetId, name }` 또는 `null`
-- `equipment[slot]`: `{ assetId, name }` 또는 `null`
+- `bodyParts[category]`: `{ assetId, name, color }` 또는 `null`
+- `equipment[slot]`: `{ assetId, name, color }` 또는 `null`
 
-`assetId`는 자동 카탈로그의 파일 stem이며 파일 경로는 저장 데이터의 핵심 식별자로 사용하지 않는다. 복원 시 ID가 사라졌으면 해당 카테고리만 `없음`으로 처리한다.
+`assetId`는 자동 카탈로그의 파일 stem이며 파일 경로는 저장 데이터의 핵심 식별자로 사용하지 않는다. `color`는 팔레트를 지원하는 카테고리의 `#RRGGBB` 값이며 미지원 카테고리는 `null`이다. 한글 파일명 전환 전 ID는 `assets/characters/asset-id-aliases.json` 별칭으로 복원한다. 복원 시 ID가 사라졌으면 해당 카테고리만 `없음`으로 처리한다.

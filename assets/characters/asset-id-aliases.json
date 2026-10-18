@@ -1,0 +1,440 @@
+{
+  "여성_머리_01": [
+    "female_hair_ref01"
+  ],
+  "여성_머리_02": [
+    "female_hair_ref02"
+  ],
+  "여성_머리_03": [
+    "female_hair_ref03"
+  ],
+  "여성_머리_04": [
+    "female_hair_ref04"
+  ],
+  "여성_머리_05": [
+    "female_hair_ref05"
+  ],
+  "여성_머리_06": [
+    "female_hair_ref06"
+  ],
+  "여성_머리_07": [
+    "female_hair_ref07"
+  ],
+  "여성_머리_08": [
+    "female_hair_ref08"
+  ],
+  "여성_머리_09": [
+    "female_hair_ref09"
+  ],
+  "여성_머리_10": [
+    "female_hair_ref10"
+  ],
+  "여성_머리_11": [
+    "female_hair_ref11"
+  ],
+  "여성_머리_12": [
+    "female_hair_ref12"
+  ],
+  "여성_머리_13": [
+    "female_hair_ref13"
+  ],
+  "여성_머리_14": [
+    "female_hair_ref14"
+  ],
+  "여성_머리_15": [
+    "female_hair_ref15"
+  ],
+  "여성_머리_10_금발": [
+    "female_hair_ref10_blonde"
+  ],
+  "여성_눈_01": [
+    "female_eyes_ref01_v3"
+  ],
+  "여성_눈_02": [
+    "female_eyes_ref02_v3"
+  ],
+  "여성_눈_03": [
+    "female_eyes_ref03_v3"
+  ],
+  "여성_눈_04": [
+    "female_eyes_ref04_v3"
+  ],
+  "여성_눈_05": [
+    "female_eyes_ref05_v3"
+  ],
+  "여성_눈_06": [
+    "female_eyes_ref06_v3"
+  ],
+  "여성_눈_07": [
+    "female_eyes_ref07_v3"
+  ],
+  "여성_눈_08": [
+    "female_eyes_ref08_v3"
+  ],
+  "여성_눈_09": [
+    "female_eyes_ref09_v3"
+  ],
+  "여성_눈_10": [
+    "female_eyes_ref10_v3"
+  ],
+  "여성_입_01": [
+    "female_mouth_ref01_v5"
+  ],
+  "여성_입_02": [
+    "female_mouth_ref02_v5"
+  ],
+  "여성_입_03": [
+    "female_mouth_ref03_v5"
+  ],
+  "여성_입_04": [
+    "female_mouth_ref04_v5"
+  ],
+  "여성_입_05": [
+    "female_mouth_ref05_v5"
+  ],
+  "여성_코_01": [
+    "female_nose_ref01_v5"
+  ],
+  "여성_코_02": [
+    "female_nose_ref02_v5"
+  ],
+  "여성_코_03": [
+    "female_nose_ref03_v5"
+  ],
+  "여성_코_04": [
+    "female_nose_ref04_v5"
+  ],
+  "여성_코_05": [
+    "female_nose_ref05_v5"
+  ],
+  "남성_머리_01": [
+    "male_hair_ref01"
+  ],
+  "남성_머리_02": [
+    "male_hair_ref02"
+  ],
+  "남성_머리_03": [
+    "male_hair_ref03"
+  ],
+  "남성_머리_04": [
+    "male_hair_ref04"
+  ],
+  "남성_머리_05": [
+    "male_hair_ref05"
+  ],
+  "남성_머리_06": [
+    "male_hair_ref06"
+  ],
+  "남성_머리_07": [
+    "male_hair_ref07"
+  ],
+  "남성_머리_08": [
+    "male_hair_ref08"
+  ],
+  "남성_머리_09": [
+    "male_hair_ref09"
+  ],
+  "남성_머리_10": [
+    "male_hair_ref10"
+  ],
+  "남성_머리_11": [
+    "male_hair_ref11"
+  ],
+  "남성_머리_12": [
+    "male_hair_ref12"
+  ],
+  "남성_머리_13": [
+    "male_hair_ref13"
+  ],
+  "남성_머리_14": [
+    "male_hair_ref14"
+  ],
+  "남성_머리_15": [
+    "male_hair_ref15"
+  ],
+  "남성_머리_16": [
+    "male_hair_ref16"
+  ],
+  "남성_머리_17": [
+    "male_hair_ref17"
+  ],
+  "남성_머리_18": [
+    "male_hair_ref18"
+  ],
+  "남성_머리_19": [
+    "male_hair_ref19"
+  ],
+  "남성_머리_20": [
+    "male_hair_ref20"
+  ],
+  "남성_눈_01": [
+    "male_eyes_ref01"
+  ],
+  "남성_눈_02": [
+    "male_eyes_ref02"
+  ],
+  "남성_눈_03": [
+    "male_eyes_ref03"
+  ],
+  "남성_눈_04": [
+    "male_eyes_ref04"
+  ],
+  "남성_눈_05": [
+    "male_eyes_ref05"
+  ],
+  "남성_눈_06": [
+    "male_eyes_ref06"
+  ],
+  "남성_눈_07": [
+    "male_eyes_ref07"
+  ],
+  "남성_눈_08": [
+    "male_eyes_ref08"
+  ],
+  "남성_눈_09": [
+    "male_eyes_ref09"
+  ],
+  "남성_눈_10": [
+    "male_eyes_ref10"
+  ],
+  "남성_입_01": [
+    "male_mouth_ref01_v5"
+  ],
+  "남성_입_02": [
+    "male_mouth_ref02_v5"
+  ],
+  "남성_입_03": [
+    "male_mouth_ref03_v5"
+  ],
+  "남성_입_04": [
+    "male_mouth_ref04_v5"
+  ],
+  "남성_입_05": [
+    "male_mouth_ref05_v5"
+  ],
+  "남성_코_01": [
+    "male_nose_ref01_v5"
+  ],
+  "남성_코_02": [
+    "male_nose_ref02_v5"
+  ],
+  "남성_코_03": [
+    "male_nose_ref03_v5"
+  ],
+  "남성_코_04": [
+    "male_nose_ref04_v5"
+  ],
+  "남성_코_05": [
+    "male_nose_ref05_v5"
+  ],
+  "여성_드레스": [
+    "female_dress_v4"
+  ],
+  "여성_제복": [
+    "female_uniform_v4"
+  ],
+  "여성_속옷": [
+    "female_underwear_skinned_v3"
+  ],
+  "여성_가죽갑옷": [
+    "female_leather_v4"
+  ],
+  "여성_로브": [
+    "female_robe_v4"
+  ],
+  "여성_판금갑옷": [
+    "female_armor_v4"
+  ],
+  "여성_발_캔버스화": [
+    "female_feet_canvas_v6"
+  ],
+  "여성_발_캐주얼화": [
+    "female_feet_casual_shoes_v6"
+  ],
+  "여성_발_구두": [
+    "female_feet_dress_shoes_v6"
+  ],
+  "여성_발_슬리퍼": [
+    "female_feet_slippers_v6"
+  ],
+  "여성_머리장비_버킷햇": [
+    "female_head_bucket_hat_v6"
+  ],
+  "여성_머리장비_얼굴가리개": [
+    "female_head_face_mask_v6"
+  ],
+  "여성_머리장비_머리띠": [
+    "female_head_headband_v6"
+  ],
+  "여성_머리장비_투구": [
+    "female_head_helmet_v6"
+  ],
+  "여성_머리장비_후드": [
+    "female_head_hood_v6"
+  ],
+  "여성_머리장비_삿갓": [
+    "female_head_sakkat_v6"
+  ],
+  "여성_주무기_책": [
+    "female_mainHand_book_v6"
+  ],
+  "여성_주무기_활": [
+    "female_mainHand_bow_v6"
+  ],
+  "여성_주무기_석궁": [
+    "female_mainHand_crossbow_v6"
+  ],
+  "여성_주무기_단검": [
+    "female_mainHand_dagger_v6"
+  ],
+  "여성_주무기_너클": [
+    "female_mainHand_knuckle_v6"
+  ],
+  "여성_주무기_한손철퇴": [
+    "female_mainHand_mace_1h_v6"
+  ],
+  "여성_주무기_양손철퇴": [
+    "female_mainHand_mace_2h_v6"
+  ],
+  "여성_주무기_권총": [
+    "female_mainHand_pistol_v6"
+  ],
+  "여성_주무기_지팡이": [
+    "female_mainHand_staff_v6"
+  ],
+  "여성_주무기_한손검": [
+    "female_mainHand_sword_1h_v6"
+  ],
+  "여성_주무기_양손검": [
+    "female_mainHand_sword_2h_v6"
+  ],
+  "여성_보조무기_쌍단검": [
+    "female_offHand_dagger_dual_v6"
+  ],
+  "여성_보조무기_쌍너클": [
+    "female_offHand_knuckle_dual_v6"
+  ],
+  "여성_보조무기_쌍철퇴": [
+    "female_offHand_mace_dual_v6"
+  ],
+  "여성_보조무기_보조책": [
+    "female_offHand_notebook_v6"
+  ],
+  "여성_보조무기_쌍권총": [
+    "female_offHand_pistol_dual_v6"
+  ],
+  "여성_보조무기_대형방패": [
+    "female_offHand_shield_large_v6"
+  ],
+  "여성_보조무기_소형방패": [
+    "female_offHand_shield_small_v6"
+  ],
+  "여성_보조무기_쌍검": [
+    "female_offHand_sword_dual_v6"
+  ],
+  "남성_제복": [
+    "male_uniform_v4"
+  ],
+  "남성_속옷": [
+    "male_underwear_skinned_v3"
+  ],
+  "남성_턱시도": [
+    "male_tuxedo_v4"
+  ],
+  "남성_가죽갑옷": [
+    "male_leather_v4"
+  ],
+  "남성_로브": [
+    "male_robe_v4"
+  ],
+  "남성_판금갑옷": [
+    "male_armor_v4"
+  ],
+  "남성_발_캔버스화": [
+    "male_feet_canvas_v6"
+  ],
+  "남성_발_캐주얼화": [
+    "male_feet_casual_shoes_v6"
+  ],
+  "남성_발_구두": [
+    "male_feet_dress_shoes_v6"
+  ],
+  "남성_발_슬리퍼": [
+    "male_feet_slippers_v6"
+  ],
+  "남성_머리장비_버킷햇": [
+    "male_head_bucket_hat_v6"
+  ],
+  "남성_머리장비_얼굴가리개": [
+    "male_head_face_mask_v6"
+  ],
+  "남성_머리장비_머리띠": [
+    "male_head_headband_v6"
+  ],
+  "남성_머리장비_투구": [
+    "male_head_helmet_v6"
+  ],
+  "남성_머리장비_후드": [
+    "male_head_hood_v6"
+  ],
+  "남성_머리장비_삿갓": [
+    "male_head_sakkat_v6"
+  ],
+  "남성_주무기_책": [
+    "male_mainHand_book_v6"
+  ],
+  "남성_주무기_활": [
+    "male_mainHand_bow_v6"
+  ],
+  "남성_주무기_석궁": [
+    "male_mainHand_crossbow_v6"
+  ],
+  "남성_주무기_단검": [
+    "male_mainHand_dagger_v6"
+  ],
+  "남성_주무기_너클": [
+    "male_mainHand_knuckle_v6"
+  ],
+  "남성_주무기_한손철퇴": [
+    "male_mainHand_mace_1h_v6"
+  ],
+  "남성_주무기_양손철퇴": [
+    "male_mainHand_mace_2h_v6"
+  ],
+  "남성_주무기_권총": [
+    "male_mainHand_pistol_v6"
+  ],
+  "남성_주무기_지팡이": [
+    "male_mainHand_staff_v6"
+  ],
+  "남성_주무기_한손검": [
+    "male_mainHand_sword_1h_v6"
+  ],
+  "남성_주무기_양손검": [
+    "male_mainHand_sword_2h_v6"
+  ],
+  "남성_보조무기_쌍단검": [
+    "male_offHand_dagger_dual_v6"
+  ],
+  "남성_보조무기_쌍너클": [
+    "male_offHand_knuckle_dual_v6"
+  ],
+  "남성_보조무기_쌍철퇴": [
+    "male_offHand_mace_dual_v6"
+  ],
+  "남성_보조무기_보조책": [
+    "male_offHand_notebook_v6"
+  ],
+  "남성_보조무기_쌍권총": [
+    "male_offHand_pistol_dual_v6"
+  ],
+  "남성_보조무기_대형방패": [
+    "male_offHand_shield_large_v6"
+  ],
+  "남성_보조무기_소형방패": [
+    "male_offHand_shield_small_v6"
+  ],
+  "남성_보조무기_쌍검": [
+    "male_offHand_sword_dual_v6"
+  ]
+}
