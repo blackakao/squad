@@ -55,6 +55,7 @@ function normalizeSkillEffect(effect,type = "add_buff") {
     dispelMode:effect.dispelMode ?? "id",dispelCategory:effect.dispelCategory ?? "general",dispelPolarity:effect.dispelPolarity ?? "any",
     ...(effect.immunity ? {immunity:{scope:effect.immunity.scope,category:effect.immunity.category,state:effect.immunity.state}} : {}),
     stat:effect.stat, sourceStat:effect.sourceStat ?? effect.source_stat ?? "magic", mode:effect.mode, value:Number(effect.value) || 0,
+    requiredOwnedSummonEntityId:String(effect.requiredOwnedSummonEntityId ?? effect.required_owned_summon_entity_id ?? "").trim(),
     nextCastTimePercent:Number.isFinite(Number(effect.nextCastTimePercent ?? effect.next_cast_time_percent)) ? Math.max(0,Number(effect.nextCastTimePercent ?? effect.next_cast_time_percent)) : 100,
     nextResourceCostPercent:Number.isFinite(Number(effect.nextResourceCostPercent ?? effect.next_resource_cost_percent)) ? Math.max(0,Number(effect.nextResourceCostPercent ?? effect.next_resource_cost_percent)) : 100,
     nextCooldownPercent:Number.isFinite(Number(effect.nextCooldownPercent ?? effect.next_cooldown_percent)) ? Math.max(0,Number(effect.nextCooldownPercent ?? effect.next_cooldown_percent)) : 100,
@@ -81,6 +82,7 @@ function renderTimedEffectFields(action) {
   const periodicCoefficient=normalizeCoefficient(periodic.coefficient ?? {type:"fixed",value:periodic.value});
   const options = (labels, selected) => Object.entries(labels).map(([key,label]) => `<option value="${key}" ${key === selected ? "selected" : ""}>${label}</option>`).join("");
   return `<div data-action-field="timedEffect">
+    <label>연결 소환수<select class="skill-effect-required-summon"><option value="">조건 없음</option>${entitiesJson.map(entity=>`<option value="${escapeHtml(entity.entityId)}" ${effect.requiredOwnedSummonEntityId === entity.entityId ? "selected" : ""}>${escapeHtml(entity.name)} 생존 중</option>`).join("")}</select></label>
     <label>효과 ID<input class="skill-effect-id" value="${escapeHtml(effect.id)}"></label>
     <small>같은 시전자의 같은 ID는 갱신·중첩됩니다. 서로 다른 효과에는 다른 ID를 사용하세요. ID 해제는 해당 ID만, 분류/전체 해제는 ID와 무관하게 같은 종류의 해제 가능한 효과를 제거합니다.</small>
     <div data-action-field="effectDelete">
@@ -153,7 +155,7 @@ function renderTimedEffectFields(action) {
 
 function readSkillEffectFromRow(row) {
   const value = name => row.querySelector(`.skill-effect-${name}`)?.value;
-  return {id:value("id"),name:value("name"),stat:value("stat"),sourceStat:value("source-stat"),state:value("state"),mode:value("mode"),
+  return {id:value("id"),name:value("name"),stat:value("stat"),sourceStat:value("source-stat"),state:value("state"),mode:value("mode"),requiredOwnedSummonEntityId:value("required-summon") ?? "",
     category:value("category"),polarity:value("polarity"),dispellable:row.querySelector('.skill-effect-dispellable')?.checked ?? true,
     dispelMode:value("dispel-mode"),dispelCategory:value("dispel-category"),dispelPolarity:value("dispel-polarity"),
     ...(value("immunity-scope") && (row.querySelector('.skill-action-type')?.value === "add_buff" || row.querySelector('.skill-action-field-effect')?.value === "add_buff") ? {immunity:{scope:value("immunity-scope"),category:value("immunity-category"),state:value("immunity-state")}} : {}),
@@ -207,7 +209,13 @@ function hasBattleState(unit, state) {
 function recalculateBattleBuffs(unit) {
   unit.effectBaseStats ??= {};
   const buffs = (unit.activeEffects ?? []).flatMap(effect => {
-    if(effect.kind === "buff" && ["flat","percent","override","convert"].includes(effect.mode)) return [effect];
+    if(effect.kind === "buff" && ["flat","percent","override","convert"].includes(effect.mode)) {
+      if (effect.requiredOwnedSummonEntityId) {
+        const caster=[...playerSquad,...enemySquad].find(candidate=>candidate.effectCasterId === effect.casterId);
+        if (!caster || !getLivingOwnedSummons(caster,effect.requiredOwnedSummonEntityId).length) return [];
+      }
+      return [effect];
+    }
     if(effect.kind === "transform") return Object.entries(effect.modifiers ?? {}).filter(([,value])=>Number(value)!==0)
       .map(([stat,value])=>({stat,value:Number(value),mode:effect.mode,stacks:1}));
     return [];
@@ -360,6 +368,14 @@ function applyTransformation(source,target,action,skill) {
 function updateBattleEffects() {
   [...playerSquad,...enemySquad].forEach(unit => {
     if (!unit.activeEffects?.length) return;
+    const linkedState=unit.activeEffects.filter(effect=>effect.requiredOwnedSummonEntityId).map(effect=>{
+      const caster=[...playerSquad,...enemySquad].find(candidate=>candidate.effectCasterId === effect.casterId);
+      return `${effect.id}:${caster && getLivingOwnedSummons(caster,effect.requiredOwnedSummonEntityId).length ? 1 : 0}`;
+    }).join("|");
+    if (unit.linkedSummonEffectState !== linkedState) {
+      unit.linkedSummonEffectState=linkedState;
+      recalculateBattleBuffs(unit);
+    }
     if (!unit.alive) {clearBattleEffects(unit);return;}
     const previousLength = unit.activeEffects.length;
     unit.activeEffects = unit.activeEffects.filter(effect => {

@@ -1,0 +1,28 @@
+{
+  "entityId": "knight_magic_horse",
+  "name": "마법말",
+  "role": "tank",
+  "description": "기사에게 연결되어 피해의 20%를 대신 받는 마법 말.",
+  "icon": "",
+  "summonType": "temporary",
+  "attackType": "physical",
+  "tags": [
+    "summon",
+    "knight",
+    "mount"
+  ],
+  "ai": "stationary",
+  "stats": {
+    "hp": 1000,
+    "mp": 0,
+    "st": 0,
+    "atk": 0,
+    "magic": 0,
+    "defense": 0,
+    "resistance": 0,
+    "speed": 0,
+    "attackSpeed": 2,
+    "castTime": 0,
+    "attackRange": 1
+  }
+}

@@ -37,6 +37,7 @@
   unit.reservedForTemporarySwap = false;
   actionTargetCooldowns.delete(unit);
   unit.passiveLastTriggerTick = {};
+  unit.passiveRecentAttackers = new Map();
   unit.castTimer = 0;
   unit.castDuration = 0;
   unit.pendingAction = null;
@@ -46,6 +47,7 @@
   unit.effectType = null;
   unit.effectTimer = 0;
   unit.skillBubbleText = "";
+  unit.skillBubbleIcon = "";
   unit.skillBubbleTimer = 0;
   unit.retreatHpBelow = 0;
 }
@@ -201,7 +203,7 @@ function createSummonedBattleUnit(source, config) {
       maxHp: config.hp, maxMp: config.mp, maxSt: config.st, baseBp: 0,
       atk: config.atk, magic: config.magic, defense: config.defense, resistance: config.resistance,
       speed: config.speed, attackSpeed: config.attackSpeed, castSpeed: config.castTime,
-      attackRange: config.attackRange, attackType: config.ai === "healer" ? "magic" : "physical",
+      attackRange: config.attackRange, attackType: config.attackType === "magic" || config.ai === "healer" ? "magic" : "physical",
       protectOwnerPercent:config.protectOwnerPercent,protectOwnerScope:config.protectOwnerScope,protectOwnerPriority:config.protectOwnerPriority,
       transferStateScope:config.transferStateScope,transferStatePriority:config.transferStatePriority,
       attributes: {}, skillIds: [], attackSkillId: "",
@@ -375,6 +377,7 @@ function activateWaitingUnit(unit, type) {
   if (!preserveState) unit.attackCooldown = 0;
   unit.pendingAction = null;
   unit.skillBubbleText = "";
+  unit.skillBubbleIcon = "";
   publishBattleEvents([{type:type === "revive" ? "revive" : "battle_entry",source:unit,target:unit}]);
   addBattleEventLog(unit, `${unit.name}: ${type === "revive" ? "부활" : preserveState ? "예비대 투입" : "전투 진입"}`);
 }
@@ -627,6 +630,10 @@ function prepareBattleSession({ openScreen = true } = {}) {
   battleStartedAtText = new Date(battleStartedAt).toISOString();
   lastResourceUpdateAt = battleStartedAt;
   isBattleRunning = true;
+  [...playerSquad, ...enemySquad].filter(unit => unit.alive).forEach(unit => {
+    publishBattleEvents([{type:"battle_entry",source:unit,target:unit}]);
+    addBattleEventLog(unit, `${unit.name}: 전투 진입`);
+  });
   updateBattleButton();
   return true;
 }
@@ -846,15 +853,30 @@ function updateCombat() {
   aliveEnemies.forEach(unit => takeAction(unit, aliveEnemies, alivePlayers));
 }
 
+function getBasicBattleSkill(unit) {
+  // Equipped weapons choose the action; role AI is only the unarmed fallback.
+  const unarmedHealer = !(unit.weaponAttacks?.length) && (unit.ai ?? unit.role) === "healer";
+  return getUnitSkill(unit, unarmedHealer ? DEFAULT_HEAL_SKILL_ID : DEFAULT_ATTACK_SKILL_ID);
+}
+
 function takeAction(unit, allies, enemies) {
   if (!unit.alive) return;
   tickSkillCooldowns(unit);
   if (unit.retreatHpBelow > 0 && unit.maxHp > 0 && unit.hp/unit.maxHp*100 <= unit.retreatHpBelow) return;
   if (hasBattleState(unit,"stun")) return;
   const hasIndependentWeapons=(unit.weaponAttackStates?.length ?? 0)>1;
-  if (hasIndependentWeapons) updateIndependentWeaponAttacks(unit,enemies);
+  if (unit.attackCooldown > 0) unit.attackCooldown--;
+  for (const state of unit.weaponAttackStates ?? []) {
+    if (state.cooldown > 0) state.cooldown--;
+  }
   if (updateBattleChannel(unit)) return;
   if (updateCast(unit)) {
+    return;
+  }
+
+  // Finish an already committed weapon cast before selecting the next action.
+  if (hasIndependentWeapons && unit.weaponAttackStates.some(state=>state.castTimer>0)) {
+    updateIndependentWeaponAttacks(unit,enemies,false);
     return;
   }
 
@@ -862,29 +884,17 @@ function takeAction(unit, allies, enemies) {
     return;
   }
 
-  if (hasIndependentWeapons) return;
+  if (hasIndependentWeapons) {
+    updateIndependentWeaponAttacks(unit,enemies);
+    return;
+  }
 
   if (unit.attackCooldown > 0) {
-    unit.attackCooldown--;
     return;
   }
 
-  if ((unit.ai ?? unit.role) === "healer") {
-    const target = findHealTarget(unit, allies);
-    if (!target) {
-      return;
-    }
-
-    if (!hasEnoughMpForAction(unit)) {
-      return;
-    }
-
-    spendMpForAction(unit);
-    startCast(unit, { type: "heal", target });
-    return;
-  }
-
-  const target = findTarget(unit, enemies);
+  const basicSkill = getBasicBattleSkill(unit);
+  const target = resolveSkillTarget(unit, basicSkill, allies, enemies);
   if (!target) {
     return;
   }
@@ -895,14 +905,14 @@ function takeAction(unit, allies, enemies) {
     }
 
     spendMpForAction(unit);
-    startCast(unit, { type: "attack", target, ranged: getUnitRange(unit) > ATTACK_RANGE_UNIT });
+    startCast(unit, { type: "attack", target, skill:basicSkill, ranged: getUnitRange(unit) > ATTACK_RANGE_UNIT });
   } else {
     if (!hasEnoughStForPhysicalAttack(unit)) {
       return;
     }
 
     spendStForPhysicalAttack(unit);
-    startCast(unit, { type: "attack", target, ranged: getUnitRange(unit) > ATTACK_RANGE_UNIT });
+    startCast(unit, { type: "attack", target, skill:basicSkill, ranged: getUnitRange(unit) > ATTACK_RANGE_UNIT });
   }
 }
 
@@ -927,13 +937,14 @@ function tryUseReadySkill(unit, allies, enemies) {
   const target = resolveSkillTarget(unit, skill, allies, enemies);
   const resourceSpent=spendSkillResourceCosts(unit, skill, nextSkillModifier.resourceCostPercent);
   consumeNextSkillModifier(unit,nextSkillModifier);
-  showSkillBubble(unit, skill.name);
+  showSkillBubble(unit, skill.name, skill.icon);
   startCast(unit, { type: "skill", target, skill, resourceSpent, skillModifier:nextSkillModifier, ranged: distance(unit, target) > ATTACK_RANGE_UNIT });
   return true;
 }
 
-function showSkillBubble(unit, text) {
+function showSkillBubble(unit, text, icon = "") {
   unit.skillBubbleText = String(text ?? "");
+  unit.skillBubbleIcon = typeof recordImagePath === "function" ? recordImagePath(icon) : String(icon ?? "");
   unit.skillBubbleTimer = 90;
 }
 
@@ -949,7 +960,7 @@ function resolveSkillTarget(unit, skill, allies, enemies) {
 function startCast(unit, action) {
   if (unit.channelAction) return;
   if (hasBattleState(unit,"stun") || (action.type === "skill" && hasBattleState(unit,"silence"))) return;
-  const skill = action.type === "skill" ? action.skill : getUnitSkill(unit, action.type === "heal" ? DEFAULT_HEAL_SKILL_ID : DEFAULT_ATTACK_SKILL_ID);
+  const skill = action.skill ?? getUnitSkill(unit, action.type === "heal" ? DEFAULT_HEAL_SKILL_ID : DEFAULT_ATTACK_SKILL_ID);
   if (!isSkillExecutable(skill)) return;
   const castTime = normalizeSkillCastTime(unit.isSummon && action.type !== "skill" ? unit.castSpeed : skill?.castTime);
   const castDuration = Math.round((castTime == null ? getCastDuration(unit) : castTime * BASE_ATTACK_COOLDOWN) * (action.skillModifier?.castTimePercent ?? 100) / 100);
@@ -1064,19 +1075,19 @@ function resolveIndependentWeaponAttack(unit,state) {
   else doAttack(unit,target,skill);
 }
 
-function updateIndependentWeaponAttacks(unit,enemies) {
+function updateIndependentWeaponAttacks(unit,enemies,startNew=true) {
   const resolving=[];
   unit.weaponAttackStates.forEach(state=>{
-    if (state.cooldown>0) state.cooldown--;
     if (state.castTimer>0) {
       state.castTimer--;
       if (state.castTimer<=0) resolving.push(state);
       return;
     }
-    if (state.cooldown>0 || !canPayIndependentWeaponCost(unit,state.weapon)) return;
+    if (!startNew || state.cooldown>0 || !canPayIndependentWeaponCost(unit,state.weapon)) return;
     const range=state.weapon.attackRange*ATTACK_RANGE_UNIT;
-    const target=enemies.filter(enemy=>enemy.alive && distance(unit,enemy)<=range).sort((a,b)=>distance(unit,a)-distance(unit,b))[0];
-    if (!target) return;
+    const skill=getIndependentWeaponSkill(unit,state.weapon,null);
+    const target=resolveSkillTarget(unit,skill,getSummonSquad(unit),enemies);
+    if (!target || distance(unit,target)>range) return;
     spendIndependentWeaponCost(unit,state.weapon);
     markAction(unit);
     state.target=target;
@@ -1304,6 +1315,7 @@ function updateEffects() {
       unit.skillBubbleTimer--;
       if (unit.skillBubbleTimer === 0) {
         unit.skillBubbleText = "";
+        unit.skillBubbleIcon = "";
       }
     }
   });
@@ -1315,10 +1327,15 @@ function drawSkillBubble(unit, statusOffset) {
   }
 
   const text = unit.skillBubbleText;
+  const iconImage = unit.skillBubbleIcon && typeof getCachedRecordImage === "function" ? getCachedRecordImage(unit.skillBubbleIcon) : null;
+  const hasIcon = Boolean(iconImage?.complete && iconImage.naturalWidth > 0);
   ctx.save();
   ctx.font = `${11 * scale}px Arial`;
   const paddingX = 8 * scale;
-  const width = Math.max(42 * scale, ctx.measureText(text).width + paddingX * 2);
+  const iconSize = 16 * scale;
+  const iconGap = 5 * scale;
+  const iconWidth = hasIcon ? iconSize + iconGap : 0;
+  const width = Math.max(42 * scale, ctx.measureText(text).width + paddingX * 2 + iconWidth);
   const height = 22 * scale;
   const x = unit.x - width / 2;
   const y = unit.y - statusOffset - 34 * scale;
@@ -1345,6 +1362,16 @@ function drawSkillBubble(unit, statusOffset) {
   ctx.stroke();
 
   ctx.fillStyle = "#111827";
+  if (hasIcon) {
+    const contentWidth = ctx.measureText(text).width + iconWidth;
+    const iconX = unit.x - contentWidth / 2;
+    ctx.drawImage(iconImage, iconX, y + (height - iconSize) / 2, iconSize, iconSize);
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    ctx.fillText(text, iconX + iconWidth, y + height / 2);
+    ctx.restore();
+    return;
+  }
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText(text, unit.x, y + height / 2);

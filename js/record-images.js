@@ -1,7 +1,19 @@
 // Per-record pictures. Independent of shared word/category icon mappings.
+const recordImageCache = new Map();
+
 function recordImagePath(value) {
   const path = typeof value === 'string' ? value : '';
   return /^assets\/images\/(skills|synergies)\/[^/\\?#]+\.(png|jpe?g|webp|gif)$/i.test(path) ? path : '';
+}
+
+function getCachedRecordImage(value) {
+  const path = recordImagePath(value);
+  if (!path) return null;
+  if (recordImageCache.has(path)) return recordImageCache.get(path);
+  const image = new Image();
+  image.src = path;
+  recordImageCache.set(path,image);
+  return image;
 }
 
 function renderRecordImageName(record) {

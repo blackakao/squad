@@ -1568,6 +1568,153 @@ function damageProxyAction(e,percent=20,priority=100,scope='all') {
  Object.assign(action.effect,{mode:'damage_proxy',proxyPercent:percent,proxyPriority:priority,proxyScope:scope});return action;
 }
 
+test('knight mount and demon brute branch on owned summon state and proxy owner damage', () => {
+  const e=engine();
+  const allSkills=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8'));
+  const ids=['skill_class_knight_magic_horse','skill_class_knight_haste_horse','skill_class_demon_brute'];
+  const actual=allSkills.filter(candidate=>ids.includes(candidate.id));
+  assert.equal(actual.length,3);
+  e.skillsJson=e.normalizeSkillJson(actual);
+  e.newEntities=['knight_magic_horse','demon_brute'].map(id=>JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','entities',`${id}.json`),'utf8')));
+  vm.runInContext('entitiesJson.push(...newEntities)',e);
+
+  const knight=unit(e);knight.name='기사';knight.speed=1.3;knight.atk=90;knight.attackSpeed=2;
+  const enemy=unit(e,'enemy',120);enemy.atk=100;
+  const passive=e.skillsJson.find(candidate=>candidate.id==='skill_class_knight_magic_horse');
+  const haste=e.skillsJson.find(candidate=>candidate.id==='skill_class_knight_haste_horse');
+  assert.equal(e.isSkillExecutable(passive),true,JSON.stringify(passive.actions));
+  knight.skillIds=[passive.id];
+  e.publishBattleEvents([{type:'battle_entry',source:knight,target:knight}]);
+  assert.equal(knight.summons.filter(summon=>summon.alive).length,1);
+  const horse=knight.summons[0];
+  assert.equal(horse.entityId,'knight_magic_horse');assert.equal(horse.maxHp,1000);
+  assert.ok(Math.abs(knight.speed-1.95)<1e-9);
+  e.applyActionDamage(enemy,knight,{damageType:'fixed',coefficients:[{type:'fixed',value:100}]});
+  assert.equal(knight.hp,20);assert.equal(horse.hp,980);
+
+  const summonCount=knight.summons.length;
+  e.applySkill(knight,knight,haste);
+  assert.equal(knight.summons.length,summonCount);
+  assert.equal(knight.atk,112.5);assert.equal(knight.attackSpeed,1.5);
+  horse.hp=0;e.syncAliveState(horse);e.updateBattleEffects(knight);
+  assert.equal(knight.speed,1.3);
+  e.applySkill(knight,knight,haste);
+  assert.equal(knight.summons.filter(summon=>summon.alive).length,1);
+  assert.equal(knight.atk,90);assert.equal(knight.attackSpeed,2);
+
+  const demon=unit(e);demon.name='악마';demon.magic=60;demon.hp=demon.maxHp=500;
+  const bruteSkill=e.skillsJson.find(candidate=>candidate.id==='skill_class_demon_brute');
+  e.applySkill(demon,demon,bruteSkill);
+  const brute=demon.summons.find(summon=>summon.alive);
+  assert.equal(brute.entityId,'demon_brute');assert.equal(brute.attackType,'magic');assert.equal(brute.magic,60);
+  e.applyActionDamage(enemy,demon,{damageType:'fixed',coefficients:[{type:'fixed',value:100}]});
+  assert.equal(demon.hp,460);assert.equal(brute.hp,940);
+  e.applySkill(demon,demon,bruteSkill);
+  assert.equal(demon.summons.filter(summon=>summon.alive).length,1);
+  assert.equal(brute.magic,75);
+});
+
+function basicActionEngine() {
+  const e=engine();
+  e.isMagicAttackUnit=u=>u.attackType==='magic';
+  e.isPhysicalAttackUnit=u=>u.attackType!=='magic';
+  return e;
+}
+
+test('common action priority selects ready skills before weapons for every role and weapon count', () => {
+  for (const role of ['melee','ranged','healer','tank']) for (const count of [1,2]) {
+    const e=basicActionEngine(), source=unit(e), enemy=unit(e,'enemy',110);
+    Object.assign(source,{role,attackType:'physical',castSpeed:0,
+      weaponAttacks:Array.from({length:count},()=>({attackType:'physical',attackRange:5,attackSpeed:1,castSpeed:0}))});
+    e.resetUnitForBattle(source);
+    const first=skill(e,{type:'deal_damage',target:'enemy',damageType:'fixed',coefficients:[{type:'fixed',value:3}]});
+    const ready={...first,id:'ready'};
+    e.skillsJson=[first,ready];source.skillIds=[first.id,ready.id];source.skillCooldowns[first.id]=100;
+    e.takeAction(source,e.playerSquad,e.enemySquad);
+    assert.equal(enemy.hp,97,`${role}/${count}: skill only`);
+    assert.equal(source.st,100,`${role}/${count}: no weapon resource spent`);
+    assert.equal(e.getBattleEvents('cast_start').at(-1).skillId,ready.id);
+    e.takeAction(source,e.playerSquad,e.enemySquad);e.updateProjectiles();
+    assert(enemy.hp<97,`${role}/${count}: weapon during cooldowns`);
+    assert.equal(source.st,100-10*count);
+  }
+});
+
+test('common action priority blocks weapons during skill casts and finishes committed weapon casts', () => {
+  const e=basicActionEngine(), source=unit(e);unit(e,'enemy',110);
+  source.weaponAttacks=Array.from({length:2},()=>({attackType:'physical',attackRange:5,attackSpeed:1,castSpeed:0.1}));
+  e.resetUnitForBattle(source);
+  const active=skill(e,{type:'deal_damage',target:'enemy',coefficients:[{type:'fixed',value:1}]},0.1);
+  e.skillsJson=[active];source.skillIds=[active.id];
+  e.takeAction(source,e.playerSquad,e.enemySquad);
+  e.takeAction(source,e.playerSquad,e.enemySquad);
+  assert.equal(source.st,100);assert(source.castTimer>0);
+  while(source.castTimer>0) e.takeAction(source,e.playerSquad,e.enemySquad);
+  e.takeAction(source,e.playerSquad,e.enemySquad);
+  assert.equal(source.st,80);assert(source.weaponAttackStates.every(s=>s.castTimer>0));
+  source.skillCooldowns[active.id]=0;
+  const casts=e.getBattleEvents('cast_start').length;
+  while(source.weaponAttackStates.some(s=>s.castTimer>0)) e.takeAction(source,e.playerSquad,e.enemySquad);
+  assert.equal(e.getBattleEvents('cast_start').length,casts);
+  e.takeAction(source,e.playerSquad,e.enemySquad);
+  assert.equal(e.getBattleEvents('cast_start').length,casts+1);
+  assert.equal(source.st,80);
+});
+
+test('armed support uses weapon damage while active skills cool down', () => {
+  const e=basicActionEngine(), source=unit(e), enemy=unit(e,'enemy',110);
+  Object.assign(source,{role:'healer',attackType:'magic',castSpeed:0,weaponAttacks:[{attackType:'magic'}]});
+  const active=skill(e,{type:'deal_damage',target:'enemy',coefficients:[{type:'fixed',value:1}]});
+  e.skillsJson=[active];source.skillIds=[active.id];source.skillCooldowns[active.id]=100;
+  e.takeAction(source,e.playerSquad,e.enemySquad);e.updateProjectiles();
+  assert.equal(enemy.hp,80);assert.equal(source.mp,95);
+  assert(e.getBattleEvents('cast_start').some(event=>event.skillId==='skill_basic_weapon_attack'));
+  source.attackCooldown=0;source.mp=0;
+  e.takeAction(source,e.playerSquad,e.enemySquad);assert.equal(source.pendingAction,null);
+});
+
+test('healing weapon chooses injured allies regardless of wielder role and idles without a valid target', () => {
+  const e=basicActionEngine(), source=unit(e), ally=unit(e,'player',105), enemy=unit(e,'enemy',110);
+  const heal=skill(e,{type:'heal',target:'ally',healResource:'HP',coefficients:[{type:'fixed',value:20}]});
+  heal.id='weapon_heal';e.skillsJson=[heal];ally.hp=40;
+  Object.assign(source,{role:'melee',attackType:'magic',attackSkillId:heal.id,castSpeed:0,weaponAttacks:[{attackSkillId:heal.id}]});
+  e.takeAction(source,e.playerSquad,e.enemySquad);e.updateProjectiles();
+  assert.equal(ally.hp,60);assert.equal(enemy.hp,100);
+  source.attackCooldown=0;ally.hp=100;const mp=source.mp;
+  e.takeAction(source,e.playerSquad,e.enemySquad);assert.equal(source.mp,mp);assert.equal(source.pendingAction,null);
+});
+
+test('mixed independent weapons choose enemy and ally targets separately', () => {
+  const e=basicActionEngine(), source=unit(e), ally=unit(e,'player',105), enemy=unit(e,'enemy',110);
+  const heal=skill(e,{type:'heal',target:'ally',healResource:'HP',coefficients:[{type:'fixed',value:20}]});
+  heal.id='weapon_heal';e.skillsJson=[heal];ally.hp=40;
+  source.weaponAttacks=[{attackType:'physical',attackRange:5,attackSpeed:1,castSpeed:0},
+    {attackType:'magic',attackSkillId:heal.id,attackRange:5,attackSpeed:1,castSpeed:0}];
+  e.resetUnitForBattle(source);
+  e.takeAction(source,e.playerSquad,e.enemySquad);e.updateProjectiles();
+  assert.equal(enemy.hp,90);assert.equal(ally.hp,60);
+  assert.equal(source.st,90);assert.equal(source.mp,95);
+});
+
+test('unarmed healer retains basic healing and active skill priority', () => {
+  const e=basicActionEngine(), source=unit(e), ally=unit(e,'player',105);unit(e,'enemy',110);
+  Object.assign(source,{role:'healer',attackType:'magic',castSpeed:0});ally.hp=30;
+  e.takeAction(source,e.playerSquad,e.enemySquad);e.updateProjectiles();
+  assert(ally.hp>30);assert.equal(e.getBasicBattleSkill(source).id,'skill_basic_heal');
+  const active=skill(e,{type:'heal',target:'ally',coefficients:[{type:'fixed',value:1}]});
+  e.skillsJson=[active];source.skillIds=[active.id];source.attackCooldown=0;
+  e.takeAction(source,e.playerSquad,e.enemySquad);
+  assert.equal(e.getBattleEvents('cast_start').at(-1).skillId,active.id);
+});
+
+test('saved serum staff produces basic attack casts between its class skills', () => {
+  const {createEngine,loadData}=require('../balance/simulator/engine.cjs');
+  const data=loadData(), serum=data.characters.findIndex(c=>c.name==='혈청형');
+  assert(serum>=0);
+  const result=createEngine(data).runBattle({teamA:[serum],teamB:[0],seed:42,maxSeconds:30,trace:true});
+  assert(result.events.some(event=>event.type==='cast_start' && event.source?.side==='player' && event.skillId==='skill_basic_weapon_attack'));
+});
+
 function lifecycleSummon(e, owner, type, count=1) {
   const s=skill(e,{type:'summon_entity',summon:{count,limit:3,lifetime:0}});
   e.newEntity.summonType=type;
@@ -2034,11 +2181,30 @@ test('guardian effort skills and custom resource match their class rules',()=>{
  assert.equal(strike.castTime,0);assert.equal(strike.cooldown,10);assert.equal(strike.actions[0].rangeMode,'mainWeapon');
  assert.deepEqual(Array.from(strike.actions[0].coefficients,c=>[c.field,c.value]),[['atk',100],['customResourceCurrent',100]]);
  assert.equal(strike.actions[0].coefficients[1].resourceId,'effort_magic');
- assert.deepEqual(endurance.passiveTrigger,{event:'damaged',chance:100,includePeriodic:true});
+ assert.deepEqual(endurance.passiveTrigger,{event:'damaged',chance:100,includePeriodic:true,allowMultiplePerTick:true,recentAttackerMitigation:{enabled:true,window:3,threshold:2,initialReductionPercent:10,additionalReductionPercent:3,maxReductionPercent:25}});
  assert.equal(endurance.actions[0].healResource,'custom:effort_magic');assert.equal(endurance.actions[0].coefficients[0].field,'triggerActualDamage');
  const guardian=characters.find(character=>character.skillIds?.includes(strike.id));
  assert.deepEqual(guardian.skillIds,['skill_class_guardian_whirl',strike.id,endurance.id]);
  assert.deepEqual(guardian.customResources.find(resource=>resource.id==='effort_magic'),{id:'effort_magic',name:'노력[마법]',initial:0,max:999999});
+});
+
+test('guardian endurance reduces damage by recent unique attackers and expires them after three seconds',()=>{
+ const e=engine(),guardian=unit(e);guardian.maxHp=guardian.hp=1000;
+ guardian.customResources=e.createBattleCustomResources([{id:'effort_magic',name:'노력[마법]',initial:0,max:999999}]);
+ const enduranceAction=e.createDefaultAction('heal');enduranceAction.target='self';enduranceAction.healResource='custom:effort_magic';
+ enduranceAction.coefficients=[{type:'calculated',field:'triggerActualDamage',calc:'percent',value:5}];
+ equipPassive(e,guardian,'damaged',enduranceAction,{passiveTrigger:{event:'damaged',chance:100,includePeriodic:true,allowMultiplePerTick:true,recentAttackerMitigation:{enabled:true,window:3,threshold:2,initialReductionPercent:10,additionalReductionPercent:3,maxReductionPercent:25}}});
+ const damage=e.createDefaultAction('deal_damage');damage.damageType='fixed';damage.coefficients=[{type:'fixed',value:100}];
+ const attackers=Array.from({length:7},(_,index)=>unit(e,'enemy',150+index*10));
+ const expectedDamage=[100,90,87,84,81,78,75];
+ attackers.forEach((attacker,index)=>{
+   const before=guardian.hp;e.applyActionDamage(attacker,guardian,damage);
+   assert.equal(before-guardian.hp,expectedDamage[index]);
+ });
+ assert.equal(guardian.hp,405);assert.equal(guardian.customResources.effort_magic.current,29.75);
+ vm.runInContext('combatEventTick+=181',e);
+ e.applyActionDamage(attackers[0],guardian,damage);
+ assert.equal(guardian.hp,305);assert.equal(guardian.customResources.effort_magic.current,34.75);
 });
 
 test('primary-anchored chains select only additional targets around the first target',()=>{

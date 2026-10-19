@@ -51,6 +51,8 @@ class EntityStore:
             raise EntityError("잘못된 AI입니다.")
         if entity.get("summonType", "temporary") not in ("persistent", "temporary"):
             raise EntityError("소환수 종류는 persistent 또는 temporary여야 합니다.")
+        if entity.get("attackType", "physical") not in ("physical", "magic"):
+            raise EntityError("공격 타입은 physical 또는 magic이어야 합니다.")
         if not isinstance(entity.get("tags"), list) or not all(isinstance(t, str) for t in entity["tags"]):
             raise EntityError("태그는 문자열 배열이어야 합니다.")
         if not all(isinstance(entity.get(key, ""), str) for key in ("description", "icon")):
@@ -89,6 +91,7 @@ class EntityStore:
             entity.setdefault("icon", "")
             entity.setdefault("tags", [])
             entity.setdefault("ai", entity.get("role") if entity.get("role") in {"melee", "ranged", "healer"} else "melee")
+            entity.setdefault("attackType", "magic" if entity.get("ai") == "healer" else "physical")
             self.validate(entity)
             path = self.path(entity["entityId"])
             if create and path.exists():
@@ -129,7 +132,8 @@ class EntityStore:
                     old = action["summon"]
                     entity_id = "legacy_" + uuid.uuid5(uuid.NAMESPACE_URL, str(skill.get("id")) + ":" + str(index)).hex[:16]
                     stats = {key: old.get(key, default) for key, default in dict(hp=100, mp=100, st=100, atk=10, magic=10, defense=0, resistance=0, speed=1, attackSpeed=1, castTime=0, attackRange=1).items()}
-                    entity = dict(entityId=entity_id, name=old.get("name", "소환수"), role=old.get("role", "melee"), description="", icon="", tags=["summon"], ai="stationary" if stats["speed"] == 0 else old.get("role", "melee"), stats=stats)
+                    ai = "stationary" if stats["speed"] == 0 else old.get("role", "melee")
+                    entity = dict(entityId=entity_id, name=old.get("name", "소환수"), role=old.get("role", "melee"), description="", icon="", tags=["summon"], ai=ai, attackType="magic" if ai == "healer" else "physical", stats=stats)
                     if not self.path(entity_id).exists():
                         self.save(entity, create=True)
                     action.update(entityId=entity_id, count=old.get("count", 1), limit=old.get("limit", 3), duration=old.get("lifetime", 20))

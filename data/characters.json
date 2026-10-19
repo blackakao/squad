@@ -83,7 +83,9 @@
     "attackRange": 3,
     "role": "tank",
     "skillIds": [
-      "skill_class_knight_charge"
+      "skill_class_knight_charge",
+      "skill_class_knight_magic_horse",
+      "skill_class_knight_haste_horse"
     ],
     "portrait": "assets/images/portraits/character-002.png",
     "attributes": {
@@ -1161,6 +1163,14 @@
       "skill_class_guardian_effort_strike",
       "skill_class_guardian_endurance"
     ],
+    "customResources": [
+      {
+        "id": "effort_magic",
+        "name": "노력[마법]",
+        "initial": 0,
+        "max": 999999
+      }
+    ],
     "portrait": "assets/images/portraits/image-20261018143206679619.png",
     "attributes": {
       "str": 50,
@@ -1420,7 +1430,9 @@
     "resistance": 20,
     "attackRange": 1,
     "role": "tank",
-    "skillIds": [],
+    "skillIds": [
+      "skill_class_demon_brute"
+    ],
     "portrait": "",
     "attributes": {
       "str": 0,

@@ -1011,12 +1011,56 @@ function renderBattleSkillRow(unit) {
     const angle = total > 0 ? Math.max(0, Math.min(360, remaining / total * 360)) : 0;
     const seconds = remaining > 0 ? Math.ceil(remaining / BASE_ATTACK_COOLDOWN * 10) / 10 : 0;
     const icon = recordImagePath(skill.icon);
-    return `<span class="battle-skill-icon" title="${escapeHtml(skill.name)}${remaining > 0 ? ` · ${seconds}초` : ""}">
-      ${icon ? `<img src="${escapeHtml(icon)}" alt="" onerror="this.hidden=true">` : `<span class="battle-skill-placeholder">${escapeHtml(String(skill.name).slice(0, 1))}</span>`}
-      ${remaining > 0 ? `<span class="battle-skill-cooldown" style="--cooldown-angle:${angle}deg"></span><span class="battle-skill-time">${seconds}</span>` : ""}
+    const effortResource=skill.id === "skill_class_guardian_endurance" ? unit.customResources?.effort_magic : null;
+    const effortText=effortResource ? ` · 노력[마법] ${Math.round((Number(effortResource.current) || 0)*10)/10}` : "";
+    const tooltip = `${skill.name}${effortText}${remaining > 0 ? ` · ${seconds}초` : ""}`;
+    return `<span class="battle-skill-tooltip" data-tooltip="${escapeHtml(tooltip)}" tabindex="0" aria-label="${escapeHtml(tooltip)}">
+      <span class="battle-skill-icon" aria-hidden="true">
+        ${icon ? `<img src="${escapeHtml(icon)}" alt="" onerror="this.hidden=true">` : `<span class="battle-skill-placeholder">${escapeHtml(String(skill.name).slice(0, 1))}</span>`}
+        ${remaining > 0 ? `<span class="battle-skill-cooldown" style="--cooldown-angle:${angle}deg"></span><span class="battle-skill-time">${seconds}</span>` : ""}
+      </span>
     </span>`;
   }).join("")}</div>`;
 }
+
+let battleSkillTooltipEl = null;
+
+function hideBattleSkillTooltip() {
+  if (battleSkillTooltipEl) battleSkillTooltipEl.hidden = true;
+}
+
+function showBattleSkillTooltip(target, clientX, clientY) {
+  const label = target?.dataset?.tooltip;
+  if (!label) return hideBattleSkillTooltip();
+  if (!battleSkillTooltipEl) {
+    battleSkillTooltipEl = document.createElement("div");
+    battleSkillTooltipEl.className = "battle-skill-floating-tooltip";
+    battleSkillTooltipEl.setAttribute("role", "tooltip");
+    document.body.appendChild(battleSkillTooltipEl);
+  }
+  battleSkillTooltipEl.textContent = label;
+  battleSkillTooltipEl.hidden = false;
+  const gap = 10;
+  const bounds = battleSkillTooltipEl.getBoundingClientRect();
+  battleSkillTooltipEl.style.left = `${Math.max(gap, Math.min(window.innerWidth - bounds.width - gap, clientX + gap))}px`;
+  battleSkillTooltipEl.style.top = `${Math.max(gap, Math.min(window.innerHeight - bounds.height - gap, clientY + gap))}px`;
+}
+
+document.addEventListener("pointermove", event => {
+  const target = event.target.closest?.(".battle-skill-tooltip");
+  if (target) showBattleSkillTooltip(target, event.clientX, event.clientY);
+  else hideBattleSkillTooltip();
+});
+document.addEventListener("pointerleave", hideBattleSkillTooltip);
+document.addEventListener("focusin", event => {
+  const target = event.target.closest?.(".battle-skill-tooltip");
+  if (!target) return;
+  const bounds = target.getBoundingClientRect();
+  showBattleSkillTooltip(target, bounds.right, bounds.top);
+});
+document.addEventListener("focusout", event => {
+  if (event.target.closest?.(".battle-skill-tooltip")) hideBattleSkillTooltip();
+});
 
 function renderStatus(units, colorResolver) {
   return units.filter(unit => !unit.isSummon).map(unit => {

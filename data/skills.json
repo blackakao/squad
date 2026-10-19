@@ -2997,14 +2997,23 @@
     "name": "수호자 · 인내",
     "className": "수호자",
     "icon": "assets/images/skills/수호자_노력의 일격.png",
-    "description": "피해를 받을 때마다 실제 받은 피해의 5%를 노력[마법]으로 영구 누적합니다.",
+    "description": "피해를 받을 때마다 실제 받은 피해의 5%를 노력[마법]으로 영구 누적합니다. 최근 3초 안에 피해를 준 적이 2명 이상이면 받는 피해가 10% 감소하며, 추가 공격자마다 3%p씩 최대 25%까지 감소합니다.",
     "slot": "passive",
     "cooldown": 0,
     "castTime": 0,
     "passiveTrigger": {
       "event": "damaged",
       "chance": 100,
-      "includePeriodic": true
+      "includePeriodic": true,
+      "allowMultiplePerTick": true,
+      "recentAttackerMitigation": {
+        "enabled": true,
+        "window": 3,
+        "threshold": 2,
+        "initialReductionPercent": 10,
+        "additionalReductionPercent": 3,
+        "maxReductionPercent": 25
+      }
     },
     "resourceCosts": [],
     "actions": [
@@ -3754,6 +3763,258 @@
           "immobile": true,
           "exitHpBelow": 30,
           "retreatHpBelow": 30
+        }
+      }
+    ]
+  },
+  {
+    "id": "skill_class_knight_magic_horse",
+    "name": "기사 · 마법말",
+    "className": "기사",
+    "icon": "",
+    "description": "전투 시작 시 마법말을 소환합니다. 마법말이 생존하는 동안 이동속도가 50% 증가하며, 받는 피해의 20%를 마법말이 대신 받습니다.",
+    "slot": "passive",
+    "cooldown": 0,
+    "castTime": 0,
+    "passiveTrigger": {
+      "event": "battle_entry",
+      "chance": 100,
+      "includePeriodic": false,
+      "allowMultiplePerTick": false
+    },
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "summon_entity",
+        "target": "self",
+        "rangeMode": "custom",
+        "rangeValue": 0,
+        "minRange": 0,
+        "ownedSummonCondition": "absent",
+        "ownedSummonEntityId": "knight_magic_horse",
+        "entityId": "knight_magic_horse",
+        "summonCenter": "self",
+        "count": 1,
+        "limit": 1,
+        "duration": 0,
+        "protectOwnerPercent": 20,
+        "protectOwnerScope": "all",
+        "protectOwnerPriority": 20,
+        "inheritStats": {
+          "hp": 0,
+          "mp": 0,
+          "st": 0,
+          "atk": 0,
+          "magic": 0,
+          "defense": 0,
+          "resistance": 0,
+          "speed": 0
+        }
+      },
+      {
+        "type": "add_buff",
+        "target": "self",
+        "rangeMode": "custom",
+        "rangeValue": 0,
+        "minRange": 0,
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "knight_magic_horse",
+        "targetSummonEntityId": "",
+        "duration": 0,
+        "effect": {
+          "id": "knight_magic_horse_speed",
+          "name": "마법말 탑승",
+          "state": "buff",
+          "category": "magic",
+          "polarity": "beneficial",
+          "dispellable": true,
+          "stat": "speed",
+          "sourceStat": "atk",
+          "mode": "percent",
+          "value": 50,
+          "requiredOwnedSummonEntityId": "knight_magic_horse",
+          "maxStacks": 1,
+          "stackMode": "refresh"
+        }
+      }
+    ]
+  },
+  {
+    "id": "skill_class_knight_haste_horse",
+    "name": "기사 · 가속/마법말소환",
+    "className": "기사",
+    "icon": "",
+    "description": "마법말이 없으면 다시 소환합니다. 마법말이 생존 중이면 5초 동안 공격력 25% 증가, 공격 간격 25% 감소 효과를 얻습니다.",
+    "slot": "active",
+    "cooldown": 15,
+    "castTime": 0,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true
+    },
+    "resourceCosts": [
+      {
+        "resource": "ST",
+        "mode": "fixed",
+        "value": 30
+      }
+    ],
+    "actions": [
+      {
+        "type": "summon_entity",
+        "target": "self",
+        "rangeMode": "custom",
+        "rangeValue": 0,
+        "minRange": 0,
+        "ownedSummonCondition": "absent",
+        "ownedSummonEntityId": "knight_magic_horse",
+        "entityId": "knight_magic_horse",
+        "summonCenter": "self",
+        "count": 1,
+        "limit": 1,
+        "duration": 0,
+        "protectOwnerPercent": 20,
+        "protectOwnerScope": "all",
+        "protectOwnerPriority": 20,
+        "inheritStats": {
+          "hp": 0,
+          "mp": 0,
+          "st": 0,
+          "atk": 0,
+          "magic": 0,
+          "defense": 0,
+          "resistance": 0,
+          "speed": 0
+        }
+      },
+      {
+        "type": "add_buff",
+        "target": "self",
+        "rangeMode": "custom",
+        "rangeValue": 0,
+        "minRange": 0,
+        "ownedSummonCondition": "alive",
+        "ownedSummonEntityId": "knight_magic_horse",
+        "targetSummonEntityId": "",
+        "duration": 5,
+        "effect": {
+          "id": "knight_horse_haste_atk",
+          "name": "마법말 가속 · 공격력",
+          "state": "buff",
+          "category": "magic",
+          "polarity": "beneficial",
+          "dispellable": true,
+          "stat": "atk",
+          "sourceStat": "atk",
+          "mode": "percent",
+          "value": 25,
+          "requiredOwnedSummonEntityId": "knight_magic_horse",
+          "maxStacks": 1,
+          "stackMode": "refresh"
+        }
+      },
+      {
+        "type": "add_buff",
+        "target": "self",
+        "rangeMode": "custom",
+        "rangeValue": 0,
+        "minRange": 0,
+        "ownedSummonCondition": "alive",
+        "ownedSummonEntityId": "knight_magic_horse",
+        "targetSummonEntityId": "",
+        "duration": 5,
+        "effect": {
+          "id": "knight_horse_haste_speed",
+          "name": "마법말 가속 · 공격속도",
+          "state": "buff",
+          "category": "magic",
+          "polarity": "beneficial",
+          "dispellable": true,
+          "stat": "attackSpeed",
+          "sourceStat": "atk",
+          "mode": "percent",
+          "value": -25,
+          "requiredOwnedSummonEntityId": "knight_magic_horse",
+          "maxStacks": 1,
+          "stackMode": "refresh"
+        }
+      }
+    ]
+  },
+  {
+    "id": "skill_class_demon_brute",
+    "name": "악마 · 덩치소환/덩치공격",
+    "className": "악마",
+    "icon": "",
+    "description": "덩치가 없으면 소환합니다. 덩치는 악마가 받는 피해의 60%를 대신 받습니다. 덩치가 생존 중이면 5초 동안 덩치의 마력이 25% 증가합니다.",
+    "slot": "active",
+    "cooldown": 10,
+    "castTime": 0,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true
+    },
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 30
+      }
+    ],
+    "actions": [
+      {
+        "type": "summon_entity",
+        "target": "self",
+        "rangeMode": "custom",
+        "rangeValue": 0,
+        "minRange": 0,
+        "ownedSummonCondition": "absent",
+        "ownedSummonEntityId": "demon_brute",
+        "entityId": "demon_brute",
+        "summonCenter": "self",
+        "count": 1,
+        "limit": 1,
+        "duration": 0,
+        "protectOwnerPercent": 60,
+        "protectOwnerScope": "all",
+        "protectOwnerPriority": 60,
+        "inheritStats": {
+          "hp": 0,
+          "mp": 0,
+          "st": 0,
+          "atk": 0,
+          "magic": 0,
+          "defense": 0,
+          "resistance": 0,
+          "speed": 0
+        }
+      },
+      {
+        "type": "add_buff",
+        "target": "summon",
+        "rangeMode": "custom",
+        "rangeValue": 100,
+        "minRange": 0,
+        "ownedSummonCondition": "alive",
+        "ownedSummonEntityId": "demon_brute",
+        "targetSummonEntityId": "demon_brute",
+        "duration": 5,
+        "effect": {
+          "id": "demon_brute_magic",
+          "name": "덩치 공격명령",
+          "state": "buff",
+          "category": "magic",
+          "polarity": "beneficial",
+          "dispellable": true,
+          "stat": "magic",
+          "sourceStat": "atk",
+          "mode": "percent",
+          "value": 25,
+          "requiredOwnedSummonEntityId": "demon_brute",
+          "maxStacks": 1,
+          "stackMode": "refresh"
         }
       }
     ]

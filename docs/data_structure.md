@@ -133,12 +133,14 @@
 - `choice`: 선택 타입 전용 `{ defaultOptionId, options[] }`. 각 option은 `{ id, label, skillId }`이며 `skillId`로 기존 실행 스킬을 참조한다.
 - 액션 대상 재적용 제한: `targetCooldown`은 초 단위이며 `targetCooldownScope`는 `caster`(기본, 시전자별) 또는 `global`(모든 시전자 공유)이다. `global`은 `targetCooldownEffectId`와 `targetCooldownEffectName`으로 대상 상태에 표시되는 제한 효과를 만든다.
 - 액션의 `allowSelfTarget`은 아군 대상에 시전자 자신을 포함할지 정한다. 생략 기본값은 `true`다.
+- 액션의 `ownedSummonCondition`은 `any`·`alive`·`absent`, `ownedSummonEntityId`는 검사할 소환 Entity ID다. `targetSummonEntityId`는 `target: summon`의 후보를 특정 Entity로 제한한다.
+- 버프 효과의 `requiredOwnedSummonEntityId`는 해당 Entity가 시전자 소유로 생존하는 동안만 능력치 보정을 활성화한다.
 - 주기 효과의 `periodic.coefficient`는 고정값 또는 시전자 능력치 계수이며 적용 순간 기준값을 보관한다. `growthInterval`과 `growthValue`는 시간에 따른 계수 증가를 정의한다. `effect.stackMode: reject`는 같은 효과 ID가 있는 대상을 선택하지 않는다.
 - `cooldown`: 초 단위 쿨다운
 - `castTime`: 초 단위 시전 시간, 비어 있으면 유닛 기본 시전 속도 사용
 - `castReceivedDamagePercent`: 시전 중 받는 피해 배율, 기본값 100
 - `channel`: 채널링 설정 `{ duration, interval, interruptOnDamage, lockTarget, receivedDamagePercent }`. 대상 고정과 채널 중 받는 피해 비율을 선택적으로 저장한다.
-- `passiveTrigger`: 패시브 발동 조건
+- `passiveTrigger`: 패시브 발동 조건. `battle_entry`는 유닛의 전투 진입 시 한 번 발동한다. `allowMultiplePerTick`은 같은 전투 틱의 조건 이벤트마다 발동할지 정하며 생략 기본값은 `false`다. 선택적 `recentAttackerMitigation`은 `{ enabled, window, threshold, initialReductionPercent, additionalReductionPercent, maxReductionPercent }`로 최근 고유 공격자 수에 따른 받는 피해 감소를 저장한다.
 - 계산계수의 `field: triggerActualDamage`는 패시브를 발동시킨 실제 피해량을 참조한다. `field: customResourceCurrent`는 `resourceId`에 지정한 시전자 커스텀 자원의 현재값을 참조한다.
 - `resourceCosts`: HP/MP/ST/BP 또는 `custom:<id>` 비용
 - `actions`: 실행 액션 배열
@@ -205,6 +207,7 @@
 
 - `entityId`
 - `name`, `role`, `description`, `icon`, `tags`, `ai`
+- `attackType`: `physical` 또는 `magic`. 생략한 기존 파일은 치유 AI만 마법, 나머지는 물리로 해석합니다.
 - `summonType`: `persistent` 또는 `temporary`. 생략한 기존 파일은 임시로 해석하며 조회 시 필드를 강제로 쓰지 않습니다.
 - `stats`: `hp`, `mp`, `st`, `atk`, `magic`, `defense`, `resistance`, `speed`, `attackSpeed`, `castTime`, `attackRange`
 

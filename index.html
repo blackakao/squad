@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Squad Auto Battle Prototype</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=20261018-compact-buttons">
+<link rel="stylesheet" href="css/style.css?v=20261019-runtime-skill-icons-2">
 </head>
 <body>
 
@@ -854,6 +854,13 @@
               <label>발동 이벤트<select id="skillPassiveEvent"></select></label>
               <label>발동 확률 (%)<input id="skillPassiveChance" type="number" min="0" max="100" step="0.1" value="100"></label>
               <label class="skill-check-field skill-form-field-wide"><input id="skillPassivePeriodic" type="checkbox">주기 피해·회복도 발동 조건에 포함</label>
+              <label class="skill-check-field skill-form-field-wide"><input id="skillPassiveMultiplePerTick" type="checkbox">같은 전투 틱의 모든 조건 이벤트에 각각 발동</label>
+              <label class="skill-check-field skill-form-field-wide"><input id="skillPassiveRecentAttackersEnabled" type="checkbox">최근 고유 공격자 수에 따른 받는 피해 감소</label>
+              <label>추적 시간 (초)<input id="skillPassiveRecentAttackersWindow" type="number" min="0.1" step="0.1" value="3"></label>
+              <label>감소 시작 공격자 수<input id="skillPassiveRecentAttackersThreshold" type="number" min="2" step="1" value="2"></label>
+              <label>최초 피해 감소 (%)<input id="skillPassiveRecentAttackersInitial" type="number" min="0" max="100" step="0.1" value="10"></label>
+              <label>추가 공격자당 감소 (%p)<input id="skillPassiveRecentAttackersAdditional" type="number" min="0" max="100" step="0.1" value="3"></label>
+              <label>최대 피해 감소 (%)<input id="skillPassiveRecentAttackersMax" type="number" min="0" max="100" step="0.1" value="25"></label>
             </div>
             <small>조건 충족 시 즉시 실행합니다. 아래 자원 소모와 쿨타임을 적용하며, 동일 패시브는 한 전투 틱에 한 번만 발동합니다. 패시브 효과로 다른 패시브를 연쇄 발동하지 않습니다. 기절·침묵 중에도 발동하지만 사망한 유닛은 발동하지 않습니다.</small>
           </div>
@@ -1008,17 +1015,17 @@
 <script src="js/portrait/hair-colors.js?v=20261007-parts1"></script>
 <script src="js/portrait/imported-catalog.js?v=20261009-equipment1"></script>
 <script src="js/portrait/catalog.js?v=20261007-parts1"></script>
-<script src="js/ui.js?v=20261018-duel"></script>
+<script src="js/ui.js?v=20261019-runtime-skill-icons-2"></script>
 <script src="js/portrait/bridge.js?v=20260929-bald1"></script>
 <script src="js/api.js?v=20260914-image-assets"></script>
-<script src="js/record-images.js?v=20261015-record-images"></script>
+<script src="js/record-images.js?v=20261019-runtime-skill-icons-2"></script>
 <script src="js/category.js?v=20261005-icons"></script>
 <script src="js/battle-events.js?v=20261012-contributions"></script>
 <script src="js/skill-channel.js?v=20260929-team-rules"></script>
-<script src="js/skill-passives.js?v=20261011-item-modifiers"></script>
-<script src="js/skill-effects.js?v=20261001-field-effects"></script>
-  <script src="js/skill.js?v=20261018-skill-table-2"></script>
-<script src="js/entity.js?v=20261001-summon-inheritance"></script>
+<script src="js/skill-passives.js?v=20261019-guardian-endurance"></script>
+<script src="js/skill-effects.js?v=20261020-summon-link"></script>
+  <script src="js/skill.js?v=20261020-summon-branch"></script>
+<script src="js/entity.js?v=20261020-attack-type"></script>
 <script src="js/layout.js?v=20260817-layout"></script>
 <script src="js/combat-power.js?v=20261014-v1"></script>
 <script src="js/combat-power-ui.js?v=20261014-v1"></script>
@@ -1031,7 +1038,7 @@
 <script src="js/team.js?v=20261018-compact-buttons"></script>
 <script src="js/stats.js?v=20261014-cp-v1"></script>
 <script src="js/record.js?v=20261012-contributions"></script>
-<script src="js/battle.js?v=20261018-duel"></script>
+<script src="js/battle.js?v=20261020-summon-branch"></script>
 <script src="https://js.puter.com/v2/"></script>
 <script src="js/image-generator.js?v=20261005-image-actions"></script>
 <script src="js/icon-background.js?v=20261009"></script>

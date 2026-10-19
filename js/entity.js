@@ -8,7 +8,7 @@ const ENTITY_ROLES = {melee:"근접",ranged:"원거리",healer:"치유 (힐)",ta
 const ENTITY_AI = {melee:"근접",ranged:"원거리",healer:"치유",stationary:"설치형"};
 
 function createDefaultEntity() {
-  return {entityId:"",name:"새 Entity",description:"",icon:"",role:"melee",ai:"melee",summonType:"temporary",tags:["summon"],stats:{hp:100,mp:100,st:100,atk:10,magic:10,defense:0,resistance:0,speed:1,attackSpeed:1,castTime:0,attackRange:1}};
+  return {entityId:"",name:"새 Entity",description:"",icon:"",role:"melee",ai:"melee",attackType:"physical",summonType:"temporary",tags:["summon"],stats:{hp:100,mp:100,st:100,atk:10,magic:10,defense:0,resistance:0,speed:1,attackSpeed:1,castTime:0,attackRange:1}};
 }
 
 async function entityRequest(path = "", method = "GET", body) {
@@ -33,7 +33,7 @@ function getSummonConfiguration(source, action) {
   const stats={...entity.stats};
   const sourceFields={hp:"maxHp",mp:"maxMp",st:"maxSt",atk:"atk",magic:"magic",defense:"defense",resistance:"resistance",speed:"speed"};
   for(const stat of SUMMON_INHERIT_STATS) stats[stat]=(Number(stats[stat]) || 0)+(Number(source?.[sourceFields[stat]]) || 0)*(Number(action.inheritStats?.[stat]) || 0)/100;
-  return {...stats, entityId:entity.entityId,name:entity.name,icon:entity.icon,role:entity.role,ai:entity.ai,
+  return {...stats, entityId:entity.entityId,name:entity.name,icon:entity.icon,role:entity.role,ai:entity.ai,attackType:entity.attackType === "magic" ? "magic" : "physical",
     summonType:entity.summonType === "persistent" ? "persistent" : "temporary",
     speed:entity.ai === "stationary" ? 0 : stats.speed,
     count:action.count ?? 1,limit:action.limit ?? 3,lifetime:action.duration ?? 20,summonCenter:action.summonCenter ?? "self",
@@ -183,6 +183,7 @@ function ensureEntityEditor() {
       <label>태그 (쉼표 구분)<input name="tags"></label>
       <fieldset><legend>능력치</legend><div class="entity-stat-grid">${Object.entries(ENTITY_STAT_FIELDS).map(([key,label])=>`<label>${label}<input name="${key}" type="number" min="${key==='hp'?1:['attackSpeed','attackRange'].includes(key)?0.1:0}" max="100000" step="any" required></label>`).join('')}</div></fieldset>
       <label>AI<select name="ai">${options(ENTITY_AI)}</select></label>
+      <label>공격 타입<select name="attackType"><option value="physical">물리</option><option value="magic">마법</option></select></label>
       <p id="entityEditorUsage"></p>
       <label>저장 방식<select name="saveMode" onchange="updateEntitySaveMode()"><option value="update">기존 Entity 수정 (모든 Skill에 반영)</option><option value="new">새 Entity로 저장 (현재 액션만 연결)</option></select></label>
       <div class="entity-toolbar"><button type="submit">Entity 저장</button><button type="button" onclick="startEntityPreview()">미리보기</button><button type="button" onclick="stopEntityPreview()">미리보기 중지</button><button type="button" onclick="closeEntityEditor()">닫기</button></div>
@@ -198,6 +199,7 @@ function openEntityEditor(button, edit = false) {
   const form = document.getElementById('entityEditorForm');
   for(const key of ['entityId','name','description','icon','role','ai']) form.elements[key].value = entity[key] || '';
   form.elements.summonType.value = entity.summonType ?? 'temporary';
+  form.elements.attackType.value = entity.attackType === 'magic' ? 'magic' : 'physical';
   form.elements.tags.value = entity.tags.join(', ');
   for(const key of Object.keys(ENTITY_STAT_FIELDS)) form.elements[key].value = entity.stats[key];
   form.elements.saveMode.value = edit ? 'update' : 'new';
@@ -222,7 +224,7 @@ function readEntityEditor() {
   const form = document.getElementById('entityEditorForm');
   return {entityId:form.elements.entityId.value.trim(),name:form.elements.name.value.trim(),description:form.elements.description.value,
     summonType:form.elements.summonType.value,
-    icon:form.elements.icon.value.trim(),role:form.elements.role.value,ai:form.elements.ai.value,tags:form.elements.tags.value.split(',').map(s=>s.trim()).filter(Boolean),
+    icon:form.elements.icon.value.trim(),role:form.elements.role.value,ai:form.elements.ai.value,attackType:form.elements.attackType.value,tags:form.elements.tags.value.split(',').map(s=>s.trim()).filter(Boolean),
     stats:Object.fromEntries(Object.keys(ENTITY_STAT_FIELDS).map(key=>[key,Number(form.elements[key].value)]))};
 }
 

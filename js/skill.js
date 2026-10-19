@@ -560,6 +560,9 @@ function normalizeSkillAction(action = {}) {
     targetCooldownScope: action.targetCooldownScope === "global" ? "global" : "caster",
     targetCooldownEffectId: String(action.targetCooldownEffectId ?? "").trim(),
     targetCooldownEffectName: String(action.targetCooldownEffectName ?? "").trim(),
+    ownedSummonCondition:["alive","absent"].includes(action.ownedSummonCondition) ? action.ownedSummonCondition : "any",
+    ownedSummonEntityId:String(action.ownedSummonEntityId ?? "").trim(),
+    targetSummonEntityId:String(action.targetSummonEntityId ?? "").trim(),
     ...(TIMED_EFFECT_ACTIONS.includes(type) ? {effect:normalizeSkillEffect(action.effect,type)} : {}),
     chainCount: Math.min(20, Math.floor(normalizeSkillCooldown(action.chainCount))),
     chainRange: normalizeSkillCooldown(action.chainRange ?? 3),
@@ -1319,6 +1322,11 @@ function renderSkillActionRow(action, index) {
         <label class="skill-action-field"><span>공유 효과 이름</span><input class="skill-action-target-cooldown-effect-name" value="${escapeHtml(action.targetCooldownEffectName ?? "")}" placeholder="예: 과다투약 금지"></label>
         <small>시전자별은 같은 시전자의 같은 스킬·액션만 제한합니다. 전체 공유는 대상에게 표시되는 효과를 부여해 모든 시전자의 같은 효과 ID를 제한합니다.</small>
       </div>
+      <div class="skill-action-condition-field">
+        <label class="skill-action-field"><span>소유 소환수 조건</span><select class="skill-action-owned-summon-condition"><option value="any" ${action.ownedSummonCondition === "any" ? "selected" : ""}>제한 없음</option><option value="alive" ${action.ownedSummonCondition === "alive" ? "selected" : ""}>지정 Entity 생존</option><option value="absent" ${action.ownedSummonCondition === "absent" ? "selected" : ""}>지정 Entity 부재</option></select></label>
+        <label class="skill-action-field"><span>조건 Entity</span><select class="skill-action-owned-summon-entity"><option value="">선택 없음</option>${entitiesJson.map(entity=>`<option value="${escapeHtml(entity.entityId)}" ${action.ownedSummonEntityId === entity.entityId ? "selected" : ""}>${escapeHtml(entity.name)}</option>`).join("")}</select></label>
+        <label class="skill-action-field"><span>대상 소환수 Entity</span><select class="skill-action-target-summon-entity"><option value="">모든 내 소환수</option>${entitiesJson.map(entity=>`<option value="${escapeHtml(entity.entityId)}" ${action.targetSummonEntityId === entity.entityId ? "selected" : ""}>${escapeHtml(entity.name)}</option>`).join("")}</select></label>
+      </div>
       <label class="skill-action-field" data-action-field="damageType">
         <span>피해 타입</span>
         <select class="skill-action-damage-type">
@@ -1688,6 +1696,9 @@ function readSkillActionsFromForm() {
       targetCooldownScope: row.querySelector(".skill-action-target-cooldown-scope")?.value ?? "caster",
       targetCooldownEffectId: row.querySelector(".skill-action-target-cooldown-effect-id")?.value ?? "",
       targetCooldownEffectName: row.querySelector(".skill-action-target-cooldown-effect-name")?.value ?? "",
+      ownedSummonCondition:row.querySelector(".skill-action-owned-summon-condition")?.value ?? "any",
+      ownedSummonEntityId:row.querySelector(".skill-action-owned-summon-entity")?.value ?? "",
+      targetSummonEntityId:row.querySelector(".skill-action-target-summon-entity")?.value ?? "",
       ...(TIMED_EFFECT_ACTIONS.includes(type) || (type === "create_field" && ["add_buff","add_state"].includes(row.querySelector('.skill-action-field-effect')?.value)) ? {effect:readSkillEffectFromRow(row)} : {}),
       ...(type === "transform" ? {transform:{id:row.querySelector('.skill-transform-id')?.value,name:row.querySelector('.skill-transform-name')?.value,
         mode:row.querySelector('.skill-transform-mode')?.value,modifiers:Object.fromEntries([...row.querySelectorAll('.skill-transform-stat')].map(input=>[input.dataset.stat,Number(input.value)])),
@@ -1944,8 +1955,20 @@ function getUnitSkill(unit, fallbackSkillId = DEFAULT_ATTACK_SKILL_ID) {
     ?? createDefaultSkillJson()[0]);
 }
 
+function getLivingOwnedSummons(source, entityId = "") {
+  return [...playerSquad,...enemySquad].filter(unit => unit.alive && unit.isSummon && unit.summoner === source
+    && (!entityId || unit.entityId === entityId));
+}
+
+function meetsOwnedSummonCondition(source, action, ownedEntityIds = null) {
+  if (action.ownedSummonCondition === "any" || !action.ownedSummonEntityId) return true;
+  const alive = ownedEntityIds ? ownedEntityIds.has(action.ownedSummonEntityId)
+    : getLivingOwnedSummons(source,action.ownedSummonEntityId).length > 0;
+  return action.ownedSummonCondition === "alive" ? alive : !alive;
+}
+
 function resolveSkillActionTarget(source, action, preferredTarget = null, skill = null, requirePreferred = false) {
-  if (!source?.alive || !isSkillActionSupported(action)) return null;
+  if (!source?.alive || !isSkillActionSupported(action) || !meetsOwnedSummonCondition(source,action)) return null;
   const forcedMovement = action.type === "move" && ["Knockback","Pull","Push"].includes(action.moveType);
   if (action.type === "move" && !forcedMovement && (hasBattleState(source,"stun") || hasBattleState(source,"root"))) return null;
   if (action.type === "summon_entity") {
@@ -1973,7 +1996,8 @@ function resolveSkillActionTarget(source, action, preferredTarget = null, skill 
   const selfArea = !isChainAction(action) && action.area > 0 && (action.areaCenter === "self" || action.target === "self") && supportsActionArea(action.type);
   const range = selfArea ? action.area * ATTACK_RANGE_UNIT : getActionRangePixels(source, action);
   const pool = action.target === "self" && !selfArea ? [source] : action.target === "enemy" ? otherSquad
-    : action.target === "summon" ? ownSquad.filter(unit=>unit.isSummon && unit.summoner===source) : ownSquad;
+    : action.target === "summon" ? ownSquad.filter(unit=>unit.isSummon && unit.summoner===source
+      && (!action.targetSummonEntityId || unit.entityId === action.targetSummonEntityId)) : ownSquad;
   const minimumRange = getActionMinimumRangePixels(action);
   let candidates = pool.filter(unit => {
     const targetDistance = distance(source, unit);
@@ -2224,7 +2248,9 @@ function applySkill(source, target, skill, execution = createSkillExecutionConte
   if (!source?.alive || !isSkillExecutable(skill)) {
     return;
   }
+  const ownedEntityIds = new Set(getLivingOwnedSummons(source).map(unit=>unit.entityId));
   skill.actions.forEach(action => {
+    if (!meetsOwnedSummonCondition(source,action,ownedEntityIds)) return;
     const resolved = resolveSkillActionTarget(source, action, target, skill);
     if (resolved) applySkillAction(source, resolved, action, skill, execution);
     else {
@@ -2331,7 +2357,8 @@ function getSkillActionTargets(source, target, action, skill = null) {
   const ownSquad = source.side === "enemy" ? enemySquad : playerSquad;
   const otherSquad = source.side === "enemy" ? playerSquad : enemySquad;
   const drainedResource = action.type === "drain_resource" ? getResourceField(action.drainResource ?? "MP") : null;
-  const targetPool=action.target === "enemy" ? otherSquad : action.target === "summon" ? ownSquad.filter(unit=>unit.isSummon && unit.summoner===source) : ownSquad;
+  const targetPool=action.target === "enemy" ? otherSquad : action.target === "summon" ? ownSquad.filter(unit=>unit.isSummon && unit.summoner===source
+    && (!action.targetSummonEntityId || unit.entityId === action.targetSummonEntityId)) : ownSquad;
   const candidates = targetPool.filter(unit => isActionTargetEligible(source, unit, action, skill)
     && (!drainedResource || getUnitResourceCurrent(unit, action.drainResource) > 0)
     && (!action.type.startsWith("delete_") || unit.activeEffects?.some(effect=>matchesEffectDispel(effect,action))));
@@ -2450,7 +2477,11 @@ function applyDamagePortion(source,target,action,skill,rawDamage,skipImmunity=fa
   if (target.reviveInvulnerableTicks > 0) return {actual:0,hpDamage:0,barrierDamage:0,deathEvents:[],channelEvents:[],
     context:{source,target,skill,periodic:action.periodic,damageType:action.damageType,amount:0,hpDamage:0,barrierDamage:0}};
   const immunity=!skipImmunity && rawDamage>0 ? consumeDamageImmunity(target,Boolean(action.periodic)) : null;
-  if(!immunity) applyBarrierOrHpDamage(source,target,action,rawDamage);
+  if(!immunity) {
+    const recentAttackerReduction=rawDamage>0 && typeof getRecentAttackerDamageReductionPercent === "function" ? getRecentAttackerDamageReductionPercent(target,source) : 0;
+    rawDamage*=Math.max(0,100-recentAttackerReduction)/100;
+    applyBarrierOrHpDamage(source,target,action,rawDamage);
+  }
   const deathEvents=syncAliveState(target,{source,skill,periodic:action.periodic,deferEvents:true});
   const hpDamage=Math.max(0,hpBefore-target.hp),barrierDamage=Math.max(0,bpBefore-(Number(target.bp) || 0));
   const actual=hpDamage+barrierDamage;
