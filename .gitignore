@@ -1,0 +1,33 @@
+# Python bytecode and test caches
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local Python virtual environments (repository root only)
+/.venv/
+/venv/
+/env/
+
+# Editor and operating-system temporary files; keep .vscode settings
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Disposable profiling workspace; archived evidence stays in balance/profiles
+/.tmp-balance-profile/
+# Do not broadly ignore *.cpuprofile, *.log, balance/, data/, or assets/.
+
+# New local runs only; existing tracked baselines remain tracked.
+# Promote reviewed evidence explicitly; see docs/balance/STORAGE_AUDIT.md.
+/balance/jobs/simulation_*/
+/balance/ui-validation/simulation_*/
+/balance/results/????-??-??T*_*.json
+/balance/results/????-??-??T*_*.md
+# Isolated UI test workspace (normally removed by TemporaryDirectory)
+/.tmp-simulation-ui-*/

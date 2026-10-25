@@ -71,16 +71,16 @@
     "name": "기사",
     "hp": 4970,
     "mp": 150,
-    "st": 105,
+    "st": 110,
     "bp": 0,
-    "atk": 90,
+    "atk": 120,
     "magic": 60,
     "speed": 1.3,
-    "attackSpeed": 2,
-    "castSpeed": 0.5,
-    "defense": 40,
+    "attackSpeed": 3.5,
+    "castSpeed": 1,
+    "defense": 30,
     "resistance": 13.8,
-    "attackRange": 3,
+    "attackRange": 2,
     "role": "tank",
     "skillIds": [
       "skill_class_knight_charge",
@@ -112,8 +112,8 @@
       "revivePosition": "death"
     },
     "equipment": {
-      "mainWeapon": "item_1781164504281",
-      "subWeapon": "item_1781164461051",
+      "mainWeapon": "item_gen_20261010_02_01",
+      "subWeapon": "item_gen_20261010_02_01",
       "top": "item_gen_20261010_11_01",
       "bottom": "item_gen_20261010_11_06",
       "accessory": "",
@@ -123,8 +123,8 @@
       {
         "name": "세트 1",
         "equipment": {
-          "mainWeapon": "item_1781164504281",
-          "subWeapon": "item_1781164461051",
+          "mainWeapon": "item_gen_20261010_02_01",
+          "subWeapon": "item_gen_20261010_02_01",
           "top": "item_gen_20261010_11_01",
           "bottom": "item_gen_20261010_11_06",
           "accessory": "",
@@ -1163,14 +1163,6 @@
       "skill_class_guardian_effort_strike",
       "skill_class_guardian_endurance"
     ],
-    "customResources": [
-      {
-        "id": "effort_magic",
-        "name": "노력[마법]",
-        "initial": 0,
-        "max": 999999
-      }
-    ],
     "portrait": "assets/images/portraits/image-20261018143206679619.png",
     "attributes": {
       "str": 50,
@@ -1218,7 +1210,15 @@
     ],
     "activeEquipmentSet": 0,
     "faction": "엘프",
-    "attackType": "physical"
+    "attackType": "physical",
+    "customResources": [
+      {
+        "id": "effort_magic",
+        "name": "노력[마법]",
+        "initial": 0,
+        "max": 999999
+      }
+    ]
   },
   {
     "name": "몽마",

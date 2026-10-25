@@ -1187,9 +1187,11 @@ function dispatchSkillActions(source, preferredTarget, skill, allowProjectiles, 
     dispatchSkillActionSequence(source,preferredTarget,skill,allowProjectiles,forceProjectile,channelAction,0,createSkillExecutionContext(resourceSpent));
     return;
   }
+  const ownedEntityIds = new Set(getLivingOwnedSummons(source).map(unit=>unit.entityId));
   const hasMovement = skill.actions.some(action => action.type === "move");
   skill.actions.forEach(action => {
     if (!source.alive || (channelAction && source.channelAction !== channelAction)) return;
+    if (!meetsOwnedSummonCondition(source,action,ownedEntityIds)) return;
     const lockTarget=Boolean(channelAction && normalizeSkillChannel(skill.channel).lockTarget && action.target !== "self");
     const target = resolveSkillActionTarget(source, action, preferredTarget, skill, lockTarget);
     if (!target) return;
@@ -1206,10 +1208,17 @@ function dispatchSkillActions(source, preferredTarget, skill, allowProjectiles, 
 }
 
 function dispatchSkillActionSequence(source, preferredTarget, skill, allowProjectiles, forceProjectile, channelAction, startIndex, execution) {
+  execution.ownedSummonEntityIds ??= new Set(getLivingOwnedSummons(source).map(unit=>unit.entityId));
   const hasMovement = skill.actions.some(action => action.type === "move");
   for (let index=startIndex; index<skill.actions.length; index++) {
     if (!source.alive || (channelAction && source.channelAction !== channelAction)) return;
     const action=skill.actions[index];
+    if (!meetsOwnedSummonCondition(source,action,execution.ownedSummonEntityIds)) {
+      execution.previousActualDamage=0;
+      execution.previousActualHealing=0;
+      execution.previousResourceDrained=0;
+      continue;
+    }
     const lockTarget=Boolean(channelAction && normalizeSkillChannel(skill.channel).lockTarget && action.target !== "self");
     const target=resolveSkillActionTarget(source,action,preferredTarget,skill,lockTarget);
     if (!target) {

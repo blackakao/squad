@@ -29,6 +29,14 @@ Node.js 22.8 이상(검증: Node 24)과 Python이 필요합니다. `python serve
 
 웹 작업 파일은 `balance/jobs/<simulationId>/`의 request.json/job.json/result.json/report.md/battles.ndjson/error.log입니다. 완료 기록은 덮어쓰지 않습니다. Web UI → Python API/Job → Node worker → 공통 service → 실제 engine → aggregate → 저장 결과 순으로 연결합니다. CLI도 같은 service를 호출합니다. 프레임워크·큐 서버·npm 의존성은 추가하지 않았습니다.
 
+## 결과 보존과 Git 관리
+
+새 Job 디렉터리, UI 검증 실행 사본, 날짜 형식 CLI JSON/Markdown 결과는 로컬에 그대로 저장하되 Git에서는 기본 무시합니다. 기존 추적 중인 결과·테스트 기준·프로파일·화면 증거는 계속 유지합니다. 무시 규칙은 파일 생성·기존 결과 조회·API에 영향을 주지 않으며 로컬 결과를 자동 삭제하지 않습니다.
+
+새 결과를 공식 기준으로 공유할 때는 입력 스냅샷·엔진 버전·목표·관련 로그와 문서 참조를 함께 검토하고 승인된 실행의 정확한 경로만 `git add -f -- <경로>`로 추가합니다. 폴더 전체를 무차별 추가하지 않습니다. 무시된 새 이력은 커밋/다른 환경에 자동 전달되지 않으므로 필요한 기록은 별도 백업하거나 기준 자료로 승격해야 합니다. 기존 추적 파일은 무시 규칙으로 보호되지 않으므로 검증 실행 전 변경 상태를 확인합니다.
+
+UI 테스트의 `--saved-runs`는 현재 `balance/ui-validation/simulation_*/`를 격리 서버에 복사합니다. 동일한 Job 사본이 있어도 참조 전환과 검증 없이 삭제하지 않습니다. 파일별 보존 분류·SHA-256·중복 목록·후속 개선안은 [저장 자료 조사](STORAGE_AUDIT.md)에 기록했습니다.
+
 ## 실행
 
 개발/자동화용 CLI는 Node.js 22.8 이상이 필요합니다(검증 환경: Node 24). npm 설치, 빌드, Python 서버, 브라우저 없이 프로젝트 루트에서 실행합니다.

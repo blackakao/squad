@@ -336,6 +336,9 @@
     "attackRange": 1
   },
   {
+    "statModifiers": {
+      "focus": 3
+    },
     "id": "item_gen_20261010_02_01",
     "name": "정련 대검",
     "slot": "mainWeapon",
@@ -347,7 +350,7 @@
     "hp": 0,
     "mp": 0,
     "st": 5,
-    "atk": 60,
+    "atk": 350,
     "magic": 0,
     "speed": 0,
     "attackSpeed": 3.5,

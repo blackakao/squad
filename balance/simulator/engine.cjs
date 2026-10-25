@@ -58,7 +58,8 @@ function createEngine(data = loadData(), {width = 400, height = 300} = {}) {
   const context = vm.createContext(vm.constants.DONT_CONTEXTIFY);
   Object.assign(context, {structuredClone, Date: VirtualDate, Math: math,
     performance: {now: () => time},
-    document: {getElementById: id => id === 'battleCanvas' ? field : null},
+    document: {getElementById: id => id === 'battleCanvas' ? field : null, addEventListener() {}, removeEventListener() {}},
+    addEventListener() {}, removeEventListener() {},
     log() {}, logWarn() {}, logError: (...args) => errors.push(args.map(String).join(' ')),
     alert: message => { throw new Error(message); },
   });

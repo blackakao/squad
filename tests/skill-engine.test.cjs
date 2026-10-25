@@ -1604,12 +1604,12 @@ test('knight mount and demon brute branch on owned summon state and proxy owner 
 
   const demon=unit(e);demon.name='악마';demon.magic=60;demon.hp=demon.maxHp=500;
   const bruteSkill=e.skillsJson.find(candidate=>candidate.id==='skill_class_demon_brute');
-  e.applySkill(demon,demon,bruteSkill);
+  e.dispatchSkillActions(demon,demon,bruteSkill,false);
   const brute=demon.summons.find(summon=>summon.alive);
   assert.equal(brute.entityId,'demon_brute');assert.equal(brute.attackType,'magic');assert.equal(brute.magic,60);
   e.applyActionDamage(enemy,demon,{damageType:'fixed',coefficients:[{type:'fixed',value:100}]});
   assert.equal(demon.hp,460);assert.equal(brute.hp,940);
-  e.applySkill(demon,demon,bruteSkill);
+  e.dispatchSkillActions(demon,demon,bruteSkill,false);
   assert.equal(demon.summons.filter(summon=>summon.alive).length,1);
   assert.equal(brute.magic,75);
 });
