@@ -30,6 +30,7 @@
   unit.weaponAttackStates = (unit.weaponAttacks ?? []).map(weapon=>({weapon,cooldown:0,castTimer:0,target:null}));
   unit.skillCooldowns = {};
   unit.skillCooldownTotals = {};
+  unit.skillComboStages = {};
   unit.runtimeCopiedSkills = [];
   unit.runtimeRuleOverrides = [];
   unit.temporaryReserveTicks = null;
@@ -571,7 +572,7 @@ async function finishBattle(result) {
   battleStartedAt = null;
   battleStartedAtText = "";
   lastResourceUpdateAt = null;
-  clearBattleEventLogs();
+  renderBattleEventLogs();
 }
 
 function prepareBattleSession({ openScreen = true } = {}) {
@@ -666,7 +667,7 @@ function abortBattle() {
   battleStartedAtText = "";
   lastResourceUpdateAt = null;
   updateBattleButton();
-  clearBattleEventLogs();
+  renderBattleEventLogs();
   log("전투 중단");
 }
 
@@ -778,7 +779,15 @@ function moveUnit(unit, targets) {
   }
 
   const speed = (unit.speed ?? ROLE_STATS[unit.role]?.speedMultiplier ?? 1) * (unit.exhausted ? EXHAUSTED_MOVE_MULTIPLIER : 1);
-  const desiredRange = getUnitRange(unit);
+  const readySkill=getEquippedSkills(unit).map(skill=>getRuntimeComboSkill(unit,skill)).find(skill =>
+    (Number(unit.skillCooldowns?.[skill.id]) || 0) <= 0
+    && canPaySkillResourceCosts(unit,skill,getNextSkillModifier(unit).resourceCostPercent)
+    && skill.actions.some(action=>action.target === "enemy"));
+  const weaponRanges=(unit.weaponAttackStates ?? []).map(state=>Number(state.weapon.attackRange)*ATTACK_RANGE_UNIT).filter(range=>range>0);
+  const basicRange=weaponRanges.length>1 ? Math.min(getUnitRange(unit),...weaponRanges) : getUnitRange(unit);
+  const desiredRange=readySkill
+    ? Math.min(getUnitRange(unit),...readySkill.actions.filter(action=>action.target === "enemy").map(action=>getActionRangePixels(unit,action)))
+    : basicRange;
 
   if (unit.retreatHpBelow > 0 && hpPercent <= unit.retreatHpBelow) {
     unit.vx = -(dx / dist) * speed;
@@ -925,7 +934,7 @@ function tickSkillCooldowns(unit) {
 function tryUseReadySkill(unit, allies, enemies) {
   if (hasBattleState(unit,"stun") || hasBattleState(unit,"silence")) return false;
   const nextSkillModifier=getNextSkillModifier(unit);
-  const skill = getEquippedSkills(unit).find(candidate => {
+  const skill = getEquippedSkills(unit).map(candidate => getRuntimeComboSkill(unit,candidate)).find(candidate => {
     const cooldownLeft = Number(unit.skillCooldowns?.[candidate.id]) || 0;
     return cooldownLeft <= 0 && canPaySkillResourceCosts(unit, candidate, nextSkillModifier.resourceCostPercent) && resolveSkillTarget(unit, candidate, allies, enemies);
   });
@@ -937,7 +946,7 @@ function tryUseReadySkill(unit, allies, enemies) {
   const target = resolveSkillTarget(unit, skill, allies, enemies);
   const resourceSpent=spendSkillResourceCosts(unit, skill, nextSkillModifier.resourceCostPercent);
   consumeNextSkillModifier(unit,nextSkillModifier);
-  showSkillBubble(unit, skill.name, skill.icon);
+  showSkillBubble(unit, skill.runtimeCombo ? `${skill.name} · ${skill.runtimeCombo.stageName}` : skill.name, skill.icon);
   startCast(unit, { type: "skill", target, skill, resourceSpent, skillModifier:nextSkillModifier, ranged: distance(unit, target) > ATTACK_RANGE_UNIT });
   return true;
 }
@@ -950,7 +959,9 @@ function showSkillBubble(unit, text, icon = "") {
 
 function resolveSkillTarget(unit, skill, allies, enemies) {
   if (!isSkillExecutable(skill)) return null;
-  for (const action of skill.actions) {
+  const independentActions=skill.actions.filter(action=>!skillActionUsesExecutionResults(action));
+  const targetActions=independentActions.length ? independentActions : skill.actions;
+  for (const action of targetActions) {
     const target = resolveSkillActionTarget(unit, action, null, skill);
     if (target) return target;
   }
@@ -1037,9 +1048,10 @@ function resolveSkillCast(unit, action) {
     return;
   }
 
-  unit.skillCooldowns[skill.id] = getModifiedSkillCooldownTicks(skill,unit,action.skillModifier);
+  unit.skillCooldowns[skill.id] = getResolvedSkillCooldownTicks(skill,unit,action.skillModifier);
   unit.skillCooldownTotals[skill.id] = unit.skillCooldowns[skill.id];
   dispatchSkillActions(unit, action.target, skill, true, false, null, action.resourceSpent);
+  advanceSkillCombo(unit,skill);
 }
 
 function getIndependentWeaponSkill(unit,weapon,target) {
@@ -1168,7 +1180,7 @@ function updateBattleFields() {
         : distance(a,field)-distance(b,field));
       if (action.target === "self") targets=targets.filter(unit=>unit===source);
       if (action.maxTargets > 0) targets=targets.slice(0,action.maxTargets);
-      const applied={...action,type:action.fieldEffect,area:0,chainCount:0,
+      const applied={...action,type:action.fieldEffect,area:0,chainCount:0,periodic:true,
         ...(["add_buff","add_state"].includes(action.fieldEffect) ? {duration:action.fieldEffectDuration} : {}),
         ...(action.fieldEffect === "move" ? {moveType:action.fieldMoveType,distance:action.fieldDistance,_moveOrigin:{x:field.x,y:field.y}} : {})};
       for(const target of targets) applySkillAction(source,target,applied,skill,createSkillExecutionContext());

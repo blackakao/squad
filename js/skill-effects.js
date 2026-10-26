@@ -8,7 +8,7 @@ let nextEffectCasterId = 1;
 function createDefaultSkillEffect(type) {
   const state = type.includes("state");
   return {id:state ? "stun" : "attack_up", name:state ? "기절" : "공격력 증가", state:"stun",
-    stat:"atk", sourceStat:"magic", mode:"flat", value:10, nextCastTimePercent:100, nextResourceCostPercent:100, nextCooldownPercent:100, reflectPercent:20, reflectScope:"all", reflectDamageType:"fixed", proxyPercent:20, proxyPriority:100, proxyScope:"all", maxStacks:1, stackMode:"refresh",uses:0,consumeOn:"hit",consumePeriodic:false,
+    stat:"atk", sourceStat:"magic", mode:"flat", value:10, nextCastTimePercent:100, nextResourceCostPercent:100, nextCooldownPercent:100, reflectPercent:20, reflectScope:"all", reflectDamageType:"fixed", proxyPercent:20, proxyPriority:100, proxyScope:"all", counterOnMelee:false, maxStacks:1, stackMode:"refresh",uses:0,consumeOn:"hit",consumePeriodic:false,
     category:"general",polarity:state ? "harmful" : "beneficial",dispellable:true,dispelMode:"id",dispelCategory:"general",dispelPolarity:"any"};
 }
 
@@ -65,6 +65,7 @@ function normalizeSkillEffect(effect,type = "add_buff") {
     proxyPercent:Number.isFinite(Number(effect.proxyPercent)) ? Math.max(1,Math.min(100,Number(effect.proxyPercent))) : 20,
     proxyPriority:Number.isFinite(Number(effect.proxyPriority)) ? Math.max(0,Math.min(999,Math.floor(Number(effect.proxyPriority)))) : 100,
     proxyScope:["all","basic","skill"].includes(effect.proxyScope) ? effect.proxyScope : "all",
+    counterOnMelee:effect.counterOnMelee === true,
     uses:Math.max(0,Math.min(100,Math.floor(Number(effect.uses) || 0))),
     consumeOn:effect.mode === "damage_immunity" ? "damaged" : Object.hasOwn(EFFECT_CONSUME_LABELS,effect.consumeOn) ? effect.consumeOn : "hit",
     consumePeriodic:effect.consumePeriodic === true,
@@ -128,6 +129,10 @@ function renderTimedEffectFields(action) {
           <label>대상 피해<select class="skill-effect-proxy-scope">${options({all:"모든 피해",basic:"기본 공격",skill:"스킬 피해"},effect.proxyScope ?? "all")}</select></label>
           <small>이 버프를 부여한 살아 있는 아군이 피해를 대신 받습니다. 우선순위 숫자가 낮을수록 먼저 분배하며 대리 피해는 다시 전달하지 않습니다.</small>
         </div>
+        <div class="skill-effect-counter-settings ${effect.mode === "damage_immunity" ? "" : "hidden"}">
+          <label><input class="skill-effect-counter-on-melee" type="checkbox" ${effect.counterOnMelee ? "checked" : ""}>1m 이하 직접 공격을 무시하면 즉시 기본 공격으로 반격</label>
+          <small>DOT와 필드 주기 피해는 피해 무시 횟수와 반격을 소모하지 않습니다. 반사 피해와 반격으로 발생한 공격에는 연쇄 반격하지 않습니다.</small>
+        </div>
         <label>면역 범위<select class="skill-effect-immunity-scope">${options({"":"면역 없음",state:"모든 상태",harmful:"해로운 효과",all:"모든 상태·버프"},effect.immunity?.scope ?? "")}</select></label>
         <label>면역 분류<select class="skill-effect-immunity-category">${options({all:"모든 분류",...EFFECT_CATEGORY_LABELS},effect.immunity?.category ?? "all")}</select></label>
         <label>면역 상태<select class="skill-effect-immunity-state">${options({all:"상태 제한 없음",...STATE_LABELS},effect.immunity?.state ?? "all")}</select></label>
@@ -160,7 +165,7 @@ function readSkillEffectFromRow(row) {
     dispelMode:value("dispel-mode"),dispelCategory:value("dispel-category"),dispelPolarity:value("dispel-polarity"),
     ...(value("immunity-scope") && (row.querySelector('.skill-action-type')?.value === "add_buff" || row.querySelector('.skill-action-field-effect')?.value === "add_buff") ? {immunity:{scope:value("immunity-scope"),category:value("immunity-category"),state:value("immunity-state")}} : {}),
     value:Number(value("value")),nextCastTimePercent:Number(value("next-cast-time-percent")),nextResourceCostPercent:Number(value("next-resource-cost-percent")),nextCooldownPercent:Number(value("next-cooldown-percent")),reflectPercent:Number(value("reflect-percent")),reflectScope:value("reflect-scope"),reflectDamageType:value("reflect-damage-type"),proxyPercent:Number(value("proxy-percent")),proxyPriority:Number(value("proxy-priority")),proxyScope:value("proxy-scope"),maxStacks:Number(value("max-stacks")),stackMode:value("stack-mode"),
-    uses:Number(value("uses")),consumeOn:value("consume-on"),consumePeriodic:row.querySelector('.skill-effect-consume-periodic')?.checked ?? false,
+    uses:Number(value("uses")),consumeOn:value("consume-on"),consumePeriodic:row.querySelector('.skill-effect-consume-periodic')?.checked ?? false,counterOnMelee:row.querySelector('.skill-effect-counter-on-melee')?.checked ?? false,
     ...(value("periodic-type") ? {periodic:{type:value("periodic-type"),interval:Number(value("periodic-interval")),value:Number(value("periodic-value")),
       coefficient:{type:value("periodic-coefficient-type"),field:value("periodic-coefficient-field"),calc:value("periodic-coefficient-calc"),value:Number(value("periodic-value"))},
       growthInterval:Number(value("periodic-growth-interval")),growthValue:Number(value("periodic-growth-value")),damageType:value("periodic-damage"),resource:value("periodic-resource")}} : {})};
@@ -171,6 +176,7 @@ function updateSkillEffectModeVisibility(select) {
   select.closest('[data-action-field="effectBuff"]')?.querySelector('.skill-effect-convert-settings')?.classList.toggle('hidden',select.value !== 'convert');
   select.closest('[data-action-field="effectBuff"]')?.querySelector('.skill-effect-next-skill-settings')?.classList.toggle('hidden',select.value !== 'next_skill_modifier');
   select.closest('[data-action-field="effectBuff"]')?.querySelector('.skill-effect-reflect-settings')?.classList.toggle('hidden',select.value !== 'damage_reflect');
+  select.closest('[data-action-field="effectBuff"]')?.querySelector('.skill-effect-counter-settings')?.classList.toggle('hidden',select.value !== 'damage_immunity');
 }
 
 function replaceMissingEffectAction(button) {
@@ -256,7 +262,9 @@ function interruptBattleCast(unit, reason = "상태 효과") {
   if (!pending) return;
   if (pending.type === "skill") {
     unit.skillCooldowns ??= {};
-    unit.skillCooldowns[pending.skill.id] = getModifiedSkillCooldownTicks(pending.skill,unit,pending.skillModifier);
+    unit.skillCooldowns[pending.skill.id] = pending.skill?.runtimeCombo
+      ? getComboStepCooldownTicks(pending.skill,unit,pending.skillModifier)
+      : getModifiedSkillCooldownTicks(pending.skill,unit,pending.skillModifier);
     unit.skillCooldownTotals ??= {};
     unit.skillCooldownTotals[pending.skill.id] = unit.skillCooldowns[pending.skill.id];
   } else unit.attackCooldown = getAttackCooldown(unit);

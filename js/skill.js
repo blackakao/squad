@@ -641,6 +641,20 @@ function normalizeSkillAction(action = {}) {
   };
 }
 
+function normalizeSkillCombo(combo) {
+  if (!combo || !Array.isArray(combo.stages) || combo.stages.length < 2) return null;
+  const stages = combo.stages.slice(0, 20).map((stage, index) => ({
+    name:String(stage?.name ?? `${index + 1}단계`).trim() || `${index + 1}단계`,
+    actions:(Array.isArray(stage?.actions) ? stage.actions : []).map(normalizeSkillAction)
+  })).filter(stage => stage.actions.length);
+  if (stages.length < 2) return null;
+  return {
+    stages,
+    stepCooldown:normalizeSkillCooldown(combo.stepCooldown ?? 0.5),
+    completionActions:(Array.isArray(combo.completionActions) ? combo.completionActions : []).map(normalizeSkillAction)
+  };
+}
+
 function normalizeSkillJson(skills) {
   const defaults = createDefaultSkillJson();
   const normalized = (Array.isArray(skills) && skills.length ? skills : defaults)
@@ -657,6 +671,7 @@ function normalizeSkillJson(skills) {
       channel:normalizeSkillChannel(skill?.channel),
       ...(skill?.slot === "passive" || skill?.passiveTrigger ? {passiveTrigger:normalizePassiveTrigger(skill?.passiveTrigger)} : {}),
       ...(isChoiceSkill(skill?.slot) ? {choice:normalizeSkillChoice(skill?.choice)} : {}),
+      ...(normalizeSkillCombo(skill?.combo) ? {combo:normalizeSkillCombo(skill.combo)} : {}),
       resourceCosts: normalizeSkillResourceCosts(skill),
       actions: isChoiceSkill(skill?.slot) ? [] : (Array.isArray(skill?.actions) && skill.actions.length ? skill.actions.map(normalizeSkillAction) : [createDefaultAction()])
     }))
@@ -782,6 +797,20 @@ function getModifiedSkillCooldownTicks(skill,unit,modifier=null) {
   return Math.max(0,Math.round(getSkillCooldownTicks(skill,unit)*(modifier?.cooldownPercent ?? 100)/100));
 }
 
+function getComboStepCooldownTicks(skill,unit,modifier=null) {
+  const combo=normalizeSkillCombo(skill?.combo);
+  if (!combo) return getModifiedSkillCooldownTicks(skill,unit,modifier);
+  const percent=getUnitTeamBattleRules(unit).cooldownPercent;
+  return Math.max(0,Math.round(combo.stepCooldown*BASE_ATTACK_COOLDOWN*percent/100*(modifier?.cooldownPercent ?? 100)/100));
+}
+
+function getResolvedSkillCooldownTicks(skill,unit,modifier=null) {
+  const runtime=skill?.runtimeCombo;
+  return runtime && runtime.stageIndex < runtime.stageCount-1
+    ? getComboStepCooldownTicks(skill,unit,modifier)
+    : getModifiedSkillCooldownTicks(skill,unit,modifier);
+}
+
 function isUnitSkillDisabled(unit, skillOrId) {
   const skill=typeof skillOrId === "string" ? (getSkillById(skillOrId) ?? {id:skillOrId}) : skillOrId;
   if ((unit?.runtimeRuleOverrides ?? []).some(rule=>rule.disableAllSkills)) return Boolean(skill);
@@ -809,6 +838,25 @@ function getEquippedSkills(unit) {
   const copied = (Array.isArray(unit?.runtimeCopiedSkills) ? unit.runtimeCopiedSkills : [])
     .filter(skill => skill && isSkillExecutable(skill) && !isUnitSkillDisabled(unit,skill));
   return [...equipped, ...copied].map(skill => getRuntimeItemSkill(unit, skill));
+}
+
+function getRuntimeComboSkill(unit, skill) {
+  const combo=normalizeSkillCombo(skill?.combo);
+  if (!combo) return skill;
+  const stageIndex=Math.max(0,Math.min(combo.stages.length-1,Math.floor(Number(unit?.skillComboStages?.[skill.id]) || 0)));
+  const stage=combo.stages[stageIndex];
+  return {
+    ...skill,
+    actions:[...stage.actions,...(stageIndex === combo.stages.length-1 ? combo.completionActions : [])],
+    runtimeCombo:{stageIndex,stageCount:combo.stages.length,stageName:stage.name}
+  };
+}
+
+function advanceSkillCombo(unit, skill) {
+  const runtime=skill?.runtimeCombo;
+  if (!unit || !runtime) return;
+  unit.skillComboStages ??= {};
+  unit.skillComboStages[skill.id]=(runtime.stageIndex+1)%runtime.stageCount;
 }
 
 function getCopyableUnitSkills(unit) {
@@ -1141,7 +1189,9 @@ function formatSkillValueSummary(skill) {
   const coefficients = (skill.actions ?? []).flatMap(action => action.coefficients ?? []).map(formatCoefficientSummary);
   const coefficientText = coefficients.length ? [...new Set(coefficients)].slice(0, 3).join(" + ") + (coefficients.length > 3 ? ` 외 ${coefficients.length - 3}개` : "") : "계수 없음";
   const castTime = skill.castTime == null ? "유닛 기준" : Number(skill.castTime) === 0 ? "즉시" : `${skill.castTime}초`;
-  return `<span class="skill-value-summary"><span><strong>소모</strong> ${escapeHtml(costs)}</span><span><strong>계수</strong> ${escapeHtml(coefficientText)}</span><span><strong>대기</strong> ${escapeHtml(String(skill.cooldown ?? 0))}초 · <strong>시전</strong> ${escapeHtml(castTime)}</span></span>`;
+  const combo=normalizeSkillCombo(skill.combo);
+  const cooldownText=combo ? `연계 ${combo.stepCooldown}초 · 전체 ${skill.cooldown ?? 0}초` : `${skill.cooldown ?? 0}초`;
+  return `<span class="skill-value-summary"><span><strong>소모</strong> ${escapeHtml(costs)}</span><span><strong>계수</strong> ${escapeHtml(coefficientText)}</span><span><strong>대기</strong> ${escapeHtml(cooldownText)} · <strong>시전</strong> ${escapeHtml(castTime)}</span></span>`;
 }
 
 function renderSkillPage() {
@@ -1204,6 +1254,9 @@ function openSkillModal(index = "") {
   skillDescriptionEl.value = skill?.description ?? "";
   skillSlotEl.value = skill?.slot ?? "active";
   skillCooldownEl.value = skill?.cooldown ?? 0;
+  const combo=normalizeSkillCombo(skill?.combo);
+  skillComboCooldownEl.value=combo?.stepCooldown ?? 0.5;
+  skillComboCooldownFieldEl.classList.toggle("hidden",!combo);
   skillCastTimeEl.value = skill?.castTime ?? "";
   skillCastReceivedDamagePercentEl.value = skill?.castReceivedDamagePercent ?? 100;
   renderPassiveTriggerForm(skill);
@@ -1806,6 +1859,7 @@ async function saveSkillFromForm(event) {
       channel:readSkillChannelForm(),
       ...(skillSlotEl.value === "passive" ? {passiveTrigger:readPassiveTriggerForm()} : {}),
       ...(choiceType ? {choice:readSkillChoiceForm()} : {}),
+      ...(previous?.combo ? {combo:{...previous.combo,stepCooldown:normalizeSkillCooldown(skillComboCooldownEl.value ?? 0.5)}} : {}),
       resourceCosts,
       actions
     };
@@ -2244,6 +2298,10 @@ function skillUsesExecutionResults(skill) {
   return skill.actions.some(action => action.coefficients?.some(coefficient => ["previousActualDamage","executionActualDamage","previousActualHealing","executionActualHealing","previousResourceDrained","executionResourceDrained","resourceSpentTotal","hpResourceSpent","mpResourceSpent","stResourceSpent","bpResourceSpent"].includes(coefficient.field)));
 }
 
+function skillActionUsesExecutionResults(action) {
+  return action.coefficients?.some(coefficient => ["previousActualDamage","executionActualDamage","previousActualHealing","executionActualHealing","previousResourceDrained","executionResourceDrained","resourceSpentTotal","hpResourceSpent","mpResourceSpent","stResourceSpent","bpResourceSpent"].includes(coefficient.field)) ?? false;
+}
+
 function applySkill(source, target, skill, execution = createSkillExecutionContext()) {
   if (!source?.alive || !isSkillExecutable(skill)) {
     return;
@@ -2404,6 +2462,7 @@ function applyActionDamage(source, target, action, skill = null, execution = nul
     const context={source,target,skill,periodic:action.periodic,damageType:action.damageType,amount:0,hpDamage:0,barrierDamage:0};
     publishBattleEvents([{...context,type:"hit"},{...context,type:"damaged"}]);
     addBattleEventLog(target,`${target.name}: ${immunity.name} 효과로 피해 무시`);
+    applyDamageImmunityCounter(target,source,action,skill,immunity);
     return 0;
   }
   const rawDamage = getActionCoefficientValue(action, source, target, execution) * getUnitTeamBattleRules(source).damagePercent / 100 * (Number(skill?.weaponDamagePercent ?? 100) / 100);
@@ -2438,6 +2497,19 @@ function applyActionDamage(source, target, action, skill = null, execution = nul
   addBattleEventLog(source, `${source.name}가 ${target.name}에게 ${skill?.name ?? "공격"} 행동을 하여 총 ${formatBattleEventValue(actualTotal)} 피해 발생`);
   portions.forEach((portion,index)=>applyDamageReflection(portion.recipient,source,action,skill,results[index].actual,reflections[index]));
   return actualTotal;
+}
+
+function applyDamageImmunityCounter(defender,attacker,blockedAction,blockedSkill,effect) {
+  if (!effect?.counterOnMelee || !defender?.alive || !attacker?.alive || blockedAction.periodic || blockedAction.reflected || blockedAction.countered) return 0;
+  if (getActionRangePixels(attacker,blockedAction) > ATTACK_RANGE_UNIT) return 0;
+  const basic=getUnitSkill(defender,DEFAULT_ATTACK_SKILL_ID);
+  if (!isSkillExecutable(basic)) return 0;
+  const counterSkill={...basic,id:`counter_${basic.id}`,name:`${effect.name} 반격`,triggered:true,
+    actions:basic.actions.map(action=>({...action,countered:true}))};
+  if (!counterSkill.actions.some(action=>resolveSkillActionTarget(defender,action,attacker,counterSkill,true))) return 0;
+  showSkillBubble(defender,counterSkill.name,basic.icon);
+  applySkill(defender,attacker,counterSkill);
+  return 1;
 }
 
 function getDamageReflectionEffects(unit,skill,action) {

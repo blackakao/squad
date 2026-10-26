@@ -1563,6 +1563,47 @@ test('damage immunity consumes configured hits before HP or barrier loss',()=>{
  e.applySkill(source,target,attack);assert.equal(target.bp,0);assert.equal(target.hp,100);
 });
 
+test('guard charges ignore direct hits but are not consumed by DOT or field ticks',()=>{
+ const e=engine(),source=unit(e),target=unit(e,'enemy',105);
+ const guard=e.createDefaultAction('add_buff');guard.target='self';guard.duration=0;
+ Object.assign(guard.effect,{id:'marine_guard',name:'guard',mode:'damage_immunity',uses:2,consumePeriodic:false});
+ e.applySkill(target,target,skill(e,guard));
+ const dot=e.createDefaultAction('deal_damage');Object.assign(dot,{target:'enemy',periodic:true,damageType:'fixed',coefficients:[{type:'fixed',value:10}]});
+ e.applyActionDamage(source,target,dot,{id:'dot',name:'dot'});
+ assert.equal(target.hp,90);assert.equal(target.activeEffects[0].usesRemaining,2);
+ const field=fieldAction(e,'deal_damage',1,1/60);field.coefficients=[{type:'fixed',value:10}];field.fieldRadius=1;
+ e.applySkill(source,target,skill(e,field));e.updateBattleFields();
+ assert.equal(target.hp,80);assert.equal(target.activeEffects[0].usesRemaining,2);
+ const direct=e.createDefaultAction('deal_damage');direct.damageType='fixed';direct.coefficients=[{type:'fixed',value:10}];
+ e.applyActionDamage(source,target,direct,{id:'direct',name:'direct'});e.applyActionDamage(source,target,direct,{id:'direct',name:'direct'});
+ assert.equal(target.hp,80);assert.equal(target.activeEffects.length,0);
+});
+
+test('counter ignores one direct hit and retaliates only against melee without recursion',()=>{
+ const e=engine(),attacker=unit(e),viking=unit(e,'enemy',105);
+ const counter=e.createDefaultAction('add_buff');counter.target='self';counter.duration=0;
+ Object.assign(counter.effect,{id:'viking_counter',name:'counter',mode:'damage_immunity',uses:1,consumePeriodic:false,counterOnMelee:true});
+ const melee=e.createDefaultAction('deal_damage');Object.assign(melee,{target:'enemy',rangeMode:'custom',rangeValue:1,damageType:'fixed',coefficients:[{type:'fixed',value:20}]});
+ e.applySkill(viking,viking,skill(e,counter));e.applyActionDamage(attacker,viking,melee,{id:'melee',name:'melee'});
+ assert.equal(viking.hp,100);assert.equal(attacker.hp,90);assert.equal(viking.activeEffects.length,0);
+ attacker.hp=100;viking.hp=100;e.applySkill(viking,viking,skill(e,counter));
+ const ranged={...melee,rangeValue:2};e.applyActionDamage(attacker,viking,ranged,{id:'ranged',name:'ranged'});
+ assert.equal(viking.hp,100);assert.equal(attacker.hp,100);assert.equal(viking.activeEffects.length,0);
+ e.applySkill(attacker,attacker,skill(e,counter));e.applySkill(viking,viking,skill(e,counter));
+ e.applyActionDamage(attacker,viking,melee,{id:'melee',name:'melee'});
+ assert.equal(viking.hp,100);assert.equal(attacker.hp,100);assert.equal(viking.activeEffects.length,0);assert.equal(attacker.activeEffects.length,0);
+});
+
+test('marine guard and viking counter data match class rules and assignments',()=>{
+ const skills=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8'));
+ const characters=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','characters.json'),'utf8'));
+ const guard=skills.find(item=>item.id==='skill_class_marine_guard'),counter=skills.find(item=>item.id==='skill_class_viking_counter');
+ assert.deepEqual([guard.castTime,guard.cooldown,guard.actions[0].effect.uses,guard.actions[0].effect.consumePeriodic],[0,10,2,false]);
+ assert.deepEqual([counter.castTime,counter.cooldown,counter.actions[0].effect.uses,counter.actions[0].effect.consumePeriodic,counter.actions[0].effect.counterOnMelee],[0,3,1,false,true]);
+ assert.ok(characters.find(character=>character.name==='해병').skillIds.includes(guard.id));
+ assert.deepEqual(characters.find(character=>character.name==='바이킹').skillIds,[counter.id]);
+});
+
 function damageProxyAction(e,percent=20,priority=100,scope='all') {
  const action=e.createDefaultAction('add_buff');action.target='ally';action.effect.id=`proxy_${priority}_${scope}`;action.effect.name='피해 대리';
  Object.assign(action.effect,{mode:'damage_proxy',proxyPercent:percent,proxyPriority:priority,proxyScope:scope});return action;
@@ -2130,6 +2171,23 @@ test('actions can exclude their caster from allied target selection',()=>{
  ally.hp=50;assert.equal(e.resolveSkillActionTarget(source,normalized,source),ally);
 });
 
+test('result-linked self actions cannot make an ally-only skill castable without an ally',()=>{
+ const e=engine(),source=unit(e);source.hp=80;
+ const heal=e.createDefaultAction('heal');heal.target='ally';heal.allowSelfTarget=false;heal.coefficients=[{type:'fixed',value:20}];
+ const payment=e.createDefaultAction('drain_resource');payment.target='self';payment.drainResource='HP';
+ payment.coefficients=[{type:'calculated',field:'previousActualHealing',calc:'percent',value:30}];
+ const s=skill(e,heal);s.actions.push(e.normalizeSkillAction(payment));s.resourceCosts=[{resource:'MP',mode:'fixed',value:10}];
+ e.skillsJson=[s];source.skillIds=[s.id];
+ assert.equal(e.resolveSkillActionTarget(source,s.actions[1]),source);
+ assert.equal(e.resolveSkillTarget(source,s,e.playerSquad,e.enemySquad),null);
+ assert.equal(e.tryUseReadySkill(source,e.playerSquad,e.enemySquad),false);
+ assert.equal(source.mp,100);assert.equal(source.hp,80);assert.equal(source.skillCooldowns[s.id],undefined);
+ const ally=unit(e);ally.hp=50;
+ assert.equal(e.resolveSkillTarget(source,s,e.playerSquad,e.enemySquad),ally);
+ assert.equal(e.tryUseReadySkill(source,e.playerSquad,e.enemySquad),true);
+ assert.equal(ally.hp,70);assert.equal(source.hp,74);assert.equal(source.mp,90);
+});
+
 test('periodic coefficients snapshot caster stats, grow by interval and reject reapplication',()=>{
  const e=engine(),source=unit(e),otherCaster=unit(e),target=unit(e,'enemy',105);target.maxHp=target.hp=1000;
  const action=e.createDefaultAction('add_state');action.target='enemy';action.duration=0;
@@ -2237,4 +2295,59 @@ test('archer and sniper skill data match their class rules',()=>{
  assert.deepEqual([shot.castTime,shot.castReceivedDamagePercent,shot.actions[0].rangeMultiplier,shot.actions[0].coefficients[0].value],[3,130,200,300]);
  assert.deepEqual([mode.actions[0].transform.receivedDamagePercent,mode.actions[0].transform.immobile,mode.actions[0].transform.exitHpBelow,mode.actions[0].transform.retreatHpBelow],[130,true,30,30]);
  assert.deepEqual(characters.find(c=>c.name==='궁사').skillIds,[multi.id,power.id]);assert.deepEqual(characters.find(c=>c.name==='저격수').skillIds,[shot.id,mode.id]);
+});
+
+test('combo skills advance per unit, wrap after completion and reset for battle',()=>{
+ const e=engine(),source=unit(e);
+ const action=value=>{const item=e.createDefaultAction('deal_damage');item.coefficients=[{type:'fixed',value}];return item;};
+ const combo=skill(e,action(10));combo.cooldown=10;combo.combo={stepCooldown:.5,stages:[{name:'one',actions:[action(10)]},{name:'two',actions:[action(20)]},{name:'three',actions:[action(30)]}],completionActions:[action(40)]};
+ let runtime=e.getRuntimeComboSkill(source,combo);assert.deepEqual([runtime.runtimeCombo.stageIndex,runtime.actions[0].coefficients[0].value,runtime.actions.length],[0,10,1]);
+ assert.equal(e.getResolvedSkillCooldownTicks(runtime,source),30);
+ e.advanceSkillCombo(source,runtime);runtime=e.getRuntimeComboSkill(source,combo);assert.deepEqual([runtime.runtimeCombo.stageIndex,runtime.actions[0].coefficients[0].value,runtime.actions.length],[1,20,1]);
+ e.advanceSkillCombo(source,runtime);runtime=e.getRuntimeComboSkill(source,combo);assert.deepEqual([runtime.runtimeCombo.stageIndex,runtime.actions[0].coefficients[0].value,runtime.actions.length],[2,30,2]);
+ assert.equal(e.getResolvedSkillCooldownTicks(runtime,source),600);
+ e.advanceSkillCombo(source,runtime);assert.equal(e.getRuntimeComboSkill(source,combo).runtimeCombo.stageIndex,0);
+ source.skillComboStages[combo.id]=2;e.resetUnitForBattle(source);assert.equal(Object.keys(source.skillComboStages).length,0);
+});
+
+test('monk four strike and berserker fire strike data match their combo rules',()=>{
+ const skills=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8'));
+ const characters=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','characters.json'),'utf8'));
+ const monk=skills.find(item=>item.id==='skill_class_monk_combo');
+ const fire=skills.find(item=>item.id==='skill_class_berserker_fire_strike');
+ const values=skill=>skill.combo.stages.map(stage=>stage.actions[0].coefficients[0].value);
+ assert.deepEqual([monk.name,monk.castTime,monk.cooldown,monk.combo.stepCooldown,values(monk)],['승려 · 4연격',0,12,.5,[120,130,140,150]]);
+ assert.deepEqual([fire.castTime,fire.cooldown,fire.combo.stepCooldown,values(fire)],[0,10,.5,[125,135,145]]);
+ assert.deepEqual(fire.combo.stages.map(stage=>stage.actions.length),[2,2,2]);
+ assert.deepEqual([fire.combo.completionActions[0].effect.stat,fire.combo.completionActions[0].effect.value,fire.combo.completionActions[0].duration],['attackSpeed',-20,3]);
+ assert.ok(characters.find(character=>character.name==='광전사').skillIds.includes(fire.id));
+});
+
+test('weapon cooldown fallback approaches independent weapon range for melee supports and fighters',()=>{
+ for(const role of ['healer','tank']) {
+  const e=engine(),source=unit(e),target=unit(e,'enemy',180);
+  Object.assign(source,{role,attackRange:3,speed:2,weaponAttackStates:[{weapon:{attackRange:1}},{weapon:{attackRange:1}}]});
+  const before=source.x;e.moveUnit(source,[target]);assert(source.x>before);
+ }
+});
+
+test('saved monk and berserker resume weapon hits during full combo cooldowns',()=>{
+ const {createEngine,loadData}=require('../balance/simulator/engine.cjs');
+ const data=loadData(),names=['승려','광전사'],ids=names.map(name=>data.characters.findIndex(c=>c.name===name));
+ const result=createEngine(data).runBattle({teamA:[ids[0]],teamB:[ids[1]],seed:42,maxSeconds:30,trace:true});
+ for(const [index,id,count,seconds] of [[0,'skill_class_monk_combo',4,12],[1,'skill_class_berserker_fire_strike',3,10]]) {
+  const casts=result.events.filter(e=>e.type==='cast_complete' && e.source.name===names[index] && e.skillId===id);
+  assert(casts.length>=count,`${names[index]} completes combo`);
+  const end=casts[count-1].tick;
+  assert(result.events.some(e=>e.type==='hit' && e.source.name===names[index] && e.skillId==='skill_basic_weapon_attack' && e.tick>end && e.tick<end+seconds*60),`${names[index]} basic hit during full cooldown`);
+ }
+});
+
+test('combo users approach the ready stage action range instead of stalling at unit range',()=>{
+ const e=engine(),source=unit(e),target=unit(e,'enemy',180);
+ source.x=100;source.attackRange=3;source.speed=2;target.x=180;
+ const action=e.createDefaultAction('deal_damage');Object.assign(action,{target:'enemy',rangeMode:'custom',rangeValue:1});
+ const combo=skill(e,action);combo.combo={stepCooldown:.5,stages:[{name:'one',actions:[action]},{name:'two',actions:[action]}],completionActions:[]};
+ e.skillsJson=[combo];source.skillIds=[combo.id];source.skillCooldowns={};
+ const before=source.x;e.moveUnit(source,[target]);assert.ok(source.x>before);
 });

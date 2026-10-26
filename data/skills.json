@@ -7,10 +7,13 @@
     "slot": "basic",
     "cooldown": 0,
     "castTime": null,
+    "castReceivedDamagePercent": 100,
     "channel": {
       "duration": 0,
       "interval": 1,
-      "interruptOnDamage": true
+      "interruptOnDamage": true,
+      "lockTarget": false,
+      "receivedDamagePercent": 100
     },
     "resourceCosts": [
       {
@@ -25,14 +28,20 @@
         "target": "enemy",
         "rangeMode": "mainWeapon",
         "rangeValue": 1,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
         "targetHpBelow": 100,
         "targetCooldown": 0,
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
+        "chainOrigin": "previous",
         "coefficients": [
           {
             "type": "calculated",
@@ -73,10 +82,13 @@
     "slot": "basic",
     "cooldown": 0,
     "castTime": null,
+    "castReceivedDamagePercent": 100,
     "channel": {
       "duration": 0,
       "interval": 1,
-      "interruptOnDamage": true
+      "interruptOnDamage": true,
+      "lockTarget": false,
+      "receivedDamagePercent": 100
     },
     "resourceCosts": [
       {
@@ -91,14 +103,20 @@
         "target": "ally",
         "rangeMode": "mainWeapon",
         "rangeValue": 1,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
         "targetHpBelow": 100,
         "targetCooldown": 0,
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
+        "chainOrigin": "previous",
         "coefficients": [
           {
             "type": "calculated",
@@ -144,7 +162,9 @@
     "channel": {
       "duration": 0,
       "interval": 1,
-      "interruptOnDamage": true
+      "interruptOnDamage": true,
+      "lockTarget": false,
+      "receivedDamagePercent": 100
     },
     "resourceCosts": [
       {
@@ -167,6 +187,9 @@
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 2,
         "chainRange": 5,
         "chainOrigin": "primary",
@@ -215,7 +238,9 @@
     "channel": {
       "duration": 0,
       "interval": 1,
-      "interruptOnDamage": true
+      "interruptOnDamage": true,
+      "lockTarget": false,
+      "receivedDamagePercent": 100
     },
     "resourceCosts": [
       {
@@ -238,6 +263,9 @@
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
         "chainOrigin": "previous",
@@ -282,10 +310,13 @@
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "castReceivedDamagePercent": 100,
     "channel": {
       "duration": 0,
       "interval": 1,
-      "interruptOnDamage": true
+      "interruptOnDamage": true,
+      "lockTarget": false,
+      "receivedDamagePercent": 100
     },
     "resourceCosts": [
       {
@@ -300,14 +331,20 @@
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 5,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
         "targetHpBelow": 100,
         "targetCooldown": 0,
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
+        "chainOrigin": "previous",
         "coefficients": [],
         "healResource": "HP",
         "drainResource": "MP",
@@ -335,14 +372,20 @@
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 1,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
         "targetHpBelow": 100,
         "targetCooldown": 0,
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
+        "chainOrigin": "previous",
         "coefficients": [
           {
             "type": "calculated",
@@ -384,10 +427,13 @@
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "castReceivedDamagePercent": 100,
     "channel": {
       "duration": 0,
       "interval": 1,
-      "interruptOnDamage": true
+      "interruptOnDamage": true,
+      "lockTarget": false,
+      "receivedDamagePercent": 100
     },
     "resourceCosts": [
       {
@@ -402,14 +448,20 @@
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 5,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
         "targetHpBelow": 100,
         "targetCooldown": 0,
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
+        "chainOrigin": "previous",
         "coefficients": [
           {
             "type": "calculated",
@@ -451,10 +503,13 @@
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "castReceivedDamagePercent": 100,
     "channel": {
       "duration": 0,
       "interval": 1,
-      "interruptOnDamage": true
+      "interruptOnDamage": true,
+      "lockTarget": false,
+      "receivedDamagePercent": 100
     },
     "resourceCosts": [
       {
@@ -469,14 +524,20 @@
         "target": "self",
         "rangeMode": "custom",
         "rangeValue": 5,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
         "targetHpBelow": 100,
         "targetCooldown": 0,
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
+        "chainOrigin": "previous",
         "coefficients": [
           {
             "type": "calculated",
@@ -513,14 +574,18 @@
     "id": "skill_class_mage_quick",
     "name": "마법사 · 즉시시전 공격 (기본형)",
     "className": "마법사",
+    "icon": "assets/images/skills/_-20261026221925114613.png",
     "description": "",
     "slot": "active",
     "cooldown": 8,
     "castTime": 0,
+    "castReceivedDamagePercent": 100,
     "channel": {
       "duration": 0,
       "interval": 1,
-      "interruptOnDamage": true
+      "interruptOnDamage": true,
+      "lockTarget": false,
+      "receivedDamagePercent": 100
     },
     "resourceCosts": [
       {
@@ -535,14 +600,20 @@
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 5,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
         "targetHpBelow": 100,
         "targetCooldown": 0,
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
+        "chainOrigin": "previous",
         "coefficients": [
           {
             "type": "calculated",
@@ -560,14 +631,14 @@
         "maxTargets": 0,
         "critical": 0,
         "penetration": 0,
-        "moveType": "Walk",
+        "moveType": "Dash",
         "moveSpeed": 1,
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
         "fieldRadius": 0,
         "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 5,
+        "fieldEffectDuration": 0,
         "fieldMoveType": "Push",
         "fieldDistance": 1,
         "fieldCenter": "target",
@@ -579,14 +650,18 @@
     "id": "skill_class_priest_smite",
     "name": "성직자 · 마법 강타",
     "className": "성직자",
+    "icon": "assets/images/skills/_-20261026221836127698.png",
     "description": "",
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "castReceivedDamagePercent": 100,
     "channel": {
       "duration": 0,
       "interval": 1,
-      "interruptOnDamage": true
+      "interruptOnDamage": true,
+      "lockTarget": false,
+      "receivedDamagePercent": 100
     },
     "resourceCosts": [
       {
@@ -601,14 +676,20 @@
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 5,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
         "targetHpBelow": 100,
         "targetCooldown": 0,
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
+        "chainOrigin": "previous",
         "coefficients": [
           {
             "type": "calculated",
@@ -626,14 +707,14 @@
         "maxTargets": 0,
         "critical": 0,
         "penetration": 0,
-        "moveType": "Walk",
+        "moveType": "Dash",
         "moveSpeed": 1,
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
         "fieldRadius": 0,
         "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 5,
+        "fieldEffectDuration": 0,
         "fieldMoveType": "Push",
         "fieldDistance": 1,
         "fieldCenter": "target",
@@ -645,14 +726,18 @@
     "id": "skill_class_priest_barrier",
     "name": "성직자 · 보호막",
     "className": "성직자",
+    "icon": "assets/images/skills/_-20261026221853945748.png",
     "description": "",
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "castReceivedDamagePercent": 100,
     "channel": {
       "duration": 0,
       "interval": 1,
-      "interruptOnDamage": true
+      "interruptOnDamage": true,
+      "lockTarget": false,
+      "receivedDamagePercent": 100
     },
     "resourceCosts": [
       {
@@ -667,14 +752,20 @@
         "target": "ally",
         "rangeMode": "custom",
         "rangeValue": 5,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
         "targetHpBelow": 100,
         "targetCooldown": 0,
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
+        "chainOrigin": "previous",
         "coefficients": [
           {
             "type": "calculated",
@@ -692,14 +783,14 @@
         "maxTargets": 0,
         "critical": 0,
         "penetration": 0,
-        "moveType": "Walk",
+        "moveType": "Dash",
         "moveSpeed": 1,
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
         "fieldRadius": 0,
         "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 5,
+        "fieldEffectDuration": 0,
         "fieldMoveType": "Push",
         "fieldDistance": 1,
         "fieldCenter": "target",
@@ -716,10 +807,13 @@
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "castReceivedDamagePercent": 100,
     "channel": {
       "duration": 0,
       "interval": 1,
-      "interruptOnDamage": true
+      "interruptOnDamage": true,
+      "lockTarget": false,
+      "receivedDamagePercent": 100
     },
     "resourceCosts": [
       {
@@ -734,14 +828,20 @@
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 1,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
         "targetHpBelow": 100,
         "targetCooldown": 0,
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
+        "chainOrigin": "previous",
         "coefficients": [
           {
             "type": "calculated",
@@ -783,10 +883,13 @@
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "castReceivedDamagePercent": 100,
     "channel": {
       "duration": 0,
       "interval": 1,
-      "interruptOnDamage": true
+      "interruptOnDamage": true,
+      "lockTarget": false,
+      "receivedDamagePercent": 100
     },
     "resourceCosts": [
       {
@@ -801,14 +904,20 @@
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 5,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
         "targetHpBelow": 100,
         "targetCooldown": 0,
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
+        "chainOrigin": "previous",
         "coefficients": [
           {
             "type": "calculated",
@@ -850,10 +959,13 @@
     "slot": "active",
     "cooldown": 1,
     "castTime": 0,
+    "castReceivedDamagePercent": 100,
     "channel": {
       "duration": 0,
       "interval": 1,
-      "interruptOnDamage": true
+      "interruptOnDamage": true,
+      "lockTarget": false,
+      "receivedDamagePercent": 100
     },
     "resourceCosts": [
       {
@@ -868,14 +980,20 @@
         "target": "ally",
         "rangeMode": "mainWeapon",
         "rangeValue": 1,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
         "targetHpBelow": 100,
         "targetCooldown": 15,
         "targetCooldownScope": "global",
         "targetCooldownEffectId": "medic_inargansin_overdose_lock",
         "targetCooldownEffectName": "과다투약 금지",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
+        "chainOrigin": "previous",
         "coefficients": [
           {
             "type": "fixed",
@@ -917,6 +1035,7 @@
     "slot": "active",
     "cooldown": 5,
     "castTime": 0,
+    "castReceivedDamagePercent": 100,
     "channel": {
       "duration": 3,
       "interval": 1,
@@ -937,14 +1056,20 @@
         "target": "ally",
         "rangeMode": "custom",
         "rangeValue": 1,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": false,
         "targetHpBelow": 100,
         "targetCooldown": 0,
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
+        "chainOrigin": "previous",
         "coefficients": [
           {
             "type": "calculated",
@@ -973,8 +1098,7 @@
         "fieldMoveType": "Push",
         "fieldDistance": 1,
         "fieldCenter": "target",
-        "fieldInterval": 1,
-        "allowSelfTarget": false
+        "fieldInterval": 1
       }
     ]
   },
@@ -987,10 +1111,13 @@
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "castReceivedDamagePercent": 100,
     "channel": {
       "duration": 0,
       "interval": 1,
-      "interruptOnDamage": true
+      "interruptOnDamage": true,
+      "lockTarget": false,
+      "receivedDamagePercent": 100
     },
     "resourceCosts": [
       {
@@ -1005,14 +1132,20 @@
         "target": "self",
         "rangeMode": "custom",
         "rangeValue": 1,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
         "targetHpBelow": 100,
         "targetCooldown": 0,
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
+        "chainOrigin": "previous",
         "coefficients": [
           {
             "type": "fixed",
@@ -1054,10 +1187,13 @@
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "castReceivedDamagePercent": 100,
     "channel": {
       "duration": 0,
       "interval": 1,
-      "interruptOnDamage": true
+      "interruptOnDamage": true,
+      "lockTarget": false,
+      "receivedDamagePercent": 100
     },
     "resourceCosts": [
       {
@@ -1072,14 +1208,20 @@
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 5,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
         "targetHpBelow": 100,
         "targetCooldown": 0,
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
+        "chainOrigin": "previous",
         "coefficients": [
           {
             "type": "calculated",
@@ -1121,10 +1263,13 @@
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "castReceivedDamagePercent": 100,
     "channel": {
       "duration": 0,
       "interval": 1,
-      "interruptOnDamage": true
+      "interruptOnDamage": true,
+      "lockTarget": false,
+      "receivedDamagePercent": 100
     },
     "resourceCosts": [
       {
@@ -1139,14 +1284,20 @@
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 1,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
         "targetHpBelow": 100,
         "targetCooldown": 0,
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
+        "chainOrigin": "previous",
         "coefficients": [
           {
             "type": "calculated",
@@ -1182,14 +1333,20 @@
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 1,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
         "targetHpBelow": 100,
         "targetCooldown": 0,
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
+        "chainOrigin": "previous",
         "coefficients": [
           {
             "type": "calculated",
@@ -1225,14 +1382,20 @@
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 1,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
         "targetHpBelow": 100,
         "targetCooldown": 0,
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
+        "chainOrigin": "previous",
         "coefficients": [
           {
             "type": "calculated",
@@ -1268,14 +1431,20 @@
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 1,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
         "targetHpBelow": 100,
         "targetCooldown": 0,
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
+        "chainOrigin": "previous",
         "coefficients": [
           {
             "type": "calculated",
@@ -1311,14 +1480,20 @@
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 1,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
         "targetHpBelow": 100,
         "targetCooldown": 0,
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
+        "chainOrigin": "previous",
         "coefficients": [
           {
             "type": "calculated",
@@ -1354,14 +1529,20 @@
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 1,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
         "targetHpBelow": 100,
         "targetCooldown": 0,
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
+        "chainOrigin": "previous",
         "coefficients": [
           {
             "type": "calculated",
@@ -1396,17 +1577,241 @@
   },
   {
     "id": "skill_class_monk_combo",
-    "name": "승려 · 사연격 (기본형)",
+    "name": "승려 · 4연격",
     "className": "승려",
     "icon": "assets/images/skills/승려_사연격.png",
-    "description": "",
+    "description": "0.5초 간격으로 120%·130%·140%·150% 근접 물리 피해를 이어가며, 4단계가 끝나면 12초 후 처음부터 다시 사용할 수 있습니다.",
     "slot": "active",
-    "cooldown": 8,
-    "castTime": 0.5,
+    "cooldown": 12,
+    "castTime": 0,
+    "castReceivedDamagePercent": 100,
     "channel": {
       "duration": 0,
       "interval": 1,
-      "interruptOnDamage": true
+      "interruptOnDamage": true,
+      "lockTarget": false,
+      "receivedDamagePercent": 100
+    },
+    "combo": {
+      "stages": [
+        {
+          "name": "1연격",
+          "actions": [
+            {
+              "type": "deal_damage",
+              "target": "enemy",
+              "rangeMode": "custom",
+              "rangeValue": 1,
+              "rangeMultiplier": 100,
+              "minRange": 0,
+              "allowSelfTarget": true,
+              "targetHpBelow": 100,
+              "targetCooldown": 0,
+              "targetCooldownScope": "caster",
+              "targetCooldownEffectId": "",
+              "targetCooldownEffectName": "",
+              "ownedSummonCondition": "any",
+              "ownedSummonEntityId": "",
+              "targetSummonEntityId": "",
+              "chainCount": 0,
+              "chainRange": 3,
+              "chainOrigin": "previous",
+              "coefficients": [
+                {
+                  "type": "calculated",
+                  "field": "atk",
+                  "calc": "percent",
+                  "value": 120,
+                  "effectId": ""
+                }
+              ],
+              "healResource": "HP",
+              "drainResource": "MP",
+              "damageType": "physical",
+              "area": 0,
+              "areaCenter": "target",
+              "maxTargets": 0,
+              "critical": 0,
+              "penetration": 0,
+              "moveType": "Walk",
+              "moveSpeed": 1,
+              "distance": 0,
+              "duration": 0,
+              "fieldShape": "circle",
+              "fieldRadius": 0,
+              "fieldEffect": "deal_damage",
+              "fieldEffectDuration": 5,
+              "fieldMoveType": "Push",
+              "fieldDistance": 1,
+              "fieldCenter": "target",
+              "fieldInterval": 1
+            }
+          ]
+        },
+        {
+          "name": "2연격",
+          "actions": [
+            {
+              "type": "deal_damage",
+              "target": "enemy",
+              "rangeMode": "custom",
+              "rangeValue": 1,
+              "rangeMultiplier": 100,
+              "minRange": 0,
+              "allowSelfTarget": true,
+              "targetHpBelow": 100,
+              "targetCooldown": 0,
+              "targetCooldownScope": "caster",
+              "targetCooldownEffectId": "",
+              "targetCooldownEffectName": "",
+              "ownedSummonCondition": "any",
+              "ownedSummonEntityId": "",
+              "targetSummonEntityId": "",
+              "chainCount": 0,
+              "chainRange": 3,
+              "chainOrigin": "previous",
+              "coefficients": [
+                {
+                  "type": "calculated",
+                  "field": "atk",
+                  "calc": "percent",
+                  "value": 130,
+                  "effectId": ""
+                }
+              ],
+              "healResource": "HP",
+              "drainResource": "MP",
+              "damageType": "physical",
+              "area": 0,
+              "areaCenter": "target",
+              "maxTargets": 0,
+              "critical": 0,
+              "penetration": 0,
+              "moveType": "Walk",
+              "moveSpeed": 1,
+              "distance": 0,
+              "duration": 0,
+              "fieldShape": "circle",
+              "fieldRadius": 0,
+              "fieldEffect": "deal_damage",
+              "fieldEffectDuration": 5,
+              "fieldMoveType": "Push",
+              "fieldDistance": 1,
+              "fieldCenter": "target",
+              "fieldInterval": 1
+            }
+          ]
+        },
+        {
+          "name": "3연격",
+          "actions": [
+            {
+              "type": "deal_damage",
+              "target": "enemy",
+              "rangeMode": "custom",
+              "rangeValue": 1,
+              "rangeMultiplier": 100,
+              "minRange": 0,
+              "allowSelfTarget": true,
+              "targetHpBelow": 100,
+              "targetCooldown": 0,
+              "targetCooldownScope": "caster",
+              "targetCooldownEffectId": "",
+              "targetCooldownEffectName": "",
+              "ownedSummonCondition": "any",
+              "ownedSummonEntityId": "",
+              "targetSummonEntityId": "",
+              "chainCount": 0,
+              "chainRange": 3,
+              "chainOrigin": "previous",
+              "coefficients": [
+                {
+                  "type": "calculated",
+                  "field": "atk",
+                  "calc": "percent",
+                  "value": 140,
+                  "effectId": ""
+                }
+              ],
+              "healResource": "HP",
+              "drainResource": "MP",
+              "damageType": "physical",
+              "area": 0,
+              "areaCenter": "target",
+              "maxTargets": 0,
+              "critical": 0,
+              "penetration": 0,
+              "moveType": "Walk",
+              "moveSpeed": 1,
+              "distance": 0,
+              "duration": 0,
+              "fieldShape": "circle",
+              "fieldRadius": 0,
+              "fieldEffect": "deal_damage",
+              "fieldEffectDuration": 5,
+              "fieldMoveType": "Push",
+              "fieldDistance": 1,
+              "fieldCenter": "target",
+              "fieldInterval": 1
+            }
+          ]
+        },
+        {
+          "name": "4연격",
+          "actions": [
+            {
+              "type": "deal_damage",
+              "target": "enemy",
+              "rangeMode": "custom",
+              "rangeValue": 1,
+              "rangeMultiplier": 100,
+              "minRange": 0,
+              "allowSelfTarget": true,
+              "targetHpBelow": 100,
+              "targetCooldown": 0,
+              "targetCooldownScope": "caster",
+              "targetCooldownEffectId": "",
+              "targetCooldownEffectName": "",
+              "ownedSummonCondition": "any",
+              "ownedSummonEntityId": "",
+              "targetSummonEntityId": "",
+              "chainCount": 0,
+              "chainRange": 3,
+              "chainOrigin": "previous",
+              "coefficients": [
+                {
+                  "type": "calculated",
+                  "field": "atk",
+                  "calc": "percent",
+                  "value": 150,
+                  "effectId": ""
+                }
+              ],
+              "healResource": "HP",
+              "drainResource": "MP",
+              "damageType": "physical",
+              "area": 0,
+              "areaCenter": "target",
+              "maxTargets": 0,
+              "critical": 0,
+              "penetration": 0,
+              "moveType": "Walk",
+              "moveSpeed": 1,
+              "distance": 0,
+              "duration": 0,
+              "fieldShape": "circle",
+              "fieldRadius": 0,
+              "fieldEffect": "deal_damage",
+              "fieldEffectDuration": 5,
+              "fieldMoveType": "Push",
+              "fieldDistance": 1,
+              "fieldCenter": "target",
+              "fieldInterval": 1
+            }
+          ]
+        }
+      ],
+      "completionActions": []
     },
     "resourceCosts": [
       {
@@ -1421,149 +1826,26 @@
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 1,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
         "targetHpBelow": 100,
         "targetCooldown": 0,
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
+        "chainOrigin": "previous",
         "coefficients": [
           {
             "type": "calculated",
             "field": "atk",
             "calc": "percent",
-            "value": 25,
-            "effectId": ""
-          }
-        ],
-        "healResource": "HP",
-        "drainResource": "MP",
-        "damageType": "physical",
-        "area": 0,
-        "areaCenter": "target",
-        "maxTargets": 0,
-        "critical": 0,
-        "penetration": 0,
-        "moveType": "Walk",
-        "moveSpeed": 1,
-        "distance": 0,
-        "duration": 0,
-        "fieldShape": "circle",
-        "fieldRadius": 0,
-        "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 5,
-        "fieldMoveType": "Push",
-        "fieldDistance": 1,
-        "fieldCenter": "target",
-        "fieldInterval": 1
-      },
-      {
-        "type": "deal_damage",
-        "target": "enemy",
-        "rangeMode": "custom",
-        "rangeValue": 1,
-        "minRange": 0,
-        "targetHpBelow": 100,
-        "targetCooldown": 0,
-        "targetCooldownScope": "caster",
-        "targetCooldownEffectId": "",
-        "targetCooldownEffectName": "",
-        "chainCount": 0,
-        "chainRange": 3,
-        "coefficients": [
-          {
-            "type": "calculated",
-            "field": "atk",
-            "calc": "percent",
-            "value": 25,
-            "effectId": ""
-          }
-        ],
-        "healResource": "HP",
-        "drainResource": "MP",
-        "damageType": "physical",
-        "area": 0,
-        "areaCenter": "target",
-        "maxTargets": 0,
-        "critical": 0,
-        "penetration": 0,
-        "moveType": "Walk",
-        "moveSpeed": 1,
-        "distance": 0,
-        "duration": 0,
-        "fieldShape": "circle",
-        "fieldRadius": 0,
-        "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 5,
-        "fieldMoveType": "Push",
-        "fieldDistance": 1,
-        "fieldCenter": "target",
-        "fieldInterval": 1
-      },
-      {
-        "type": "deal_damage",
-        "target": "enemy",
-        "rangeMode": "custom",
-        "rangeValue": 1,
-        "minRange": 0,
-        "targetHpBelow": 100,
-        "targetCooldown": 0,
-        "targetCooldownScope": "caster",
-        "targetCooldownEffectId": "",
-        "targetCooldownEffectName": "",
-        "chainCount": 0,
-        "chainRange": 3,
-        "coefficients": [
-          {
-            "type": "calculated",
-            "field": "atk",
-            "calc": "percent",
-            "value": 25,
-            "effectId": ""
-          }
-        ],
-        "healResource": "HP",
-        "drainResource": "MP",
-        "damageType": "physical",
-        "area": 0,
-        "areaCenter": "target",
-        "maxTargets": 0,
-        "critical": 0,
-        "penetration": 0,
-        "moveType": "Walk",
-        "moveSpeed": 1,
-        "distance": 0,
-        "duration": 0,
-        "fieldShape": "circle",
-        "fieldRadius": 0,
-        "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 5,
-        "fieldMoveType": "Push",
-        "fieldDistance": 1,
-        "fieldCenter": "target",
-        "fieldInterval": 1
-      },
-      {
-        "type": "deal_damage",
-        "target": "enemy",
-        "rangeMode": "custom",
-        "rangeValue": 1,
-        "minRange": 0,
-        "targetHpBelow": 100,
-        "targetCooldown": 0,
-        "targetCooldownScope": "caster",
-        "targetCooldownEffectId": "",
-        "targetCooldownEffectName": "",
-        "chainCount": 0,
-        "chainRange": 3,
-        "coefficients": [
-          {
-            "type": "calculated",
-            "field": "atk",
-            "calc": "percent",
-            "value": 25,
+            "value": 120,
             "effectId": ""
           }
         ],
@@ -1599,10 +1881,13 @@
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "castReceivedDamagePercent": 100,
     "channel": {
       "duration": 0,
       "interval": 1,
-      "interruptOnDamage": true
+      "interruptOnDamage": true,
+      "lockTarget": false,
+      "receivedDamagePercent": 100
     },
     "resourceCosts": [
       {
@@ -1617,14 +1902,20 @@
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 5,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
         "targetHpBelow": 100,
         "targetCooldown": 0,
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
+        "chainOrigin": "previous",
         "coefficients": [
           {
             "type": "calculated",
@@ -1666,10 +1957,13 @@
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "castReceivedDamagePercent": 100,
     "channel": {
       "duration": 0,
       "interval": 1,
-      "interruptOnDamage": true
+      "interruptOnDamage": true,
+      "lockTarget": false,
+      "receivedDamagePercent": 100
     },
     "resourceCosts": [
       {
@@ -1684,14 +1978,20 @@
         "target": "self",
         "rangeMode": "custom",
         "rangeValue": 1,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
         "targetHpBelow": 100,
         "targetCooldown": 0,
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
+        "chainOrigin": "previous",
         "coefficients": [
           {
             "type": "fixed",
@@ -1733,10 +2033,13 @@
     "slot": "active",
     "cooldown": 8,
     "castTime": 0,
+    "castReceivedDamagePercent": 100,
     "channel": {
       "duration": 0,
       "interval": 1,
-      "interruptOnDamage": true
+      "interruptOnDamage": true,
+      "lockTarget": false,
+      "receivedDamagePercent": 100
     },
     "resourceCosts": [
       {
@@ -1751,20 +2054,26 @@
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 5,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
         "targetHpBelow": 100,
         "targetCooldown": 0,
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
+        "chainOrigin": "previous",
         "coefficients": [
           {
             "type": "calculated",
             "field": "magic",
             "calc": "percent",
-            "value": 150,
+            "value": 300,
             "effectId": ""
           }
         ],
@@ -1776,14 +2085,14 @@
         "maxTargets": 0,
         "critical": 0,
         "penetration": 0,
-        "moveType": "Walk",
+        "moveType": "Dash",
         "moveSpeed": 1,
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
         "fieldRadius": 0,
         "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 5,
+        "fieldEffectDuration": 0,
         "fieldMoveType": "Push",
         "fieldDistance": 1,
         "fieldCenter": "target",
@@ -1800,10 +2109,13 @@
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "castReceivedDamagePercent": 100,
     "channel": {
       "duration": 0,
       "interval": 1,
-      "interruptOnDamage": true
+      "interruptOnDamage": true,
+      "lockTarget": false,
+      "receivedDamagePercent": 100
     },
     "resourceCosts": [
       {
@@ -1818,14 +2130,20 @@
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 1,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
         "targetHpBelow": 100,
         "targetCooldown": 0,
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
+        "chainOrigin": "previous",
         "coefficients": [
           {
             "type": "calculated",
@@ -1866,10 +2184,13 @@
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "castReceivedDamagePercent": 100,
     "channel": {
       "duration": 0,
       "interval": 1,
-      "interruptOnDamage": true
+      "interruptOnDamage": true,
+      "lockTarget": false,
+      "receivedDamagePercent": 100
     },
     "resourceCosts": [
       {
@@ -1884,14 +2205,20 @@
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 1,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
         "targetHpBelow": 100,
         "targetCooldown": 0,
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
+        "chainOrigin": "previous",
         "coefficients": [
           {
             "type": "calculated",
@@ -1933,10 +2260,13 @@
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "castReceivedDamagePercent": 100,
     "channel": {
       "duration": 0,
       "interval": 1,
-      "interruptOnDamage": true
+      "interruptOnDamage": true,
+      "lockTarget": false,
+      "receivedDamagePercent": 100
     },
     "resourceCosts": [
       {
@@ -1951,14 +2281,20 @@
         "target": "ally",
         "rangeMode": "custom",
         "rangeValue": 5,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
         "targetHpBelow": 100,
         "targetCooldown": 0,
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
+        "chainOrigin": "previous",
         "coefficients": [
           {
             "type": "calculated",
@@ -1995,14 +2331,18 @@
     "id": "skill_class_serum_drain",
     "name": "혈청형 · 흡혈",
     "className": "혈청형",
+    "icon": "assets/images/skills/혈청형_생명흡수.png",
     "description": "적에게 마력의 100% 마법 피해를 주고, 실제 피해량의 60%만큼 자신의 HP를 회복합니다.",
     "slot": "active",
     "cooldown": 5,
     "castTime": 1.5,
+    "castReceivedDamagePercent": 100,
     "channel": {
       "duration": 0,
       "interval": 1,
-      "interruptOnDamage": true
+      "interruptOnDamage": true,
+      "lockTarget": false,
+      "receivedDamagePercent": 100
     },
     "resourceCosts": [
       {
@@ -2017,14 +2357,20 @@
         "target": "enemy",
         "rangeMode": "mainWeapon",
         "rangeValue": 5,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
         "targetHpBelow": 100,
         "targetCooldown": 0,
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
+        "chainOrigin": "previous",
         "coefficients": [
           {
             "type": "calculated",
@@ -2060,14 +2406,20 @@
         "target": "self",
         "rangeMode": "mainWeapon",
         "rangeValue": 5,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
         "targetHpBelow": 100,
         "targetCooldown": 0,
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
+        "chainOrigin": "previous",
         "coefficients": [
           {
             "type": "calculated",
@@ -2098,17 +2450,18 @@
         "fieldCenter": "target",
         "fieldInterval": 1
       }
-    ],
-    "icon": "assets/images/skills/혈청형_생명흡수.png"
+    ]
   },
   {
     "id": "skill_class_serum_transfusion",
     "name": "혈청형 · 헌혈",
     "className": "혈청형",
+    "icon": "assets/images/skills/혈청형_생명수혈.png",
     "description": "5초 동안 1초마다 아군의 HP를 마력의 50%만큼 회복하고, 실제 회복량의 30%만큼 자신의 HP를 소모합니다.",
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "castReceivedDamagePercent": 100,
     "channel": {
       "duration": 5,
       "interval": 1,
@@ -2129,14 +2482,20 @@
         "target": "ally",
         "rangeMode": "mainWeapon",
         "rangeValue": 5,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": false,
         "targetHpBelow": 100,
         "targetCooldown": 0,
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
+        "chainOrigin": "previous",
         "coefficients": [
           {
             "type": "calculated",
@@ -2165,22 +2524,27 @@
         "fieldMoveType": "Push",
         "fieldDistance": 1,
         "fieldCenter": "target",
-        "fieldInterval": 1,
-        "allowSelfTarget": false
+        "fieldInterval": 1
       },
       {
         "type": "drain_resource",
         "target": "self",
         "rangeMode": "mainWeapon",
         "rangeValue": 5,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
         "targetHpBelow": 100,
         "targetCooldown": 0,
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
+        "chainOrigin": "previous",
         "coefficients": [
           {
             "type": "calculated",
@@ -2211,8 +2575,7 @@
         "fieldCenter": "target",
         "fieldInterval": 1
       }
-    ],
-    "icon": "assets/images/skills/혈청형_생명수혈.png"
+    ]
   },
   {
     "id": "skill_class_warlock_bite",
@@ -2223,10 +2586,13 @@
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "castReceivedDamagePercent": 100,
     "channel": {
       "duration": 0,
       "interval": 1,
-      "interruptOnDamage": true
+      "interruptOnDamage": true,
+      "lockTarget": false,
+      "receivedDamagePercent": 100
     },
     "resourceCosts": [
       {
@@ -2241,14 +2607,20 @@
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 5,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
         "targetHpBelow": 100,
         "targetCooldown": 0,
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
+        "chainOrigin": "previous",
         "coefficients": [
           {
             "type": "calculated",
@@ -2284,14 +2656,20 @@
         "target": "self",
         "rangeMode": "custom",
         "rangeValue": 5,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
         "targetHpBelow": 100,
         "targetCooldown": 0,
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
+        "chainOrigin": "previous",
         "coefficients": [
           {
             "type": "calculated",
@@ -2332,10 +2710,13 @@
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "castReceivedDamagePercent": 100,
     "channel": {
       "duration": 0,
       "interval": 1,
-      "interruptOnDamage": true
+      "interruptOnDamage": true,
+      "lockTarget": false,
+      "receivedDamagePercent": 100
     },
     "resourceCosts": [
       {
@@ -2350,14 +2731,20 @@
         "target": "self",
         "rangeMode": "custom",
         "rangeValue": 5,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
         "targetHpBelow": 100,
         "targetCooldown": 0,
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
+        "chainOrigin": "previous",
         "coefficients": [
           {
             "type": "calculated",
@@ -2399,10 +2786,13 @@
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "castReceivedDamagePercent": 100,
     "channel": {
       "duration": 0,
       "interval": 1,
-      "interruptOnDamage": true
+      "interruptOnDamage": true,
+      "lockTarget": false,
+      "receivedDamagePercent": 100
     },
     "resourceCosts": [
       {
@@ -2417,14 +2807,20 @@
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 5,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
         "targetHpBelow": 100,
         "targetCooldown": 0,
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
+        "chainOrigin": "previous",
         "coefficients": [
           {
             "type": "fixed",
@@ -2466,10 +2862,13 @@
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "castReceivedDamagePercent": 100,
     "channel": {
       "duration": 0,
       "interval": 1,
-      "interruptOnDamage": true
+      "interruptOnDamage": true,
+      "lockTarget": false,
+      "receivedDamagePercent": 100
     },
     "resourceCosts": [
       {
@@ -2484,14 +2883,20 @@
         "target": "ally",
         "rangeMode": "custom",
         "rangeValue": 5,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
         "targetHpBelow": 100,
         "targetCooldown": 0,
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
+        "chainOrigin": "previous",
         "coefficients": [
           {
             "type": "calculated",
@@ -2532,10 +2937,13 @@
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "castReceivedDamagePercent": 100,
     "channel": {
       "duration": 0,
       "interval": 1,
-      "interruptOnDamage": true
+      "interruptOnDamage": true,
+      "lockTarget": false,
+      "receivedDamagePercent": 100
     },
     "resourceCosts": [
       {
@@ -2550,14 +2958,20 @@
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 1,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
         "targetHpBelow": 100,
         "targetCooldown": 0,
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
+        "chainOrigin": "previous",
         "coefficients": [
           {
             "type": "calculated",
@@ -2598,10 +3012,13 @@
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "castReceivedDamagePercent": 100,
     "channel": {
       "duration": 0,
       "interval": 1,
-      "interruptOnDamage": true
+      "interruptOnDamage": true,
+      "lockTarget": false,
+      "receivedDamagePercent": 100
     },
     "resourceCosts": [
       {
@@ -2616,14 +3033,20 @@
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 5,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
         "targetHpBelow": 100,
         "targetCooldown": 0,
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
+        "chainOrigin": "previous",
         "coefficients": [
           {
             "type": "calculated",
@@ -2664,10 +3087,13 @@
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "castReceivedDamagePercent": 100,
     "channel": {
       "duration": 0,
       "interval": 1,
-      "interruptOnDamage": true
+      "interruptOnDamage": true,
+      "lockTarget": false,
+      "receivedDamagePercent": 100
     },
     "resourceCosts": [
       {
@@ -2682,14 +3108,20 @@
         "target": "ally",
         "rangeMode": "custom",
         "rangeValue": 5,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
         "targetHpBelow": 100,
         "targetCooldown": 0,
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
+        "chainOrigin": "previous",
         "coefficients": [
           {
             "type": "calculated",
@@ -2726,14 +3158,18 @@
     "id": "skill_class_mage_area",
     "name": "마법사 · 마력 폭발",
     "className": "마법사",
+    "icon": "assets/images/skills/_-20261026222031680153.png",
     "description": "",
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "castReceivedDamagePercent": 100,
     "channel": {
       "duration": 0,
       "interval": 1,
-      "interruptOnDamage": true
+      "interruptOnDamage": true,
+      "lockTarget": false,
+      "receivedDamagePercent": 100
     },
     "resourceCosts": [
       {
@@ -2748,14 +3184,20 @@
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 5,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
         "targetHpBelow": 100,
         "targetCooldown": 0,
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
+        "chainOrigin": "previous",
         "coefficients": [
           {
             "type": "calculated",
@@ -2773,14 +3215,14 @@
         "maxTargets": 0,
         "critical": 0,
         "penetration": 0,
-        "moveType": "Walk",
+        "moveType": "Dash",
         "moveSpeed": 1,
         "distance": 0,
         "duration": 0,
         "fieldShape": "circle",
         "fieldRadius": 0,
         "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 5,
+        "fieldEffectDuration": 0,
         "fieldMoveType": "Push",
         "fieldDistance": 1,
         "fieldCenter": "target",
@@ -2797,10 +3239,13 @@
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "castReceivedDamagePercent": 100,
     "channel": {
       "duration": 0,
       "interval": 1,
-      "interruptOnDamage": true
+      "interruptOnDamage": true,
+      "lockTarget": false,
+      "receivedDamagePercent": 100
     },
     "resourceCosts": [
       {
@@ -2815,14 +3260,20 @@
         "target": "ally",
         "rangeMode": "custom",
         "rangeValue": 5,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
         "targetHpBelow": 100,
         "targetCooldown": 0,
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
+        "chainOrigin": "previous",
         "coefficients": [
           {
             "type": "calculated",
@@ -2864,10 +3315,13 @@
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "castReceivedDamagePercent": 100,
     "channel": {
       "duration": 0,
       "interval": 1,
-      "interruptOnDamage": true
+      "interruptOnDamage": true,
+      "lockTarget": false,
+      "receivedDamagePercent": 100
     },
     "resourceCosts": [
       {
@@ -2882,14 +3336,20 @@
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 5,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
         "targetHpBelow": 100,
         "targetCooldown": 0,
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
+        "chainOrigin": "previous",
         "coefficients": [
           {
             "type": "calculated",
@@ -2931,34 +3391,48 @@
     "slot": "active",
     "cooldown": 10,
     "castTime": 0,
+    "castReceivedDamagePercent": 100,
     "channel": {
       "duration": 0,
       "interval": 1,
-      "interruptOnDamage": true
+      "interruptOnDamage": true,
+      "lockTarget": false,
+      "receivedDamagePercent": 100
     },
-    "resourceCosts": [],
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 0
+      }
+    ],
     "actions": [
       {
         "type": "deal_damage",
         "target": "enemy",
         "rangeMode": "mainWeapon",
         "rangeValue": 1,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
         "targetHpBelow": 100,
         "targetCooldown": 0,
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
+        "chainOrigin": "previous",
         "coefficients": [
           {
             "type": "calculated",
             "field": "atk",
             "calc": "percent",
             "value": 100,
-            "effectId": "",
-            "resourceId": ""
+            "effectId": ""
           },
           {
             "type": "calculated",
@@ -3001,6 +3475,14 @@
     "slot": "passive",
     "cooldown": 0,
     "castTime": 0,
+    "castReceivedDamagePercent": 100,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true,
+      "lockTarget": false,
+      "receivedDamagePercent": 100
+    },
     "passiveTrigger": {
       "event": "damaged",
       "chance": 100,
@@ -3015,29 +3497,40 @@
         "maxReductionPercent": 25
       }
     },
-    "resourceCosts": [],
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 0
+      }
+    ],
     "actions": [
       {
         "type": "heal",
         "target": "self",
         "rangeMode": "mainWeapon",
         "rangeValue": 1,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
         "targetHpBelow": 100,
         "targetCooldown": 0,
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
+        "chainOrigin": "previous",
         "coefficients": [
           {
             "type": "calculated",
             "field": "triggerActualDamage",
             "calc": "percent",
             "value": 5,
-            "effectId": "",
-            "resourceId": ""
+            "effectId": ""
           }
         ],
         "healResource": "custom:effort_magic",
@@ -3072,10 +3565,13 @@
     "slot": "active",
     "cooldown": 8,
     "castTime": 1,
+    "castReceivedDamagePercent": 100,
     "channel": {
       "duration": 0,
       "interval": 1,
-      "interruptOnDamage": true
+      "interruptOnDamage": true,
+      "lockTarget": false,
+      "receivedDamagePercent": 100
     },
     "resourceCosts": [
       {
@@ -3090,14 +3586,20 @@
         "target": "enemy",
         "rangeMode": "custom",
         "rangeValue": 5,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
         "targetHpBelow": 100,
         "targetCooldown": 0,
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
+        "chainOrigin": "previous",
         "coefficients": [
           {
             "type": "calculated",
@@ -3138,10 +3640,13 @@
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "castReceivedDamagePercent": 100,
     "channel": {
       "duration": 0,
       "interval": 1,
-      "interruptOnDamage": true
+      "interruptOnDamage": true,
+      "lockTarget": false,
+      "receivedDamagePercent": 100
     },
     "resourceCosts": [
       {
@@ -3156,14 +3661,20 @@
         "target": "self",
         "rangeMode": "mainWeapon",
         "rangeValue": 1,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
         "targetHpBelow": 100,
         "targetCooldown": 0,
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
+        "chainOrigin": "previous",
         "coefficients": [
           {
             "type": "fixed",
@@ -3224,10 +3735,13 @@
     "slot": "active",
     "cooldown": 8,
     "castTime": 1,
+    "castReceivedDamagePercent": 100,
     "channel": {
       "duration": 0,
       "interval": 1,
-      "interruptOnDamage": true
+      "interruptOnDamage": true,
+      "lockTarget": false,
+      "receivedDamagePercent": 100
     },
     "resourceCosts": [
       {
@@ -3242,14 +3756,20 @@
         "target": "self",
         "rangeMode": "mainWeapon",
         "rangeValue": 1,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
         "targetHpBelow": 100,
         "targetCooldown": 0,
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
+        "chainOrigin": "previous",
         "coefficients": [
           {
             "type": "fixed",
@@ -3309,10 +3829,13 @@
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
+    "castReceivedDamagePercent": 100,
     "channel": {
       "duration": 0,
       "interval": 1,
-      "interruptOnDamage": true
+      "interruptOnDamage": true,
+      "lockTarget": false,
+      "receivedDamagePercent": 100
     },
     "resourceCosts": [
       {
@@ -3327,14 +3850,20 @@
         "target": "self",
         "rangeMode": "mainWeapon",
         "rangeValue": 1,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
         "targetHpBelow": 100,
         "targetCooldown": 0,
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
+        "chainOrigin": "previous",
         "coefficients": [
           {
             "type": "fixed",
@@ -3395,10 +3924,13 @@
     "slot": "active",
     "cooldown": 8,
     "castTime": 1.5,
+    "castReceivedDamagePercent": 100,
     "channel": {
       "duration": 0,
       "interval": 1,
-      "interruptOnDamage": true
+      "interruptOnDamage": true,
+      "lockTarget": false,
+      "receivedDamagePercent": 100
     },
     "resourceCosts": [
       {
@@ -3413,6 +3945,7 @@
         "target": "enemy",
         "rangeMode": "mainWeapon",
         "rangeValue": 1,
+        "rangeMultiplier": 100,
         "minRange": 0,
         "allowSelfTarget": true,
         "targetHpBelow": 100,
@@ -3420,6 +3953,9 @@
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "effect": {
           "id": "disease_virus",
           "name": "바이러스",
@@ -3434,6 +3970,7 @@
           "sourceStat": "magic",
           "mode": "flat",
           "value": 0,
+          "requiredOwnedSummonEntityId": "",
           "nextCastTimePercent": 100,
           "nextResourceCostPercent": 100,
           "nextCooldownPercent": 100,
@@ -3467,6 +4004,7 @@
         },
         "chainCount": 0,
         "chainRange": 3,
+        "chainOrigin": "previous",
         "coefficients": [
           {
             "type": "fixed",
@@ -3508,10 +4046,13 @@
     "slot": "active",
     "cooldown": 8,
     "castTime": 1.5,
+    "castReceivedDamagePercent": 100,
     "channel": {
       "duration": 0,
       "interval": 1,
-      "interruptOnDamage": true
+      "interruptOnDamage": true,
+      "lockTarget": false,
+      "receivedDamagePercent": 100
     },
     "resourceCosts": [
       {
@@ -3526,6 +4067,7 @@
         "target": "enemy",
         "rangeMode": "mainWeapon",
         "rangeValue": 1,
+        "rangeMultiplier": 100,
         "minRange": 0,
         "allowSelfTarget": true,
         "targetHpBelow": 100,
@@ -3533,6 +4075,9 @@
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "effect": {
           "id": "disease_open_wound",
           "name": "벌어지는 상처",
@@ -3547,6 +4092,7 @@
           "sourceStat": "magic",
           "mode": "flat",
           "value": 0,
+          "requiredOwnedSummonEntityId": "",
           "nextCastTimePercent": 100,
           "nextResourceCostPercent": 100,
           "nextCooldownPercent": 100,
@@ -3580,6 +4126,7 @@
         },
         "chainCount": 0,
         "chainRange": 3,
+        "chainOrigin": "previous",
         "coefficients": [
           {
             "type": "fixed",
@@ -3625,7 +4172,9 @@
     "channel": {
       "duration": 0,
       "interval": 1,
-      "interruptOnDamage": true
+      "interruptOnDamage": true,
+      "lockTarget": false,
+      "receivedDamagePercent": 100
     },
     "resourceCosts": [
       {
@@ -3648,6 +4197,9 @@
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
         "chainOrigin": "previous",
@@ -3696,7 +4248,9 @@
     "channel": {
       "duration": 0,
       "interval": 1,
-      "interruptOnDamage": true
+      "interruptOnDamage": true,
+      "lockTarget": false,
+      "receivedDamagePercent": 100
     },
     "resourceCosts": [
       {
@@ -3719,30 +4273,27 @@
         "targetCooldownScope": "caster",
         "targetCooldownEffectId": "",
         "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
         "chainCount": 0,
         "chainRange": 3,
         "chainOrigin": "previous",
-        "coefficients": [],
+        "coefficients": [
+          {
+            "type": "fixed",
+            "field": "atk",
+            "calc": "percent",
+            "value": 1,
+            "effectId": ""
+          }
+        ],
         "healResource": "HP",
         "drainResource": "MP",
         "damageType": "physical",
         "area": 0,
         "areaCenter": "target",
         "maxTargets": 1,
-        "critical": 0,
-        "penetration": 0,
-        "moveType": "Walk",
-        "moveSpeed": 1,
-        "distance": 0,
-        "duration": 0,
-        "fieldShape": "circle",
-        "fieldRadius": 0,
-        "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 5,
-        "fieldMoveType": "Push",
-        "fieldDistance": 1,
-        "fieldCenter": "target",
-        "fieldInterval": 1,
         "transform": {
           "id": "sniper_mode",
           "name": "저격모드",
@@ -3763,7 +4314,21 @@
           "immobile": true,
           "exitHpBelow": 30,
           "retreatHpBelow": 30
-        }
+        },
+        "critical": 0,
+        "penetration": 0,
+        "moveType": "Walk",
+        "moveSpeed": 1,
+        "distance": 0,
+        "duration": 0,
+        "fieldShape": "circle",
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       }
     ]
   },
@@ -3771,35 +4336,67 @@
     "id": "skill_class_knight_magic_horse",
     "name": "기사 · 마법말",
     "className": "기사",
-    "icon": "",
     "description": "전투 시작 시 마법말을 소환합니다. 마법말이 생존하는 동안 이동속도가 50% 증가하며, 받는 피해의 20%를 마법말이 대신 받습니다.",
     "slot": "passive",
     "cooldown": 0,
     "castTime": 0,
+    "castReceivedDamagePercent": 100,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true,
+      "lockTarget": false,
+      "receivedDamagePercent": 100
+    },
     "passiveTrigger": {
       "event": "battle_entry",
       "chance": 100,
-      "includePeriodic": false,
-      "allowMultiplePerTick": false
+      "includePeriodic": false
     },
-    "resourceCosts": [],
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 0
+      }
+    ],
     "actions": [
       {
         "type": "summon_entity",
         "target": "self",
         "rangeMode": "custom",
         "rangeValue": 0,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "ownedSummonCondition": "absent",
         "ownedSummonEntityId": "knight_magic_horse",
+        "targetSummonEntityId": "",
+        "chainCount": 0,
+        "chainRange": 3,
+        "chainOrigin": "previous",
+        "coefficients": [
+          {
+            "type": "fixed",
+            "field": "atk",
+            "calc": "percent",
+            "value": 1,
+            "effectId": ""
+          }
+        ],
+        "healResource": "HP",
+        "drainResource": "MP",
+        "damageType": "physical",
+        "area": 0,
+        "areaCenter": "target",
+        "maxTargets": 0,
         "entityId": "knight_magic_horse",
         "summonCenter": "self",
-        "count": 1,
-        "limit": 1,
-        "duration": 0,
-        "protectOwnerPercent": 20,
-        "protectOwnerScope": "all",
-        "protectOwnerPriority": 20,
         "inheritStats": {
           "hp": 0,
           "mp": 0,
@@ -3809,18 +4406,45 @@
           "defense": 0,
           "resistance": 0,
           "speed": 0
-        }
+        },
+        "count": 1,
+        "limit": 1,
+        "protectOwnerPercent": 20,
+        "protectOwnerScope": "all",
+        "protectOwnerPriority": 20,
+        "transferStateScope": "none",
+        "transferStatePriority": 0,
+        "critical": 0,
+        "penetration": 0,
+        "moveType": "Walk",
+        "moveSpeed": 1,
+        "distance": 0,
+        "duration": 0,
+        "fieldShape": "circle",
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       },
       {
         "type": "add_buff",
         "target": "self",
         "rangeMode": "custom",
         "rangeValue": 0,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "ownedSummonCondition": "any",
         "ownedSummonEntityId": "knight_magic_horse",
         "targetSummonEntityId": "",
-        "duration": 0,
         "effect": {
           "id": "knight_magic_horse_speed",
           "name": "마법말 탑승",
@@ -3828,14 +4452,61 @@
           "category": "magic",
           "polarity": "beneficial",
           "dispellable": true,
+          "dispelMode": "id",
+          "dispelCategory": "general",
+          "dispelPolarity": "any",
           "stat": "speed",
           "sourceStat": "atk",
           "mode": "percent",
           "value": 50,
           "requiredOwnedSummonEntityId": "knight_magic_horse",
+          "nextCastTimePercent": 100,
+          "nextResourceCostPercent": 100,
+          "nextCooldownPercent": 100,
+          "reflectPercent": 20,
+          "reflectScope": "all",
+          "reflectDamageType": "fixed",
+          "proxyPercent": 20,
+          "proxyPriority": 100,
+          "proxyScope": "all",
+          "uses": 0,
+          "consumeOn": "hit",
+          "consumePeriodic": false,
           "maxStacks": 1,
           "stackMode": "refresh"
-        }
+        },
+        "chainCount": 0,
+        "chainRange": 3,
+        "chainOrigin": "previous",
+        "coefficients": [
+          {
+            "type": "fixed",
+            "field": "atk",
+            "calc": "percent",
+            "value": 1,
+            "effectId": ""
+          }
+        ],
+        "healResource": "HP",
+        "drainResource": "MP",
+        "damageType": "physical",
+        "area": 0,
+        "areaCenter": "target",
+        "maxTargets": 0,
+        "critical": 0,
+        "penetration": 0,
+        "moveType": "Walk",
+        "moveSpeed": 1,
+        "distance": 0,
+        "duration": 0,
+        "fieldShape": "circle",
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       }
     ]
   },
@@ -3843,15 +4514,17 @@
     "id": "skill_class_knight_haste_horse",
     "name": "기사 · 가속/마법말소환",
     "className": "기사",
-    "icon": "",
     "description": "마법말이 없으면 다시 소환합니다. 마법말이 생존 중이면 5초 동안 공격력 25% 증가, 공격 간격 25% 감소 효과를 얻습니다.",
     "slot": "active",
     "cooldown": 15,
     "castTime": 0,
+    "castReceivedDamagePercent": 100,
     "channel": {
       "duration": 0,
       "interval": 1,
-      "interruptOnDamage": true
+      "interruptOnDamage": true,
+      "lockTarget": false,
+      "receivedDamagePercent": 100
     },
     "resourceCosts": [
       {
@@ -3866,17 +4539,37 @@
         "target": "self",
         "rangeMode": "custom",
         "rangeValue": 0,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "ownedSummonCondition": "absent",
         "ownedSummonEntityId": "knight_magic_horse",
+        "targetSummonEntityId": "",
+        "chainCount": 0,
+        "chainRange": 3,
+        "chainOrigin": "previous",
+        "coefficients": [
+          {
+            "type": "fixed",
+            "field": "atk",
+            "calc": "percent",
+            "value": 1,
+            "effectId": ""
+          }
+        ],
+        "healResource": "HP",
+        "drainResource": "MP",
+        "damageType": "physical",
+        "area": 0,
+        "areaCenter": "target",
+        "maxTargets": 0,
         "entityId": "knight_magic_horse",
         "summonCenter": "self",
-        "count": 1,
-        "limit": 1,
-        "duration": 0,
-        "protectOwnerPercent": 20,
-        "protectOwnerScope": "all",
-        "protectOwnerPriority": 20,
         "inheritStats": {
           "hp": 0,
           "mp": 0,
@@ -3886,18 +4579,45 @@
           "defense": 0,
           "resistance": 0,
           "speed": 0
-        }
+        },
+        "count": 1,
+        "limit": 1,
+        "protectOwnerPercent": 20,
+        "protectOwnerScope": "all",
+        "protectOwnerPriority": 20,
+        "transferStateScope": "none",
+        "transferStatePriority": 0,
+        "critical": 0,
+        "penetration": 0,
+        "moveType": "Walk",
+        "moveSpeed": 1,
+        "distance": 0,
+        "duration": 0,
+        "fieldShape": "circle",
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       },
       {
         "type": "add_buff",
         "target": "self",
         "rangeMode": "custom",
         "rangeValue": 0,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "ownedSummonCondition": "alive",
         "ownedSummonEntityId": "knight_magic_horse",
         "targetSummonEntityId": "",
-        "duration": 5,
         "effect": {
           "id": "knight_horse_haste_atk",
           "name": "마법말 가속 · 공격력",
@@ -3905,25 +4625,78 @@
           "category": "magic",
           "polarity": "beneficial",
           "dispellable": true,
+          "dispelMode": "id",
+          "dispelCategory": "general",
+          "dispelPolarity": "any",
           "stat": "atk",
           "sourceStat": "atk",
           "mode": "percent",
           "value": 25,
           "requiredOwnedSummonEntityId": "knight_magic_horse",
+          "nextCastTimePercent": 100,
+          "nextResourceCostPercent": 100,
+          "nextCooldownPercent": 100,
+          "reflectPercent": 20,
+          "reflectScope": "all",
+          "reflectDamageType": "fixed",
+          "proxyPercent": 20,
+          "proxyPriority": 100,
+          "proxyScope": "all",
+          "uses": 0,
+          "consumeOn": "hit",
+          "consumePeriodic": false,
           "maxStacks": 1,
           "stackMode": "refresh"
-        }
+        },
+        "chainCount": 0,
+        "chainRange": 3,
+        "chainOrigin": "previous",
+        "coefficients": [
+          {
+            "type": "fixed",
+            "field": "atk",
+            "calc": "percent",
+            "value": 1,
+            "effectId": ""
+          }
+        ],
+        "healResource": "HP",
+        "drainResource": "MP",
+        "damageType": "physical",
+        "area": 0,
+        "areaCenter": "target",
+        "maxTargets": 0,
+        "critical": 0,
+        "penetration": 0,
+        "moveType": "Walk",
+        "moveSpeed": 1,
+        "distance": 0,
+        "duration": 5,
+        "fieldShape": "circle",
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       },
       {
         "type": "add_buff",
         "target": "self",
         "rangeMode": "custom",
         "rangeValue": 0,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "ownedSummonCondition": "alive",
         "ownedSummonEntityId": "knight_magic_horse",
         "targetSummonEntityId": "",
-        "duration": 5,
         "effect": {
           "id": "knight_horse_haste_speed",
           "name": "마법말 가속 · 공격속도",
@@ -3931,14 +4704,61 @@
           "category": "magic",
           "polarity": "beneficial",
           "dispellable": true,
+          "dispelMode": "id",
+          "dispelCategory": "general",
+          "dispelPolarity": "any",
           "stat": "attackSpeed",
           "sourceStat": "atk",
           "mode": "percent",
           "value": -25,
           "requiredOwnedSummonEntityId": "knight_magic_horse",
+          "nextCastTimePercent": 100,
+          "nextResourceCostPercent": 100,
+          "nextCooldownPercent": 100,
+          "reflectPercent": 20,
+          "reflectScope": "all",
+          "reflectDamageType": "fixed",
+          "proxyPercent": 20,
+          "proxyPriority": 100,
+          "proxyScope": "all",
+          "uses": 0,
+          "consumeOn": "hit",
+          "consumePeriodic": false,
           "maxStacks": 1,
           "stackMode": "refresh"
-        }
+        },
+        "chainCount": 0,
+        "chainRange": 3,
+        "chainOrigin": "previous",
+        "coefficients": [
+          {
+            "type": "fixed",
+            "field": "atk",
+            "calc": "percent",
+            "value": 1,
+            "effectId": ""
+          }
+        ],
+        "healResource": "HP",
+        "drainResource": "MP",
+        "damageType": "physical",
+        "area": 0,
+        "areaCenter": "target",
+        "maxTargets": 0,
+        "critical": 0,
+        "penetration": 0,
+        "moveType": "Walk",
+        "moveSpeed": 1,
+        "distance": 0,
+        "duration": 5,
+        "fieldShape": "circle",
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       }
     ]
   },
@@ -3946,15 +4766,18 @@
     "id": "skill_class_demon_brute",
     "name": "악마 · 덩치소환/덩치공격",
     "className": "악마",
-    "icon": "",
+    "icon": "assets/images/skills/_-20261026221724282977.png",
     "description": "덩치가 없으면 소환합니다. 덩치는 악마가 받는 피해의 60%를 대신 받습니다. 덩치가 생존 중이면 5초 동안 덩치의 마력이 25% 증가합니다.",
     "slot": "active",
     "cooldown": 10,
     "castTime": 0,
+    "castReceivedDamagePercent": 100,
     "channel": {
       "duration": 0,
       "interval": 1,
-      "interruptOnDamage": true
+      "interruptOnDamage": true,
+      "lockTarget": false,
+      "receivedDamagePercent": 100
     },
     "resourceCosts": [
       {
@@ -3969,17 +4792,37 @@
         "target": "self",
         "rangeMode": "custom",
         "rangeValue": 0,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "ownedSummonCondition": "absent",
         "ownedSummonEntityId": "demon_brute",
+        "targetSummonEntityId": "",
+        "chainCount": 0,
+        "chainRange": 3,
+        "chainOrigin": "previous",
+        "coefficients": [
+          {
+            "type": "fixed",
+            "field": "atk",
+            "calc": "percent",
+            "value": 1,
+            "effectId": ""
+          }
+        ],
+        "healResource": "HP",
+        "drainResource": "MP",
+        "damageType": "physical",
+        "area": 0,
+        "areaCenter": "target",
+        "maxTargets": 0,
         "entityId": "demon_brute",
         "summonCenter": "self",
-        "count": 1,
-        "limit": 1,
-        "duration": 0,
-        "protectOwnerPercent": 60,
-        "protectOwnerScope": "all",
-        "protectOwnerPriority": 60,
         "inheritStats": {
           "hp": 0,
           "mp": 0,
@@ -3989,32 +4832,700 @@
           "defense": 0,
           "resistance": 0,
           "speed": 0
-        }
+        },
+        "count": 1,
+        "limit": 1,
+        "protectOwnerPercent": 60,
+        "protectOwnerScope": "all",
+        "protectOwnerPriority": 60,
+        "transferStateScope": "none",
+        "transferStatePriority": 0,
+        "critical": 0,
+        "penetration": 0,
+        "moveType": "Dash",
+        "moveSpeed": 1,
+        "distance": 0,
+        "duration": 0,
+        "fieldShape": "circle",
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 0,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
       },
       {
         "type": "add_buff",
         "target": "summon",
         "rangeMode": "custom",
         "rangeValue": 100,
+        "rangeMultiplier": 100,
         "minRange": 0,
+        "allowSelfTarget": true,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
         "ownedSummonCondition": "alive",
         "ownedSummonEntityId": "demon_brute",
         "targetSummonEntityId": "demon_brute",
-        "duration": 5,
         "effect": {
           "id": "demon_brute_magic",
           "name": "덩치 공격명령",
-          "state": "buff",
+          "state": "stun",
           "category": "magic",
           "polarity": "beneficial",
           "dispellable": true,
+          "dispelMode": "id",
+          "dispelCategory": "general",
+          "dispelPolarity": "any",
           "stat": "magic",
           "sourceStat": "atk",
           "mode": "percent",
           "value": 25,
           "requiredOwnedSummonEntityId": "demon_brute",
+          "nextCastTimePercent": 100,
+          "nextResourceCostPercent": 100,
+          "nextCooldownPercent": 100,
+          "reflectPercent": 20,
+          "reflectScope": "all",
+          "reflectDamageType": "fixed",
+          "proxyPercent": 20,
+          "proxyPriority": 100,
+          "proxyScope": "all",
+          "uses": 0,
+          "consumeOn": "hit",
+          "consumePeriodic": false,
           "maxStacks": 1,
           "stackMode": "refresh"
+        },
+        "chainCount": 0,
+        "chainRange": 3,
+        "chainOrigin": "previous",
+        "coefficients": [
+          {
+            "type": "fixed",
+            "field": "atk",
+            "calc": "percent",
+            "value": 1,
+            "effectId": ""
+          }
+        ],
+        "healResource": "HP",
+        "drainResource": "MP",
+        "damageType": "physical",
+        "area": 0,
+        "areaCenter": "target",
+        "maxTargets": 0,
+        "critical": 0,
+        "penetration": 0,
+        "moveType": "Dash",
+        "moveSpeed": 1,
+        "distance": 0,
+        "duration": 5,
+        "fieldShape": "circle",
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
+      }
+    ]
+  },
+  {
+    "id": "skill_class_berserker_fire_strike",
+    "name": "광전사 · 불의일격",
+    "className": "광전사",
+    "description": "0.5초 간격으로 쌍수 무기가 각각 125%·135%·145% 근접 물리 피해를 줍니다. 완주하면 3초간 공격속도가 20% 증가하고 10초 후 다시 사용할 수 있습니다.",
+    "slot": "active",
+    "cooldown": 10,
+    "castTime": 0,
+    "castReceivedDamagePercent": 100,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true,
+      "lockTarget": false,
+      "receivedDamagePercent": 100
+    },
+    "combo": {
+      "stages": [
+        {
+          "name": "1격",
+          "actions": [
+            {
+              "type": "deal_damage",
+              "target": "enemy",
+              "rangeMode": "custom",
+              "rangeValue": 1,
+              "rangeMultiplier": 100,
+              "minRange": 0,
+              "allowSelfTarget": true,
+              "targetHpBelow": 100,
+              "targetCooldown": 0,
+              "targetCooldownScope": "caster",
+              "targetCooldownEffectId": "",
+              "targetCooldownEffectName": "",
+              "ownedSummonCondition": "any",
+              "ownedSummonEntityId": "",
+              "targetSummonEntityId": "",
+              "chainCount": 0,
+              "chainRange": 3,
+              "chainOrigin": "previous",
+              "coefficients": [
+                {
+                  "type": "calculated",
+                  "field": "atk",
+                  "calc": "percent",
+                  "value": 125,
+                  "effectId": ""
+                }
+              ],
+              "healResource": "HP",
+              "drainResource": "MP",
+              "damageType": "physical",
+              "area": 0,
+              "areaCenter": "target",
+              "maxTargets": 0,
+              "critical": 0,
+              "penetration": 0,
+              "moveType": "Walk",
+              "moveSpeed": 1,
+              "distance": 0,
+              "duration": 0,
+              "fieldShape": "circle",
+              "fieldRadius": 0,
+              "fieldEffect": "deal_damage",
+              "fieldEffectDuration": 5,
+              "fieldMoveType": "Push",
+              "fieldDistance": 1,
+              "fieldCenter": "target",
+              "fieldInterval": 1
+            },
+            {
+              "type": "deal_damage",
+              "target": "enemy",
+              "rangeMode": "custom",
+              "rangeValue": 1,
+              "rangeMultiplier": 100,
+              "minRange": 0,
+              "allowSelfTarget": true,
+              "targetHpBelow": 100,
+              "targetCooldown": 0,
+              "targetCooldownScope": "caster",
+              "targetCooldownEffectId": "",
+              "targetCooldownEffectName": "",
+              "ownedSummonCondition": "any",
+              "ownedSummonEntityId": "",
+              "targetSummonEntityId": "",
+              "chainCount": 0,
+              "chainRange": 3,
+              "chainOrigin": "previous",
+              "coefficients": [
+                {
+                  "type": "calculated",
+                  "field": "atk",
+                  "calc": "percent",
+                  "value": 125,
+                  "effectId": ""
+                }
+              ],
+              "healResource": "HP",
+              "drainResource": "MP",
+              "damageType": "physical",
+              "area": 0,
+              "areaCenter": "target",
+              "maxTargets": 0,
+              "critical": 0,
+              "penetration": 0,
+              "moveType": "Walk",
+              "moveSpeed": 1,
+              "distance": 0,
+              "duration": 0,
+              "fieldShape": "circle",
+              "fieldRadius": 0,
+              "fieldEffect": "deal_damage",
+              "fieldEffectDuration": 5,
+              "fieldMoveType": "Push",
+              "fieldDistance": 1,
+              "fieldCenter": "target",
+              "fieldInterval": 1
+            }
+          ]
+        },
+        {
+          "name": "2격",
+          "actions": [
+            {
+              "type": "deal_damage",
+              "target": "enemy",
+              "rangeMode": "custom",
+              "rangeValue": 1,
+              "rangeMultiplier": 100,
+              "minRange": 0,
+              "allowSelfTarget": true,
+              "targetHpBelow": 100,
+              "targetCooldown": 0,
+              "targetCooldownScope": "caster",
+              "targetCooldownEffectId": "",
+              "targetCooldownEffectName": "",
+              "ownedSummonCondition": "any",
+              "ownedSummonEntityId": "",
+              "targetSummonEntityId": "",
+              "chainCount": 0,
+              "chainRange": 3,
+              "chainOrigin": "previous",
+              "coefficients": [
+                {
+                  "type": "calculated",
+                  "field": "atk",
+                  "calc": "percent",
+                  "value": 135,
+                  "effectId": ""
+                }
+              ],
+              "healResource": "HP",
+              "drainResource": "MP",
+              "damageType": "physical",
+              "area": 0,
+              "areaCenter": "target",
+              "maxTargets": 0,
+              "critical": 0,
+              "penetration": 0,
+              "moveType": "Walk",
+              "moveSpeed": 1,
+              "distance": 0,
+              "duration": 0,
+              "fieldShape": "circle",
+              "fieldRadius": 0,
+              "fieldEffect": "deal_damage",
+              "fieldEffectDuration": 5,
+              "fieldMoveType": "Push",
+              "fieldDistance": 1,
+              "fieldCenter": "target",
+              "fieldInterval": 1
+            },
+            {
+              "type": "deal_damage",
+              "target": "enemy",
+              "rangeMode": "custom",
+              "rangeValue": 1,
+              "rangeMultiplier": 100,
+              "minRange": 0,
+              "allowSelfTarget": true,
+              "targetHpBelow": 100,
+              "targetCooldown": 0,
+              "targetCooldownScope": "caster",
+              "targetCooldownEffectId": "",
+              "targetCooldownEffectName": "",
+              "ownedSummonCondition": "any",
+              "ownedSummonEntityId": "",
+              "targetSummonEntityId": "",
+              "chainCount": 0,
+              "chainRange": 3,
+              "chainOrigin": "previous",
+              "coefficients": [
+                {
+                  "type": "calculated",
+                  "field": "atk",
+                  "calc": "percent",
+                  "value": 135,
+                  "effectId": ""
+                }
+              ],
+              "healResource": "HP",
+              "drainResource": "MP",
+              "damageType": "physical",
+              "area": 0,
+              "areaCenter": "target",
+              "maxTargets": 0,
+              "critical": 0,
+              "penetration": 0,
+              "moveType": "Walk",
+              "moveSpeed": 1,
+              "distance": 0,
+              "duration": 0,
+              "fieldShape": "circle",
+              "fieldRadius": 0,
+              "fieldEffect": "deal_damage",
+              "fieldEffectDuration": 5,
+              "fieldMoveType": "Push",
+              "fieldDistance": 1,
+              "fieldCenter": "target",
+              "fieldInterval": 1
+            }
+          ]
+        },
+        {
+          "name": "3격",
+          "actions": [
+            {
+              "type": "deal_damage",
+              "target": "enemy",
+              "rangeMode": "custom",
+              "rangeValue": 1,
+              "rangeMultiplier": 100,
+              "minRange": 0,
+              "allowSelfTarget": true,
+              "targetHpBelow": 100,
+              "targetCooldown": 0,
+              "targetCooldownScope": "caster",
+              "targetCooldownEffectId": "",
+              "targetCooldownEffectName": "",
+              "ownedSummonCondition": "any",
+              "ownedSummonEntityId": "",
+              "targetSummonEntityId": "",
+              "chainCount": 0,
+              "chainRange": 3,
+              "chainOrigin": "previous",
+              "coefficients": [
+                {
+                  "type": "calculated",
+                  "field": "atk",
+                  "calc": "percent",
+                  "value": 145,
+                  "effectId": ""
+                }
+              ],
+              "healResource": "HP",
+              "drainResource": "MP",
+              "damageType": "physical",
+              "area": 0,
+              "areaCenter": "target",
+              "maxTargets": 0,
+              "critical": 0,
+              "penetration": 0,
+              "moveType": "Walk",
+              "moveSpeed": 1,
+              "distance": 0,
+              "duration": 0,
+              "fieldShape": "circle",
+              "fieldRadius": 0,
+              "fieldEffect": "deal_damage",
+              "fieldEffectDuration": 5,
+              "fieldMoveType": "Push",
+              "fieldDistance": 1,
+              "fieldCenter": "target",
+              "fieldInterval": 1
+            },
+            {
+              "type": "deal_damage",
+              "target": "enemy",
+              "rangeMode": "custom",
+              "rangeValue": 1,
+              "rangeMultiplier": 100,
+              "minRange": 0,
+              "allowSelfTarget": true,
+              "targetHpBelow": 100,
+              "targetCooldown": 0,
+              "targetCooldownScope": "caster",
+              "targetCooldownEffectId": "",
+              "targetCooldownEffectName": "",
+              "ownedSummonCondition": "any",
+              "ownedSummonEntityId": "",
+              "targetSummonEntityId": "",
+              "chainCount": 0,
+              "chainRange": 3,
+              "chainOrigin": "previous",
+              "coefficients": [
+                {
+                  "type": "calculated",
+                  "field": "atk",
+                  "calc": "percent",
+                  "value": 145,
+                  "effectId": ""
+                }
+              ],
+              "healResource": "HP",
+              "drainResource": "MP",
+              "damageType": "physical",
+              "area": 0,
+              "areaCenter": "target",
+              "maxTargets": 0,
+              "critical": 0,
+              "penetration": 0,
+              "moveType": "Walk",
+              "moveSpeed": 1,
+              "distance": 0,
+              "duration": 0,
+              "fieldShape": "circle",
+              "fieldRadius": 0,
+              "fieldEffect": "deal_damage",
+              "fieldEffectDuration": 5,
+              "fieldMoveType": "Push",
+              "fieldDistance": 1,
+              "fieldCenter": "target",
+              "fieldInterval": 1
+            }
+          ]
+        }
+      ],
+      "completionActions": [
+        {
+          "type": "add_buff",
+          "target": "self",
+          "rangeMode": "custom",
+          "rangeValue": 0,
+          "rangeMultiplier": 100,
+          "minRange": 0,
+          "allowSelfTarget": true,
+          "targetHpBelow": 100,
+          "targetCooldown": 0,
+          "targetCooldownScope": "caster",
+          "targetCooldownEffectId": "",
+          "targetCooldownEffectName": "",
+          "ownedSummonCondition": "any",
+          "ownedSummonEntityId": "",
+          "targetSummonEntityId": "",
+          "effect": {
+            "id": "berserker_fire_strike_speed",
+            "name": "불의일격 완주",
+            "state": "buff",
+            "category": "physical",
+            "polarity": "beneficial",
+            "dispellable": true,
+            "dispelMode": "id",
+            "dispelCategory": "general",
+            "dispelPolarity": "any",
+            "stat": "attackSpeed",
+            "sourceStat": "atk",
+            "mode": "percent",
+            "value": -20,
+            "requiredOwnedSummonEntityId": "",
+            "nextCastTimePercent": 100,
+            "nextResourceCostPercent": 100,
+            "nextCooldownPercent": 100,
+            "reflectPercent": 20,
+            "reflectScope": "all",
+            "reflectDamageType": "fixed",
+            "proxyPercent": 20,
+            "proxyPriority": 100,
+            "proxyScope": "all",
+            "uses": 0,
+            "consumeOn": "hit",
+            "consumePeriodic": false,
+            "maxStacks": 1,
+            "stackMode": "refresh"
+          },
+          "chainCount": 0,
+          "chainRange": 3,
+          "chainOrigin": "previous",
+          "coefficients": [
+            {
+              "type": "fixed",
+              "field": "atk",
+              "calc": "percent",
+              "value": 1,
+              "effectId": ""
+            }
+          ],
+          "healResource": "HP",
+          "drainResource": "MP",
+          "damageType": "physical",
+          "area": 0,
+          "areaCenter": "target",
+          "maxTargets": 0,
+          "critical": 0,
+          "penetration": 0,
+          "moveType": "Walk",
+          "moveSpeed": 1,
+          "distance": 0,
+          "duration": 3,
+          "fieldShape": "circle",
+          "fieldRadius": 0,
+          "fieldEffect": "deal_damage",
+          "fieldEffectDuration": 5,
+          "fieldMoveType": "Push",
+          "fieldDistance": 1,
+          "fieldCenter": "target",
+          "fieldInterval": 1
+        }
+      ]
+    },
+    "resourceCosts": [
+      {
+        "resource": "ST",
+        "mode": "fixed",
+        "value": 10
+      }
+    ],
+    "actions": [
+      {
+        "type": "deal_damage",
+        "target": "enemy",
+        "rangeMode": "custom",
+        "rangeValue": 1,
+        "rangeMultiplier": 100,
+        "minRange": 0,
+        "allowSelfTarget": true,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
+        "chainCount": 0,
+        "chainRange": 3,
+        "chainOrigin": "previous",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "atk",
+            "calc": "percent",
+            "value": 125,
+            "effectId": ""
+          }
+        ],
+        "healResource": "HP",
+        "drainResource": "MP",
+        "damageType": "physical",
+        "area": 0,
+        "areaCenter": "target",
+        "maxTargets": 0,
+        "critical": 0,
+        "penetration": 0,
+        "moveType": "Walk",
+        "moveSpeed": 1,
+        "distance": 0,
+        "duration": 0,
+        "fieldShape": "circle",
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
+      },
+      {
+        "type": "deal_damage",
+        "target": "enemy",
+        "rangeMode": "custom",
+        "rangeValue": 1,
+        "rangeMultiplier": 100,
+        "minRange": 0,
+        "allowSelfTarget": true,
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
+        "chainCount": 0,
+        "chainRange": 3,
+        "chainOrigin": "previous",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "atk",
+            "calc": "percent",
+            "value": 125,
+            "effectId": ""
+          }
+        ],
+        "healResource": "HP",
+        "drainResource": "MP",
+        "damageType": "physical",
+        "area": 0,
+        "areaCenter": "target",
+        "maxTargets": 0,
+        "critical": 0,
+        "penetration": 0,
+        "moveType": "Walk",
+        "moveSpeed": 1,
+        "distance": 0,
+        "duration": 0,
+        "fieldShape": "circle",
+        "fieldRadius": 0,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1
+      }
+    ]
+  },
+  {
+    "id": "skill_class_marine_guard",
+    "name": "해병 · 가드",
+    "className": "해병",
+    "icon": "assets/images/skills/해병_가드.png",
+    "description": "방패를 들어 다음 직접 피해 2회를 완전히 무시합니다. DOT와 지역 지속 피해에는 횟수가 소모되지 않습니다.",
+    "slot": "active",
+    "cooldown": 10,
+    "castTime": 0,
+    "resourceCosts": [
+      {
+        "resource": "ST",
+        "mode": "fixed",
+        "value": 10
+      }
+    ],
+    "actions": [
+      {
+        "type": "add_buff",
+        "target": "self",
+        "duration": 0,
+        "effect": {
+          "id": "marine_guard",
+          "name": "가드",
+          "mode": "damage_immunity",
+          "category": "physical",
+          "polarity": "beneficial",
+          "dispellable": true,
+          "stackMode": "refresh",
+          "maxStacks": 1,
+          "uses": 2,
+          "consumeOn": "damaged",
+          "consumePeriodic": false,
+          "counterOnMelee": false
+        }
+      }
+    ]
+  },
+  {
+    "id": "skill_class_viking_counter",
+    "name": "바이킹 · 반격",
+    "className": "바이킹",
+    "icon": "assets/images/skills/바이킹_반격.png",
+    "description": "다음 직접 피해 1회를 완전히 무시합니다. 1m 이하 근접 공격을 무시하면 공격자에게 즉시 기본 공격으로 반격합니다. DOT와 지역 지속 피해에는 소모되지 않습니다.",
+    "slot": "active",
+    "cooldown": 3,
+    "castTime": 0,
+    "resourceCosts": [
+      {
+        "resource": "ST",
+        "mode": "fixed",
+        "value": 10
+      }
+    ],
+    "actions": [
+      {
+        "type": "add_buff",
+        "target": "self",
+        "duration": 0,
+        "effect": {
+          "id": "viking_counter",
+          "name": "반격 준비",
+          "mode": "damage_immunity",
+          "category": "physical",
+          "polarity": "beneficial",
+          "dispellable": true,
+          "stackMode": "refresh",
+          "maxStacks": 1,
+          "uses": 1,
+          "consumeOn": "damaged",
+          "consumePeriodic": false,
+          "counterOnMelee": true
         }
       }
     ]

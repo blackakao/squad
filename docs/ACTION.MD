@@ -226,6 +226,8 @@
 
 ## UI 목록 처리
 
+`add_buff`의 `damage_immunity` 모드는 `uses`만큼 직접 피해를 완전히 무시한다. `consumePeriodic:false`이면 DOT와 `create_field`의 지속 틱은 횟수를 소모하지 않는다. 선택 필드 `counterOnMelee:true`는 유효 사거리 1m 이하의 직접 공격을 무시했을 때 시전자의 기본 공격을 즉시 1회 실행하며 반사·반격 피해에는 연쇄 발동하지 않는다.
+
 - `cast_skill`: 액션 목록에서 제거한다. 스킬 시전 값은 액션 내부가 아니라 스킬 실행 구조에서 다룬다.
 - `override_rule`, `copy_skill`: 현재 구현 난이도가 높아 UI 목록에서는 잠금 처리한다. 추후 확장 가능하도록 코드에는 잠금 목록으로 남긴다.
 

@@ -101,6 +101,7 @@ function publishBattleEvents(events) {
       const current = combatEventQueue.shift();
       accumulateBattleContribution(current.snapshot,current.source,current.target);
       combatEventHistory.push(current.snapshot);
+      if (typeof recordBattleActionLog === 'function') recordBattleActionLog(current.snapshot);
       if (combatEventHistory.length > 1000) combatEventHistory.shift();
       combatEventDepth = current.depth + 1;
       const callbacks = new Set([...(battleEventSubscribers.get(current.snapshot.type) ?? []),...(battleEventSubscribers.get("*") ?? [])]);
@@ -121,6 +122,7 @@ function getBattleEvents(type = "all") {
 }
 
 function resetBattleEvents() {
+  if (typeof clearBattleEventLogs === 'function') clearBattleEventLogs();
   combatEventHistory = [];combatEventQueue = [];combatEventSequence = 0;combatEventTick = 0;
   combatEventUnitIds = new WeakMap();combatEventNextUnitId = 1;
   battleContributions = new Map();contributionSummons = new WeakSet();
@@ -128,15 +130,5 @@ function resetBattleEvents() {
 }
 
 function renderBattleEngineEvents() {
-  if (typeof document === "undefined") return;
-  const panel = document.getElementById("battleEngineEvents");
-  const list = document.getElementById("battleEngineEventList");
-  if (!panel?.open || !list) return;
-  const type = document.getElementById("battleEngineEventFilter")?.value ?? "all";
-  const events = getBattleEvents(type).slice(-200).reverse();
-  list.innerHTML = events.map(event => `<div class="battle-event-log-row ${event.source?.side === "enemy" ? "enemy" : "player"}">
-    <span class="battle-event-log-time">${(event.tick/60).toFixed(2)}s</span>
-    <span>${BATTLE_EVENT_LABELS[event.type]} · ${escapeHtml(event.source?.name || "환경")} → ${escapeHtml(event.target?.name || "-")}
-    ${escapeHtml(event.skillName)} ${event.periodic ? "(주기)" : ""} ${event.triggered ? "(패시브)" : ""} ${["hit","damaged","heal","resource_drain","damage_redirect"].includes(event.type) ? `${event.amount.toFixed(1)} ${event.resource ?? ""}` : ""}${event.type === "forced_move" ? `${event.amount.toFixed(1)} 거리` : ""}
-    ${event.reason ? `(${escapeHtml(event.reason)})` : ""}</span></div>`).join("") || '<div class="battle-event-log-empty">해당 이벤트가 없습니다.</div>';
+  if (typeof renderBattleEventLogs === 'function') renderBattleEventLogs();
 }

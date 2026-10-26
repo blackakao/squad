@@ -73,7 +73,7 @@
     "mp": 150,
     "st": 110,
     "bp": 0,
-    "atk": 120,
+    "atk": 410,
     "magic": 60,
     "speed": 1.3,
     "attackSpeed": 3.5,
@@ -347,7 +347,7 @@
     "mp": 100,
     "st": 170,
     "bp": 0,
-    "atk": 221,
+    "atk": 270,
     "magic": 10,
     "speed": 2.2,
     "attackSpeed": 2.5,
@@ -415,7 +415,7 @@
     "mp": 100,
     "st": 170,
     "bp": 0,
-    "atk": 221,
+    "atk": 270,
     "magic": 10,
     "speed": 2.2,
     "attackSpeed": 2.5,
@@ -626,7 +626,8 @@
     "role": "tank",
     "skillIds": [
       "skill_class_marine_bash",
-      "skill_class_marine_boomerang"
+      "skill_class_marine_boomerang",
+      "skill_class_marine_guard"
     ],
     "portrait": "assets/images/portraits/image-20261018142752687048.png",
     "attributes": {
@@ -895,7 +896,9 @@
     "resistance": 3.8,
     "attackRange": 3,
     "role": "tank",
-    "skillIds": [],
+    "skillIds": [
+      "skill_class_berserker_fire_strike"
+    ],
     "portrait": "assets/images/portraits/image-20261018143144779692.png",
     "attributes": {
       "str": 50,
@@ -951,7 +954,7 @@
     "mp": 150,
     "st": 105,
     "bp": 0,
-    "atk": 171,
+    "atk": 220,
     "magic": 10,
     "speed": 1.3,
     "attackSpeed": 3,
@@ -1210,15 +1213,7 @@
     ],
     "activeEquipmentSet": 0,
     "faction": "엘프",
-    "attackType": "physical",
-    "customResources": [
-      {
-        "id": "effort_magic",
-        "name": "노력[마법]",
-        "initial": 0,
-        "max": 999999
-      }
-    ]
+    "attackType": "physical"
   },
   {
     "name": "몽마",
@@ -1365,7 +1360,9 @@
     "resistance": 5,
     "attackRange": 1,
     "role": "tank",
-    "skillIds": [],
+    "skillIds": [
+      "skill_class_viking_counter"
+    ],
     "portrait": "assets/images/portraits/image-20261018143216522505.png",
     "attributes": {
       "str": 50,
@@ -1417,18 +1414,18 @@
   },
   {
     "name": "악마",
-    "hp": 4500,
+    "hp": 4782,
     "mp": 200,
-    "st": 100,
+    "st": 105,
     "bp": 0,
     "atk": 10,
-    "magic": 60,
-    "speed": 1.2,
-    "attackSpeed": 2,
-    "castSpeed": 0.5,
-    "defense": 10,
-    "resistance": 20,
-    "attackRange": 1,
+    "magic": 560,
+    "speed": 1.3,
+    "attackSpeed": 1,
+    "castSpeed": 3,
+    "defense": 11.9,
+    "resistance": 31.3,
+    "attackRange": 4,
     "role": "tank",
     "skillIds": [
       "skill_class_demon_brute"
@@ -1458,10 +1455,10 @@
       "revivePosition": "death"
     },
     "equipment": {
-      "mainWeapon": "",
-      "subWeapon": "",
-      "top": "",
-      "bottom": "",
+      "mainWeapon": "item_1781186124129",
+      "subWeapon": "item_1781186124129",
+      "top": "item_gen_20261010_14_01",
+      "bottom": "item_gen_20261010_14_06",
       "accessory": "",
       "special": ""
     },
@@ -1469,10 +1466,10 @@
       {
         "name": "세트 1",
         "equipment": {
-          "mainWeapon": "",
-          "subWeapon": "",
-          "top": "",
-          "bottom": "",
+          "mainWeapon": "item_1781186124129",
+          "subWeapon": "item_1781186124129",
+          "top": "item_gen_20261010_14_01",
+          "bottom": "item_gen_20261010_14_06",
           "accessory": "",
           "special": ""
         }
@@ -1480,7 +1477,7 @@
     ],
     "activeEquipmentSet": 0,
     "faction": "소악마군단",
-    "attackType": "physical"
+    "attackType": "magic"
   },
   {
     "name": "요정 사냥꾼",
@@ -1879,17 +1876,17 @@
   },
   {
     "name": "질병형",
-    "hp": 2282,
+    "hp": 4782,
     "mp": 200,
     "st": 105,
     "bp": 0,
-    "atk": 22,
+    "atk": 12,
     "magic": 560,
     "speed": 1.1,
     "attackSpeed": 1,
-    "castSpeed": 2.5,
-    "defense": 1.9,
-    "resistance": 26.3,
+    "castSpeed": 3,
+    "defense": 11.9,
+    "resistance": 31.3,
     "attackRange": 4,
     "role": "ranged",
     "skillIds": [
@@ -1899,9 +1896,9 @@
     "portrait": "",
     "attributes": {
       "str": 0,
-      "vit": 0,
+      "vit": 50,
       "agi": 0,
-      "focus": 50,
+      "focus": 0,
       "int": 50,
       "wis": 50
     },

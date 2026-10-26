@@ -31,5 +31,137 @@
         ]
       }
     ]
+  },
+  {
+    "icon": "",
+    "id": "synergy_d88ad65a-0939-4280-b013-c954463cbc2e",
+    "name": "날렵쟁이들",
+    "condition": {
+      "type": "role",
+      "value": "melee"
+    },
+    "stacking": "highest",
+    "thresholds": [
+      {
+        "count": 3,
+        "effects": [
+          {
+            "type": "stat",
+            "stat": "attackSpeed",
+            "value": 7,
+            "target": "team"
+          },
+          {
+            "type": "stat",
+            "stat": "speed",
+            "value": 7,
+            "target": "team"
+          }
+        ]
+      },
+      {
+        "count": 5,
+        "effects": [
+          {
+            "type": "stat",
+            "stat": "attackSpeed",
+            "value": 15,
+            "target": "team"
+          },
+          {
+            "type": "stat",
+            "stat": "speed",
+            "value": 15,
+            "target": "team"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "icon": "",
+    "id": "synergy_c35692e0-6bcd-4240-b13e-948a58ebeb28",
+    "name": "넘치는 마력",
+    "condition": {
+      "type": "role",
+      "value": "ranged"
+    },
+    "stacking": "highest",
+    "thresholds": [
+      {
+        "count": 2,
+        "effects": [
+          {
+            "type": "stat",
+            "stat": "magic",
+            "value": 20,
+            "target": "team"
+          }
+        ]
+      },
+      {
+        "count": 5,
+        "effects": [
+          {
+            "type": "stat",
+            "stat": "magic",
+            "value": 50,
+            "target": "team"
+          },
+          {
+            "type": "stat",
+            "stat": "resistance",
+            "value": 5,
+            "target": "team"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "icon": "",
+    "id": "synergy_95ff04c0-6354-4d92-9a39-531f1f2cb653",
+    "name": "생존성",
+    "condition": {
+      "type": "role",
+      "value": "healer"
+    },
+    "stacking": "highest",
+    "thresholds": [
+      {
+        "count": 2,
+        "effects": [
+          {
+            "type": "stat",
+            "stat": "defense",
+            "value": 2,
+            "target": "team"
+          },
+          {
+            "type": "stat",
+            "stat": "resistance",
+            "value": 2,
+            "target": "team"
+          }
+        ]
+      },
+      {
+        "count": 4,
+        "effects": [
+          {
+            "type": "stat",
+            "stat": "defense",
+            "value": 5,
+            "target": "team"
+          },
+          {
+            "type": "stat",
+            "stat": "resistance",
+            "value": 5,
+            "target": "team"
+          }
+        ]
+      }
+    ]
   }
 ]

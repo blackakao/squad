@@ -132,6 +132,8 @@ const skillNameEl = document.getElementById("skillName");
 const skillClassNameEl = document.getElementById("skillClassName");
 const skillSlotEl = document.getElementById("skillSlot");
 const skillCooldownEl = document.getElementById("skillCooldown");
+const skillComboCooldownEl = document.getElementById("skillComboCooldown");
+const skillComboCooldownFieldEl = document.getElementById("skillComboCooldownField");
 const skillDescriptionEl = document.getElementById("skillDescription");
 const skillCastTimeEl = document.getElementById("skillCastTime");
 const skillCastReceivedDamagePercentEl = document.getElementById("skillCastReceivedDamagePercent");
@@ -1013,7 +1015,10 @@ function renderBattleSkillRow(unit) {
     const icon = recordImagePath(skill.icon);
     const effortResource=skill.id === "skill_class_guardian_endurance" ? unit.customResources?.effort_magic : null;
     const effortText=effortResource ? ` · 노력[마법] ${Math.round((Number(effortResource.current) || 0)*10)/10}` : "";
-    const tooltip = `${skill.name}${effortText}${remaining > 0 ? ` · ${seconds}초` : ""}`;
+    const combo=typeof normalizeSkillCombo === "function" ? normalizeSkillCombo(skill.combo) : null;
+    const comboIndex=combo ? Math.max(0,Math.min(combo.stages.length-1,Math.floor(Number(unit.skillComboStages?.[skill.id]) || 0))) : 0;
+    const comboText=combo ? ` · ${combo.stages[comboIndex].name} (${comboIndex+1}/${combo.stages.length})` : "";
+    const tooltip = `${skill.name}${comboText}${effortText}${remaining > 0 ? ` · ${seconds}초` : ""}`;
     return `<span class="battle-skill-tooltip" data-tooltip="${escapeHtml(tooltip)}" tabindex="0" aria-label="${escapeHtml(tooltip)}">
       <span class="battle-skill-icon" aria-hidden="true">
         ${icon ? `<img src="${escapeHtml(icon)}" alt="" onerror="this.hidden=true">` : `<span class="battle-skill-placeholder">${escapeHtml(String(skill.name).slice(0, 1))}</span>`}
@@ -1143,18 +1148,12 @@ function formatBattleEventValue(value) {
 }
 
 function addBattleEventLog(source, message) {
-  if (source?.isEntityPreview) return;
-  battleEventLogs.push({
-    side: getBattleUnitSide(source),
-    time: getBattleElapsedSeconds(),
-    message: String(message ?? "")
-  });
+  // Legacy prose is intentionally not collected; use numeric event outcomes.
+}
 
-  if (battleEventLogs.length > BATTLE_EVENT_LOG_LIMIT) {
-    battleEventLogs = battleEventLogs.slice(-BATTLE_EVENT_LOG_LIMIT);
-  }
-
-  renderBattleEventLogs();
+function recordBattleActionLog(event) {
+  if (!['damaged', 'heal'].includes(event.type) || !(event.amount > 0)) return;
+  battleEventLogs.push(event);
 }
 
 function clearBattleEventLogs() {
@@ -1162,22 +1161,32 @@ function clearBattleEventLogs() {
   renderBattleEventLogs();
 }
 
+function renderBattleActionLogRow(event) {
+  const healing = event.type === 'heal';
+  const label = healing ? (event.resource && event.resource !== 'HP' ? `${event.resource} 회복` : '치유') : '피해';
+  return `<div class="battle-event-log-row ${event.source?.side === 'enemy' ? 'enemy' : 'player'}">
+    <span class="battle-event-log-time">${(event.tick / 60).toFixed(2)}s</span>
+    <span>${escapeHtml(event.source?.name || '환경')} → ${escapeHtml(event.target?.name || '-')}</span>
+    <span>${escapeHtml(event.skillName || (healing ? '회복' : '기본 공격'))}</span>
+    <span class="battle-event-log-amount">${escapeHtml(label)} ${formatBattleEventValue(event.amount)}</span></div>`;
+}
+
 function renderBattleEventLogs() {
-  if (!battleEventLogListEl) {
-    return;
+  if (!battleEventLogListEl) return;
+  const list = battleEventLogListEl;
+  const rendered = Number(list.dataset.renderedCount) || 0;
+  if (!battleEventLogs.length || rendered > battleEventLogs.length) {
+    list.innerHTML = '';
+    list.dataset.renderedCount = '0';
+    list.scrollTop = 0;
   }
-
-  if (!battleEventLogs.length) {
-    battleEventLogListEl.innerHTML = `<div class="battle-event-log-empty">전투 이벤트가 없습니다.</div>`;
-    return;
-  }
-
-  battleEventLogListEl.innerHTML = battleEventLogs.slice().reverse().map(entry => `
-    <div class="battle-event-log-row ${entry.side === "enemy" ? "enemy" : "player"}">
-      <span class="battle-event-log-time">${formatBattleEventValue(entry.time)}s</span>
-      <span>${escapeHtml(entry.message)}</span>
-    </div>
-  `).join("");
+  const count = Number(list.dataset.renderedCount) || 0;
+  const pending = battleEventLogs.slice(count).reverse();
+  if (!pending.length) return;
+  const previousTop = list.scrollTop, previousHeight = list.scrollHeight;
+  list.insertAdjacentHTML('afterbegin', pending.map(renderBattleActionLogRow).join(''));
+  list.dataset.renderedCount = String(battleEventLogs.length);
+  if (previousTop > 0) list.scrollTop = previousTop + list.scrollHeight - previousHeight;
 }
 
 function showBattleScreenTab(tabName) {

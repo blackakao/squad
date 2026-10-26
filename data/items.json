@@ -11,7 +11,7 @@
     "hp": 0,
     "mp": 0,
     "st": 0,
-    "atk": 151,
+    "atk": 200,
     "magic": 0,
     "speed": 0,
     "attackSpeed": 3,
@@ -336,9 +336,6 @@
     "attackRange": 1
   },
   {
-    "statModifiers": {
-      "focus": 3
-    },
     "id": "item_gen_20261010_02_01",
     "name": "정련 대검",
     "slot": "mainWeapon",
@@ -347,6 +344,9 @@
     "attackType": "physical",
     "attackSkillId": "",
     "armorCategory": "",
+    "statModifiers": {
+      "focus": 3
+    },
     "hp": 0,
     "mp": 0,
     "st": 5,
