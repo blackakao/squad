@@ -12,9 +12,10 @@ const HEAL_RESOURCES = ["HP", "MP", "ST", "BP"];
 const CUSTOM_RESOURCE_PREFIX = "custom:";
 const ACTION_MOVE_TYPES = ["Walk", "Dash", "Teleport", "Knockback", "Pull", "Push"];
 const MOVE_ACTION_TYPES = ["Dash", "Teleport", "Knockback", "Pull", "Push"];
+const MOVE_PLACEMENTS = ["target", "behind"];
 const RANGE_MODES = ["mainWeapon", "custom"];
 const COEFFICIENT_TYPES = ["fixed", "calculated"];
-const COEFFICIENT_FIELDS = ["str", "vit", "agi", "focus", "int", "wis", "hp", "targetMaxHp", "mp", "st", "bp", "atk", "magic", "defense", "resistance", "actualDamageTotal", "moveDistanceTotal", "targetEffectStacks", "targetEffectIdStacks", "ownedSummonCount", "triggerActualDamage", "customResourceCurrent", "previousActualDamage", "executionActualDamage", "previousActualHealing", "executionActualHealing", "previousResourceDrained", "executionResourceDrained", "resourceSpentTotal", "hpResourceSpent", "mpResourceSpent", "stResourceSpent", "bpResourceSpent"];
+const COEFFICIENT_FIELDS = ["str", "vit", "agi", "focus", "int", "wis", "hp", "targetMaxHp", "mp", "st", "bp", "atk", "magic", "defense", "resistance", "actualDamageTotal", "moveDistanceTotal", "targetEffectStacks", "targetEffectIdStacks", "targetEffectTagStacks", "ownedSummonCount", "triggerActualDamage", "triggerActualAmount", "customResourceCurrent", "previousActualDamage", "executionActualDamage", "previousActualHealing", "executionActualHealing", "previousResourceDrained", "executionResourceDrained", "resourceSpentTotal", "hpResourceSpent", "mpResourceSpent", "stResourceSpent", "bpResourceSpent"];
 const COEFFICIENT_CALCS = ["flat", "percent"];
 const RESOURCE_COST_MODES = ["fixed", "maxPercent", "currentPercent"];
 const TRANSFORM_STATS = ["atk","magic","defense","resistance","speed","attackRange","attackSpeed","castSpeed"];
@@ -80,8 +81,10 @@ const COEFFICIENT_FIELD_LABELS = {
   moveDistanceTotal: "전투 누적 이동 거리 (사거리 단위)",
   targetEffectStacks: "대상의 전체 효과 중첩 합계",
   targetEffectIdStacks: "대상의 특정 효과 ID 중첩 합계",
+  targetEffectTagStacks: "대상의 특정 태그 해로운 효과 중첩 합계",
   ownedSummonCount: "살아 있는 자기 소환수 수",
   triggerActualDamage: "발동 이벤트의 실제 피해량",
+  triggerActualAmount: "발동 이벤트의 실제 피해·회복량",
   customResourceCurrent: "지정 커스텀 자원의 현재값",
   previousActualDamage: "직전 액션의 실제 피해량",
   executionActualDamage: "현재 스킬 실행의 누적 실제 피해량",
@@ -153,6 +156,8 @@ function createDefaultAction(type = "deal_damage") {
     rangeValue: 1,
     minRange: 0,
     allowSelfTarget: true,
+    requiredTargetEffectId: "",
+    requiredTargetEffectCaster: "any",
     chainCount: 0,
     chainRange: 3,
     coefficients: [coefficient],
@@ -163,6 +168,7 @@ function createDefaultAction(type = "deal_damage") {
     critical: 0,
     penetration: 0,
     moveType: type === "move" ? "Dash" : "Walk",
+    movePlacement: "target",
     moveSpeed: 1,
     distance: type === "move" ? 10 : 0,
     duration: TIMED_EFFECT_ACTIONS.includes(type) || ["create_field","transform","override_rule","deploy_reserve"].includes(type) ? 5 : 0,
@@ -272,7 +278,8 @@ function getActionTargetsForType(type) {
   if (type === "command_summon") return ["summon"];
   if (["transform","deploy_reserve"].includes(type)) return ["self"];
   if (type === "copy_skill") return ["ally"];
-  if (["revive_ally","swap_reserve","swap_equipment_set","override_rule"].includes(type)) return ["self", "ally"];
+  if (["revive_ally","swap_reserve","swap_equipment_set"].includes(type)) return ["self", "ally"];
+  if (type === "override_rule") return ["self", "ally", "enemy"];
   return type === "move" ? ["ally", "enemy", "summon"] : ACTION_TARGETS;
 }
 
@@ -318,7 +325,8 @@ function normalizeActionTarget(target, type = "deal_damage") {
   if (type === "transform") return "self";
   if (type === "copy_skill") return "ally";
   if (type === "deploy_reserve") return "self";
-  if (["revive_ally","swap_reserve","swap_equipment_set","override_rule"].includes(type)) return ["self", "ally"].includes(target) ? target : "ally";
+  if (["revive_ally","swap_reserve","swap_equipment_set"].includes(type)) return ["self", "ally"].includes(target) ? target : "ally";
+  if (type === "override_rule") return ["self", "ally", "enemy"].includes(target) ? target : "ally";
   if (type === "move") {
     return ["ally", "enemy"].includes(target) ? target : "enemy";
   }
@@ -350,6 +358,7 @@ function normalizeCoefficient(coefficient = {}) {
       calc,
       value: Number.isFinite(value) ? value : type === "fixed" ? 1 : 100,
       effectId: String(coefficient.effectId ?? coefficient.effect_id ?? "").trim(),
+      ...(field === "targetEffectTagStacks" ? {effectTag:String(coefficient.effectTag ?? coefficient.effect_tag ?? "").trim(),stackSourceField:["atk","magic"].includes(coefficient.stackSourceField ?? coefficient.stack_source_field) ? (coefficient.stackSourceField ?? coefficient.stack_source_field) : "magic"} : {}),
       ...(field === "customResourceCurrent" ? {resourceId:normalizeCustomResourceId(coefficient.resourceId ?? coefficient.resource_id)} : {})
     };
   }
@@ -374,6 +383,7 @@ function normalizeCoefficient(coefficient = {}) {
     calc: oldMode === "percent" ? "percent" : "percent",
     value: oldMode === "percent" ? Number.isFinite(oldValue) ? oldValue : 100 : Number.isFinite(oldValue) ? oldValue * 100 : 100,
     effectId: String(coefficient.effectId ?? coefficient.effect_id ?? "").trim(),
+    ...(field === "targetEffectTagStacks" ? {effectTag:String(coefficient.effectTag ?? coefficient.effect_tag ?? "").trim(),stackSourceField:["atk","magic"].includes(coefficient.stackSourceField ?? coefficient.stack_source_field) ? (coefficient.stackSourceField ?? coefficient.stack_source_field) : "magic"} : {}),
     ...(field === "customResourceCurrent" ? {resourceId:normalizeCustomResourceId(coefficient.resourceId ?? coefficient.resource_id)} : {})
   };
 }
@@ -555,6 +565,8 @@ function normalizeSkillAction(action = {}) {
     rangeMultiplier:Math.max(0,Number(action.rangeMultiplier ?? 100) || 0),
     minRange: normalizeSkillCooldown(action.minRange),
     allowSelfTarget: action.allowSelfTarget !== false,
+    requiredTargetEffectId:String(action.requiredTargetEffectId ?? action.required_target_effect_id ?? "").trim(),
+    requiredTargetEffectCaster:action.requiredTargetEffectCaster === "self" || action.required_target_effect_caster === "self" ? "self" : "any",
     targetHpBelow: Math.min(100, normalizeSkillCooldown(action.targetHpBelow ?? 100)),
     targetCooldown: normalizeSkillCooldown(action.targetCooldown),
     targetCooldownScope: action.targetCooldownScope === "global" ? "global" : "caster",
@@ -624,6 +636,7 @@ function normalizeSkillAction(action = {}) {
     moveType: type === "move"
       ? MOVE_ACTION_TYPES.includes(moveTypeValue) ? moveTypeValue : "Dash"
       : ACTION_MOVE_TYPES.includes(moveTypeValue) ? moveTypeValue : "Walk",
+    movePlacement: MOVE_PLACEMENTS.includes(action.movePlacement ?? action.move_placement) ? (action.movePlacement ?? action.move_placement) : "target",
     moveSpeed: Number.isFinite(moveSpeedValue) ? Math.max(0, moveSpeedValue) : 1,
     distance: type === "move"
       ? Number.isFinite(distanceValue) ? Math.max(1, Math.min(10, distanceValue)) : 10
@@ -1070,6 +1083,7 @@ function formatCoefficientSummary(coefficient) {
     return `고정 ${coefficient.value}`;
   }
   const reference = coefficient.field === "targetEffectIdStacks" ? coefficient.effectId || "ID 미설정"
+    : coefficient.field === "targetEffectTagStacks" ? `${coefficient.effectTag || "태그 미설정"} · ${COEFFICIENT_FIELD_LABELS[coefficient.stackSourceField] ?? coefficient.stackSourceField}`
     : coefficient.field === "customResourceCurrent" ? coefficient.resourceId || "자원 ID 미설정" : "";
   return `${COEFFICIENT_FIELD_LABELS[coefficient.field] ?? coefficient.field}${reference ? ` (${reference})` : ""} ${COEFFICIENT_CALC_LABELS[coefficient.calc] ?? coefficient.calc} ${coefficient.value}`;
 }
@@ -1126,7 +1140,8 @@ function formatActionSummary(action) {
   if (action.type === "drain_resource") return `자원 감소 / ${ACTION_TARGET_LABELS[action.target]} / ${getResourceLabel(action.drainResource)} / ${rangeText} / ${coefficientText}`;
   if (action.type === "move") {
     const speedText = action.moveType === "Dash" ? ` / 이동속도 +${action.moveSpeed}` : "";
-    return `이동 / ${ACTION_TARGET_LABELS[action.target]} / ${ACTION_MOVE_TYPE_LABELS[action.moveType]} / 이동 거리 ${action.distance}${speedText}`;
+    const placementText = action.moveType === "Teleport" && action.movePlacement === "behind" ? " / 대상 뒤" : "";
+    return `이동 / ${ACTION_TARGET_LABELS[action.target]} / ${ACTION_MOVE_TYPE_LABELS[action.moveType]}${placementText} / 이동 거리 ${action.distance}${speedText}`;
   }
   if (action.type === "create_field") {
     const timed=["add_buff","add_state"].includes(action.fieldEffect);
@@ -1368,6 +1383,8 @@ function renderSkillActionRow(action, index) {
       </label>
       <div class="skill-action-condition-field">
         <label class="skill-check-field"><input class="skill-action-allow-self" type="checkbox" ${action.allowSelfTarget !== false ? "checked" : ""}>시전자 자신도 대상 허용</label>
+        <label class="skill-action-field"><span>필수 대상 효과 ID</span><input class="skill-action-required-target-effect-id" value="${escapeHtml(action.requiredTargetEffectId ?? "")}" placeholder="비우면 제한 없음"></label>
+        <label class="skill-action-field"><span>필수 효과 시전자</span><select class="skill-action-required-target-effect-caster"><option value="any" ${action.requiredTargetEffectCaster !== "self" ? "selected" : ""}>누구나</option><option value="self" ${action.requiredTargetEffectCaster === "self" ? "selected" : ""}>이 스킬 시전자</option></select></label>
         <label class="skill-action-field"><span>대상 HP 이하 (%) · 100: 제한 없음</span><input class="skill-action-target-hp" type="number" min="0" max="100" step="1" value="${action.targetHpBelow ?? 100}"></label>
         <label class="skill-action-field"><span>대상별 쿨타임 (초) · 0: 제한 없음</span><input class="skill-action-target-cooldown" type="number" min="0" step="0.1" value="${action.targetCooldown ?? 0}"></label>
         <label class="skill-action-field"><span>대상 제한 범위</span><select class="skill-action-target-cooldown-scope"><option value="caster" ${action.targetCooldownScope !== "global" ? "selected" : ""}>같은 시전자·스킬·액션</option><option value="global" ${action.targetCooldownScope === "global" ? "selected" : ""}>모든 시전자 공유 효과</option></select></label>
@@ -1390,6 +1407,13 @@ function renderSkillActionRow(action, index) {
         <span>이동 방식</span>
         <select class="skill-action-move-type" onchange="updateSkillActionFieldVisibility(this)">
           ${MOVE_ACTION_TYPES.map(type => `<option value="${type}" ${type === action.moveType ? "selected" : ""}>${ACTION_MOVE_TYPE_LABELS[type] ?? type}</option>`).join("")}
+        </select>
+      </label>
+      <label class="skill-action-field" data-action-field="movePlacement">
+        <span>순간이동 도착 위치</span>
+        <select class="skill-action-move-placement">
+          <option value="target" ${action.movePlacement === "target" ? "selected" : ""}>대상 위치</option>
+          <option value="behind" ${action.movePlacement === "behind" ? "selected" : ""}>대상 뒤</option>
         </select>
       </label>
       <label class="skill-action-field" data-action-field="moveSpeed">
@@ -1487,6 +1511,9 @@ function renderSkillCoefficientRow(coefficient) {
   const normalized = normalizeCoefficient(coefficient);
   const effectIdField = normalized.type === "calculated" && normalized.field === "targetEffectIdStacks"
     ? `<label class="skill-coefficient-effect-id">효과 ID<input class="skill-coefficient-effect-id-input" value="${escapeHtml(normalized.effectId)}" placeholder="예: bleed"></label>` : "";
+  const effectTagField = normalized.type === "calculated" && normalized.field === "targetEffectTagStacks"
+    ? `<label class="skill-coefficient-effect-id">효과 태그<input class="skill-coefficient-effect-tag-input" value="${escapeHtml(normalized.effectTag)}" placeholder="예: disease"></label>
+       <label class="skill-coefficient-effect-id">중첩당 기준 능력치<select class="skill-coefficient-stack-source"><option value="magic" ${normalized.stackSourceField === "magic" ? "selected" : ""}>마력</option><option value="atk" ${normalized.stackSourceField === "atk" ? "selected" : ""}>공격력</option></select></label>` : "";
   const resourceIdField = normalized.type === "calculated" && normalized.field === "customResourceCurrent"
     ? `<label class="skill-coefficient-effect-id">커스텀 자원 ID<input class="skill-coefficient-resource-id-input" value="${escapeHtml(normalized.resourceId)}" placeholder="예: effort_magic"></label>` : "";
   const detailFields = normalized.type === "calculated" ? `
@@ -1509,6 +1536,7 @@ function renderSkillCoefficientRow(coefficient) {
       <input class="skill-coefficient-value" type="number" step="0.1" value="${normalized.value}" placeholder="1">
       <button type="button" onclick="removeSkillCoefficientRow(this)">삭제</button>
       ${effectIdField}
+      ${effectTagField}
       ${resourceIdField}
     </div>
   `;
@@ -1612,6 +1640,9 @@ function updateSkillActionFieldVisibility(selectOrRow) {
   if (type !== "move" || moveType !== "Dash") {
     hiddenFields.push("moveSpeed");
   }
+  if (type !== "move" || moveType !== "Teleport") {
+    hiddenFields.push("movePlacement");
+  }
 
   row.querySelectorAll("[data-action-field]").forEach(field => {
     field.classList.toggle("hidden", hiddenFields.includes(field.dataset.actionField));
@@ -1666,6 +1697,8 @@ function refreshSkillCoefficientRow(select) {
     field: row.querySelector(".skill-coefficient-field")?.value,
     calc: row.querySelector(".skill-coefficient-calc")?.value,
     effectId: row.querySelector(".skill-coefficient-effect-id-input")?.value,
+    effectTag: row.querySelector(".skill-coefficient-effect-tag-input")?.value,
+    stackSourceField: row.querySelector(".skill-coefficient-stack-source")?.value,
     resourceId: row.querySelector(".skill-coefficient-resource-id-input")?.value,
     value: Number(row.querySelector(".skill-coefficient-value").value)
   });
@@ -1700,6 +1733,8 @@ function readSkillCoefficientsFromRow(row) {
     field: coefficientRow.querySelector(".skill-coefficient-field")?.value,
     calc: coefficientRow.querySelector(".skill-coefficient-calc")?.value,
     effectId: coefficientRow.querySelector(".skill-coefficient-effect-id-input")?.value,
+    effectTag: coefficientRow.querySelector(".skill-coefficient-effect-tag-input")?.value,
+    stackSourceField: coefficientRow.querySelector(".skill-coefficient-stack-source")?.value,
     resourceId: coefficientRow.querySelector(".skill-coefficient-resource-id-input")?.value,
     value: Number(coefficientRow.querySelector(".skill-coefficient-value")?.value)
   }));
@@ -1744,6 +1779,8 @@ function readSkillActionsFromForm() {
       rangeValue: range.rangeValue,
       minRange: Number(row.querySelector(".skill-action-min-range")?.value ?? 0),
       allowSelfTarget: row.querySelector(".skill-action-allow-self")?.checked ?? true,
+      requiredTargetEffectId:row.querySelector(".skill-action-required-target-effect-id")?.value ?? "",
+      requiredTargetEffectCaster:row.querySelector(".skill-action-required-target-effect-caster")?.value ?? "any",
       targetHpBelow: Number(row.querySelector(".skill-action-target-hp")?.value ?? 100),
       targetCooldown: Number(row.querySelector(".skill-action-target-cooldown")?.value ?? 0),
       targetCooldownScope: row.querySelector(".skill-action-target-cooldown-scope")?.value ?? "caster",
@@ -1801,6 +1838,7 @@ function readSkillActionsFromForm() {
       drainResource: row.querySelector(".skill-action-drain-resource")?.value ?? "MP",
       damageType: row.querySelector(".skill-action-damage-type")?.value ?? "physical",
       moveType: row.querySelector(".skill-action-move-type")?.value ?? "Walk",
+      movePlacement: row.querySelector(".skill-action-move-placement")?.value ?? "target",
       moveSpeed: Number(row.querySelector(".skill-action-move-speed")?.value ?? 1),
       distance: Number(row.querySelector(".skill-action-distance")?.value ?? 0),
       fieldRadius: Number(row.querySelector(".skill-action-field-radius")?.value ?? 0),
@@ -1896,6 +1934,10 @@ async function saveSkillFromForm(event) {
     alert("특정 효과 ID 중첩 계수에 효과 ID를 입력하세요.");
     return;
   }
+  if (skill.actions.some(action => action.coefficients?.some(coefficient => coefficient.field === "targetEffectTagStacks" && !coefficient.effectTag))) {
+    alert("특정 효과 태그 중첩 계수에 효과 태그를 입력하세요.");
+    return;
+  }
   if (!isSkillChannelConfigured(skill)) {
     alert("채널링의 적용 간격은 0보다 큰 값으로 설정하세요.");return;
   }
@@ -1948,6 +1990,11 @@ async function deleteSkillFromModal() {
     && normalizeSkillChoice(candidate.choice).options.some(option => option.skillId === skill.id));
   if (choiceUsers.length) {
     alert(`이 스킬은 선택 스킬 ${choiceUsers.length}개에서 사용 중입니다.\n\n${choiceUsers.map(candidate => `- ${candidate.name}`).join("\n")}`);
+    return;
+  }
+  const entityUsers=(entitiesJson ?? []).filter(entity=>entity.attackSkillId === skill.id);
+  if (entityUsers.length) {
+    alert(`이 스킬은 Entity ${entityUsers.length}개의 기본 공격으로 사용 중입니다.\n\n${entityUsers.map(entity=>`- ${entity.name}`).join("\n")}`);
     return;
   }
   if (skill.actions.some(action => action.coefficients?.some(coefficient => coefficient.field === "customResourceCurrent" && !coefficient.resourceId))) {
@@ -2081,9 +2128,11 @@ function getCoefficientBaseValue(coefficient, source, target = null, execution =
   if (coefficient.field === "moveDistanceTotal") return source.moveDistanceTotal ?? 0;
   if (coefficient.field === "targetEffectStacks") return (target?.activeEffects ?? []).reduce((sum, effect) => sum + (effect.stacks || 0), 0);
   if (coefficient.field === "targetEffectIdStacks") return (target?.activeEffects ?? []).filter(effect => effect.id === coefficient.effectId).reduce((sum, effect) => sum + (effect.stacks || 0), 0);
+  if (coefficient.field === "targetEffectTagStacks") return (target?.activeEffects ?? []).filter(effect => effect.polarity === "harmful" && effect.tags?.includes(coefficient.effectTag)).reduce((sum, effect) => sum + (effect.stacks || 0), 0);
   if (coefficient.field === "ownedSummonCount") return [...playerSquad, ...enemySquad].filter(unit => unit.alive && unit.isSummon && unit.summoner === source).length;
   if (coefficient.field === "targetMaxHp") return Number(target?.maxHp) || 0;
   if (coefficient.field === "triggerActualDamage") return execution?.triggerActualDamage ?? 0;
+  if (coefficient.field === "triggerActualAmount") return execution?.triggerActualAmount ?? 0;
   if (coefficient.field === "customResourceCurrent") return getUnitResourceCurrent(source, `${CUSTOM_RESOURCE_PREFIX}${coefficient.resourceId}`);
   if (coefficient.field === "previousActualDamage") return execution?.previousActualDamage ?? 0;
   if (coefficient.field === "executionActualDamage") return execution?.actualDamage ?? 0;
@@ -2109,6 +2158,10 @@ function getCoefficientValue(coefficient, source, target = null, execution = nul
 
   const baseValue = getCoefficientBaseValue(coefficient, source, target, execution);
   const inputValue = Number(coefficient.value) || 0;
+  if (coefficient.field === "targetEffectTagStacks") {
+    const sourceBase=Number(source[coefficient.stackSourceField ?? "magic"]) || 0;
+    return baseValue * (coefficient.calc === "percent" ? sourceBase * inputValue / 100 : inputValue);
+  }
   return coefficient.calc === "percent" ? baseValue * inputValue / 100 : baseValue + inputValue;
 }
 
@@ -2290,7 +2343,7 @@ function renderRuleOverrideActionArea(action) {
 
 function createSkillExecutionContext(resourceSpent = null, triggerEvent = null) {
   return {previousActualDamage:0,actualDamage:0,previousActualHealing:0,actualHealing:0,previousResourceDrained:0,resourceDrained:0,
-    triggerActualDamage:Math.max(0,Number(triggerEvent?.amount) || 0),
+    triggerActualDamage:Math.max(0,Number(triggerEvent?.amount) || 0),triggerActualAmount:Math.max(0,Number(triggerEvent?.amount) || 0),
     resourceSpent:resourceSpent ?? {total:0,HP:0,MP:0,ST:0,BP:0}};
 }
 
@@ -2676,12 +2729,18 @@ function applyActionMove(source, target, action) {
     desiredX = target.x + dx / length * amount * direction;
     desiredY = target.y + dy / length * amount * direction;
   } else {
-    const ratio = Math.max(1,Math.min(10,Number(action.distance) || 10)) / 10;
-    desiredX = source.x + dx * ratio;
-    desiredY = source.y + dy * ratio;
+    if (moveType === "Teleport" && action.movePlacement === "behind") {
+      desiredX = target.x + dx / length * COLLISION_DISTANCE;
+      desiredY = target.y + dy / length * COLLISION_DISTANCE;
+    } else {
+      const ratio = Math.max(1,Math.min(10,Number(action.distance) || 10)) / 10;
+      desiredX = source.x + dx * ratio;
+      desiredY = source.y + dy * ratio;
+    }
   }
   const moved = moveUnitWithCollision(movedUnit,desiredX,desiredY,{sweep:moveType !== "Teleport"});
   movedUnit.moveDistanceTotal = (movedUnit.moveDistanceTotal ?? 0) + moved / ATTACK_RANGE_UNIT;
+  if (moved > 0) processMovementEffectTriggers(movedUnit);
   if (forced && moved > 0) publishBattleEvents([{type:"forced_move",source,target,moveType,amount:moved / ATTACK_RANGE_UNIT}]);
   return moved;
 }
@@ -2715,6 +2774,11 @@ function actionTargetCooldownKey(action, skill) {
 }
 function isActionTargetEligible(source, target, action, skill) {
   if (action.allowSelfTarget === false && source === target) return false;
+  if (action.requiredTargetEffectId) {
+    const requiredCasterId=action.requiredTargetEffectCaster === "self" ? source.effectCasterId : null;
+    if (!(target.activeEffects ?? []).some(effect=>effect.id === action.requiredTargetEffectId
+      && (action.requiredTargetEffectCaster !== "self" || (requiredCasterId != null && effect.casterId === requiredCasterId)))) return false;
+  }
   if (action.effect?.stackMode === "reject" && action.effect.id
     && (target.activeEffects ?? []).some(effect => effect.id === action.effect.id)) return false;
   const threshold = action.targetHpBelow ?? 100;

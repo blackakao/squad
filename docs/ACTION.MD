@@ -4,6 +4,11 @@
 
 스킬은 하나 이상의 액션으로 구성된다. 액션은 피해, 회복, 이동, 버프, 상태이상, 필드 생성처럼 전투 중 발생하는 실제 동작을 표현한다.
 
+## 순간이동 도착 위치와 적 규칙 변경
+
+- `move` 액션의 `moveType`이 `Teleport`일 때 `movePlacement`를 `target`(기존 대상 위치) 또는 `behind`(시전자에서 대상을 향한 직선 너머의 인접 위치)로 지정할 수 있다. 생략 시 기존과 같은 `target`이다.
+- `override_rule`은 `self`, `ally`, `enemy` 대상을 지원한다. 기본 대상은 기존처럼 `ally`이며, 적 대상은 액션에 명시한 경우에만 적용한다.
+
 ## 공통 규칙
 
 - 대상은 `자신`, `아군`, `적군` 중 하나를 선택한다. 기존의 포괄적인 `대상` 값은 사용하지 않는다.
@@ -22,7 +27,7 @@
 
 - 베이직: 기본 공격, 기본 회복처럼 전투에서 자동으로 사용되는 기본 스킬
 - 액티브: 사용 조건이나 선택 입력을 통해 실행될 수 있는 능동 스킬
-- 패시브: 전투 진입·적중·피격·시전 완료·회복·적 처치 이벤트에 따라 즉시 발동하는 스킬. `passiveTrigger.event`, `chance`, `includePeriodic`, 같은 틱 복수 발동용 `allowMultiplePerTick`을 설정하고 공통 자원·쿨타임을 적용한다. 선택적 `recentAttackerMitigation`은 최근 고유 공격자 수에 따른 받는 피해 감소를 정의한다. 시전시간은 적용하지 않는다. 자세한 규칙은 [현재 엔진 안내](SKILL_ENGINE.md#이벤트-기반-패시브)를 참고한다.
+- 패시브: 전투 진입·적중·피격·시전 완료·회복·적 처치 이벤트에 따라 즉시 발동하는 스킬. 단일 `passiveTrigger.event` 또는 복수 `events`, `chance`, `includePeriodic`, 같은 틱 복수 발동용 `allowMultiplePerTick`을 설정하고 공통 자원·쿨타임을 적용한다. 선택적 `damageType`은 물리·마법·고정 피해 이벤트만 통과시키며, 선택적 `recentAttackerMitigation`은 최근 고유 공격자 수에 따른 받는 피해 감소를 정의한다. 시전시간은 적용하지 않는다. 자세한 규칙은 [현재 엔진 안내](SKILL_ENGINE.md#이벤트-기반-패시브)를 참고한다.
 
 ## 캐릭터 장착 스킬
 
@@ -78,6 +83,8 @@
 
 - 고정: `필드값 + 값입력`으로 계산한다. 예를 들어 `힘 / 고정 / 0`이면 힘 스탯만큼을 최종 계수로 본다.
 - 퍼센트: `필드값 * 값입력 / 100`으로 계산한다. 예를 들어 `공격력 / 퍼센트 / 80`이면 공격력의 80%를 최종 계수로 본다.
+
+`targetEffectTagStacks`는 대상의 해로운 효과 중 지정 태그가 붙은 중첩 수를 센다. 퍼센트 계산은 `중첩 수 × 기준 능력치 × 값입력 / 100`이며 기준 능력치는 공격력 또는 마력을 선택한다. 태그가 없거나 이로운 효과인 경우에는 세지 않는다.
 
 데이터 필드는 다음과 같다.
 
@@ -196,6 +203,8 @@
 현재 `effect.id`, `name`, `stat`, `mode`(`flat`/`percent`), `value`, `stackMode`(`refresh`/`stack`/`reject`), `maxStacks`를 사용한다. `duration`은 초 단위이며 0은 전투 종료까지다. `reject`는 시전자와 관계없이 같은 ID가 남아 있는 대상을 제외한다. 제거 액션은 `effect.id`로 일치하는 종류의 효과를 모든 시전자에 대해 해제한다. 효과 정의가 없는 과거 액션은 잠금 상태로 보존한다.
 
 상태·버프에는 선택적으로 `effect.periodic`을 추가해 주기 피해·회복을 실행한다. `type`, `interval`, `coefficient`, `growthInterval`, `growthValue`, `damageType`, `resource`를 편집한다. 계산계수의 기준 능력치는 효과를 부여할 때 고정하고, 증가 간격마다 계수 입력값에 증가값을 더한다. 버프의 `mode` 또는 상태의 `state`를 `periodic`으로 선택하면 능력치·행동 제한 없이 주기 효과만 실행한다. 기존 `value`만 있는 데이터는 고정계수로 호환한다.
+
+효과에는 분류와 별도로 `tags`를 둘 수 있다. `movementStCostPercent`는 효과가 유지되는 동안 자동 이동의 ST 소모 배율이며 기본값 100이다. `movementTriggerDistance`, `movementTriggerState`, `movementTriggerDuration`을 설정하면 효과 적용 뒤 실제 누적 이동 거리가 기준에 도달할 때 지정 상태를 한 번 부여한다. 자동 이동·돌진·순간이동·강제 이동을 모두 거리로 센다.
 
 - 코드: `add_buff`
 - 설명: 대상에게 지속 효과를 추가한다.

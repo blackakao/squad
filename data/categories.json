@@ -110,6 +110,17 @@
     "slotType": "both"
   },
   {
+    "type": "weapon",
+    "key": "단검",
+    "label": "단검",
+    "handType": "oneHand",
+    "attackRange": 1,
+    "attackSpeed": 1,
+    "castSpeed": 0.2,
+    "attackType": "physical",
+    "slotType": "both"
+  },
+  {
     "type": "armor",
     "key": "plate",
     "label": "판금"

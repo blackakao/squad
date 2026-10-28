@@ -1,5 +1,5 @@
 const TIMED_EFFECT_ACTIONS = ["add_buff", "delete_buff", "add_state", "delete_state"];
-const BUFF_STAT_LABELS = {atk:"공격력", magic:"마력", defense:"방어력", resistance:"저항력", speed:"이동속도", attackRange:"사거리", attackSpeed:"공격 간격(초)", castSpeed:"기본 시전시간(초)"};
+const BUFF_STAT_LABELS = {atk:"공격력", magic:"마력", adaptiveOffense:"적응형 공격 능력치", defense:"방어력", resistance:"저항력", speed:"이동속도", attackRange:"사거리", attackSpeed:"공격 간격(초)", castSpeed:"기본 시전시간(초)"};
 const STATE_LABELS = {stun:"기절", root:"이동 불가", silence:"침묵", periodic:"주기 효과만 적용"};
 const EFFECT_CATEGORY_LABELS = {general:"일반",physical:"물리",magic:"마법"};
 const EFFECT_CONSUME_LABELS = {hit:"자신이 적중",damaged:"자신이 피격",heal:"자신이 회복",cast_complete:"자신의 시전 완료"};
@@ -9,7 +9,8 @@ function createDefaultSkillEffect(type) {
   const state = type.includes("state");
   return {id:state ? "stun" : "attack_up", name:state ? "기절" : "공격력 증가", state:"stun",
     stat:"atk", sourceStat:"magic", mode:"flat", value:10, nextCastTimePercent:100, nextResourceCostPercent:100, nextCooldownPercent:100, reflectPercent:20, reflectScope:"all", reflectDamageType:"fixed", proxyPercent:20, proxyPriority:100, proxyScope:"all", counterOnMelee:false, maxStacks:1, stackMode:"refresh",uses:0,consumeOn:"hit",consumePeriodic:false,
-    category:"general",polarity:state ? "harmful" : "beneficial",dispellable:true,dispelMode:"id",dispelCategory:"general",dispelPolarity:"any"};
+    category:"general",polarity:state ? "harmful" : "beneficial",tags:[],dispellable:true,dispelMode:"id",dispelCategory:"general",dispelPolarity:"any",
+    movementStCostPercent:100,movementTriggerDistance:0,movementTriggerState:"stun",movementTriggerDuration:0};
 }
 
 function isEffectActionConfigured(action) {
@@ -51,7 +52,7 @@ function isPeriodicEffectConfigured(periodic) {
 
 function normalizeSkillEffect(effect,type = "add_buff") {
   return {id:String(effect.id ?? "").trim(), name:String(effect.name || effect.id || "효과").trim(), state:effect.state,
-    category:effect.category ?? "general",polarity:effect.polarity ?? (type.endsWith("state") ? "harmful" : "beneficial"),dispellable:effect.dispellable !== false,
+    category:effect.category ?? "general",polarity:effect.polarity ?? (type.endsWith("state") ? "harmful" : "beneficial"),tags:[...new Set((Array.isArray(effect.tags) ? effect.tags : String(effect.tags ?? "").split(",")).map(tag=>String(tag).trim()).filter(Boolean))],dispellable:effect.dispellable !== false,
     dispelMode:effect.dispelMode ?? "id",dispelCategory:effect.dispelCategory ?? "general",dispelPolarity:effect.dispelPolarity ?? "any",
     ...(effect.immunity ? {immunity:{scope:effect.immunity.scope,category:effect.immunity.category,state:effect.immunity.state}} : {}),
     stat:effect.stat, sourceStat:effect.sourceStat ?? effect.source_stat ?? "magic", mode:effect.mode, value:Number(effect.value) || 0,
@@ -66,6 +67,10 @@ function normalizeSkillEffect(effect,type = "add_buff") {
     proxyPriority:Number.isFinite(Number(effect.proxyPriority)) ? Math.max(0,Math.min(999,Math.floor(Number(effect.proxyPriority)))) : 100,
     proxyScope:["all","basic","skill"].includes(effect.proxyScope) ? effect.proxyScope : "all",
     counterOnMelee:effect.counterOnMelee === true,
+    movementStCostPercent:Number.isFinite(Number(effect.movementStCostPercent ?? effect.movement_st_cost_percent)) ? Math.max(0,Number(effect.movementStCostPercent ?? effect.movement_st_cost_percent)) : 100,
+    movementTriggerDistance:Number.isFinite(Number(effect.movementTriggerDistance ?? effect.movement_trigger_distance)) ? Math.max(0,Number(effect.movementTriggerDistance ?? effect.movement_trigger_distance)) : 0,
+    movementTriggerState:Object.hasOwn(STATE_LABELS,effect.movementTriggerState ?? effect.movement_trigger_state) ? (effect.movementTriggerState ?? effect.movement_trigger_state) : "stun",
+    movementTriggerDuration:Number.isFinite(Number(effect.movementTriggerDuration ?? effect.movement_trigger_duration)) ? Math.max(0,Number(effect.movementTriggerDuration ?? effect.movement_trigger_duration)) : 0,
     uses:Math.max(0,Math.min(100,Math.floor(Number(effect.uses) || 0))),
     consumeOn:effect.mode === "damage_immunity" ? "damaged" : Object.hasOwn(EFFECT_CONSUME_LABELS,effect.consumeOn) ? effect.consumeOn : "hit",
     consumePeriodic:effect.consumePeriodic === true,
@@ -97,6 +102,7 @@ function renderTimedEffectFields(action) {
       <label>효과 성격<select class="skill-effect-polarity">${options({beneficial:"이로운 효과",harmful:"해로운 효과"},effect.polarity ?? "beneficial")}</select></label>
       <label><input class="skill-effect-dispellable" type="checkbox" ${effect.dispellable !== false ? "checked" : ""}>해제 가능</label>
       <label>효과 이름<input class="skill-effect-name" value="${escapeHtml(effect.name)}"></label>
+      <label>효과 태그 (쉼표 구분)<input class="skill-effect-tags" value="${escapeHtml((effect.tags ?? []).join(", "))}" placeholder="예: disease"></label>
       <label>지속시간 (초, 0: 전투 종료까지)<input class="skill-effect-duration" type="number" min="0" step="0.1" value="${action.duration ?? 5}"></label>
       <label>재적용 방식<select class="skill-effect-stack-mode"><option value="refresh" ${effect.stackMode === "refresh" ? "selected" : ""}>시간 갱신</option><option value="stack" ${effect.stackMode === "stack" ? "selected" : ""}>중첩 증가 + 시간 갱신</option><option value="reject" ${effect.stackMode === "reject" ? "selected" : ""}>효과가 있으면 대상 선택 제외</option></select></label>
       <label>최대 중첩<input class="skill-effect-max-stacks" type="number" min="1" max="20" value="${effect.maxStacks}"></label>
@@ -104,6 +110,11 @@ function renderTimedEffectFields(action) {
       <label>횟수 소모 조건<select class="skill-effect-consume-on">${options(EFFECT_CONSUME_LABELS,effect.consumeOn ?? "hit")}</select></label>
       <label><input class="skill-effect-consume-periodic" type="checkbox" ${effect.consumePeriodic ? "checked" : ""}>주기 피해·회복도 횟수 소모</label>
       <small>사용 횟수가 1 이상일 때만 행동마다 1회 소모합니다. 피해 무시는 피격 조건을 사용하며 실제 피해가 발생하기 전에 소모됩니다.</small>
+      <label>이동 ST 소모 (%)<input class="skill-effect-movement-st-cost-percent" type="number" min="0" step="1" value="${effect.movementStCostPercent ?? 100}"></label>
+      <label>이동 발동 거리 (m, 0: 없음)<input class="skill-effect-movement-trigger-distance" type="number" min="0" step="0.1" value="${effect.movementTriggerDistance ?? 0}"></label>
+      <label>이동 발동 상태<select class="skill-effect-movement-trigger-state">${options(STATE_LABELS,effect.movementTriggerState ?? "stun")}</select></label>
+      <label>이동 발동 상태 지속시간 (초)<input class="skill-effect-movement-trigger-duration" type="number" min="0" step="0.1" value="${effect.movementTriggerDuration ?? 0}"></label>
+      <small>효과가 적용된 뒤 누적 이동 거리가 기준에 도달하면 지정 상태를 1회 부여합니다.</small>
       <div data-action-field="effectBuff">
         <label>능력치<select class="skill-effect-stat">${options(BUFF_STAT_LABELS,effect.stat)}</select></label>
         <label>계산<select class="skill-effect-mode" onchange="updateSkillEffectModeVisibility(this)"><option value="flat" ${effect.mode === "flat" ? "selected" : ""}>고정값 가산</option><option value="percent" ${effect.mode === "percent" ? "selected" : ""}>기본 능력치의 % 가산</option><option value="override" ${effect.mode === "override" ? "selected" : ""}>최종값 고정 (0: 삭제)</option><option value="convert" ${effect.mode === "convert" ? "selected" : ""}>다른 능력치의 % 전환</option><option value="next_skill_modifier" ${effect.mode === "next_skill_modifier" ? "selected" : ""}>다음 1회 스킬 보정</option><option value="damage_reflect" ${effect.mode === "damage_reflect" ? "selected" : ""}>받은 피해 반사</option><option value="periodic" ${effect.mode === "periodic" ? "selected" : ""}>주기 효과만 적용</option><option value="immunity" ${effect.mode === "immunity" ? "selected" : ""}>능력치 변경 없이 면역 적용</option><option value="damage_immunity" ${effect.mode === "damage_immunity" ? "selected" : ""}>피해 무시</option><option value="damage_proxy" ${effect.mode === "damage_proxy" ? "selected" : ""}>피해 대리 수신</option></select></label>
@@ -160,12 +171,13 @@ function renderTimedEffectFields(action) {
 
 function readSkillEffectFromRow(row) {
   const value = name => row.querySelector(`.skill-effect-${name}`)?.value;
-  return {id:value("id"),name:value("name"),stat:value("stat"),sourceStat:value("source-stat"),state:value("state"),mode:value("mode"),requiredOwnedSummonEntityId:value("required-summon") ?? "",
+  return {id:value("id"),name:value("name"),stat:value("stat"),sourceStat:value("source-stat"),state:value("state"),mode:value("mode"),requiredOwnedSummonEntityId:value("required-summon") ?? "",tags:String(value("tags") ?? "").split(",").map(tag=>tag.trim()).filter(Boolean),
     category:value("category"),polarity:value("polarity"),dispellable:row.querySelector('.skill-effect-dispellable')?.checked ?? true,
     dispelMode:value("dispel-mode"),dispelCategory:value("dispel-category"),dispelPolarity:value("dispel-polarity"),
     ...(value("immunity-scope") && (row.querySelector('.skill-action-type')?.value === "add_buff" || row.querySelector('.skill-action-field-effect')?.value === "add_buff") ? {immunity:{scope:value("immunity-scope"),category:value("immunity-category"),state:value("immunity-state")}} : {}),
     value:Number(value("value")),nextCastTimePercent:Number(value("next-cast-time-percent")),nextResourceCostPercent:Number(value("next-resource-cost-percent")),nextCooldownPercent:Number(value("next-cooldown-percent")),reflectPercent:Number(value("reflect-percent")),reflectScope:value("reflect-scope"),reflectDamageType:value("reflect-damage-type"),proxyPercent:Number(value("proxy-percent")),proxyPriority:Number(value("proxy-priority")),proxyScope:value("proxy-scope"),maxStacks:Number(value("max-stacks")),stackMode:value("stack-mode"),
     uses:Number(value("uses")),consumeOn:value("consume-on"),consumePeriodic:row.querySelector('.skill-effect-consume-periodic')?.checked ?? false,counterOnMelee:row.querySelector('.skill-effect-counter-on-melee')?.checked ?? false,
+    movementStCostPercent:Number(value("movement-st-cost-percent")),movementTriggerDistance:Number(value("movement-trigger-distance")),movementTriggerState:value("movement-trigger-state"),movementTriggerDuration:Number(value("movement-trigger-duration")),
     ...(value("periodic-type") ? {periodic:{type:value("periodic-type"),interval:Number(value("periodic-interval")),value:Number(value("periodic-value")),
       coefficient:{type:value("periodic-coefficient-type"),field:value("periodic-coefficient-field"),calc:value("periodic-coefficient-calc"),value:Number(value("periodic-value"))},
       growthInterval:Number(value("periodic-growth-interval")),growthValue:Number(value("periodic-growth-value")),damageType:value("periodic-damage"),resource:value("periodic-resource")}} : {})};
@@ -298,7 +310,7 @@ function blocksEffectApplication(target, source, config, kind) {
 function applyTimedEffectAction(source,target,action,skill) {
   const kind = action.type.endsWith("state") ? "state" : "buff";
   target.activeEffects ??= [];
-  const config = normalizeSkillEffect(action.effect,action.type);
+  let config = normalizeSkillEffect(action.effect,action.type);
   if (action.type.startsWith("delete_")) {
     const previousLength = target.activeEffects.length;
     target.activeEffects = target.activeEffects.filter(effect => !matchesEffectDispel(effect,action));
@@ -318,6 +330,10 @@ function applyTimedEffectAction(source,target,action,skill) {
   }
   target.activeEffects ??= [];
   source.effectCasterId ??= nextEffectCasterId++;
+  if (kind === "buff" && config.stat === "adaptiveOffense") {
+    const resolvedStat=(Number(target.magic) || 0) > (Number(target.atk) || 0) ? "magic" : "atk";
+    config={...config,stat:resolvedStat,adaptiveStat:"adaptiveOffense"};
+  }
   if (blocksEffectApplication(target,source,config,kind)) {
     addBattleEventLog(source,`${source.name} → ${target.name}: ${config.name} 부여 차단 (면역)`);
     return;
@@ -333,6 +349,7 @@ function applyTimedEffectAction(source,target,action,skill) {
     ...(config.mode === "convert" ? {conversionBase:sourceBase} : {}),
     skillId:skill?.id,triggered:Boolean(skill?.triggered),remainingTicks:action.duration > 0 ? Math.max(1,Math.ceil(action.duration * BASE_ATTACK_COOLDOWN)) : null,
     usesRemaining:config.mode === "next_skill_modifier" ? 1 : config.uses > 0 ? config.uses : null,
+    movementStartDistance:Number(target.moveDistanceTotal) || 0,movementTriggerConsumed:false,
     nextPeriodicTick:config.periodic ? (existing?.periodic?.interval === config.periodic.interval ? existing.nextPeriodicTick : null) ?? Math.max(1,Math.ceil(config.periodic.interval * BASE_ATTACK_COOLDOWN)) : null};
   if (existing) Object.assign(existing,instance);
   else target.activeEffects.push(instance);
@@ -412,6 +429,24 @@ function updateBattleEffects() {
 
 function getBattleEffectLabel(unit) {
   return (unit.activeEffects ?? []).map(effect => `${effect.name}×${effect.stacks}${effect.usesRemaining === null ? "" : ` ${effect.usesRemaining}회`} ${effect.remainingTicks === null ? "∞" : (effect.remainingTicks/BASE_ATTACK_COOLDOWN).toFixed(1)+"초"}`).join(" · ");
+}
+
+function getMovementStCostPercent(unit) {
+  return (unit?.activeEffects ?? []).reduce((percent,effect)=>percent*Math.max(0,Number(effect.movementStCostPercent ?? 100))/100,100);
+}
+
+function processMovementEffectTriggers(unit) {
+  for (const effect of [...(unit?.activeEffects ?? [])]) {
+    if (effect.movementTriggerConsumed || !(effect.movementTriggerDistance > 0) || !(effect.movementTriggerDuration > 0)) continue;
+    if ((Number(unit.moveDistanceTotal) || 0) - (Number(effect.movementStartDistance) || 0) < effect.movementTriggerDistance) continue;
+    effect.movementTriggerConsumed=true;
+    const source=[...playerSquad,...enemySquad].find(candidate=>candidate.effectCasterId === effect.casterId) ?? unit;
+    applyTimedEffectAction(source,unit,{type:"add_state",duration:effect.movementTriggerDuration,effect:{
+      id:`${effect.id}_movement_trigger`,name:`${effect.name} · 이동 발동`,state:effect.movementTriggerState,
+      category:effect.category,polarity:"harmful",dispellable:true,maxStacks:1,stackMode:"refresh"
+    }},{id:effect.skillId,name:effect.name,triggered:effect.triggered});
+    addBattleEventLog(unit,`${unit.name}: ${effect.name} 이동 거리 ${effect.movementTriggerDistance}m 도달`);
+  }
 }
 
 function consumeBattleEffectUse(unit,effect,reason) {

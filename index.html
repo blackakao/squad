@@ -852,8 +852,9 @@
           <div id="skillPassiveFields" class="skill-settings-card hidden">
             <div class="skill-settings-card-title">패시브 발동 조건</div>
             <div class="skill-form-grid">
-              <label>발동 이벤트<select id="skillPassiveEvent"></select></label>
+              <label>발동 이벤트<select id="skillPassiveEvent" multiple size="3"></select><small>여러 이벤트를 함께 선택할 수 있습니다.</small></label>
               <label>발동 확률 (%)<input id="skillPassiveChance" type="number" min="0" max="100" step="0.1" value="100"></label>
+              <label>피해 유형<select id="skillPassiveDamageType"><option value="">전체</option><option value="physical">물리</option><option value="magic">마법</option><option value="fixed">고정</option></select></label>
               <label class="skill-check-field skill-form-field-wide"><input id="skillPassivePeriodic" type="checkbox">주기 피해·회복도 발동 조건에 포함</label>
               <label class="skill-check-field skill-form-field-wide"><input id="skillPassiveMultiplePerTick" type="checkbox">같은 전투 틱의 모든 조건 이벤트에 각각 발동</label>
               <label class="skill-check-field skill-form-field-wide"><input id="skillPassiveRecentAttackersEnabled" type="checkbox">최근 고유 공격자 수에 따른 받는 피해 감소</label>

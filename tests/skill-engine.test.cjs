@@ -279,6 +279,37 @@ test('equipped passive triggers on hit, uses resources and cooldown, without int
   e.applySkill(source,target,attack);assert.equal(source.hp,70);assert.equal(source.mp,90);
 });
 
+test('passive damage type filter converts only matching actual damage and selects the most injured ally in range', () => {
+  const e=engine(),source=unit(e),ally=unit(e,'player',120),far=unit(e,'player',300),enemy=unit(e,'enemy',105);
+  source.hp=90;ally.hp=40;far.hp=10;
+  const healing={type:'heal',target:'ally',rangeMode:'custom',rangeValue:10,maxTargets:1,healResource:'HP',coefficients:[{type:'calculated',field:'triggerActualDamage',calc:'percent',value:30}]};
+  const passive=equipPassive(e,source,'hit',healing,{passiveTrigger:{event:'hit',chance:100,damageType:'physical',includePeriodic:false,allowMultiplePerTick:true}});
+  const physical=skill(e,{type:'deal_damage',target:'enemy',damageType:'physical',coefficients:[{type:'fixed',value:20}]});
+  const magic=skill(e,{type:'deal_damage',target:'enemy',damageType:'magic',coefficients:[{type:'fixed',value:20}]});
+  e.applySkill(source,enemy,magic);assert.equal(ally.hp,40);
+  e.applySkill(source,enemy,physical);assert.equal(ally.hp,46);assert.equal(source.hp,90);assert.equal(far.hp,10);
+  assert.equal(passive.passiveTrigger.damageType,'physical');
+  const legacy=e.normalizePassiveTrigger({event:'hit',chance:100,damageType:'unknown'});
+  assert.equal(Object.hasOwn(legacy,'damageType'),false);
+});
+
+test('adaptive buffs choose the higher offense and multi-event passives require an effect from their caster', () => {
+  const e=engine(),priest=unit(e),magicAlly=unit(e,'player',120),attackAlly=unit(e,'player',130),otherBlessed=unit(e,'player',140),enemy=unit(e,'enemy',105);
+  const otherPriest=unit(e,'player',150);
+  Object.assign(magicAlly,{atk:40,magic:160,hp:40});Object.assign(attackAlly,{atk:100,magic:50,hp:40});otherBlessed.hp=40;
+  const blessing=e.normalizeSkillJson([{id:'blessing',name:'blessing',slot:'active',actions:[{type:'add_buff',target:'ally',rangeMode:'custom',rangeValue:100,duration:30,effect:{id:'priest_blessing',name:'blessing',stat:'adaptiveOffense',mode:'percent',value:5}}]}]).find(skill=>skill.id==='blessing');
+  e.applySkill(priest,magicAlly,blessing);e.applySkill(priest,attackAlly,blessing);e.applySkill(otherPriest,otherBlessed,blessing);
+  assert.deepEqual(Array.from(magicAlly.activeEffects,effect=>[effect.stat,effect.adaptiveStat,effect.value]),[['magic','adaptiveOffense',5]]);
+  assert.equal(magicAlly.magic,168);assert.equal(magicAlly.atk,40);assert.equal(attackAlly.atk,105);assert.equal(attackAlly.magic,50);
+  const resonance=e.normalizeSkillJson([{id:'resonance',name:'resonance',slot:'passive',cooldown:0,passiveTrigger:{events:['hit','heal'],chance:100,allowMultiplePerTick:true},actions:[{type:'heal',target:'ally',rangeMode:'custom',rangeValue:1000,requiredTargetEffectId:'priest_blessing',requiredTargetEffectCaster:'self',area:1000,areaCenter:'self',coefficients:[{type:'calculated',field:'triggerActualAmount',calc:'percent',value:5}]}]}]).find(skill=>skill.id==='resonance');
+  e.skillsJson=[resonance];priest.skillIds=[resonance.id];
+  e.applyActionDamage(priest,enemy,{type:'deal_damage',target:'enemy',damageType:'fixed',coefficients:[{type:'fixed',value:100}]});
+  assert.equal(magicAlly.hp,45);assert.equal(attackAlly.hp,45);assert.equal(otherBlessed.hp,40);
+  e.applyActionHeal(priest,otherBlessed,{type:'heal',target:'ally',healResource:'HP',coefficients:[{type:'fixed',value:20}]});
+  assert.equal(magicAlly.hp,46);assert.equal(attackAlly.hp,46);assert.equal(otherBlessed.hp,60);
+  assert.deepEqual(Array.from(resonance.passiveTrigger.events),['hit','heal']);
+});
+
 test('attacker and defender passives run on both sides without recursive retaliation', () => {
   for(const side of ['player','enemy']) {
     const e=engine(),source=unit(e,side),target=unit(e,side==='player'?'enemy':'player',105);
@@ -1655,6 +1686,44 @@ test('knight mount and demon brute branch on owned summon state and proxy owner 
   assert.equal(brute.magic,75);
 });
 
+test('demon minions intercept one hit each and demon general uses an area basic attack',()=>{
+ const e=engine();
+ const allSkills=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8'));
+ const ids=['skill_class_demon_summon_minions','skill_class_demon_summon_general','skill_entity_demon_general_attack'];
+ e.skillsJson=e.normalizeSkillJson(allSkills.filter(candidate=>ids.includes(candidate.id)));
+ e.newEntities=['demon_minion','demon_general'].map(id=>JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','entities',`${id}.json`),'utf8')));
+ vm.runInContext('entitiesJson.push(...newEntities)',e);
+ const demon=unit(e);demon.magic=100;demon.hp=demon.maxHp=500;
+ const primary=unit(e,'enemy',140),near=unit(e,'enemy',155),far=unit(e,'enemy',240);
+ primary.y=near.y=far.y=100;primary.hp=primary.maxHp=near.hp=near.maxHp=far.hp=far.maxHp=500;
+ const minionSkill=e.skillsJson.find(skill=>skill.id==='skill_class_demon_summon_minions');
+ const generalSkill=e.skillsJson.find(skill=>skill.id==='skill_class_demon_summon_general');
+ e.dispatchSkillActions(demon,demon,minionSkill,false);
+ assert.equal(demon.summons.filter(summon=>summon.alive && summon.entityId==='demon_minion').length,3);
+ e.applyActionDamage(primary,demon,{damageType:'fixed',coefficients:[{type:'fixed',value:25}]});
+ assert.equal(demon.hp,500);assert.equal(demon.summons.filter(summon=>summon.alive && summon.entityId==='demon_minion').length,2);
+ e.dispatchSkillActions(demon,primary,generalSkill,false);
+ const general=demon.summons.find(summon=>summon.alive && summon.entityId==='demon_general');
+ assert.equal(general.attackSkillId,'skill_entity_demon_general_attack');assert.equal(general.attackSpeed,2);
+ assert.equal(primary.hp,480);assert.equal(near.hp,480);assert.equal(far.hp,500);
+ assert.equal(e.hasBattleState(primary,'stun'),true);assert.equal(e.hasBattleState(near,'stun'),true);assert.equal(e.hasBattleState(far,'stun'),false);
+ primary.hp=near.hp=far.hp=500;near.x=general.x+10;near.y=general.y;far.x=general.x+100;far.y=general.y;
+ const attack=e.getUnitSkill(general);e.applySkill(general,primary,attack);
+ assert.equal(primary.hp,400);assert.equal(near.hp,400);assert.equal(far.hp,500);
+});
+
+test('demon summon data and entity attack references match class rules',()=>{
+ const skills=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8'));
+ const characters=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','characters.json'),'utf8'));
+ const find=id=>skills.find(skill=>skill.id===id),minions=find('skill_class_demon_summon_minions'),general=find('skill_class_demon_summon_general'),attack=find('skill_entity_demon_general_attack');
+ assert.deepEqual([minions.castTime,minions.cooldown,minions.actions[0].count,minions.actions[0].duration,minions.actions[0].protectOwnerPercent],[1.5,10,3,5,100]);
+ assert.deepEqual([general.castTime,general.cooldown,general.actions[0].duration,general.actions[1].area,general.actions[1].coefficients[0].value,general.actions[2].duration],[2,15,4,3,20,1]);
+ assert.deepEqual([attack.slot,attack.actions[0].area,attack.actions[0].areaCenter,attack.actions[0].coefficients[0].value],['basic',3,'self',100]);
+ const generalEntity=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','entities','demon_general.json'),'utf8'));
+ assert.equal(generalEntity.attackSkillId,attack.id);assert.equal(generalEntity.stats.attackSpeed,2);
+ assert.deepEqual(characters.find(character=>character.skillIds?.includes('skill_class_demon_brute')).skillIds,['skill_class_demon_brute',minions.id,general.id]);
+});
+
 function basicActionEngine() {
   const e=engine();
   e.isMagicAttackUnit=u=>u.attackType==='magic';
@@ -2209,7 +2278,41 @@ test('disease skill data and self exclusions match their class rules',()=>{
  assert.equal(wound.castTime,1.5);assert.equal(wound.actions[0].duration,0);assert.equal(wound.actions[0].effect.stackMode,'reject');
  assert.equal(wound.actions[0].effect.periodic.growthInterval,10);assert.equal(wound.actions[0].effect.periodic.growthValue,1);
  const characters=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','characters.json'),'utf8'));
- assert.deepEqual(characters.find(character=>character.name==='질병형').skillIds,[virus.id,wound.id]);
+ const weak=find('skill_class_disease_weakening_disease'),pain=find('skill_class_disease_pain_amplification');
+ assert.deepEqual(virus.actions[0].effect.tags,['disease']);assert.deepEqual(wound.actions[0].effect.tags,['disease']);
+ assert.deepEqual([weak.castTime,weak.cooldown,weak.actions[0].duration],[.5,8,5]);
+ assert.deepEqual([weak.actions[0].effect.movementStCostPercent,weak.actions[0].effect.movementTriggerDistance,weak.actions[0].effect.movementTriggerState,weak.actions[0].effect.movementTriggerDuration],[200,10,'stun',2]);
+ assert.deepEqual([pain.cooldown,pain.channel.duration,pain.channel.interval,pain.channel.lockTarget],[7,3,1,true]);
+ assert.deepEqual(pain.actions[0].coefficients.map(coefficient=>[coefficient.field,coefficient.value,coefficient.effectTag ?? '']),[['magic',100,''],['targetEffectTagStacks',30,'disease']]);
+ const e=engine();assert.equal(e.isSkillExecutable(e.normalizeSkillJson([weak])[0]),true);assert.equal(e.isSkillExecutable(e.normalizeSkillJson([pain])[0]),true);
+ assert.deepEqual(characters.find(character=>character.skillIds?.includes(virus.id)).skillIds,[virus.id,wound.id,weak.id,pain.id]);
+});
+
+test('movement disease doubles movement ST cost and stuns once after ten metres',()=>{
+ const e=engine(),source=unit(e),target=unit(e,'enemy',200);
+ const action=e.createDefaultAction('add_buff');action.target='enemy';action.duration=5;
+ Object.assign(action.effect,{id:'weakening_disease',name:'weakening disease',mode:'flat',stat:'atk',value:0,polarity:'harmful',tags:['disease'],movementStCostPercent:200,movementTriggerDistance:10,movementTriggerState:'stun',movementTriggerDuration:2});
+ e.applyTimedEffectAction(source,target,action,skill(e,action));
+ assert.equal(e.getMovementStCostPercent(target),200);assert.equal(e.hasBattleState(target,'stun'),false);
+ target.moveDistanceTotal=9.9;e.processMovementEffectTriggers(target);assert.equal(e.hasBattleState(target,'stun'),false);
+ target.moveDistanceTotal=10;e.processMovementEffectTriggers(target);assert.equal(e.hasBattleState(target,'stun'),true);
+ const trigger=target.activeEffects.find(effect=>effect.id==='weakening_disease_movement_trigger');assert.equal(trigger.remainingTicks,120);
+ const count=target.activeEffects.length;target.moveDistanceTotal=20;e.processMovementEffectTriggers(target);assert.equal(target.activeEffects.length,count);
+});
+
+test('pain amplification counts only harmful effects with the disease tag',()=>{
+ const e=engine(),source=unit(e),target=unit(e,'enemy',105);source.magic=100;target.maxHp=target.hp=1000;target.resistance=0;
+ target.activeEffects=[
+  {id:'virus',polarity:'harmful',tags:['disease'],stacks:1},
+  {id:'wound',polarity:'harmful',tags:['disease'],stacks:2},
+  {id:'blessing',polarity:'beneficial',tags:['disease'],stacks:5},
+  {id:'poison',polarity:'harmful',tags:['poison'],stacks:4}
+ ];
+ const action=e.createDefaultAction('deal_damage');action.damageType='magic';action.coefficients=[
+  {type:'calculated',field:'magic',calc:'percent',value:100},
+  {type:'calculated',field:'targetEffectTagStacks',effectTag:'disease',calc:'percent',value:30}
+ ];
+ assert.equal(e.getActionCoefficientValue(action,source,target),190);
 });
 
 test('damage-trigger and custom-resource coefficients preserve references and calculate from runtime values',()=>{
@@ -2350,4 +2453,55 @@ test('combo users approach the ready stage action range instead of stalling at u
  const combo=skill(e,action);combo.combo={stepCooldown:.5,stages:[{name:'one',actions:[action]},{name:'two',actions:[action]}],completionActions:[]};
  e.skillsJson=[combo];source.skillIds=[combo.id];source.skillCooldowns={};
  const before=source.x;e.moveUnit(source,[target]);assert.ok(source.x>before);
+});
+
+test('monk cycle and spring energy data match their class rules',()=>{
+ const e=engine();
+ const skills=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8')));
+ const characters=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','characters.json'),'utf8'));
+ const cycle=skills.find(item=>item.id==='skill_class_monk_cycle'),spring=skills.find(item=>item.id==='skill_class_monk_spring_energy');
+ assert.deepEqual(JSON.parse(JSON.stringify(cycle.passiveTrigger)),{event:'hit',chance:100,includePeriodic:false,damageType:'physical',allowMultiplePerTick:true});
+ assert.deepEqual([cycle.actions[0].target,cycle.actions[0].rangeValue,cycle.actions[0].maxTargets,cycle.actions[0].coefficients[0].field,cycle.actions[0].coefficients[0].value],['ally',10,1,'triggerActualDamage',30]);
+ assert.deepEqual([spring.castTime,spring.cooldown,spring.actions[0].duration,spring.actions[0].effect.stat,spring.actions[0].effect.value,spring.actions[1].effect.stat,spring.actions[1].effect.value],[.5,12,8,'defense',10,'attackSpeed',-20]);
+ const monk=characters.find(character=>character.skillIds?.includes('skill_class_monk_combo'));
+ assert.deepEqual(monk.skillIds.slice(0,4),[cycle.id,spring.id,'skill_class_monk_combo','skill_class_monk_area_heal']);
+ const source=unit(e),ally=unit(e,'player',120);ally.defense=100;ally.attackSpeed=1;
+ e.applySkill(source,ally,spring);assert.equal(ally.defense,110);assert.equal(ally.attackSpeed,.8);assert.equal(ally.activeEffects.length,2);
+ for(let tick=0;tick<480;tick++)e.updateBattleEffects();
+ assert.equal(ally.defense,100);assert.equal(ally.attackSpeed,1);
+});
+
+test('priest resonance and blessing data match their class rules',()=>{
+ const e=engine();
+ const skills=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8')));
+ const characters=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','characters.json'),'utf8'));
+ const resonance=skills.find(item=>item.id==='skill_class_priest_resonance'),blessing=skills.find(item=>item.id==='skill_class_priest_blessing');
+ assert.deepEqual(Array.from(resonance.passiveTrigger.events),['hit','heal']);
+ assert.deepEqual([resonance.actions[0].requiredTargetEffectId,resonance.actions[0].requiredTargetEffectCaster,resonance.actions[0].coefficients[0].field,resonance.actions[0].coefficients[0].value],['priest_blessing','self','triggerActualAmount',5]);
+ assert.deepEqual([blessing.castTime,blessing.cooldown,blessing.actions[0].duration,blessing.actions[0].rangeMode,blessing.actions[0].effect.stat,blessing.actions[0].effect.value],[.5,0,30,'mainWeapon','adaptiveOffense',5]);
+ const priest=characters.find(character=>character.skillIds?.includes('skill_class_priest_smite'));
+ assert.deepEqual(priest.skillIds.slice(0,4),[resonance.id,blessing.id,'skill_class_priest_smite','skill_class_priest_barrier']);
+});
+
+test('teleport can place the caster behind the selected target without changing the default placement',()=>{
+ const e=engine(),source=unit(e),target=unit(e,'enemy',200);
+ const move=e.createDefaultAction('move');Object.assign(move,{target:'enemy',moveType:'Teleport',movePlacement:'behind',distance:10,rangeMode:'custom',rangeValue:10});
+ const normalized=e.normalizeSkillAction(move);assert.equal(normalized.movePlacement,'behind');
+ e.applySkill(source,target,skill(e,normalized));
+ assert.equal(source.x,220);assert.equal(source.y,target.y);
+ source.x=100;const ordinary={...normalized,movePlacement:'target'};e.applySkill(source,target,skill(e,ordinary));assert.equal(source.x,100);
+});
+
+test('assassin ambush and death sentence match their class rules',()=>{
+ const e=engine();
+ const skills=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8')));
+ const characters=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','characters.json'),'utf8'));
+ const ambush=skills.find(item=>item.id==='skill_class_assassin_ambush'),sentence=skills.find(item=>item.id==='skill_class_assassin_death_sentence');
+ assert.deepEqual([ambush.castTime,ambush.cooldown,ambush.actions[0].moveType,ambush.actions[0].movePlacement,ambush.actions[1].coefficients[0].value],[.3,10,'Teleport','behind',200]);
+ assert.deepEqual([sentence.castTime,sentence.cooldown,sentence.actions[0].coefficients[0].value,sentence.actions[1].effect.state,sentence.actions[1].duration,sentence.actions[2].ruleOverride.receivedDamagePercent,sentence.actions[2].duration],[0,10,150,'silence',3,120,3]);
+ const assassin=characters.find(character=>character.name==='암살자');assert.deepEqual(assassin.skillIds,[ambush.id,sentence.id]);
+ const source=unit(e),target=unit(e,'enemy',105);source.atk=20;target.defense=0;target.hp=target.maxHp=200;
+ e.applySkill(source,target,sentence);assert.equal(target.hp,170);assert.equal(e.hasBattleState(target,'silence'),true);assert.equal(e.getUnitIncomingRulePercent(target,'receivedDamagePercent'),120);
+ for(let tick=0;tick<180;tick++){e.updateBattleEffects();e.updateRuntimeRuleOverrides();}
+ assert.equal(e.hasBattleState(target,'silence'),false);assert.equal(e.getUnitIncomingRulePercent(target,'receivedDamagePercent'),100);
 });

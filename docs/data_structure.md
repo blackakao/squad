@@ -1,5 +1,10 @@
 # 데이터 구조
 
+## 이동·규칙 액션 확장
+
+- 순간이동 액션의 선택 필드 `movePlacement`는 `target` 또는 `behind`이다. 누락된 기존 데이터는 `target`으로 정규화한다.
+- `override_rule.target`은 `self`, `ally`, `enemy`를 지원한다. 기존 데이터의 기본값은 `ally`이다.
+
 ## 스킬·시너지 개별 그림
 
 `data/skills.json`과 `data/synergies.json` 레코드는 선택적 `icon` 문자열을 가진다. 값은 `assets/images/skills/파일명` 또는 `assets/images/synergies/파일명`이며 빈 문자열/필드 생략은 그림 없음이다. 스킬 정규화는 이 필드를 보존한다. 기존 데이터를 일괄 수정하지 않는다. 공통 `iconMappings`와는 별개이며 전투 계산 필드가 아니다. [그림 API·수명](RECORD_IMAGES.md).
@@ -140,11 +145,12 @@
 - `castTime`: 초 단위 시전 시간, 비어 있으면 유닛 기본 시전 속도 사용
 - `castReceivedDamagePercent`: 시전 중 받는 피해 배율, 기본값 100
 - `channel`: 채널링 설정 `{ duration, interval, interruptOnDamage, lockTarget, receivedDamagePercent }`. 대상 고정과 채널 중 받는 피해 비율을 선택적으로 저장한다.
-- `passiveTrigger`: 패시브 발동 조건. `battle_entry`는 유닛의 전투 진입 시 한 번 발동한다. `allowMultiplePerTick`은 같은 전투 틱의 조건 이벤트마다 발동할지 정하며 생략 기본값은 `false`다. 선택적 `recentAttackerMitigation`은 `{ enabled, window, threshold, initialReductionPercent, additionalReductionPercent, maxReductionPercent }`로 최근 고유 공격자 수에 따른 받는 피해 감소를 저장한다.
-- 계산계수의 `field: triggerActualDamage`는 패시브를 발동시킨 실제 피해량을 참조한다. `field: customResourceCurrent`는 `resourceId`에 지정한 시전자 커스텀 자원의 현재값을 참조한다.
+- `passiveTrigger`: 패시브 발동 조건. 기존 단일 `event`와 선택적 복수 `events`를 지원한다. `battle_entry`는 유닛의 전투 진입 시 한 번 발동한다. 선택적 `damageType`은 `physical`, `magic`, `fixed` 중 일치하는 피해 이벤트만 허용한다. `allowMultiplePerTick`은 같은 전투 틱의 조건 이벤트마다 발동할지 정하며 생략 기본값은 `false`다. 선택적 `recentAttackerMitigation`은 `{ enabled, window, threshold, initialReductionPercent, additionalReductionPercent, maxReductionPercent }`로 최근 고유 공격자 수에 따른 받는 피해 감소를 저장한다.
+- 계산계수의 `field: triggerActualDamage`는 패시브를 발동시킨 실제 피해량을 참조한다. `triggerActualAmount`는 피해 또는 회복 이벤트의 실제 수치를 공통으로 참조한다. `field: customResourceCurrent`는 `resourceId`에 지정한 시전자 커스텀 자원의 현재값을 참조한다.
 - `resourceCosts`: HP/MP/ST/BP 또는 `custom:<id>` 비용
 - `actions`: 실행 액션 배열
 - 액션의 `rangeMultiplier`는 주무기 사거리 배율이며 `chainOrigin`은 추가 대상 거리 기준이다.
+- 액션의 `requiredTargetEffectId`는 지정 효과를 가진 대상만 허용하며, `requiredTargetEffectCaster: self`는 현재 시전자가 부여한 효과만 인정한다.
 - 변신의 `receivedDamagePercent`, `immobile`, `exitHpBelow`, `retreatHpBelow`는 모드형 형태의 피해·이동·자동 해제·후퇴 규칙이다.
 
 캐릭터의 `skillIds`는 스킬 ID만 참조한다. 관리 UI는 현재 별도 클래스 DB가 없으므로 캐릭터 `name`과 스킬 `className`이 같은 항목만 장착 후보로 표시한다.
@@ -208,6 +214,7 @@
 - `entityId`
 - `name`, `role`, `description`, `icon`, `tags`, `ai`
 - `attackType`: `physical` 또는 `magic`. 생략한 기존 파일은 치유 AI만 마법, 나머지는 물리로 해석합니다.
+- `attackSkillId`: 선택적 기본 공격 스킬 ID. 실행 가능한 스킬이면 소환수 기본 공격을 교체하며 빈 값·유효하지 않은 참조는 기존 기본 공격으로 호환합니다.
 - `summonType`: `persistent` 또는 `temporary`. 생략한 기존 파일은 임시로 해석하며 조회 시 필드를 강제로 쓰지 않습니다.
 - `stats`: `hp`, `mp`, `st`, `atk`, `magic`, `defense`, `resistance`, `speed`, `attackSpeed`, `castTime`, `attackRange`
 

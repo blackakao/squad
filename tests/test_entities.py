@@ -30,6 +30,15 @@ class EntityTests(unittest.TestCase):
         with self.assertRaises(EntityError):
             self.store.save(dict(legacy, summonType='invalid'))
 
+    def test_optional_attack_skill_roundtrip_and_validation(self):
+        value = dict(entity(), attackSkillId="skill_entity_attack")
+        saved = self.store.save(value, create=True)
+        self.assertEqual(saved["attackSkillId"], "skill_entity_attack")
+        invalid = entity("invalid_attack_skill")
+        invalid["attackSkillId"] = 123
+        with self.assertRaises(EntityError):
+            self.store.save(invalid, create=True)
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)

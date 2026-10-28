@@ -152,6 +152,8 @@
     "attackRange": 3,
     "role": "healer",
     "skillIds": [
+      "skill_class_monk_cycle",
+      "skill_class_monk_spring_energy",
       "skill_class_monk_combo",
       "skill_class_monk_area_heal"
     ],
@@ -211,15 +213,17 @@
     "st": 105,
     "bp": 0,
     "atk": 20,
-    "magic": 160,
+    "magic": 560,
     "speed": 1.1,
-    "attackSpeed": 2,
-    "castSpeed": 0,
+    "attackSpeed": 1,
+    "castSpeed": 2.5,
     "defense": 1.9,
     "resistance": 26.3,
-    "attackRange": 6,
+    "attackRange": 4,
     "role": "healer",
     "skillIds": [
+      "skill_class_priest_resonance",
+      "skill_class_priest_blessing",
       "skill_class_priest_smite",
       "skill_class_priest_barrier"
     ],
@@ -248,8 +252,8 @@
       "revivePosition": "death"
     },
     "equipment": {
-      "mainWeapon": "item_1786972173219",
-      "subWeapon": "",
+      "mainWeapon": "item_1781186124129",
+      "subWeapon": "item_1781186124129",
       "top": "item_gen_20261010_14_01",
       "bottom": "item_gen_20261010_14_06",
       "accessory": "",
@@ -259,8 +263,8 @@
       {
         "name": "세트 1",
         "equipment": {
-          "mainWeapon": "item_1786972173219",
-          "subWeapon": "",
+          "mainWeapon": "item_1781186124129",
+          "subWeapon": "item_1781186124129",
           "top": "item_gen_20261010_14_01",
           "bottom": "item_gen_20261010_14_06",
           "accessory": "",
@@ -1347,18 +1351,18 @@
   },
   {
     "name": "바이킹",
-    "hp": 4500,
+    "hp": 4970,
     "mp": 100,
-    "st": 150,
+    "st": 160,
     "bp": 0,
-    "atk": 60,
+    "atk": 410,
     "magic": 10,
-    "speed": 2.2,
-    "attackSpeed": 1.5,
-    "castSpeed": 0.5,
-    "defense": 15,
-    "resistance": 5,
-    "attackRange": 1,
+    "speed": 2.3,
+    "attackSpeed": 3,
+    "castSpeed": 1,
+    "defense": 30,
+    "resistance": 8.8,
+    "attackRange": 2,
     "role": "tank",
     "skillIds": [
       "skill_class_viking_counter"
@@ -1374,7 +1378,7 @@
     },
     "equipmentRules": {
       "extraWeaponSlots": 0,
-      "twoHandSingleSlot": false,
+      "twoHandSingleSlot": true,
       "sameTargetWeaponPenaltyPercent": 0
     },
     "battleRules": {
@@ -1388,10 +1392,10 @@
       "revivePosition": "death"
     },
     "equipment": {
-      "mainWeapon": "",
-      "subWeapon": "",
-      "top": "",
-      "bottom": "",
+      "mainWeapon": "item_gen_20261010_02_01",
+      "subWeapon": "item_gen_20261010_02_01",
+      "top": "item_gen_20261010_11_01",
+      "bottom": "item_gen_20261010_11_06",
       "accessory": "",
       "special": ""
     },
@@ -1399,10 +1403,10 @@
       {
         "name": "세트 1",
         "equipment": {
-          "mainWeapon": "",
-          "subWeapon": "",
-          "top": "",
-          "bottom": "",
+          "mainWeapon": "item_gen_20261010_02_01",
+          "subWeapon": "item_gen_20261010_02_01",
+          "top": "item_gen_20261010_11_01",
+          "bottom": "item_gen_20261010_11_06",
           "accessory": "",
           "special": ""
         }
@@ -1428,7 +1432,9 @@
     "attackRange": 4,
     "role": "tank",
     "skillIds": [
-      "skill_class_demon_brute"
+      "skill_class_demon_brute",
+      "skill_class_demon_summon_minions",
+      "skill_class_demon_summon_general"
     ],
     "portrait": "",
     "attributes": {
@@ -1891,7 +1897,9 @@
     "role": "ranged",
     "skillIds": [
       "skill_class_disease_virus",
-      "skill_class_disease_open_wound"
+      "skill_class_disease_open_wound",
+      "skill_class_disease_weakening_disease",
+      "skill_class_disease_pain_amplification"
     ],
     "portrait": "",
     "attributes": {
@@ -2275,22 +2283,22 @@
   },
   {
     "name": "암살자",
-    "hp": 2000,
+    "hp": 2338,
     "mp": 100,
-    "st": 150,
+    "st": 155,
     "bp": 0,
-    "atk": 70,
+    "atk": 310,
     "magic": 10,
-    "speed": 2.2,
-    "attackSpeed": 1.5,
+    "speed": 2.3,
+    "attackSpeed": 0.5,
     "castSpeed": 0,
-    "defense": 5,
-    "resistance": 0,
-    "attackRange": 1,
+    "defense": 12.5,
+    "resistance": 3.8,
+    "attackRange": 3,
     "role": "melee",
     "skillIds": [
-      "skill_class_assassin_backstab",
-      "skill_class_assassin_smite"
+      "skill_class_assassin_ambush",
+      "skill_class_assassin_death_sentence"
     ],
     "portrait": "",
     "attributes": {
@@ -2317,10 +2325,10 @@
       "revivePosition": "death"
     },
     "equipment": {
-      "mainWeapon": "",
-      "subWeapon": "",
-      "top": "",
-      "bottom": "",
+      "mainWeapon": "item_1793195869879",
+      "subWeapon": "item_1793195869879",
+      "top": "item_gen_20261010_13_01",
+      "bottom": "item_gen_20261010_13_06",
       "accessory": "",
       "special": ""
     },
@@ -2328,10 +2336,10 @@
       {
         "name": "세트 1",
         "equipment": {
-          "mainWeapon": "",
-          "subWeapon": "",
-          "top": "",
-          "bottom": "",
+          "mainWeapon": "item_1793195869879",
+          "subWeapon": "item_1793195869879",
+          "top": "item_gen_20261010_13_01",
+          "bottom": "item_gen_20261010_13_06",
           "accessory": "",
           "special": ""
         }

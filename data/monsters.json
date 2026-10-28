@@ -71,8 +71,7 @@
     "attackRange": 1,
     "role": "tank",
     "skillIds": [],
-    "portrait": "",
-    "customResources": []
+    "portrait": ""
   },
   {
     "label": "마법형 보스",

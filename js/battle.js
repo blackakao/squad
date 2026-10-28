@@ -207,7 +207,7 @@ function createSummonedBattleUnit(source, config) {
       attackRange: config.attackRange, attackType: config.attackType === "magic" || config.ai === "healer" ? "magic" : "physical",
       protectOwnerPercent:config.protectOwnerPercent,protectOwnerScope:config.protectOwnerScope,protectOwnerPriority:config.protectOwnerPriority,
       transferStateScope:config.transferStateScope,transferStatePriority:config.transferStatePriority,
-      attributes: {}, skillIds: [], attackSkillId: "",
+      attributes: {}, skillIds: [], attackSkillId: config.attackSkillId ?? "",
       x: center.x + Math.cos(angle) * COLLISION_DISTANCE,
       y: center.y + Math.sin(angle) * COLLISION_DISTANCE
     };
@@ -257,13 +257,13 @@ function updateResources() {
 
       unit.st = Math.min(maxSt, (Number(unit.st) || 0) + exhaustedRegenPerSecond * elapsedSeconds);
       if (unit.isMoving) {
-        unit.st = Math.max(0, unit.st - ST_MOVE_COST_PER_SECOND * elapsedSeconds);
+        unit.st = Math.max(0, unit.st - ST_MOVE_COST_PER_SECOND * getMovementStCostPercent(unit) / 100 * elapsedSeconds);
       }
       if (unit.st >= exhaustedRecoveryThreshold) {
         unit.exhausted = false;
       }
     } else if (unit.isMoving) {
-      unit.st = Math.max(0, (Number(unit.st) || 0) - ST_MOVE_COST_PER_SECOND * elapsedSeconds);
+      unit.st = Math.max(0, (Number(unit.st) || 0) - ST_MOVE_COST_PER_SECOND * getMovementStCostPercent(unit) / 100 * elapsedSeconds);
       if (unit.st <= 0) {
         unit.exhausted = true;
       }
@@ -810,6 +810,7 @@ function moveUnit(unit, targets) {
   unit.y += unit.vy;
   clampPosition(unit);
   unit.moveDistanceTotal = (unit.moveDistanceTotal ?? 0) + Math.hypot(unit.x-startX, unit.y-startY) / ATTACK_RANGE_UNIT;
+  processMovementEffectTriggers(unit);
 }
 
 function resolveCollision() {

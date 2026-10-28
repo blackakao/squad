@@ -3,28 +3,35 @@ const PASSIVE_TRIGGER_LABELS = {battle_entry:"전투 진입시",hit:"자신이 �
 function normalizePassiveTrigger(trigger) {
   if (!trigger || typeof trigger !== "object") return null;
   const mitigation=trigger.recentAttackerMitigation;
-  const {allowMultiplePerTick:_allowMultiplePerTick,recentAttackerMitigation:_recentAttackerMitigation,...rest}=trigger;
-  return {...rest,event:String(trigger.event ?? ""),chance:trigger.chance == null ? 100 : Number(trigger.chance),includePeriodic:trigger.includePeriodic === true,
+  const damageType=["physical","magic","fixed"].includes(trigger.damageType) ? trigger.damageType : "";
+  const events=[...new Set((Array.isArray(trigger.events) ? trigger.events : [trigger.event]).map(String).filter(event=>Object.hasOwn(PASSIVE_TRIGGER_LABELS,event)))];
+  const event=events[0] ?? String(trigger.event ?? "");
+  const {allowMultiplePerTick:_allowMultiplePerTick,recentAttackerMitigation:_recentAttackerMitigation,damageType:_damageType,events:_events,...rest}=trigger;
+  return {...rest,event,chance:trigger.chance == null ? 100 : Number(trigger.chance),includePeriodic:trigger.includePeriodic === true,
+    ...(events.length > 1 ? {events} : {}),
+    ...(damageType ? {damageType} : {}),
     ...(trigger.allowMultiplePerTick === true ? {allowMultiplePerTick:true} : {}),
     ...(mitigation?.enabled ? {recentAttackerMitigation:{enabled:true,window:Math.max(.1,Number(mitigation.window) || 3),threshold:Math.max(2,Math.floor(Number(mitigation.threshold) || 2)),initialReductionPercent:Math.max(0,Math.min(100,Number(mitigation.initialReductionPercent) || 0)),additionalReductionPercent:Math.max(0,Math.min(100,Number(mitigation.additionalReductionPercent) || 0)),maxReductionPercent:Math.max(0,Math.min(100,Number(mitigation.maxReductionPercent) || 0))}} : {})};
 }
 
 function isPassiveTriggerConfigured(skill) {
   const trigger = skill.passiveTrigger;
-  return Boolean(trigger && Object.hasOwn(PASSIVE_TRIGGER_LABELS,trigger.event)
+  return Boolean(trigger && (trigger.events ?? [trigger.event]).some(event=>Object.hasOwn(PASSIVE_TRIGGER_LABELS,event))
     && Number.isFinite(trigger.chance) && trigger.chance >= 0 && trigger.chance <= 100);
 }
 
 function renderPassiveTriggerForm(skill = null) {
   const trigger = normalizePassiveTrigger(skill?.passiveTrigger);
   const select = document.getElementById("skillPassiveEvent");
-  select.innerHTML = '<option value="">조건 선택 필요</option>' + Object.entries(PASSIVE_TRIGGER_LABELS)
+  select.innerHTML = Object.entries(PASSIVE_TRIGGER_LABELS)
     .map(([key,label]) => `<option value="${key}">${label}</option>`).join("");
   if (trigger?.event && !Object.hasOwn(PASSIVE_TRIGGER_LABELS,trigger.event)) {
     select.insertAdjacentHTML("beforeend",`<option value="${escapeHtml(trigger.event)}" disabled>미지원: ${escapeHtml(trigger.event)}</option>`);
   }
-  select.value = trigger?.event ?? "";
+  const selectedEvents=trigger?.events ?? (trigger?.event ? [trigger.event] : []);
+  [...select.options].forEach(option=>option.selected=selectedEvents.includes(option.value));
   document.getElementById("skillPassiveChance").value = trigger?.chance ?? 100;
+  document.getElementById("skillPassiveDamageType").value = trigger?.damageType ?? "";
   document.getElementById("skillPassivePeriodic").checked = trigger?.includePeriodic ?? false;
   document.getElementById("skillPassiveMultiplePerTick").checked = trigger?.allowMultiplePerTick ?? false;
   const mitigation=trigger?.recentAttackerMitigation;
@@ -54,8 +61,9 @@ function updateSkillTypeFields() {
 
 function readPassiveTriggerForm() {
   const mitigationEnabled=document.getElementById("skillPassiveRecentAttackersEnabled").checked;
-  return normalizePassiveTrigger({event:document.getElementById("skillPassiveEvent").value,
-    chance:Number(document.getElementById("skillPassiveChance").value),includePeriodic:document.getElementById("skillPassivePeriodic").checked,allowMultiplePerTick:document.getElementById("skillPassiveMultiplePerTick").checked,
+  const events=[...document.getElementById("skillPassiveEvent").selectedOptions].map(option=>option.value);
+  return normalizePassiveTrigger({event:events[0] ?? "",events,
+    chance:Number(document.getElementById("skillPassiveChance").value),damageType:document.getElementById("skillPassiveDamageType").value,includePeriodic:document.getElementById("skillPassivePeriodic").checked,allowMultiplePerTick:document.getElementById("skillPassiveMultiplePerTick").checked,
     ...(mitigationEnabled ? {recentAttackerMitigation:{enabled:true,window:Number(document.getElementById("skillPassiveRecentAttackersWindow").value),threshold:Number(document.getElementById("skillPassiveRecentAttackersThreshold").value),initialReductionPercent:Number(document.getElementById("skillPassiveRecentAttackersInitial").value),additionalReductionPercent:Number(document.getElementById("skillPassiveRecentAttackersAdditional").value),maxReductionPercent:Number(document.getElementById("skillPassiveRecentAttackersMax").value)}} : {})});
 }
 
@@ -93,7 +101,8 @@ function handlePassiveBattleEvent(event, context) {
   for (const skill of skills) {
     if (!owner.alive) break;
     const trigger = skill.passiveTrigger;
-    if (trigger.event !== triggerType || (event.periodic && !trigger.includePeriodic)) continue;
+    if (!(trigger.events ?? [trigger.event]).includes(triggerType) || (event.periodic && !trigger.includePeriodic)) continue;
+    if (trigger.damageType && event.damageType !== trigger.damageType) continue;
     owner.passiveLastTriggerTick ??= {};
     owner.skillCooldowns ??= {};
     if ((!trigger.allowMultiplePerTick && owner.passiveLastTriggerTick[skill.id] === event.tick) || (owner.skillCooldowns[skill.id] ?? 0) > 0) continue;

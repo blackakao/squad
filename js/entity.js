@@ -8,7 +8,7 @@ const ENTITY_ROLES = {melee:"근접",ranged:"원거리",healer:"치유 (힐)",ta
 const ENTITY_AI = {melee:"근접",ranged:"원거리",healer:"치유",stationary:"설치형"};
 
 function createDefaultEntity() {
-  return {entityId:"",name:"새 Entity",description:"",icon:"",role:"melee",ai:"melee",attackType:"physical",summonType:"temporary",tags:["summon"],stats:{hp:100,mp:100,st:100,atk:10,magic:10,defense:0,resistance:0,speed:1,attackSpeed:1,castTime:0,attackRange:1}};
+  return {entityId:"",name:"새 Entity",description:"",icon:"",role:"melee",ai:"melee",attackType:"physical",attackSkillId:"",summonType:"temporary",tags:["summon"],stats:{hp:100,mp:100,st:100,atk:10,magic:10,defense:0,resistance:0,speed:1,attackSpeed:1,castTime:0,attackRange:1}};
 }
 
 async function entityRequest(path = "", method = "GET", body) {
@@ -33,7 +33,7 @@ function getSummonConfiguration(source, action) {
   const stats={...entity.stats};
   const sourceFields={hp:"maxHp",mp:"maxMp",st:"maxSt",atk:"atk",magic:"magic",defense:"defense",resistance:"resistance",speed:"speed"};
   for(const stat of SUMMON_INHERIT_STATS) stats[stat]=(Number(stats[stat]) || 0)+(Number(source?.[sourceFields[stat]]) || 0)*(Number(action.inheritStats?.[stat]) || 0)/100;
-  return {...stats, entityId:entity.entityId,name:entity.name,icon:entity.icon,role:entity.role,ai:entity.ai,attackType:entity.attackType === "magic" ? "magic" : "physical",
+  return {...stats, entityId:entity.entityId,name:entity.name,icon:entity.icon,role:entity.role,ai:entity.ai,attackType:entity.attackType === "magic" ? "magic" : "physical",attackSkillId:String(entity.attackSkillId ?? ""),
     summonType:entity.summonType === "persistent" ? "persistent" : "temporary",
     speed:entity.ai === "stationary" ? 0 : stats.speed,
     count:action.count ?? 1,limit:action.limit ?? 3,lifetime:action.duration ?? 20,summonCenter:action.summonCenter ?? "self",
@@ -108,7 +108,7 @@ function refreshEntityAction(row, initialize = false) {
   }
   const icon = safeEntityIcon(entity.icon);
   info.innerHTML = `${icon ? `<img class="entity-icon" src="${escapeHtml(icon)}" alt="Entity 아이콘">` : ''}<strong>${escapeHtml(entity.name)}</strong><p>${escapeHtml(entity.description || '')}</p>
-    <dl><dt>역할 / AI</dt><dd>${ENTITY_ROLES[entity.role]} / ${ENTITY_AI[entity.ai]}</dd>${Object.entries(ENTITY_STAT_FIELDS).map(([key,label])=>`<dt>${label}</dt><dd>${entity.stats[key]}</dd>`).join('')}<dt>태그</dt><dd>${escapeHtml(entity.tags.join(', '))}</dd></dl>`;
+    <dl><dt>역할 / AI</dt><dd>${ENTITY_ROLES[entity.role]} / ${ENTITY_AI[entity.ai]}</dd><dt>기본 공격 스킬</dt><dd>${escapeHtml(getSkillById(entity.attackSkillId)?.name ?? "기본 공격")}</dd>${Object.entries(ENTITY_STAT_FIELDS).map(([key,label])=>`<dt>${label}</dt><dd>${entity.stats[key]}</dd>`).join('')}<dt>태그</dt><dd>${escapeHtml(entity.tags.join(', '))}</dd></dl>`;
   const usages = entityUsages(entity.entityId);
   row.querySelector('.entity-usages').innerHTML = `<strong>사용 중인 Skill (${usages.length})</strong>${usages.length ? usages.map(skill=>`<button type="button" data-skill-id="${escapeHtml(skill.id)}" onclick="navigateEntityUsage(this)">${escapeHtml(skill.name)}</button>`).join('') : '<p>저장된 사용처 없음</p>'}`;
 }
@@ -184,6 +184,7 @@ function ensureEntityEditor() {
       <fieldset><legend>능력치</legend><div class="entity-stat-grid">${Object.entries(ENTITY_STAT_FIELDS).map(([key,label])=>`<label>${label}<input name="${key}" type="number" min="${key==='hp'?1:['attackSpeed','attackRange'].includes(key)?0.1:0}" max="100000" step="any" required></label>`).join('')}</div></fieldset>
       <label>AI<select name="ai">${options(ENTITY_AI)}</select></label>
       <label>공격 타입<select name="attackType"><option value="physical">물리</option><option value="magic">마법</option></select></label>
+      <label>기본 공격 스킬<select name="attackSkillId"><option value="">Entity 기본 공격</option>${getSkillOptionsHtml("")}</select></label>
       <p id="entityEditorUsage"></p>
       <label>저장 방식<select name="saveMode" onchange="updateEntitySaveMode()"><option value="update">기존 Entity 수정 (모든 Skill에 반영)</option><option value="new">새 Entity로 저장 (현재 액션만 연결)</option></select></label>
       <div class="entity-toolbar"><button type="submit">Entity 저장</button><button type="button" onclick="startEntityPreview()">미리보기</button><button type="button" onclick="stopEntityPreview()">미리보기 중지</button><button type="button" onclick="closeEntityEditor()">닫기</button></div>
@@ -200,6 +201,7 @@ function openEntityEditor(button, edit = false) {
   for(const key of ['entityId','name','description','icon','role','ai']) form.elements[key].value = entity[key] || '';
   form.elements.summonType.value = entity.summonType ?? 'temporary';
   form.elements.attackType.value = entity.attackType === 'magic' ? 'magic' : 'physical';
+  form.elements.attackSkillId.value = entity.attackSkillId ?? '';
   form.elements.tags.value = entity.tags.join(', ');
   for(const key of Object.keys(ENTITY_STAT_FIELDS)) form.elements[key].value = entity.stats[key];
   form.elements.saveMode.value = edit ? 'update' : 'new';
@@ -224,7 +226,7 @@ function readEntityEditor() {
   const form = document.getElementById('entityEditorForm');
   return {entityId:form.elements.entityId.value.trim(),name:form.elements.name.value.trim(),description:form.elements.description.value,
     summonType:form.elements.summonType.value,
-    icon:form.elements.icon.value.trim(),role:form.elements.role.value,ai:form.elements.ai.value,attackType:form.elements.attackType.value,tags:form.elements.tags.value.split(',').map(s=>s.trim()).filter(Boolean),
+    icon:form.elements.icon.value.trim(),role:form.elements.role.value,ai:form.elements.ai.value,attackType:form.elements.attackType.value,attackSkillId:form.elements.attackSkillId.value,tags:form.elements.tags.value.split(',').map(s=>s.trim()).filter(Boolean),
     stats:Object.fromEntries(Object.keys(ENTITY_STAT_FIELDS).map(key=>[key,Number(form.elements[key].value)]))};
 }
 
@@ -266,7 +268,7 @@ function startEntityPreview() {
   preview.classList.remove('hidden');
   const width = canvas.width || 400, height = canvas.height || 300;
   const owner = {name:'미리보기',side:'player',x:width*.2,y:height*.5,isEntityPreview:true,previewBounds:{width,height}};
-  const unit = createSummonedBattleUnit(owner,{...entity.stats,name:entity.name,icon:entity.icon,role:entity.role,ai:entity.ai,speed:entity.ai==='stationary'?0:entity.stats.speed});
+  const unit = createSummonedBattleUnit(owner,{...entity.stats,name:entity.name,icon:entity.icon,role:entity.role,ai:entity.ai,attackType:entity.attackType,attackSkillId:entity.attackSkillId ?? '',speed:entity.ai==='stationary'?0:entity.stats.speed});
   unit.x=width*.2;unit.y=height*.5;
   const dummy = createSummonedBattleUnit({...owner,side:'enemy'}, {...entity.stats,name:'훈련 대상',role:'melee',ai:'stationary',hp:100000,atk:0,magic:0,speed:0});
   dummy.x=width*.7;dummy.y=height*.5;

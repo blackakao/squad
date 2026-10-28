@@ -16,7 +16,7 @@ Entity는 `data/entities/<entityId>.json`에 개체별로 저장한다. 스킬�
 
 Entity 저장은 즉시 DB에 반영된다. Entity 생성/복사 후 **스킬 저장**을 눌러 연결 변경을 저장해야 한다. 스킬 편집을 취소해도 이미 저장한 Entity는 남으며 다시 선택할 수 있다.
 
-Entity의 **공격 타입**은 `physical` 또는 `magic`으로 저장하며 소환수의 기본 공격에 사용한다. 기존 Entity는 치유 AI만 마법, 나머지는 물리로 호환한다.
+Entity의 **공격 타입**은 `physical` 또는 `magic`으로 저장하며 소환수의 기본 공격에 사용한다. 선택 필드 `attackSkillId`를 지정하면 해당 실행 가능한 스킬을 Entity의 기본 공격으로 사용한다. 비어 있거나 참조가 유효하지 않으면 기존 단일 대상 기본 공격으로 돌아간다. 기존 Entity는 치유 AI만 마법, 나머지는 물리로 호환한다.
 
 ## 능력치와 AI
 
@@ -68,7 +68,7 @@ Entity 편집에서 **미리보기**를 누르면 미저장 값으로 독립 캔
 | DELETE | `/api/entities/<id>` | 삭제, 사용 중이면 409 |
 | GET | `/api/entities/<id>/usages` | 참조 스킬의 ID/이름 배열 |
 
-생성/수정 본문은 `entityId`, `name`, `description`, `icon`, `role`, `ai`, `tags`, `stats` 객체를 사용한다. `stats`에는 위의 11개 능력치가 필요하다. 설명·아이콘·태그는 생략 가능하며 AI 생략 시 역할에 따라 기본값을 정한다.
+생성/수정 본문은 `entityId`, `name`, `description`, `icon`, `role`, `ai`, `attackType`, 선택적 `attackSkillId`, `tags`, `stats` 객체를 사용한다. `stats`에는 위의 11개 능력치가 필요하다. 설명·아이콘·태그는 생략 가능하며 AI 생략 시 역할에 따라 기본값을 정한다.
 
 서버는 Entity 삭제와 스킬 저장을 동일 잠금 안에서 검증한다. 삭제 검사 직후 다른 요청이 참조를 추가하는 경합에서도 끊어진 참조를 만들지 않는다. 잘못된 ID, 경로 이동, 음수/무한대 등 유효하지 않은 능력치를 거부한다. 파일은 임시 파일 작성 후 교체한다.
 

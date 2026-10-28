@@ -53,6 +53,8 @@ class EntityStore:
             raise EntityError("소환수 종류는 persistent 또는 temporary여야 합니다.")
         if entity.get("attackType", "physical") not in ("physical", "magic"):
             raise EntityError("공격 타입은 physical 또는 magic이어야 합니다.")
+        if not isinstance(entity.get("attackSkillId", ""), str):
+            raise EntityError("기본 공격 스킬 ID는 문자열이어야 합니다.")
         if not isinstance(entity.get("tags"), list) or not all(isinstance(t, str) for t in entity["tags"]):
             raise EntityError("태그는 문자열 배열이어야 합니다.")
         if not all(isinstance(entity.get(key, ""), str) for key in ("description", "icon")):
@@ -92,6 +94,7 @@ class EntityStore:
             entity.setdefault("tags", [])
             entity.setdefault("ai", entity.get("role") if entity.get("role") in {"melee", "ranged", "healer"} else "melee")
             entity.setdefault("attackType", "magic" if entity.get("ai") == "healer" else "physical")
+            entity.setdefault("attackSkillId", "")
             self.validate(entity)
             path = self.path(entity["entityId"])
             if create and path.exists():

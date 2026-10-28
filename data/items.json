@@ -3067,5 +3067,26 @@
     "defense": 0.8,
     "resistance": 4.9,
     "attackRange": 0
+  },
+  {
+    "id": "item_1793195869879",
+    "name": "단검샘플",
+    "slot": "mainWeapon",
+    "weaponCategory": "단검",
+    "handType": "oneHand",
+    "attackType": "physical",
+    "attackSkillId": "",
+    "armorCategory": "",
+    "hp": 0,
+    "mp": 0,
+    "st": 0,
+    "atk": 120,
+    "magic": 0,
+    "speed": 0,
+    "attackSpeed": 1,
+    "castSpeed": 0.2,
+    "defense": 0,
+    "resistance": 0,
+    "attackRange": 1
   }
 ]
