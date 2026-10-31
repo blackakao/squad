@@ -8,6 +8,7 @@ function normalizePassiveTrigger(trigger) {
   const event=events[0] ?? String(trigger.event ?? "");
   const {allowMultiplePerTick:_allowMultiplePerTick,recentAttackerMitigation:_recentAttackerMitigation,damageType:_damageType,events:_events,...rest}=trigger;
   return {...rest,event,chance:trigger.chance == null ? 100 : Number(trigger.chance),includePeriodic:trigger.includePeriodic === true,
+    ...(trigger.basicAttackOnly === true ? {basicAttackOnly:true} : {}),
     ...(events.length > 1 ? {events} : {}),
     ...(damageType ? {damageType} : {}),
     ...(trigger.allowMultiplePerTick === true ? {allowMultiplePerTick:true} : {}),
@@ -32,6 +33,7 @@ function renderPassiveTriggerForm(skill = null) {
   [...select.options].forEach(option=>option.selected=selectedEvents.includes(option.value));
   document.getElementById("skillPassiveChance").value = trigger?.chance ?? 100;
   document.getElementById("skillPassiveDamageType").value = trigger?.damageType ?? "";
+  document.getElementById("skillPassiveBasicAttackOnly").checked = trigger?.basicAttackOnly ?? false;
   document.getElementById("skillPassivePeriodic").checked = trigger?.includePeriodic ?? false;
   document.getElementById("skillPassiveMultiplePerTick").checked = trigger?.allowMultiplePerTick ?? false;
   const mitigation=trigger?.recentAttackerMitigation;
@@ -63,7 +65,7 @@ function readPassiveTriggerForm() {
   const mitigationEnabled=document.getElementById("skillPassiveRecentAttackersEnabled").checked;
   const events=[...document.getElementById("skillPassiveEvent").selectedOptions].map(option=>option.value);
   return normalizePassiveTrigger({event:events[0] ?? "",events,
-    chance:Number(document.getElementById("skillPassiveChance").value),damageType:document.getElementById("skillPassiveDamageType").value,includePeriodic:document.getElementById("skillPassivePeriodic").checked,allowMultiplePerTick:document.getElementById("skillPassiveMultiplePerTick").checked,
+    chance:Number(document.getElementById("skillPassiveChance").value),damageType:document.getElementById("skillPassiveDamageType").value,basicAttackOnly:document.getElementById("skillPassiveBasicAttackOnly").checked,includePeriodic:document.getElementById("skillPassivePeriodic").checked,allowMultiplePerTick:document.getElementById("skillPassiveMultiplePerTick").checked,
     ...(mitigationEnabled ? {recentAttackerMitigation:{enabled:true,window:Number(document.getElementById("skillPassiveRecentAttackersWindow").value),threshold:Number(document.getElementById("skillPassiveRecentAttackersThreshold").value),initialReductionPercent:Number(document.getElementById("skillPassiveRecentAttackersInitial").value),additionalReductionPercent:Number(document.getElementById("skillPassiveRecentAttackersAdditional").value),maxReductionPercent:Number(document.getElementById("skillPassiveRecentAttackersMax").value)}} : {})});
 }
 
@@ -103,6 +105,7 @@ function handlePassiveBattleEvent(event, context) {
     const trigger = skill.passiveTrigger;
     if (!(trigger.events ?? [trigger.event]).includes(triggerType) || (event.periodic && !trigger.includePeriodic)) continue;
     if (trigger.damageType && event.damageType !== trigger.damageType) continue;
+    if (trigger.basicAttackOnly && getSkillById(event.skillId)?.slot !== "basic") continue;
     owner.passiveLastTriggerTick ??= {};
     owner.skillCooldowns ??= {};
     if ((!trigger.allowMultiplePerTick && owner.passiveLastTriggerTick[skill.id] === event.tick) || (owner.skillCooldowns[skill.id] ?? 0) > 0) continue;
@@ -116,7 +119,6 @@ function handlePassiveBattleEvent(event, context) {
     syncAliveState(owner,{source:owner,skill:{...skill,triggered:true},reason:"패시브 자원 소모"});
     if (!owner.alive) continue;
     addBattleEventLog(owner,`${owner.name}: 패시브 ${skill.name} 발동 (${PASSIVE_TRIGGER_LABELS[triggerType]})`);
-    showSkillBubble(owner,skill.name,skill.icon);
     applySkill(owner,preferred,{...skill,triggered:true},createSkillExecutionContext(resourceSpent,event));
   }
 }

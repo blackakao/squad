@@ -136,6 +136,7 @@
 - `icon`: `assets/images/skills/` 아래의 선택적 개별 그림 경로
 - `slot`: `basic`, `active`, `passive`, `choice_team`, `choice_prebattle`
 - `choice`: 선택 타입 전용 `{ defaultOptionId, options[] }`. 각 option은 `{ id, label, skillId }`이며 `skillId`로 기존 실행 스킬을 참조한다.
+- `selectionModifier`: 선택지가 참조하는 내부 스킬의 지속형 보정. `targetSkillIds`, `resourceTypes`, `castTimePercent`, `resourceCostPercent`, `coefficientPercent`, `areaPercent`, `splashPercent`, `splashRadius`를 사용한다. 필드가 없는 기존 선택지는 다른 스킬을 변경하지 않는다.
 - 액션 대상 재적용 제한: `targetCooldown`은 초 단위이며 `targetCooldownScope`는 `caster`(기본, 시전자별) 또는 `global`(모든 시전자 공유)이다. `global`은 `targetCooldownEffectId`와 `targetCooldownEffectName`으로 대상 상태에 표시되는 제한 효과를 만든다.
 - 액션의 `allowSelfTarget`은 아군 대상에 시전자 자신을 포함할지 정한다. 생략 기본값은 `true`다.
 - 액션의 `ownedSummonCondition`은 `any`·`alive`·`absent`, `ownedSummonEntityId`는 검사할 소환 Entity ID다. `targetSummonEntityId`는 `target: summon`의 후보를 특정 Entity로 제한한다.

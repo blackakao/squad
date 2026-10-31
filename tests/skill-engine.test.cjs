@@ -2505,3 +2505,82 @@ test('assassin ambush and death sentence match their class rules',()=>{
  for(let tick=0;tick<180;tick++){e.updateBattleEffects();e.updateRuntimeRuleOverrides();}
  assert.equal(e.hasBattleState(target,'silence'),false);assert.equal(e.getUnitIncomingRulePercent(target,'receivedDamagePercent'),100);
 });
+
+test('prebattle selection modifiers change only their configured skills',()=>{
+ const e=engine();
+ e.skillsJson=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8')));
+ const mage=unit(e);mage.skillIds=['skill_class_mage_element_choice','skill_class_mage_arrow','skill_class_mage_area'];
+ mage.skillSelections={skill_class_mage_element_choice:'wind'};
+ let arrow=e.getEquippedSkills(mage).find(item=>item.id==='skill_class_mage_arrow');assert.equal(arrow.castTime,.35);assert.equal(arrow.actions[0].coefficients[0].value,100);
+ mage.skillSelections.skill_class_mage_element_choice='earth';
+ arrow=e.getEquippedSkills(mage).find(item=>item.id==='skill_class_mage_arrow');assert.equal(arrow.castTime,.5);assert.equal(arrow.resourceCosts[0].value,12);assert.equal(arrow.actions[0].coefficients[0].value,115);
+ mage.skillSelections.skill_class_mage_element_choice='lightning';
+ const area=e.getEquippedSkills(mage).find(item=>item.id==='skill_class_mage_area');assert.equal(area.actions[0].area,2.6);assert.equal(area.actions[0].splashPercent,30);assert.equal(area.actions[0].splashRadius,2);
+});
+
+test('lightning selection copies thirty percent to nearby secondary targets without rehitting the primary',()=>{
+ const e=engine();
+ e.skillsJson=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8')));
+ const source=unit(e),primary=unit(e,'enemy',110),nearby=unit(e,'enemy',125),far=unit(e,'enemy',140);
+ source.magic=100;source.skillIds=['skill_class_mage_element_choice','skill_class_mage_arrow'];source.skillSelections={skill_class_mage_element_choice:'lightning'};
+ for(const target of [primary,nearby,far]) target.hp=target.maxHp=200;
+ const arrow=e.getEquippedSkills(source).find(item=>item.id==='skill_class_mage_arrow');e.applySkill(source,primary,arrow);
+ assert.equal(primary.hp,100);assert.equal(nearby.hp,170);assert.equal(far.hp,200);
+});
+
+test('mage element choice data uses lightning by default and is assigned before its affected skills',()=>{
+ const e=engine(),skills=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8')));
+ const characters=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','characters.json'),'utf8'));
+ const choice=skills.find(item=>item.id==='skill_class_mage_element_choice'),mage=characters.find(item=>item.name==='마법사');
+ assert.equal(choice.slot,'choice_prebattle');assert.equal(choice.choice.defaultOptionId,'lightning');assert.deepEqual(Array.from(choice.choice.options,option=>option.id),['lightning','wind','earth']);
+ assert.deepEqual(mage.skillIds,['skill_class_mage_element_choice','skill_class_mage_arrow','skill_class_mage_barrier','skill_class_mage_quick','skill_class_mage_area']);
+});
+
+test('scholar brain muscle continuously converts magic and resources without double counting',()=>{
+ const e=engine();
+ e.skillsJson=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8')));
+ const scholar=unit(e);scholar.skillIds=['skill_class_scholar_brain_muscle'];e.resetUnitForBattle(scholar);
+ assert.deepEqual([scholar.atk,scholar.magic,scholar.maxMp,scholar.mp,scholar.maxSt,scholar.st],[30,0,0,0,200,200]);
+ e.resetUnitForBattle(scholar);assert.deepEqual([scholar.atk,scholar.magic,scholar.maxSt],[30,0,200]);
+ const buff=e.createDefaultAction('add_buff');buff.target='self';buff.duration=1;Object.assign(buff.effect,{id:'scholar_magic_test',stat:'magic',mode:'flat',value:10});
+ e.applySkill(scholar,scholar,skill(e,buff));assert.deepEqual([scholar.atk,scholar.magic],[40,0]);
+});
+
+test('scholar fake barrier raises current and maximum HP then clips excess HP on expiry',()=>{
+ const e=engine();e.skillsJson=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8')));
+ const scholar=unit(e);scholar.resistance=0;scholar.skillIds=['skill_class_scholar_brain_muscle','skill_class_scholar_fake_barrier'];e.resetUnitForBattle(scholar);
+ const barrier=e.getSkillById('skill_class_scholar_fake_barrier');scholar.hp=80;e.applySkill(scholar,scholar,barrier);
+ assert.deepEqual([scholar.maxHp,scholar.hp,scholar.resistance],[124,104,20]);
+ scholar.hp=124;for(let tick=0;tick<300;tick++)e.updateBattleEffects();
+ assert.deepEqual([scholar.maxHp,scholar.hp,scholar.resistance],[100,100,0]);
+});
+
+test('scholar skill data remains physical and assigned as passive plus four active skills',()=>{
+ const e=engine(),skills=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8')));
+ const characters=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','characters.json'),'utf8'));
+ const ids=['skill_class_scholar_brain_muscle','skill_class_scholar_fake_arrow','skill_class_scholar_fake_barrier','skill_class_scholar_fake_explosion','skill_class_scholar_fake_smite'];
+ assert.deepEqual(characters[24].skillIds,ids);assert.equal(skills.find(item=>item.id===ids[0]).slot,'passive');
+ for(const id of ids.slice(1)) assert.ok(skills.find(item=>item.id===id).actions.some(action=>action.type !== 'deal_damage' || action.damageType === 'physical'));
+});
+
+test('executioner excitement triggers only on basic attacks and routes full HP recovery to BP',()=>{
+ const e=engine();e.skillsJson=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8')));
+ const source=unit(e),target=unit(e,'enemy',105);source.skillIds=['skill_class_executioner_excitement'];source.atk=20;target.defense=0;
+ const basic=e.getSkillById('skill_basic_weapon_attack');e.applySkill(source,target,basic);
+ assert.equal(source.hp,100);assert.equal(source.bp,3);
+ source.hp=50;e.applySkill(source,target,basic);assert.equal(source.hp,53);assert.equal(source.bp,3);
+ const active=e.getSkillById('skill_class_executioner_execute');source.hp=50;e.applySkill(source,target,active);
+ assert.equal(source.hp,65);assert.equal(source.bp,3);
+});
+
+test('executioner skill data matches excitement execute and bind rules',()=>{
+ const e=engine(),skills=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8')));
+ const characters=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','characters.json'),'utf8'));
+ const passive=skills.find(item=>item.id==='skill_class_executioner_excitement');
+ const execute=skills.find(item=>item.id==='skill_class_executioner_execute');
+ const bind=skills.find(item=>item.id==='skill_class_executioner_bind');
+ assert.deepEqual([passive.passiveTrigger.basicAttackOnly,passive.actions[0].coefficients[0].value,passive.actions[0].fullResourceAlternative],[true,15,'BP']);
+ assert.deepEqual([execute.castTime,execute.cooldown,execute.resourceCosts[0].value,execute.actions[0].coefficients[0].value,execute.actions[1].coefficients[0].value],[0,7,10,150,50]);
+ assert.deepEqual([bind.castTime,bind.cooldown,bind.resourceCosts[0].value,bind.actions[0].rangeValue,bind.actions[0].duration,bind.actions[0].effect.state],[.5,10,10,5,4,'root']);
+ const executioner=characters.find(character=>character.name==='집행가');assert.deepEqual(executioner.skillIds,[passive.id,execute.id,bind.id]);
+});

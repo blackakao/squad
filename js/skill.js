@@ -162,6 +162,7 @@ function createDefaultAction(type = "deal_damage") {
     chainRange: 3,
     coefficients: [coefficient],
     healResource: "HP",
+    fullResourceAlternative: "",
     drainResource: "MP",
     damageType: type === "heal" ? "magic" : "physical",
     area: 0,
@@ -240,6 +241,23 @@ function getSkillSlotLabel(slot) {
 function isChoiceSkill(skillOrSlot) {
   const slot = typeof skillOrSlot === "string" ? skillOrSlot : skillOrSlot?.slot;
   return slot === "choice_team" || slot === "choice_prebattle";
+}
+
+function normalizeSelectionModifier(modifier = {}) {
+  const percent = (key, fallback = 100) => {
+    const value = Number(modifier?.[key]);
+    return Number.isFinite(value) ? Math.max(0, value) : fallback;
+  };
+  return {
+    targetSkillIds:[...new Set((Array.isArray(modifier?.targetSkillIds) ? modifier.targetSkillIds : []).map(String).filter(Boolean))],
+    resourceTypes:[...new Set((Array.isArray(modifier?.resourceTypes) ? modifier.resourceTypes : []).map(value=>normalizeResourceReference(value)).filter(Boolean))],
+    castTimePercent:percent("castTimePercent"),
+    resourceCostPercent:percent("resourceCostPercent"),
+    coefficientPercent:percent("coefficientPercent"),
+    areaPercent:percent("areaPercent"),
+    splashPercent:percent("splashPercent",0),
+    splashRadius:Math.max(0,Number(modifier?.splashRadius) || 0)
+  };
 }
 
 function normalizeSkillChoice(choice = {}) {
@@ -581,6 +599,7 @@ function normalizeSkillAction(action = {}) {
     chainOrigin:action.chainOrigin === "primary" ? "primary" : "previous",
     coefficients: normalizeActionCoefficients({ ...action, type }),
     healResource: normalizeResourceReference(healResourceValue, "HP"),
+    fullResourceAlternative: action.fullResourceAlternative ? normalizeResourceReference(action.fullResourceAlternative, "") : "",
     drainResource: normalizeResourceReference(action.drainResource ?? action.drain_resource, "MP"),
     damageType: ACTION_DAMAGE_TYPES.includes(damageTypeValue) ? damageTypeValue : "physical",
     area: normalizeSkillCooldown(action.area),
@@ -668,6 +687,20 @@ function normalizeSkillCombo(combo) {
   };
 }
 
+function normalizePassiveConversions(value) {
+  if (!value || typeof value !== "object") return null;
+  const stat = value.stat && typeof value.stat === "object" ? {
+    source:String(value.stat.source ?? "magic"), target:String(value.stat.target ?? "atk"),
+    percent:Math.max(0,Number(value.stat.percent ?? 100) || 0), consumeSource:value.stat.consumeSource !== false
+  } : null;
+  const resource = value.resource && typeof value.resource === "object" ? {
+    source:String(value.resource.source ?? "MP").toUpperCase(), target:String(value.resource.target ?? "ST").toUpperCase(),
+    percent:Math.max(0,Number(value.resource.percent ?? 100) || 0), consumeSource:value.resource.consumeSource !== false
+  } : null;
+  const adaptiveOffense = value.adaptiveOffense === "atk" || value.adaptiveOffense === "magic" ? value.adaptiveOffense : "";
+  return stat || resource || adaptiveOffense ? {stat,resource,adaptiveOffense} : null;
+}
+
 function normalizeSkillJson(skills) {
   const defaults = createDefaultSkillJson();
   const normalized = (Array.isArray(skills) && skills.length ? skills : defaults)
@@ -684,9 +717,11 @@ function normalizeSkillJson(skills) {
       channel:normalizeSkillChannel(skill?.channel),
       ...(skill?.slot === "passive" || skill?.passiveTrigger ? {passiveTrigger:normalizePassiveTrigger(skill?.passiveTrigger)} : {}),
       ...(isChoiceSkill(skill?.slot) ? {choice:normalizeSkillChoice(skill?.choice)} : {}),
+      ...(skill?.selectionModifier ? {selectionModifier:normalizeSelectionModifier(skill.selectionModifier)} : {}),
+      ...(normalizePassiveConversions(skill?.passiveConversions) ? {passiveConversions:normalizePassiveConversions(skill.passiveConversions)} : {}),
       ...(normalizeSkillCombo(skill?.combo) ? {combo:normalizeSkillCombo(skill.combo)} : {}),
       resourceCosts: normalizeSkillResourceCosts(skill),
-      actions: isChoiceSkill(skill?.slot) ? [] : (Array.isArray(skill?.actions) && skill.actions.length ? skill.actions.map(normalizeSkillAction) : [createDefaultAction()])
+      actions: isChoiceSkill(skill?.slot) || skill?.selectionModifier ? [] : (Array.isArray(skill?.actions) && skill.actions.length ? skill.actions.map(normalizeSkillAction) : [createDefaultAction()])
     }))
     .filter(skill => skill.id && skill.name);
 
@@ -801,6 +836,40 @@ function getRuntimeItemSkill(unit, skill) {
   return result ?? skill;
 }
 
+function getSelectedSkillModifiers(unit, skill) {
+  const targetId=skill?.copiedFrom || skill?.id;
+  if (!targetId) return [];
+  return (unit?.skillIds ?? []).map(getSkillById).filter(isChoiceSkill).map(choiceSkill=>{
+    const option=getChoiceSkillOption(choiceSkill,unit?.skillSelections?.[choiceSkill.id]);
+    return option ? getSkillById(option.skillId)?.selectionModifier : null;
+  }).filter(modifier=>modifier && (!modifier.targetSkillIds.length || modifier.targetSkillIds.includes(targetId)));
+}
+
+function getRuntimeSelectionSkill(unit, skill) {
+  const modifiers=getSelectedSkillModifiers(unit,skill);
+  if (!modifiers.length) return skill;
+  const result=structuredClone(skill);
+  const multiply=(key)=>modifiers.reduce((value,modifier)=>value*modifier[key]/100,100);
+  const castTimePercent=multiply("castTimePercent");
+  if (result.castTime != null) result.castTime=Math.max(0,result.castTime*castTimePercent/100);
+  result.resourceCosts=(result.resourceCosts ?? []).map(cost=>{
+    const percent=modifiers.reduce((value,modifier)=>modifier.resourceTypes.length && !modifier.resourceTypes.includes(cost.resource)
+      ? value : value*modifier.resourceCostPercent/100,100);
+    return {...cost,value:Math.max(0,cost.value*percent/100)};
+  });
+  result.actions=(result.actions ?? []).map(action=>{
+    const next=structuredClone(action);
+    const coefficientPercent=multiply("coefficientPercent");
+    next.coefficients=(next.coefficients ?? []).map(coefficient=>({...coefficient,value:coefficient.value*coefficientPercent/100}));
+    if (next.area > 0) next.area*=multiply("areaPercent")/100;
+    const splashPercent=modifiers.reduce((value,modifier)=>Math.max(value,modifier.splashPercent),0);
+    const splashRadius=modifiers.reduce((value,modifier)=>Math.max(value,modifier.splashRadius),0);
+    if (splashPercent > 0 && splashRadius > 0) { next.splashPercent=splashPercent;next.splashRadius=splashRadius; }
+    return next;
+  });
+  return result;
+}
+
 function getSkillCooldownTicks(skill, unit = null) {
   const percent = getUnitTeamBattleRules(unit).cooldownPercent;
   return Math.max(0, Math.round(normalizeSkillCooldown(skill?.cooldown) * BASE_ATTACK_COOLDOWN * percent / 100));
@@ -850,7 +919,7 @@ function getEquippedSkills(unit) {
     .filter(skill => skill && !isDefaultSkill(skill.id) && skill.slot !== "passive" && isSkillExecutable(skill) && !isUnitSkillDisabled(unit,skill));
   const copied = (Array.isArray(unit?.runtimeCopiedSkills) ? unit.runtimeCopiedSkills : [])
     .filter(skill => skill && isSkillExecutable(skill) && !isUnitSkillDisabled(unit,skill));
-  return [...equipped, ...copied].map(skill => getRuntimeItemSkill(unit, skill));
+  return [...equipped, ...copied].map(skill => getRuntimeSelectionSkill(unit,getRuntimeItemSkill(unit, skill)));
 }
 
 function getRuntimeComboSkill(unit, skill) {
@@ -1223,7 +1292,8 @@ function renderSkillPage() {
   const query = String(document.getElementById("skillSearch")?.value ?? "").trim().toLocaleLowerCase("ko");
   const slotFilter = document.getElementById("skillSlotFilter")?.value ?? "all";
   const rows = skillsJson.map((skill, index) => ({ skill, index })).filter(({skill}) =>
-    (selectedClass === "all" || inferSkillClassName(skill) === selectedClass)
+    !skill.selectionModifier
+    && (selectedClass === "all" || inferSkillClassName(skill) === selectedClass)
     && (slotFilter === "all" || skill.slot === slotFilter)
     && (!query || `${skill.name} ${getSkillDescription(skill)}`.toLocaleLowerCase("ko").includes(query)));
   skillTableBodyEl.innerHTML = rows.map(({skill, index}) => `
@@ -1288,7 +1358,7 @@ function openSkillModal(index = "") {
 
 function getChoiceTargetSkillOptions(selected = "") {
   const editingId = skillEditIndexEl.value !== "" ? skillsJson[Number(skillEditIndexEl.value)]?.id : "";
-  return skillsJson.filter(skill => skill.id !== editingId && !isChoiceSkill(skill) && isSkillExecutable(skill))
+  return skillsJson.filter(skill => skill.id !== editingId && !isChoiceSkill(skill) && (isSkillExecutable(skill) || skill.selectionModifier))
     .map(skill => `<option value="${escapeHtml(skill.id)}" ${skill.id === selected ? "selected" : ""}>${escapeHtml(skill.name)} (${escapeHtml(getSkillSlotLabel(skill.slot))})</option>`).join("");
 }
 
@@ -1475,6 +1545,11 @@ function renderSkillActionRow(action, index) {
           <span>회복대상값</span>
           <select class="skill-action-heal-resource">
             ${renderResourceOptions(action.healResource)}
+          </select>
+          <span>주 자원이 가득 찼을 때 대체 회복</span>
+          <select class="skill-action-full-resource-alternative">
+            <option value="">사용 안 함</option>
+            ${renderResourceOptions(action.fullResourceAlternative)}
           </select>
         </label>
         <label class="skill-inline-field" data-action-field="drainResource">
@@ -1789,6 +1864,7 @@ function readSkillActionsFromForm() {
       ownedSummonCondition:row.querySelector(".skill-action-owned-summon-condition")?.value ?? "any",
       ownedSummonEntityId:row.querySelector(".skill-action-owned-summon-entity")?.value ?? "",
       targetSummonEntityId:row.querySelector(".skill-action-target-summon-entity")?.value ?? "",
+      fullResourceAlternative:row.querySelector(".skill-action-full-resource-alternative")?.value ?? "",
       ...(TIMED_EFFECT_ACTIONS.includes(type) || (type === "create_field" && ["add_buff","add_state"].includes(row.querySelector('.skill-action-field-effect')?.value)) ? {effect:readSkillEffectFromRow(row)} : {}),
       ...(type === "transform" ? {transform:{id:row.querySelector('.skill-transform-id')?.value,name:row.querySelector('.skill-transform-name')?.value,
         mode:row.querySelector('.skill-transform-mode')?.value,modifiers:Object.fromEntries([...row.querySelectorAll('.skill-transform-stat')].map(input=>[input.dataset.stat,Number(input.value)])),
@@ -1896,6 +1972,7 @@ async function saveSkillFromForm(event) {
       castReceivedDamagePercent:Math.max(0,Number(skillCastReceivedDamagePercentEl.value) || 0),
       channel:readSkillChannelForm(),
       ...(skillSlotEl.value === "passive" ? {passiveTrigger:readPassiveTriggerForm()} : {}),
+      ...(previous?.passiveConversions ? {passiveConversions:previous.passiveConversions} : {}),
       ...(choiceType ? {choice:readSkillChoiceForm()} : {}),
       ...(previous?.combo ? {combo:{...previous.combo,stepCooldown:normalizeSkillCooldown(skillComboCooldownEl.value ?? 0.5)}} : {}),
       resourceCosts,
@@ -2114,7 +2191,8 @@ function resolveSkillActionTarget(source, action, preferredTarget = null, skill 
     candidates = candidates.filter(unit => unit.activeEffects?.some(effect => matchesEffectDispel(effect,action)));
   }
   if (resource && normalizeResourceReference(action.healResource) !== "BP") {
-    candidates = candidates.filter(unit => getUnitResourceState(unit, action.healResource) && getUnitResourceCurrent(unit, action.healResource) < getUnitResourceMax(unit, action.healResource));
+    candidates = candidates.filter(unit => getUnitResourceState(unit, action.healResource)
+      && (getUnitResourceCurrent(unit, action.healResource) < getUnitResourceMax(unit, action.healResource) || getFullResourceAlternative(unit,action)));
     candidates.sort((a, b) => getUnitResourceCurrent(a, action.healResource) / Math.max(1, getUnitResourceMax(a, action.healResource)) - getUnitResourceCurrent(b, action.healResource) / Math.max(1, getUnitResourceMax(b, action.healResource)) || distance(source, a) - distance(source, b));
   } else {
     if (drainedResource) candidates = candidates.filter(unit => getUnitResourceCurrent(unit, action.drainResource) > 0);
@@ -2275,6 +2353,8 @@ function getSkillsForClass(className) {
 }
 
 function applyBattleEquipmentLoadout(target,loadout,index) {
+  restorePassiveStatConversion(target);
+  restorePassiveResourceConversion(target);
   const disabled=(target.runtimeRuleOverrides ?? []).some(rule=>rule.disableEquipmentEffects);
   const synergyDisabled=(target.runtimeRuleOverrides ?? []).some(rule=>rule.disableTeamSynergies);
   const selected=synergyDisabled && loadout.withoutSynergy ? loadout.withoutSynergy : loadout;
@@ -2297,6 +2377,7 @@ function applyBattleEquipmentLoadout(target,loadout,index) {
   target.sameTargetWeaponPenaltyPercent=applied.sameTargetWeaponPenaltyPercent;
   target.weaponAttackStates=target.weaponAttacks.map(weapon=>({weapon,cooldown:getAttackCooldown(target),castTimer:0,target:null,focusTarget:null}));
   target.activeEquipmentSet=index;
+  applyPassiveResourceConversion(target);
   recalculateBattleBuffs(target);
 }
 
@@ -2426,6 +2507,8 @@ function applySkillAction(source, target, action, skill = null, execution = crea
     showSkillChainImpact(source, targets, action);
   } else if (action.area > 0 && supportsActionArea(action.type)) {
     showSkillAreaImpact(source, target, action, skill);
+  } else if (action.splashPercent > 0 && action.splashRadius > 0 && ["deal_damage","heal","drain_resource"].includes(action.type)) {
+    showSkillAreaImpact(source,target,{...action,area:action.splashRadius,areaCenter:"target"},skill);
   }
   let actualDamage = 0;
   let actualHealing = 0;
@@ -2451,6 +2534,16 @@ function applySkillAction(source, target, action, skill = null, execution = crea
       applyCreateField(source, resolvedTarget, action, skill);
     }
   });
+  if (action.splashPercent > 0 && action.splashRadius > 0 && ["deal_damage","heal","drain_resource"].includes(action.type)) {
+    const splashAction={...action,area:action.splashRadius,areaCenter:"target",chainCount:0,maxTargets:0,splashPercent:0,splashRadius:0,
+      coefficients:(action.coefficients ?? []).map(coefficient=>({...coefficient,value:coefficient.value*action.splashPercent/100}))};
+    getSkillActionTargets(source,target,splashAction,skill).filter(candidate=>!targets.includes(candidate)).forEach(resolvedTarget=>{
+      if (!resolvedTarget.alive || !isActionTargetEligible(source,resolvedTarget,splashAction,skill)) return;
+      if (action.type === "deal_damage") actualDamage+=applyActionDamage(source,resolvedTarget,splashAction,skill,execution);
+      else if (action.type === "heal") actualHealing+=applyActionHeal(source,resolvedTarget,splashAction,skill,execution);
+      else resourceDrained+=applyActionResourceDrain(source,resolvedTarget,splashAction,skill,execution);
+    });
+  }
   execution.previousActualDamage = action.type === "deal_damage" ? actualDamage : 0;
   execution.previousActualHealing = action.type === "heal" ? actualHealing : 0;
   execution.previousResourceDrained = action.type === "drain_resource" ? resourceDrained : 0;
@@ -2483,7 +2576,7 @@ function getSkillActionTargets(source, target, action, skill = null) {
       const previous = action.chainOrigin === "primary" ? first : selected[selected.length - 1];
       const next = candidates.filter(unit => unit.alive && !selected.includes(unit)
         && distance(previous, unit) <= action.chainRange * ATTACK_RANGE_UNIT
-        && (!resource || normalizeResourceReference(action.healResource) === "BP" || (getUnitResourceState(unit, action.healResource) && getUnitResourceCurrent(unit, action.healResource) < getUnitResourceMax(unit, action.healResource)))
+        && (!resource || normalizeResourceReference(action.healResource) === "BP" || (getUnitResourceState(unit, action.healResource) && (getUnitResourceCurrent(unit, action.healResource) < getUnitResourceMax(unit, action.healResource) || getFullResourceAlternative(unit,action))))
         && (!drainedResource || getUnitResourceCurrent(unit, action.drainResource) > 0))
         .sort((a, b) => distance(previous, a) - distance(previous, b))[0];
       if (!next) break;
@@ -2633,18 +2726,25 @@ function applyBarrierOrHpDamage(source, target, action, rawDamage) {
   return damage;
 }
 
+function getFullResourceAlternative(target,action) {
+  if (!action.fullResourceAlternative || !getUnitResourceState(target,action.healResource)) return "";
+  return getUnitResourceCurrent(target,action.healResource) >= getUnitResourceMax(target,action.healResource)
+    ? normalizeResourceReference(action.fullResourceAlternative,"") : "";
+}
+
 function applyActionHeal(source, target, action, skill = null, execution = null) {
   if (target.hp <= 0) {
     return 0;
   }
 
   const amount = getActionCoefficientValue(action, source, target, execution) * getUnitTeamBattleRules(source).healingPercent / 100 * getUnitIncomingRulePercent(target,"receivedHealingPercent") / 100;
-  const resourceResult = applyResourceGain(target, action.healResource, amount);
+  const appliedResource=getFullResourceAlternative(target,action) || action.healResource;
+  const resourceResult = applyResourceGain(target, appliedResource, amount);
   if (resourceResult.applied) {
     source.stats.heal += resourceResult.gained;
-    if (resourceResult.gained > 0) publishBattleEvents([{type:"heal",source,target,skill,periodic:action.periodic,amount:resourceResult.gained,resource:normalizeResourceReference(action.healResource,"HP")}]);
+    if (resourceResult.gained > 0) publishBattleEvents([{type:"heal",source,target,skill,periodic:action.periodic,amount:resourceResult.gained,resource:normalizeResourceReference(appliedResource,"HP")}]);
     triggerEffect(target, "heal");
-    addBattleEventLog(source, `${source.name}가 ${target.name}에게 ${skill?.name ?? "회복"} 행동을 하여 ${formatBattleEventValue(resourceResult.gained)} ${getResourceLabel(action.healResource)} 회복 발생`);
+    addBattleEventLog(source, `${source.name}가 ${target.name}에게 ${skill?.name ?? "회복"} 행동을 하여 ${formatBattleEventValue(resourceResult.gained)} ${getResourceLabel(appliedResource)} 회복 발생`);
     return resourceResult.gained;
   }
 

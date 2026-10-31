@@ -1,5 +1,5 @@
 const TIMED_EFFECT_ACTIONS = ["add_buff", "delete_buff", "add_state", "delete_state"];
-const BUFF_STAT_LABELS = {atk:"공격력", magic:"마력", adaptiveOffense:"적응형 공격 능력치", defense:"방어력", resistance:"저항력", speed:"이동속도", attackRange:"사거리", attackSpeed:"공격 간격(초)", castSpeed:"기본 시전시간(초)"};
+const BUFF_STAT_LABELS = {atk:"공격력", magic:"마력", adaptiveOffense:"적응형 공격 능력치", maxHp:"최대 HP", defense:"방어력", resistance:"저항력", speed:"이동속도", attackRange:"사거리", attackSpeed:"공격 간격(초)", castSpeed:"기본 시전시간(초)"};
 const STATE_LABELS = {stun:"기절", root:"이동 불가", silence:"침묵", periodic:"주기 효과만 적용"};
 const EFFECT_CATEGORY_LABELS = {general:"일반",physical:"물리",magic:"마법"};
 const EFFECT_CONSUME_LABELS = {hit:"자신이 적중",damaged:"자신이 피격",heal:"자신이 회복",cast_complete:"자신의 시전 완료"};
@@ -224,7 +224,62 @@ function hasBattleState(unit, state) {
   return (unit.activeEffects ?? []).some(effect => effect.kind === "state" && effect.state === state);
 }
 
+function getUnitPassiveConversions(unit) {
+  const ids=resolveSelectedSkillIds(unit?.skillIds,unit?.skillSelections);
+  return ids.map(getSkillById).find(skill=>skill?.slot === "passive" && skill.passiveConversions)?.passiveConversions ?? null;
+}
+
+function restorePassiveStatConversion(unit) {
+  const state=unit.passiveStatConversionState;
+  if (!state) return;
+  unit[state.source]=state.sourceValue;
+  unit[state.target]=state.targetValue;
+  unit.passiveStatConversionState=null;
+}
+
+function applyPassiveStatConversion(unit) {
+  const conversions=getUnitPassiveConversions(unit);
+  const rule=conversions?.stat;
+  unit.adaptiveOffenseOverride=conversions?.adaptiveOffense || "";
+  if (!rule || rule.source === rule.target) return;
+  const sourceValue=Math.max(0,Number(unit[rule.source]) || 0);
+  const targetValue=Math.max(0,Number(unit[rule.target]) || 0);
+  unit.passiveStatConversionState={source:rule.source,target:rule.target,sourceValue,targetValue};
+  unit[rule.target]=targetValue+sourceValue*rule.percent/100;
+  if (rule.consumeSource) unit[rule.source]=0;
+}
+
+function applyPassiveResourceConversion(unit,{resetCurrent=false}={}) {
+  const rule=getUnitPassiveConversions(unit)?.resource;
+  if (!rule || rule.source === rule.target) return;
+  const sourceField=getResourceField(rule.source),targetField=getResourceField(rule.target);
+  if (!sourceField || !targetField) return;
+  const sourceMax=sourceField.max,targetMax=targetField.max;
+  const rawSourceMax=Math.max(0,Number(unit[sourceMax]) || 0);
+  const rawTargetMax=Math.max(0,Number(unit[targetMax]) || 0);
+  unit.passiveResourceConversionState={sourceMax,targetMax,sourceValue:rawSourceMax,targetValue:rawTargetMax};
+  unit[targetMax]=rawTargetMax+rawSourceMax*rule.percent/100;
+  if (rule.consumeSource) unit[sourceMax]=0;
+  if (resetCurrent) {
+    unit[targetField.current]=unit[targetMax];
+    if (rule.consumeSource) unit[sourceField.current]=0;
+  } else {
+    unit[targetField.current]=Math.min(unit[targetMax],Math.max(0,Number(unit[targetField.current]) || 0));
+    if (rule.consumeSource) unit[sourceField.current]=0;
+  }
+}
+
+function restorePassiveResourceConversion(unit) {
+  const state=unit.passiveResourceConversionState;
+  if (!state) return;
+  unit[state.sourceMax]=state.sourceValue;
+  unit[state.targetMax]=state.targetValue;
+  unit.passiveResourceConversionState=null;
+}
+
 function recalculateBattleBuffs(unit) {
+  restorePassiveStatConversion(unit);
+  const previousMaxHp=Math.max(0,Number(unit.maxHp) || 0);
   unit.effectBaseStats ??= {};
   const buffs = (unit.activeEffects ?? []).flatMap(effect => {
     if(effect.kind === "buff" && ["flat","percent","override","convert"].includes(effect.mode)) {
@@ -260,6 +315,10 @@ function recalculateBattleBuffs(unit) {
     const value=override ? override.value : base.value + delta;
     unit[stat] = Math.max(stat === "attackSpeed" ? 0.1 : stat === "attackRange" ? 1 : 0,value);
   }
+  if (unit.maxHp !== previousMaxHp) unit.hp=unit.maxHp > previousMaxHp
+    ? Math.min(unit.maxHp,Math.max(0,Number(unit.hp) || 0)+(unit.maxHp-previousMaxHp))
+    : Math.min(Math.max(0,Number(unit.hp) || 0),unit.maxHp);
+  applyPassiveStatConversion(unit);
 }
 
 function clearBattleEffects(unit) {
@@ -331,7 +390,7 @@ function applyTimedEffectAction(source,target,action,skill) {
   target.activeEffects ??= [];
   source.effectCasterId ??= nextEffectCasterId++;
   if (kind === "buff" && config.stat === "adaptiveOffense") {
-    const resolvedStat=(Number(target.magic) || 0) > (Number(target.atk) || 0) ? "magic" : "atk";
+    const resolvedStat=target.adaptiveOffenseOverride || ((Number(target.magic) || 0) > (Number(target.atk) || 0) ? "magic" : "atk");
     config={...config,stat:resolvedStat,adaptiveStat:"adaptiveOffense"};
   }
   if (blocksEffectApplication(target,source,config,kind)) {

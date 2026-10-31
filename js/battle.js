@@ -1,4 +1,6 @@
 ﻿function resetUnitForBattle(unit) {
+  restorePassiveStatConversion(unit);
+  restorePassiveResourceConversion(unit);
   clearBattleEffects(unit);
   clearBattleChannel(unit);
   Object.values(unit.customResources ?? {}).forEach(resource => {
@@ -9,6 +11,7 @@
   unit.mp = unit.maxMp;
   unit.maxSt = Math.max(0, Number(unit.maxSt ?? DEFAULT_RESOURCE_VALUE));
   unit.st = unit.maxSt;
+  applyPassiveResourceConversion(unit,{resetCurrent:true});
   unit.baseBp = Math.max(0, Number(unit.baseBp ?? unit.bp ?? 0));
   unit.maxBp = unit.baseBp;
   unit.bp = unit.baseBp;
@@ -51,6 +54,7 @@
   unit.skillBubbleIcon = "";
   unit.skillBubbleTimer = 0;
   unit.retreatHpBelow = 0;
+  recalculateBattleBuffs(unit);
 }
 
 let nextSummonId = 1;

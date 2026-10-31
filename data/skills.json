@@ -229,7 +229,7 @@
     "id": "skill_class_archer_power_shot",
     "name": "궁사 · 강한사격",
     "className": "궁사",
-    "icon": "assets/images/skills/궁사_멀티샷.png",
+    "icon": "assets/images/skills/궁사_강한사격.png",
     "description": "적 하나에게 공격력 200%의 물리 피해를 줍니다.",
     "slot": "active",
     "cooldown": 5,
@@ -1579,7 +1579,7 @@
     "id": "skill_class_monk_combo",
     "name": "승려 · 4연격",
     "className": "승려",
-    "icon": "assets/images/skills/승려_사연격.png",
+    "icon": "assets/images/skills/승려_4연격.png",
     "description": "0.5초 간격으로 120%·130%·140%·150% 근접 물리 피해를 이어가며, 4단계가 끝나면 12초 후 처음부터 다시 사용할 수 있습니다.",
     "slot": "active",
     "cooldown": 12,
@@ -2181,7 +2181,7 @@
     "id": "skill_class_serum_drain",
     "name": "혈청형 · 흡혈",
     "className": "혈청형",
-    "icon": "assets/images/skills/혈청형_생명흡수.png",
+    "icon": "assets/images/skills/혈청형_흡혈.png",
     "description": "적에게 마력의 100% 마법 피해를 주고, 실제 피해량의 60%만큼 자신의 HP를 회복합니다.",
     "slot": "active",
     "cooldown": 5,
@@ -2306,7 +2306,7 @@
     "id": "skill_class_serum_transfusion",
     "name": "혈청형 · 헌혈",
     "className": "혈청형",
-    "icon": "assets/images/skills/혈청형_생명수혈.png",
+    "icon": "assets/images/skills/혈청형_헌혈.png",
     "description": "5초 동안 1초마다 아군의 HP를 마력의 50%만큼 회복하고, 실제 회복량의 30%만큼 자신의 HP를 소모합니다.",
     "slot": "active",
     "cooldown": 8,
@@ -3320,7 +3320,7 @@
     "id": "skill_class_guardian_endurance",
     "name": "수호자 · 인내",
     "className": "수호자",
-    "icon": "assets/images/skills/수호자_노력의 일격.png",
+    "icon": "assets/images/skills/수호자_인내.png",
     "description": "피해를 받을 때마다 실제 받은 피해의 5%를 노력[마법]으로 영구 누적합니다. 최근 3초 안에 피해를 준 적이 2명 이상이면 받는 피해가 10% 감소하며, 추가 공격자마다 3%p씩 최대 25%까지 감소합니다.",
     "slot": "passive",
     "cooldown": 0,
@@ -3769,7 +3769,7 @@
     "id": "skill_class_disease_virus",
     "name": "질병형 · 바이러스",
     "className": "질병형",
-    "icon": "assets/images/skills/질병형_마법성 질병.png",
+    "icon": "assets/images/skills/질병형_바이러스.png",
     "description": "적에게 바이러스를 감염시켜 10초 동안 1초마다 마력의 40%, 총 마력의 400%만큼 마법 피해를 줍니다.",
     "slot": "active",
     "cooldown": 8,
@@ -3892,7 +3892,7 @@
     "id": "skill_class_disease_open_wound",
     "name": "질병형 · 벌어지는 상처",
     "className": "질병형",
-    "icon": "assets/images/skills/질병형_악화되는 상처.png",
+    "icon": "assets/images/skills/질병형_벌어지는 상처.png",
     "description": "아직 출혈이 없는 적에게 죽을 때까지 지속되는 출혈을 부여합니다. 1초마다 마력의 5% 물리 피해를 주며 10초마다 계수가 1%p 증가합니다.",
     "slot": "active",
     "cooldown": 8,
@@ -4015,7 +4015,7 @@
     "id": "skill_class_disease_weakening_disease",
     "name": "질병형 · 쇠약의 질병",
     "className": "질병형",
-    "icon": "assets/images/skills/질병형_중첩 감염.png",
+    "icon": "assets/images/skills/질병형_쇠약의 질병.png",
     "description": "적에게 5초간 쇠약의 질병을 부여합니다. 이동 중 ST 소모가 2배가 되며, 효과 적용 후 10m를 이동하면 2초간 기절합니다.",
     "slot": "active",
     "cooldown": 8,
@@ -4122,7 +4122,7 @@
     "id": "skill_class_disease_pain_amplification",
     "name": "질병형 · 고통증폭",
     "className": "질병형",
-    "icon": "assets/images/skills/질병형_질병 증폭.png",
+    "icon": "assets/images/skills/질병형_고통증폭.png",
     "description": "한 대상에게 3초간 집중하여 1초마다 마력의 100% 마법 피해를 줍니다. 대상에게 걸린 질병형 해로운 효과 중첩 하나당 피해량이 마력의 30%만큼 증가합니다.",
     "slot": "active",
     "cooldown": 7,
@@ -4281,7 +4281,7 @@
     "id": "skill_class_sniper_mode",
     "name": "저격수 · 저격모드",
     "className": "저격수",
-    "icon": "assets/images/skills/저격수_저격.png",
+    "icon": "assets/images/skills/저격수_저격모드.png",
     "description": "저격모드로 전환해 공격력과 사거리가 30% 증가하고 이동할 수 없으며, 받는 피해가 30% 증가합니다. HP 30% 이하에서 모드를 해제하고 적에게서 후퇴합니다.",
     "slot": "active",
     "cooldown": 8,
@@ -4375,6 +4375,7 @@
     ]
   },
   {
+    "icon": "assets/images/skills/기사_마법말.png",
     "id": "skill_class_knight_magic_horse",
     "name": "기사 · 마법말",
     "className": "기사",
@@ -4554,6 +4555,7 @@
     ]
   },
   {
+    "icon": "assets/images/skills/기사_가속.png",
     "id": "skill_class_knight_haste_horse",
     "name": "기사 · 가속/마법말소환",
     "className": "기사",
@@ -4811,7 +4813,7 @@
     "id": "skill_class_demon_brute",
     "name": "악마 · 덩치소환/덩치공격",
     "className": "악마",
-    "icon": "assets/images/skills/_-20261026221724282977.png",
+    "icon": "assets/images/skills/악마_덩치소환.png",
     "description": "덩치가 없으면 소환합니다. 덩치는 악마가 받는 피해의 60%를 대신 받습니다. 덩치가 생존 중이면 5초 동안 덩치의 마력이 25% 증가합니다.",
     "slot": "active",
     "cooldown": 10,
@@ -5081,7 +5083,7 @@
     "id": "skill_class_demon_summon_general",
     "name": "악마 · 악마장군 소환",
     "className": "악마",
-    "icon": "assets/images/skills/악마_악마호위꾼 소환.png",
+    "icon": "assets/images/skills/악마_악마장군 소환.png",
     "description": "적 주변에 악마장군을 4초간 소환합니다. 소환 시 3m 내 적에게 마력 20% 마법 피해와 1초 기절을 적용하며, 장군은 2초마다 3m 광역 마법 공격을 합니다.",
     "slot": "active",
     "cooldown": 15,
@@ -5305,7 +5307,7 @@
     "id": "skill_entity_demon_general_attack",
     "name": "악마장군 · 광역 공격",
     "className": "악마",
-    "icon": "assets/images/skills/악마_악마호위꾼 소환.png",
+    "icon": "assets/images/skills/악마_악마장군 소환.png",
     "description": "악마장군이 자신 중심 3m의 적에게 마력 100% 마법 피해를 줍니다.",
     "slot": "basic",
     "cooldown": 0,
@@ -5378,6 +5380,7 @@
     ]
   },
   {
+    "icon": "assets/images/skills/광전사_불의일격.png",
     "id": "skill_class_berserker_fire_strike",
     "name": "광전사 · 불의일격",
     "className": "광전사",
@@ -6111,7 +6114,7 @@
     "id": "skill_class_monk_cycle",
     "name": "승려 · 순환",
     "className": "승려",
-    "icon": "assets/images/skills/승려_치유의 파동.png",
+    "icon": "assets/images/skills/승려_순환.png",
     "description": "입힌 물리 피해의 30%를 10m 안에서 HP 비율이 가장 낮은 아군 1명의 HP로 전환합니다.",
     "slot": "passive",
     "cooldown": 0,
@@ -6194,7 +6197,7 @@
     "id": "skill_class_monk_spring_energy",
     "name": "승려 · 봄의 기운",
     "className": "승려",
-    "icon": "assets/images/skills/승려_치유의 파동.png",
+    "icon": "assets/images/skills/승려_봄의 기운.png",
     "description": "아군 1명에게 8초 동안 방어력 10% 증가와 공격 간격 20% 감소 효과를 부여합니다.",
     "slot": "active",
     "cooldown": 12,
@@ -6381,7 +6384,7 @@
     "id": "skill_class_priest_resonance",
     "name": "성직자 · 감응",
     "className": "성직자",
-    "icon": "assets/images/skills/_-20261026221836127698.png",
+    "icon": "assets/images/skills/성직자_감응.png",
     "description": "자신이 피해를 주거나 회복할 때 자신이 축복한 모든 아군이 해당 실제 수치의 5%만큼 HP를 회복합니다.",
     "slot": "passive",
     "cooldown": 0,
@@ -6467,7 +6470,7 @@
     "id": "skill_class_priest_blessing",
     "name": "성직자 · 축복",
     "className": "성직자",
-    "icon": "assets/images/skills/_-20261026221853945748.png",
+    "icon": "assets/images/skills/성직자_축복.png",
     "description": "아군 1명의 공격력과 마력 중 더 높은 적응형 능력치를 30초 동안 5% 증가시킵니다.",
     "slot": "active",
     "cooldown": 0,
@@ -6514,7 +6517,7 @@
     "id": "skill_class_assassin_ambush",
     "name": "암살자 · 기습",
     "className": "암살자",
-    "icon": "assets/images/skills/암살자_백스탭.png",
+    "icon": "assets/images/skills/암살자_기습.png",
     "description": "대상의 뒤로 순간이동한 뒤 공격력의 200% 물리 피해를 줍니다.",
     "slot": "active",
     "cooldown": 10,
@@ -6559,7 +6562,7 @@
     "id": "skill_class_assassin_death_sentence",
     "name": "암살자 · 사형선고",
     "className": "암살자",
-    "icon": "assets/images/skills/암살자_차단강타.png",
+    "icon": "assets/images/skills/암살자_사형선고.png",
     "description": "공격력의 150% 물리 피해를 주고 3초 동안 침묵시키며 받는 피해를 20% 증가시킵니다.",
     "slot": "active",
     "cooldown": 10,
@@ -6612,6 +6615,416 @@
         "ruleOverride": {
           "id": "assassin_death_sentence_damage_amp",
           "receivedDamagePercent": 120
+        }
+      }
+    ]
+  },
+  {
+    "id": "skill_class_mage_element_lightning",
+    "name": "마법사 · 번개 속성",
+    "className": "마법사",
+    "icon": "assets/images/skills/마법사_번개 속성.png",
+    "description": "마법 효과의 30%를 주 대상 주변 2m의 다른 대상에게 복제하고 마력 폭발의 범위를 30% 증가시킵니다.",
+    "slot": "passive",
+    "cooldown": 0,
+    "castTime": 0,
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_mage_arrow",
+        "skill_class_mage_barrier",
+        "skill_class_mage_quick",
+        "skill_class_mage_area"
+      ],
+      "resourceTypes": [],
+      "castTimePercent": 100,
+      "resourceCostPercent": 100,
+      "coefficientPercent": 100,
+      "areaPercent": 130,
+      "splashPercent": 30,
+      "splashRadius": 2
+    },
+    "resourceCosts": [],
+    "actions": []
+  },
+  {
+    "id": "skill_class_mage_element_wind",
+    "name": "마법사 · 바람 속성",
+    "className": "마법사",
+    "icon": "assets/images/skills/마법사_바람 속성.png",
+    "description": "마법사 스킬의 시전시간을 30% 감소시킵니다.",
+    "slot": "passive",
+    "cooldown": 0,
+    "castTime": 0,
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_mage_arrow",
+        "skill_class_mage_barrier",
+        "skill_class_mage_quick",
+        "skill_class_mage_area"
+      ],
+      "resourceTypes": [],
+      "castTimePercent": 70,
+      "resourceCostPercent": 100,
+      "coefficientPercent": 100,
+      "areaPercent": 100,
+      "splashPercent": 0,
+      "splashRadius": 0
+    },
+    "resourceCosts": [],
+    "actions": []
+  },
+  {
+    "id": "skill_class_mage_element_earth",
+    "name": "마법사 · 대지 속성",
+    "className": "마법사",
+    "icon": "assets/images/skills/마법사_대지 속성.png",
+    "description": "마법사 스킬의 적용 계수를 15% 증가시키고 MP 소모량을 20% 증가시킵니다.",
+    "slot": "passive",
+    "cooldown": 0,
+    "castTime": 0,
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_mage_arrow",
+        "skill_class_mage_barrier",
+        "skill_class_mage_quick",
+        "skill_class_mage_area"
+      ],
+      "resourceTypes": [
+        "MP"
+      ],
+      "castTimePercent": 100,
+      "resourceCostPercent": 120,
+      "coefficientPercent": 115,
+      "areaPercent": 100,
+      "splashPercent": 0,
+      "splashRadius": 0
+    },
+    "resourceCosts": [],
+    "actions": []
+  },
+  {
+    "id": "skill_class_mage_element_choice",
+    "name": "마법사 · 속성선택",
+    "className": "마법사",
+    "icon": "assets/images/skills/마법사_속성선택.png",
+    "description": "전투 직전에 번개, 바람, 대지 중 하나를 선택합니다. 선택한 속성은 해당 전투 동안 마법사 스킬에 적용됩니다.",
+    "slot": "choice_prebattle",
+    "cooldown": 0,
+    "castTime": 0,
+    "choice": {
+      "defaultOptionId": "lightning",
+      "options": [
+        {
+          "id": "lightning",
+          "label": "번개",
+          "skillId": "skill_class_mage_element_lightning"
+        },
+        {
+          "id": "wind",
+          "label": "바람",
+          "skillId": "skill_class_mage_element_wind"
+        },
+        {
+          "id": "earth",
+          "label": "대지",
+          "skillId": "skill_class_mage_element_earth"
+        }
+      ]
+    },
+    "resourceCosts": [],
+    "actions": []
+  },
+  {
+    "icon": "assets/images/skills/학자_뇌근육.png",
+    "id": "skill_class_scholar_brain_muscle",
+    "name": "학자 · 뇌근육",
+    "className": "학자",
+    "description": "마력을 공격력으로, MP를 ST로 완전히 전환하며 적응형 공격 능력치는 항상 공격력에 적용됩니다.",
+    "slot": "passive",
+    "cooldown": 0,
+    "castTime": 0,
+    "passiveConversions": {
+      "stat": {
+        "source": "magic",
+        "target": "atk",
+        "percent": 100,
+        "consumeSource": true
+      },
+      "resource": {
+        "source": "MP",
+        "target": "ST",
+        "percent": 100,
+        "consumeSource": true
+      },
+      "adaptiveOffense": "atk"
+    },
+    "resourceCosts": [],
+    "actions": []
+  },
+  {
+    "icon": "assets/images/skills/학자_가짜마법화살.png",
+    "id": "skill_class_scholar_fake_arrow",
+    "name": "학자 · 가짜마법화살",
+    "className": "학자",
+    "description": "가짜 마법 화살로 공격력의 200% 물리 피해를 주고 1초간 이동 불가 상태로 만듭니다.",
+    "slot": "active",
+    "cooldown": 0,
+    "castTime": 3,
+    "resourceCosts": [
+      {
+        "resource": "ST",
+        "value": 10
+      }
+    ],
+    "actions": [
+      {
+        "type": "deal_damage",
+        "target": "enemy",
+        "rangeMode": "mainWeapon",
+        "rangeValue": 0,
+        "damageType": "physical",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "atk",
+            "calc": "percent",
+            "value": 200
+          }
+        ]
+      },
+      {
+        "type": "add_state",
+        "target": "enemy",
+        "rangeMode": "mainWeapon",
+        "rangeValue": 0,
+        "duration": 1,
+        "effect": {
+          "id": "scholar_fake_arrow_root",
+          "name": "가짜마법화살 이동 불가",
+          "state": "root",
+          "category": "physical",
+          "polarity": "harmful",
+          "dispellable": true,
+          "maxStacks": 1,
+          "stackMode": "refresh"
+        }
+      }
+    ]
+  },
+  {
+    "icon": "assets/images/skills/학자_가짜보호막.png",
+    "id": "skill_class_scholar_fake_barrier",
+    "name": "학자 · 가짜보호막",
+    "className": "학자",
+    "description": "5초간 최대 HP와 현재 HP를 공격력의 80%만큼 높이고 저항력을 20 높입니다.",
+    "slot": "active",
+    "cooldown": 10,
+    "castTime": 0,
+    "resourceCosts": [
+      {
+        "resource": "ST",
+        "value": 10
+      }
+    ],
+    "actions": [
+      {
+        "type": "add_buff",
+        "target": "self",
+        "rangeMode": "mainWeapon",
+        "rangeValue": 0,
+        "duration": 5,
+        "effect": {
+          "id": "scholar_fake_barrier_hp",
+          "name": "가짜보호막 체력",
+          "stat": "maxHp",
+          "sourceStat": "atk",
+          "mode": "convert",
+          "value": 80,
+          "category": "physical",
+          "polarity": "beneficial",
+          "dispellable": true,
+          "maxStacks": 1,
+          "stackMode": "refresh"
+        }
+      },
+      {
+        "type": "add_buff",
+        "target": "self",
+        "rangeMode": "mainWeapon",
+        "rangeValue": 0,
+        "duration": 5,
+        "effect": {
+          "id": "scholar_fake_barrier_resistance",
+          "name": "가짜보호막 저항력",
+          "stat": "resistance",
+          "sourceStat": "magic",
+          "mode": "flat",
+          "value": 20,
+          "category": "physical",
+          "polarity": "beneficial",
+          "dispellable": true,
+          "maxStacks": 1,
+          "stackMode": "refresh"
+        }
+      }
+    ]
+  },
+  {
+    "icon": "assets/images/skills/학자_가짜마법폭발.png",
+    "id": "skill_class_scholar_fake_explosion",
+    "name": "학자 · 가짜마법폭발",
+    "className": "학자",
+    "description": "자신 주변 5m의 적에게 공격력의 80% 물리 피해를 줍니다.",
+    "slot": "active",
+    "cooldown": 10,
+    "castTime": 1,
+    "resourceCosts": [
+      {
+        "resource": "ST",
+        "value": 10
+      }
+    ],
+    "actions": [
+      {
+        "type": "deal_damage",
+        "target": "enemy",
+        "rangeMode": "custom",
+        "rangeValue": 5,
+        "damageType": "physical",
+        "area": 5,
+        "areaCenter": "self",
+        "maxTargets": 0,
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "atk",
+            "calc": "percent",
+            "value": 80
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "icon": "assets/images/skills/학자_가짜마법강타.png",
+    "id": "skill_class_scholar_fake_smite",
+    "name": "학자 · 가짜마법강타",
+    "className": "학자",
+    "description": "즉시 적을 강타해 공격력의 100% 물리 피해를 줍니다.",
+    "slot": "active",
+    "cooldown": 10,
+    "castTime": 0,
+    "resourceCosts": [
+      {
+        "resource": "ST",
+        "value": 10
+      }
+    ],
+    "actions": [
+      {
+        "type": "deal_damage",
+        "target": "enemy",
+        "rangeMode": "mainWeapon",
+        "rangeValue": 0,
+        "damageType": "physical",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "atk",
+            "calc": "percent",
+            "value": 100
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "icon": "assets/images/skills/집행가_흥분.png",
+    "id": "skill_class_executioner_excitement",
+    "name": "집행가 · 흥분",
+    "className": "집행가",
+    "description": "기본 공격으로 준 실제 피해의 15%를 HP로 회복합니다. 적중 직전 HP가 최대라면 같은 양의 BP를 회복합니다.",
+    "slot": "passive",
+    "cooldown": 0,
+    "castTime": 0,
+    "passiveTrigger": {
+      "event": "hit",
+      "chance": 100,
+      "damageType": "physical",
+      "basicAttackOnly": true,
+      "includePeriodic": false,
+      "allowMultiplePerTick": true
+    },
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "heal",
+        "target": "self",
+        "rangeMode": "mainWeapon",
+        "rangeValue": 0,
+        "healResource": "HP",
+        "fullResourceAlternative": "BP",
+        "coefficients": [
+          {"type": "calculated", "field": "triggerActualDamage", "calc": "percent", "value": 15}
+        ]
+      }
+    ]
+  },
+  {
+    "icon": "assets/images/skills/집행가_사형집행.png",
+    "id": "skill_class_executioner_execute",
+    "name": "집행가 · 사형집행",
+    "className": "집행가",
+    "description": "공격력의 150% 물리 피해를 주고 실제 피해량의 50%만큼 HP를 회복합니다.",
+    "slot": "active",
+    "cooldown": 7,
+    "castTime": 0,
+    "resourceCosts": [{"resource": "ST", "mode": "fixed", "value": 10}],
+    "actions": [
+      {
+        "type": "deal_damage",
+        "target": "enemy",
+        "rangeMode": "mainWeapon",
+        "rangeValue": 0,
+        "damageType": "physical",
+        "coefficients": [{"type": "calculated", "field": "atk", "calc": "percent", "value": 150}]
+      },
+      {
+        "type": "heal",
+        "target": "self",
+        "rangeMode": "mainWeapon",
+        "rangeValue": 0,
+        "healResource": "HP",
+        "coefficients": [{"type": "calculated", "field": "previousActualDamage", "calc": "percent", "value": 50}]
+      }
+    ]
+  },
+  {
+    "icon": "assets/images/skills/집행가_속박.png",
+    "id": "skill_class_executioner_bind",
+    "name": "집행가 · 속박",
+    "className": "집행가",
+    "description": "5m 이내의 적을 4초간 이동 불가 상태로 만듭니다.",
+    "slot": "active",
+    "cooldown": 10,
+    "castTime": 0.5,
+    "resourceCosts": [{"resource": "ST", "mode": "fixed", "value": 10}],
+    "actions": [
+      {
+        "type": "add_state",
+        "target": "enemy",
+        "rangeMode": "custom",
+        "rangeValue": 5,
+        "duration": 4,
+        "effect": {
+          "id": "executioner_bind",
+          "name": "속박",
+          "state": "root",
+          "category": "physical",
+          "polarity": "harmful",
+          "dispellable": true,
+          "maxStacks": 1,
+          "stackMode": "refresh"
         }
       }
     ]
