@@ -1,0 +1,29 @@
+{
+  "entityId": "engineer_ballista",
+  "name": "노포",
+  "role": "ranged",
+  "description": "3초마다 단발 물리 공격을 하는 고정식 노포.",
+  "icon": "",
+  "summonType": "temporary",
+  "attackType": "physical",
+  "attackSkillId": "",
+  "tags": [
+    "summon",
+    "engineer",
+    "artillery"
+  ],
+  "ai": "stationary",
+  "stats": {
+    "hp": 100,
+    "mp": 100,
+    "st": 100,
+    "atk": 100,
+    "magic": 0,
+    "defense": 0,
+    "resistance": 0,
+    "speed": 0,
+    "attackSpeed": 3,
+    "castTime": 0,
+    "attackRange": 2
+  }
+}

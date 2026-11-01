@@ -2584,3 +2584,154 @@ test('executioner skill data matches excitement execute and bind rules',()=>{
  assert.deepEqual([bind.castTime,bind.cooldown,bind.resourceCosts[0].value,bind.actions[0].rangeValue,bind.actions[0].duration,bind.actions[0].effect.state],[.5,10,10,5,4,'root']);
  const executioner=characters.find(character=>character.name==='집행가');assert.deepEqual(executioner.skillIds,[passive.id,execute.id,bind.id]);
 });
+
+test('fairy hunter blood and poison multiplies damage only when both dot tags are present',()=>{
+ const e=engine();e.skillsJson=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8')));
+ const hunter=unit(e),target=unit(e,'enemy');hunter.skillIds=['skill_class_fairy_hunter_blood_and_poison'];hunter.atk=100;target.hp=target.maxHp=1000;target.defense=0;
+ const hit=e.createDefaultAction('deal_damage');hit.coefficients=[{type:'fixed',value:100}];hit.damageType='fixed';
+ e.applyActionDamage(hunter,target,hit,{id:'test_hit',name:'test'});assert.equal(target.hp,900);
+ target.activeEffects=[{polarity:'harmful',tags:['bleed'],stacks:1}];e.applyActionDamage(hunter,target,hit,{id:'test_hit',name:'test'});assert.equal(target.hp,800);
+ target.activeEffects.push({polarity:'harmful',tags:['poison'],stacks:1});e.applyActionDamage(hunter,target,hit,{id:'test_hit',name:'test'});assert.equal(target.hp,670);
+});
+
+test('fairy hunter butterfly poison stacks hp mp and st periodic drains',()=>{
+ const e=engine();e.skillsJson=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8')));
+ const hunter=unit(e),target=unit(e,'enemy');hunter.skillIds=['skill_class_fairy_hunter_butterfly_poison'];target.hp=target.maxHp=1000;target.mp=target.maxMp=100;target.st=target.maxSt=100;
+ e.playerSquad=[hunter];e.enemySquad=[target];const poison=e.getSkillById('skill_class_fairy_hunter_butterfly_poison');
+ e.applySkill(hunter,target,poison);e.applySkill(hunter,target,poison);e.applySkill(hunter,target,poison);
+ assert.equal(target.activeEffects.find(effect=>effect.id==='fairy_hunter_butterfly_poison').stacks,3);
+ for(let tick=0;tick<180;tick++) e.updateBattleEffects();
+ assert.deepEqual([target.hp,target.mp,target.st],[970,97,97]);
+});
+
+test('fairy hunter skill data keeps bleed poison and character assignment',()=>{
+ const e=engine();const skills=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8')));const characters=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','characters.json'),'utf8'));
+ const passive=skills.find(skill=>skill.id==='skill_class_fairy_hunter_blood_and_poison');const wound=skills.find(skill=>skill.id==='skill_class_fairy_hunter_sharp_arrow');const poison=skills.find(skill=>skill.id==='skill_class_fairy_hunter_butterfly_poison');
+ assert.deepEqual(Array.from(passive.passiveTrigger.requiredTargetEffectTags),['bleed','poison']);assert.equal(passive.passiveTrigger.damageMultiplierPercent,130);
+ assert.deepEqual([Array.from(wound.actions[0].effect.tags),wound.actions[0].effect.maxStacks,wound.actions[0].effect.periodic.interval],[['bleed'],1,1]);
+ assert.deepEqual([Array.from(poison.actions[0].effect.tags),poison.actions[0].effect.maxStacks,Array.from(poison.actions[0].effect.periodic.resourceDrains,drain=>({resource:drain.resource,value:drain.value}))],[['poison'],3,[{resource:'MP',value:1},{resource:'ST',value:1}]]);
+ assert.deepEqual(characters.find(character=>character.name==='요정 사냥꾼').skillIds,[passive.id,wound.id,poison.id]);
+});
+
+test('line battle fields use corridor geometry and apply side-specific auras on entry and exit',()=>{
+ const e=engine(),source=unit(e),ally=unit(e),target=unit(e,'enemy',200),outside=unit(e,'enemy',200);
+ source.x=100;source.y=100;ally.x=150;ally.y=105;target.y=100;outside.y=130;
+ const action=e.createDefaultAction('create_field');Object.assign(action,{target:'enemy',rangeMode:'custom',rangeValue:20,fieldShape:'line',fieldWidth:2,fieldRadius:0,fieldEffect:'none',duration:5,fieldInterval:1,fieldAuras:[
+  {target:'ally',stat:'castSpeed',mode:'percent',value:-20},{target:'enemy',stat:'speed',mode:'percent',value:-20}
+ ]});
+ const s=skill(e,action);e.applySkill(source,target,s);e.updateBattleFields();
+ assert.equal(e.isUnitInsideBattleField(ally,vm.runInContext('battleFields[0]',e)),true);
+ assert.equal(e.isUnitInsideBattleField(outside,vm.runInContext('battleFields[0]',e)),false);
+ assert.equal(ally.castSpeed,.8);assert.equal(target.speed,.8);assert.equal(outside.speed,undefined);
+ ally.y=130;target.y=130;e.updateBattleFields();assert.equal(ally.castSpeed,1);assert.equal(target.speed,undefined);
+});
+
+test('vortex field movement ST surcharge falls off by distance and ignores allies',()=>{
+ const e=engine(),source=unit(e),target=unit(e,'enemy',100),edge=unit(e,'enemy',150),ally=unit(e);
+ source.x=0;target.x=100;edge.y=100;ally.x=100;
+ const action=e.createDefaultAction('create_field');Object.assign(action,{target:'enemy',fieldRadius:6,fieldEffect:'none',fieldMovementStCostCenter:6,fieldMovementStCostFalloff:1,fieldMovementStCostMinimum:1});
+ const s=skill(e,action);e.createBattleField(source,target,s.actions[0],s);
+ assert.equal(e.getBattleFieldMovementStCostFlat(target),6);assert.equal(e.getBattleFieldMovementStCostFlat(edge),1);assert.equal(e.getBattleFieldMovementStCostFlat(ally),0);
+});
+
+test('admiral skills keep approved damage fields auras and character assignment',()=>{
+ const e=engine(),skills=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8')));
+ const characters=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','characters.json'),'utf8'));
+ const wave=skills.find(skill=>skill.id==='skill_class_admiral_tidal_wave');
+ const vortex=skills.find(skill=>skill.id==='skill_class_admiral_vortex');
+ const road=skills.find(skill=>skill.id==='skill_class_admiral_sea_road');
+ assert.deepEqual([wave.castTime,wave.cooldown,wave.actions[0].coefficients[0].value,wave.actions[1].moveType,wave.actions[1].distance],[3,5,180,'Knockback',5]);
+ assert.deepEqual([vortex.castTime,vortex.cooldown,vortex.actions[0].fieldRadius,vortex.actions[0].duration,vortex.actions[0].fieldMovementStCostCenter],[3,20,6,10,6]);
+ assert.deepEqual([road.castTime,road.cooldown,road.actions[0].fieldShape,road.actions[0].fieldWidth,road.actions[0].duration,road.actions[0].fieldEffect],[.5,10,'line',2,5,'none']);
+ assert.deepEqual(Array.from(road.actions[0].fieldAuras,aura=>[aura.target,aura.stat,aura.value]),[['ally','castSpeed',-20],['enemy','speed',-20],['enemy','attackSpeed',20],['enemy','castSpeed',20]]);
+ assert.deepEqual(characters.find(character=>character.name==='제독').skillIds,[wave.id,vortex.id,road.id]);
+});
+
+test('admiral sea road executes through AI cast resource cooldown and field aura runtime',()=>{
+ const e=engine();e.skillsJson=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8')));
+ const source=unit(e),enemy=unit(e,'enemy',200);source.x=100;source.skillIds=['skill_class_admiral_sea_road'];
+ assert.equal(e.tryUseReadySkill(source,e.playerSquad,e.enemySquad),true);
+ assert.equal(source.mp,90);assert.equal(source.pendingAction.skill.id,'skill_class_admiral_sea_road');assert.equal(source.castTimer,30);
+ for(let tick=0;tick<30;tick++)e.updateCast(source);
+ assert.equal(vm.runInContext('battleFields.length',e),1);assert.equal(source.skillCooldowns.skill_class_admiral_sea_road,600);
+ e.updateBattleFields();assert.deepEqual([source.castSpeed,enemy.speed,enemy.attackSpeed,enemy.castSpeed],[.8,.8,1.2,1.2]);
+});
+
+test('engineer artillery summons enforce independent limits and recoilless cannon splash',()=>{
+ const e=engine(),allSkills=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8'));
+ const ids=['skill_class_engineer_ballista','skill_class_engineer_talisman_cannon','skill_class_engineer_recoilless_cannon','skill_entity_engineer_recoilless_attack'];
+ e.skillsJson=e.normalizeSkillJson(allSkills.filter(skill=>ids.includes(skill.id)));
+ e.newEntities=['engineer_ballista','engineer_talisman_cannon','engineer_recoilless_cannon'].map(id=>JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','entities',`${id}.json`),'utf8')));
+ vm.runInContext('entitiesJson.push(...newEntities)',e);
+ const engineer=unit(e),target=unit(e,'enemy',200),near=unit(e,'enemy',200),far=unit(e,'enemy',200);
+ const find=id=>e.skillsJson.find(skill=>skill.id===id);
+ for(let i=0;i<3;i++)e.dispatchSkillActions(engineer,engineer,find('skill_class_engineer_ballista'),false);
+ for(let i=0;i<2;i++)e.dispatchSkillActions(engineer,engineer,find('skill_class_engineer_talisman_cannon'),false);
+ for(let i=0;i<2;i++)e.dispatchSkillActions(engineer,engineer,find('skill_class_engineer_recoilless_cannon'),false);
+ assert.deepEqual(Array.from(engineer.summons.filter(summon=>summon.alive).reduce((counts,summon)=>counts.set(summon.entityId,(counts.get(summon.entityId)||0)+1),new Map())),[['engineer_ballista',2],['engineer_talisman_cannon',1],['engineer_recoilless_cannon',1]]);
+ const cannon=engineer.summons.find(summon=>summon.entityId==='engineer_recoilless_cannon');
+ target.x=cannon.x+50;target.y=cannon.y;near.x=target.x+10;near.y=target.y;far.x=target.x+150;far.y=target.y;
+ target.hp=near.hp=far.hp=500;target.maxHp=near.maxHp=far.maxHp=500;
+ e.applySkill(cannon,target,e.getUnitSkill(cannon));assert.deepEqual([target.hp,near.hp,far.hp],[300,300,500]);
+});
+
+test('engineer artillery data matches class cast cooldown entity stats and assignment',()=>{
+ const skills=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8'));
+ const characters=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','characters.json'),'utf8'));
+ const find=id=>skills.find(skill=>skill.id===id);
+ const ballista=find('skill_class_engineer_ballista'),talisman=find('skill_class_engineer_talisman_cannon'),recoilless=find('skill_class_engineer_recoilless_cannon'),attack=find('skill_entity_engineer_recoilless_attack');
+ assert.deepEqual([ballista.castTime,ballista.cooldown,ballista.actions[0].limit,ballista.actions[0].duration],[2,10,2,0]);
+ assert.deepEqual([talisman.castTime,talisman.cooldown,talisman.actions[0].limit],[3,30,1]);
+ assert.deepEqual([recoilless.castTime,recoilless.cooldown,recoilless.actions[0].limit],[3,30,1]);
+ const entities=['engineer_ballista','engineer_talisman_cannon','engineer_recoilless_cannon'].map(id=>JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','entities',`${id}.json`),'utf8')));
+ assert.deepEqual(entities.map(entity=>[entity.stats.atk,entity.stats.attackSpeed,entity.stats.attackRange]),[[100,3,2],[50,1,5],[200,5,10]]);
+ assert.deepEqual([attack.slot,attack.actions[0].damageType,attack.actions[0].area,attack.actions[0].areaCenter],['basic','physical',2,'target']);
+ assert.deepEqual(characters.find(character=>character.name==='갑사').skillIds,[ballista.id,talisman.id,recoilless.id]);
+});
+
+test('tag dispel removes only matching harmful dispellable effects and publishes one event per effect',()=>{
+ const e=engine(),source=unit(e),target=unit(e);const received=[];
+ target.activeEffects=[
+  {id:'poison',name:'poison',kind:'state',polarity:'harmful',tags:['poison'],dispellable:true},
+  {id:'bleed',name:'bleed',kind:'state',polarity:'harmful',tags:['bleed'],dispellable:true},
+  {id:'blessing',name:'blessing',kind:'state',polarity:'beneficial',tags:['poison'],dispellable:true},
+  {id:'locked',name:'locked',kind:'state',polarity:'harmful',tags:['disease'],dispellable:false},
+  {id:'curse-buff',name:'curse-buff',kind:'buff',polarity:'harmful',tags:['curse'],dispellable:true}
+ ];
+ e.subscribeBattleEvent('dispel',event=>received.push(event));
+ const action=e.normalizeSkillAction({type:'delete_state',target:'ally',effect:{dispelMode:'tags',dispelTags:['poison','bleed','pain','disease'],dispelPolarity:'harmful'}});
+ assert.equal(e.applyTimedEffectAction(source,target,action,{id:'cleanse',name:'cleanse'}),2);
+ assert.deepEqual(Array.from(target.activeEffects,effect=>effect.id),['blessing','locked','curse-buff']);
+ assert.deepEqual(received.map(event=>[event.type,event.amount,event.target.name]),[['dispel',1,target.name],['dispel',1,target.name]]);
+});
+
+test('druid cleanse skills remove typed debuffs and natural cleanse heals for every removal',()=>{
+ const e=engine();e.skillsJson=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8')));
+ const druid=unit(e),ally=unit(e);druid.name='드루이드';druid.magic=100;druid.skillIds=['skill_class_druid_natural_cleanse','skill_class_druid_wound_heal','skill_class_druid_curse_break'];
+ ally.hp=100;ally.maxHp=1000;e.playerSquad=[druid,ally];e.enemySquad=[];
+ ally.activeEffects=[
+  {id:'poison',name:'중독',kind:'state',polarity:'harmful',category:'physical',tags:['poison'],dispellable:true},
+  {id:'pain',name:'통증',kind:'buff',polarity:'harmful',category:'physical',tags:['pain'],dispellable:true},
+  {id:'hex',name:'저주',kind:'state',polarity:'harmful',category:'magic',tags:['curse'],dispellable:true}
+ ];
+ e.applySkill(druid,ally,e.getSkillById('skill_class_druid_wound_heal'));
+ assert.deepEqual(Array.from(ally.activeEffects,effect=>effect.id),['hex']);assert.equal(ally.hp,160);
+ e.applySkill(druid,ally,e.getSkillById('skill_class_druid_curse_break'));
+ assert.equal(ally.activeEffects.length,0);assert.equal(ally.hp,190);
+ assert.equal(e.getBattleEvents('dispel').length,3);
+});
+
+test('druid skill data keeps cleanse contracts and character assignment',()=>{
+ const e=engine(),skills=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8')));
+ const characters=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','characters.json'),'utf8'));
+ const natural=skills.find(skill=>skill.id==='skill_class_druid_natural_cleanse');
+ const wound=skills.find(skill=>skill.id==='skill_class_druid_wound_heal');
+ const curse=skills.find(skill=>skill.id==='skill_class_druid_curse_break');
+ assert.deepEqual(JSON.parse(JSON.stringify(natural.passiveTrigger)),{event:'dispel',chance:100,includePeriodic:false,allowMultiplePerTick:true});
+ assert.equal(natural.actions[0].coefficients[0].value,30);
+ assert.deepEqual(Array.from(wound.actions[0].effect.dispelTags),['poison','bleed','pain','disease']);
+ assert.deepEqual(Array.from(curse.actions,action=>[action.type,action.effect.dispelMode,action.effect.dispelCategory,Array.from(action.effect.dispelTags)]),[
+  ['delete_state','category','magic',[]],['delete_buff','category','magic',[]],['delete_state','tags','general',['curse']],['delete_buff','tags','general',['curse']]
+ ]);
+ assert.deepEqual(characters.find(character=>character.name==='드루이드').skillIds,[natural.id,wound.id,curse.id]);
+});

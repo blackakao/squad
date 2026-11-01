@@ -1018,7 +1018,12 @@ function renderBattleSkillRow(unit) {
     const combo=typeof normalizeSkillCombo === "function" ? normalizeSkillCombo(skill.combo) : null;
     const comboIndex=combo ? Math.max(0,Math.min(combo.stages.length-1,Math.floor(Number(unit.skillComboStages?.[skill.id]) || 0))) : 0;
     const comboText=combo ? ` · ${combo.stages[comboIndex].name} (${comboIndex+1}/${combo.stages.length})` : "";
-    const tooltip = `${skill.name}${comboText}${effortText}${remaining > 0 ? ` · ${seconds}초` : ""}`;
+    const conversion=skill.passiveConversions?.stat;
+    const conversionState=unit.passiveStatConversionState;
+    const convertedAttack=conversion?.target === "atk" && conversionState?.source === conversion.source && conversionState?.target === conversion.target
+      ? Math.max(0,(Number(conversionState.sourceValue) || 0)*(Number(conversion.percent) || 0)/100) : null;
+    const conversionText=convertedAttack == null ? "" : `\n추가된 공격력: ${Math.round(convertedAttack*10)/10}`;
+    const tooltip = `${skill.name}${conversionText}${comboText}${effortText}${remaining > 0 ? ` · ${seconds}초` : ""}`;
     return `<span class="battle-skill-tooltip" data-tooltip="${escapeHtml(tooltip)}" tabindex="0" aria-label="${escapeHtml(tooltip)}">
       <span class="battle-skill-icon" aria-hidden="true">
         ${icon ? `<img src="${escapeHtml(icon)}" alt="" onerror="this.hidden=true">` : `<span class="battle-skill-placeholder">${escapeHtml(String(skill.name).slice(0, 1))}</span>`}

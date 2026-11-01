@@ -27,7 +27,7 @@
 
 - 베이직: 기본 공격, 기본 회복처럼 전투에서 자동으로 사용되는 기본 스킬
 - 액티브: 사용 조건이나 선택 입력을 통해 실행될 수 있는 능동 스킬
-- 패시브: 전투 진입·적중·피격·시전 완료·회복·적 처치 이벤트에 따라 즉시 발동하는 스킬. 단일 `passiveTrigger.event` 또는 복수 `events`, `chance`, `includePeriodic`, 같은 틱 복수 발동용 `allowMultiplePerTick`을 설정하고 공통 자원·쿨타임을 적용한다. 선택적 `damageType`은 물리·마법·고정 피해 이벤트만 통과시키며, 선택적 `recentAttackerMitigation`은 최근 고유 공격자 수에 따른 받는 피해 감소를 정의한다. 시전시간은 적용하지 않는다. 자세한 규칙은 [현재 엔진 안내](SKILL_ENGINE.md#이벤트-기반-패시브)를 참고한다.
+- 패시브: 전투 진입·적중·피격·시전 완료·회복·적 처치 이벤트에 따라 즉시 발동하는 스킬. 단일 `passiveTrigger.event` 또는 복수 `events`, `chance`, `includePeriodic`, 같은 틱 복수 발동용 `allowMultiplePerTick`을 설정하고 공통 자원·쿨타임을 적용한다. 선택적 `damageType`은 물리·마법·고정 피해 이벤트만 통과시키며, 선택적 `recentAttackerMitigation`은 최근 고유 공격자 수에 따른 받는 피해 감소를 정의한다. `requiredTargetEffectTags`와 `damageMultiplierPercent`를 함께 설정하면 대상이 지정된 모든 해로운 효과 태그를 보유할 때 해당 패시브 소유자가 가하는 피해에 배율을 적용한다. 시전시간은 적용하지 않는다. 자세한 규칙은 [현재 엔진 안내](SKILL_ENGINE.md#이벤트-기반-패시브)를 참고한다.
 
 ## 캐릭터 장착 스킬
 
@@ -192,7 +192,7 @@
 
 ### 상태 제거
 
-`effect.dispelMode`로 ID·분류·전체를 선택하고 `dispelCategory`, `dispelPolarity`로 범위를 제한한다. `dispellable: false`인 효과는 제거하지 않는다. 버프 제거도 같은 규칙이며 상태와 버프는 별도 종류로 처리한다.
+`effect.dispelMode`로 ID·분류·태그·전체를 선택하고 `dispelCategory`, `dispelTags`, `dispelPolarity`로 범위를 제한한다. 태그 방식은 지정한 태그 중 하나라도 가진 효과를 제거한다. `dispellable: false`인 효과는 제거하지 않는다. 버프 제거도 같은 규칙이며 상태와 버프는 별도 종류로 처리한다. 실제로 제거된 효과마다 `dispel` 전투 이벤트가 한 번 발생한다.
 
 - 코드: `delete_state`
 - 설명: 대상의 상태이상을 제거한다.
@@ -202,7 +202,7 @@
 
 현재 `effect.id`, `name`, `stat`, `mode`(`flat`/`percent`), `value`, `stackMode`(`refresh`/`stack`/`reject`), `maxStacks`를 사용한다. `duration`은 초 단위이며 0은 전투 종료까지다. `reject`는 시전자와 관계없이 같은 ID가 남아 있는 대상을 제외한다. 제거 액션은 `effect.id`로 일치하는 종류의 효과를 모든 시전자에 대해 해제한다. 효과 정의가 없는 과거 액션은 잠금 상태로 보존한다.
 
-상태·버프에는 선택적으로 `effect.periodic`을 추가해 주기 피해·회복을 실행한다. `type`, `interval`, `coefficient`, `growthInterval`, `growthValue`, `damageType`, `resource`를 편집한다. 계산계수의 기준 능력치는 효과를 부여할 때 고정하고, 증가 간격마다 계수 입력값에 증가값을 더한다. 버프의 `mode` 또는 상태의 `state`를 `periodic`으로 선택하면 능력치·행동 제한 없이 주기 효과만 실행한다. 기존 `value`만 있는 데이터는 고정계수로 호환한다.
+상태·버프에는 선택적으로 `effect.periodic`을 추가해 주기 피해·회복을 실행한다. `type`, `interval`, `coefficient`, `growthInterval`, `growthValue`, `damageType`, `resource`를 편집한다. 선택적 `resourceDrains`는 각 주기마다 감소시킬 자원과 중첩당 수치를 배열로 저장하며 관리 UI에서는 `MP:1, ST:1` 형식으로 편집한다. 계산계수의 기준 능력치는 효과를 부여할 때 고정하고, 증가 간격마다 계수 입력값에 증가값을 더한다. 버프의 `mode` 또는 상태의 `state`를 `periodic`으로 선택하면 능력치·행동 제한 없이 주기 효과만 실행한다. 기존 `value`만 있는 데이터는 고정계수로 호환한다.
 
 효과에는 분류와 별도로 `tags`를 둘 수 있다. `movementStCostPercent`는 효과가 유지되는 동안 자동 이동의 ST 소모 배율이며 기본값 100이다. `movementTriggerDistance`, `movementTriggerState`, `movementTriggerDuration`을 설정하면 효과 적용 뒤 실제 누적 이동 거리가 기준에 도달할 때 지정 상태를 한 번 부여한다. 자동 이동·돌진·순간이동·강제 이동을 모두 거리로 센다.
 
@@ -229,8 +229,11 @@
 ### 필드 생성
 
 - 코드: `create_field`
-- 설명: 대상 또는 시전자의 현재 위치에 고정 필드를 만들고 일정 간격마다 범위 안의 대상을 다시 선택한다. 현재 피해, 회복, 자원 감소를 지원한다.
-- 주요 필드: `target`, `fieldEffect`, `fieldCenter`, `fieldRadius`, `duration`, `fieldInterval`, `maxTargets`, `coefficients`
+- 설명: 대상 또는 시전자의 현재 위치에 고정 필드를 만들고 일정 간격마다 범위 안의 대상을 다시 선택한다. 피해, 회복, 자원 감소, 강제 이동, 시간제 효과와 오라 전용 필드를 지원한다.
+- 주요 필드: `target`, `fieldEffect`, `fieldCenter`, `fieldShape`, `fieldRadius`, `fieldWidth`, `duration`, `fieldInterval`, `maxTargets`, `coefficients`
+- `fieldShape`은 기본 `circle`이며 `line`이면 시전자에서 선택 대상까지의 선형 구역을 만든다. `fieldWidth`는 선형 구역의 전체 폭(m)이다.
+- `fieldAuras`는 `{ target, stat, mode, value }` 배열이며 `target`은 `ally`/`enemy`, `mode`는 `flat`/`percent`를 사용한다. `fieldEffect: "none"`이면 주기 액션 없이 오라만 적용한다.
+- 원형 필드의 이동 ST 추가 비용은 중심값·1m당 감소값·최솟값으로 선언하며 적이 실제 이동 중일 때만 기존 이동 비용에 더한다.
 - `duration`이 0이면 전투가 끝날 때까지 유지한다. 시전자가 죽거나 이동해도 필드는 생성 위치에 남으며, 지속시간보다 간격이 길면 한 번도 발동하지 않고 사라질 수 있다.
 
 ## UI 목록 처리

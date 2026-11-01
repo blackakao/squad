@@ -1,0 +1,29 @@
+{
+  "entityId": "engineer_recoilless_cannon",
+  "name": "16미리 무반동포",
+  "role": "ranged",
+  "description": "5초마다 대상 주변 2m를 공격하는 고정식 무반동포.",
+  "icon": "",
+  "summonType": "temporary",
+  "attackType": "physical",
+  "attackSkillId": "skill_entity_engineer_recoilless_attack",
+  "tags": [
+    "summon",
+    "engineer",
+    "artillery"
+  ],
+  "ai": "stationary",
+  "stats": {
+    "hp": 100,
+    "mp": 100,
+    "st": 100,
+    "atk": 200,
+    "magic": 0,
+    "defense": 0,
+    "resistance": 0,
+    "speed": 0,
+    "attackSpeed": 5,
+    "castTime": 0,
+    "attackRange": 10
+  }
+}

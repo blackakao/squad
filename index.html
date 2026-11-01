@@ -858,6 +858,8 @@
               <label class="skill-check-field skill-form-field-wide"><input id="skillPassiveBasicAttackOnly" type="checkbox">기본 공격 적중에만 발동</label>
               <label class="skill-check-field skill-form-field-wide"><input id="skillPassivePeriodic" type="checkbox">주기 피해·회복도 발동 조건에 포함</label>
               <label class="skill-check-field skill-form-field-wide"><input id="skillPassiveMultiplePerTick" type="checkbox">같은 전투 틱의 모든 조건 이벤트에 각각 발동</label>
+              <label class="skill-form-field-wide">대상 필수 효과 태그<input id="skillPassiveRequiredTargetTags" placeholder="예: bleed, poison"><small>입력한 모든 해로운 효과 태그가 대상에게 있어야 조건부 피해 배율이 적용됩니다.</small></label>
+              <label>조건 충족 시 주는 피해 (%)<input id="skillPassiveDamageMultiplier" type="number" min="0" step="0.1" value="100"></label>
               <label class="skill-check-field skill-form-field-wide"><input id="skillPassiveRecentAttackersEnabled" type="checkbox">최근 고유 공격자 수에 따른 받는 피해 감소</label>
               <label>추적 시간 (초)<input id="skillPassiveRecentAttackersWindow" type="number" min="0.1" step="0.1" value="3"></label>
               <label>감소 시작 공격자 수<input id="skillPassiveRecentAttackersThreshold" type="number" min="2" step="1" value="2"></label>

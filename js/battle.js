@@ -53,6 +53,7 @@
   unit.skillBubbleText = "";
   unit.skillBubbleIcon = "";
   unit.skillBubbleTimer = 0;
+  unit.battleFieldAuraSignature = "";
   unit.retreatHpBelow = 0;
   recalculateBattleBuffs(unit);
 }
@@ -261,13 +262,13 @@ function updateResources() {
 
       unit.st = Math.min(maxSt, (Number(unit.st) || 0) + exhaustedRegenPerSecond * elapsedSeconds);
       if (unit.isMoving) {
-        unit.st = Math.max(0, unit.st - ST_MOVE_COST_PER_SECOND * getMovementStCostPercent(unit) / 100 * elapsedSeconds);
+        unit.st = Math.max(0, unit.st - (ST_MOVE_COST_PER_SECOND * getMovementStCostPercent(unit) / 100 + getBattleFieldMovementStCostFlat(unit)) * elapsedSeconds);
       }
       if (unit.st >= exhaustedRecoveryThreshold) {
         unit.exhausted = false;
       }
     } else if (unit.isMoving) {
-      unit.st = Math.max(0, (Number(unit.st) || 0) - ST_MOVE_COST_PER_SECOND * getMovementStCostPercent(unit) / 100 * elapsedSeconds);
+      unit.st = Math.max(0, (Number(unit.st) || 0) - (ST_MOVE_COST_PER_SECOND * getMovementStCostPercent(unit) / 100 + getBattleFieldMovementStCostFlat(unit)) * elapsedSeconds);
       if (unit.st <= 0) {
         unit.exhausted = true;
       }
@@ -1156,13 +1157,53 @@ function moveUnitWithCollision(unit,desiredX,desiredY,{sweep=true}={}) {
 function createBattleField(source,target,action,skill) {
   if (source?.isEntityPreview) return;
   const center=action.fieldCenter === "self" || action.target === "self" ? source : target;
-  if (!center || !(action.fieldRadius > 0) || !(action.fieldInterval > 0)) return;
+  if (!center || !(action.fieldInterval > 0) || (action.fieldShape === "line" ? !(action.fieldWidth > 0) : !(action.fieldRadius > 0))) return;
   const snapshot=structuredClone(action);snapshot._actionIndex=skill?.actions?.indexOf(action) ?? -1;
-  battleFields.push({source,skill,action:snapshot,x:center.x,y:center.y,
+  const line=action.fieldShape === "line";
+  const startX=source.x,startY=source.y,endX=center.x,endY=center.y;
+  battleFields.push({source,skill,action:snapshot,x:line ? (startX+endX)/2 : center.x,y:line ? (startY+endY)/2 : center.y,
+    ...(line ? {startX,startY,endX,endY} : {}),
     remainingTicks:action.duration > 0 ? Math.max(1,Math.ceil(action.duration*BASE_ATTACK_COOLDOWN)) : null,
     nextTick:Math.max(1,Math.ceil(action.fieldInterval*BASE_ATTACK_COOLDOWN))});
   publishBattleEvents([{type:"field_create",source,target,skill}]);
-  addBattleEventLog(source,`${source.name}: ${skill?.name ?? "필드"} 생성 (${action.fieldRadius} 반경)`);
+  addBattleEventLog(source,`${source.name}: ${skill?.name ?? "필드"} 생성 (${line ? `폭 ${action.fieldWidth}` : `반경 ${action.fieldRadius}`})`);
+}
+
+function getPointToSegmentDistance(x,y,startX,startY,endX,endY) {
+  const dx=endX-startX,dy=endY-startY,lengthSquared=dx*dx+dy*dy;
+  if (!lengthSquared) return Math.hypot(x-startX,y-startY);
+  const t=Math.max(0,Math.min(1,((x-startX)*dx+(y-startY)*dy)/lengthSquared));
+  return Math.hypot(x-(startX+t*dx),y-(startY+t*dy));
+}
+
+function isUnitInsideBattleField(unit,field) {
+  if (!unit || !field) return false;
+  return field.action.fieldShape === "line"
+    ? getPointToSegmentDistance(unit.x,unit.y,field.startX,field.startY,field.endX,field.endY) <= field.action.fieldWidth*ATTACK_RANGE_UNIT/2
+    : distance(unit,field) <= field.action.fieldRadius*ATTACK_RANGE_UNIT;
+}
+
+function getBattleFieldAuraEffects(unit) {
+  if (!unit?.alive) return [];
+  return battleFields.flatMap((field,index)=>{
+    if (field.source.removed || !isUnitInsideBattleField(unit,field)) return [];
+    const relation=unit.side === field.source.side ? "ally" : "enemy";
+    return (field.action.fieldAuras ?? []).filter(aura=>aura.target === relation).map((aura,auraIndex)=>({
+      id:`battle_field_${index}_${auraIndex}`,name:field.skill?.name ?? "필드",kind:"buff",stat:aura.stat,
+      mode:aura.mode,value:aura.value,stacks:1,fieldAura:true
+    }));
+  });
+}
+
+function getBattleFieldMovementStCostFlat(unit) {
+  return battleFields.reduce((total,field)=>{
+    const center=Number(field.action.fieldMovementStCostCenter) || 0;
+    if (!center || unit.side === field.source.side || !isUnitInsideBattleField(unit,field)) return total;
+    const meters=field.action.fieldShape === "line" ? 0 : distance(unit,field)/ATTACK_RANGE_UNIT;
+    const falloff=Math.max(0,Number(field.action.fieldMovementStCostFalloff) || 0);
+    const minimum=Math.max(0,Number(field.action.fieldMovementStCostMinimum) || 0);
+    return total+Math.max(minimum,center-falloff*meters);
+  },0);
 }
 
 function updateBattleFields() {
@@ -1177,7 +1218,7 @@ function updateBattleFields() {
       const drained=action.fieldEffect === "drain_resource" ? getResourceField(action.drainResource) : null;
       const targetPool=action.target === "enemy" ? other : action.target === "summon" ? own.filter(unit=>unit.isSummon && unit.summoner===source) : own;
       let targets=targetPool.filter(unit => unit.alive
-        && distance(unit,field) <= action.fieldRadius*ATTACK_RANGE_UNIT
+        && isUnitInsideBattleField(unit,field)
         && (!resource || normalizeResourceReference(action.healResource) === "BP" || (getUnitResourceState(unit,action.healResource) && getUnitResourceCurrent(unit,action.healResource) < getUnitResourceMax(unit,action.healResource)))
         && (!drained || getUnitResourceCurrent(unit,action.drainResource)>0));
       targets.sort((a,b)=>resource && normalizeResourceReference(action.healResource) !== "BP"
@@ -1188,7 +1229,7 @@ function updateBattleFields() {
       const applied={...action,type:action.fieldEffect,area:0,chainCount:0,periodic:true,
         ...(["add_buff","add_state"].includes(action.fieldEffect) ? {duration:action.fieldEffectDuration} : {}),
         ...(action.fieldEffect === "move" ? {moveType:action.fieldMoveType,distance:action.fieldDistance,_moveOrigin:{x:field.x,y:field.y}} : {})};
-      for(const target of targets) applySkillAction(source,target,applied,skill,createSkillExecutionContext());
+      if (action.fieldEffect !== "none") for(const target of targets) applySkillAction(source,target,applied,skill,createSkillExecutionContext());
       publishBattleEvents([{type:"field_tick",source,skill}]);
     }
     if (source.removed) return false;
@@ -1196,6 +1237,13 @@ function updateBattleFields() {
     publishBattleEvents([{type:"field_expire",source,skill}]);
     return false;
   }).filter(field => !field.source.removed);
+  for (const unit of [...playerSquad,...enemySquad]) {
+    const after=getBattleFieldAuraEffects(unit).map(effect=>`${effect.name}:${effect.stat}:${effect.value}`).join("|");
+    if (unit.battleFieldAuraSignature !== after) {
+      unit.battleFieldAuraSignature=after;
+      recalculateBattleBuffs(unit);
+    }
+  }
 }
 
 function dispatchSkillActions(source, preferredTarget, skill, allowProjectiles, forceProjectile = false, channelAction = null, resourceSpent = null) {
@@ -1581,11 +1629,19 @@ function draw() {
 function drawBattleFields() {
   battleFields.forEach(field=>{
     const color=field.source.side === "enemy" ? "#ef4444" : ["heal","add_buff"].includes(field.action.fieldEffect) ? "#16a34a" : field.action.fieldEffect === "move" ? "#0891b2" : "#7c3aed";
-    ctx.save();ctx.strokeStyle=color;ctx.fillStyle=color;ctx.globalAlpha=.16;ctx.lineWidth=2;
-    ctx.beginPath();ctx.arc(field.x,field.y,field.action.fieldRadius*ATTACK_RANGE_UNIT,0,Math.PI*2);ctx.fill();
-    ctx.globalAlpha=.8;ctx.stroke();ctx.font="11px sans-serif";ctx.textAlign="center";
+    ctx.save();ctx.strokeStyle=color;ctx.fillStyle=color;ctx.globalAlpha=.16;
+    if (field.action.fieldShape === "line") {
+      ctx.lineCap="round";ctx.lineWidth=field.action.fieldWidth*ATTACK_RANGE_UNIT;
+      ctx.beginPath();ctx.moveTo(field.startX,field.startY);ctx.lineTo(field.endX,field.endY);ctx.stroke();
+      ctx.globalAlpha=.8;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(field.startX,field.startY);ctx.lineTo(field.endX,field.endY);ctx.stroke();
+    } else {
+      ctx.lineWidth=2;ctx.beginPath();ctx.arc(field.x,field.y,field.action.fieldRadius*ATTACK_RANGE_UNIT,0,Math.PI*2);ctx.fill();
+      ctx.globalAlpha=.8;ctx.stroke();
+    }
+    ctx.globalAlpha=.8;ctx.font="11px sans-serif";ctx.textAlign="center";
     const time=field.remainingTicks === null ? "∞" : `${(field.remainingTicks/BASE_ATTACK_COOLDOWN).toFixed(1)}초`;
-    ctx.fillText(`${field.skill?.name ?? "필드"} · ${time}`,field.x,Math.max(12,field.y-field.action.fieldRadius*ATTACK_RANGE_UNIT-7));ctx.restore();
+    const labelY=field.action.fieldShape === "line" ? field.y-field.action.fieldWidth*ATTACK_RANGE_UNIT/2-7 : field.y-field.action.fieldRadius*ATTACK_RANGE_UNIT-7;
+    ctx.fillText(`${field.skill?.name ?? "필드"} · ${time}`,field.x,Math.max(12,labelY));ctx.restore();
   });
 }
 

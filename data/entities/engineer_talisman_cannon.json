@@ -1,0 +1,29 @@
+{
+  "entityId": "engineer_talisman_cannon",
+  "name": "부적포",
+  "role": "ranged",
+  "description": "1초마다 연발 물리 공격을 하는 고정식 부적포.",
+  "icon": "",
+  "summonType": "temporary",
+  "attackType": "physical",
+  "attackSkillId": "",
+  "tags": [
+    "summon",
+    "engineer",
+    "artillery"
+  ],
+  "ai": "stationary",
+  "stats": {
+    "hp": 100,
+    "mp": 100,
+    "st": 100,
+    "atk": 50,
+    "magic": 0,
+    "defense": 0,
+    "resistance": 0,
+    "speed": 0,
+    "attackSpeed": 1,
+    "castTime": 0,
+    "attackRange": 5
+  }
+}

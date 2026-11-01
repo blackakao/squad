@@ -9,7 +9,7 @@ function createDefaultSkillEffect(type) {
   const state = type.includes("state");
   return {id:state ? "stun" : "attack_up", name:state ? "기절" : "공격력 증가", state:"stun",
     stat:"atk", sourceStat:"magic", mode:"flat", value:10, nextCastTimePercent:100, nextResourceCostPercent:100, nextCooldownPercent:100, reflectPercent:20, reflectScope:"all", reflectDamageType:"fixed", proxyPercent:20, proxyPriority:100, proxyScope:"all", counterOnMelee:false, maxStacks:1, stackMode:"refresh",uses:0,consumeOn:"hit",consumePeriodic:false,
-    category:"general",polarity:state ? "harmful" : "beneficial",tags:[],dispellable:true,dispelMode:"id",dispelCategory:"general",dispelPolarity:"any",
+    category:"general",polarity:state ? "harmful" : "beneficial",tags:[],dispellable:true,dispelMode:"id",dispelTags:[],dispelCategory:"general",dispelPolarity:"any",
     movementStCostPercent:100,movementTriggerDistance:0,movementTriggerState:"stun",movementTriggerDuration:0};
 }
 
@@ -18,9 +18,10 @@ function isEffectActionConfigured(action) {
   if (!effect) return false;
   if (action.type.startsWith("delete_")) {
     const mode = effect.dispelMode ?? "id";
-    return ["id","category","all"].includes(mode)
+    return ["id","category","tags","all"].includes(mode)
       && (mode !== "id" || (typeof effect.id === "string" && Boolean(effect.id.trim())))
       && (mode !== "category" || Object.hasOwn(EFFECT_CATEGORY_LABELS,effect.dispelCategory ?? "general"))
+      && (mode !== "tags" || (Array.isArray(effect.dispelTags) && effect.dispelTags.some(tag=>String(tag).trim())))
       && ["any","beneficial","harmful"].includes(effect.dispelPolarity ?? "any");
   }
   if (typeof effect.id !== "string" || !effect.id.trim()) return false;
@@ -43,17 +44,19 @@ function isEffectActionConfigured(action) {
 
 function isPeriodicEffectConfigured(periodic) {
   const coefficient=periodic.coefficient ?? {type:"fixed",value:periodic.value};
+  const resourceDrains=Array.isArray(periodic.resourceDrains) ? periodic.resourceDrains : [];
   return ["damage","heal"].includes(periodic.type) && Number.isFinite(Number(periodic.interval)) && Number(periodic.interval) > 0
     && ["fixed","calculated"].includes(coefficient.type) && Number.isFinite(Number(coefficient.value)) && Number(coefficient.value) >= 0
     && Number.isFinite(Number(periodic.growthInterval ?? 0)) && Number(periodic.growthInterval ?? 0) >= 0
     && Number.isFinite(Number(periodic.growthValue ?? 0)) && Number(periodic.growthValue ?? 0) >= 0
+    && resourceDrains.every(drain=>Boolean(getResourceField(drain.resource)) && Number.isFinite(Number(drain.value)) && Number(drain.value) >= 0)
     && (periodic.type === "damage" ? ["physical","magic","fixed"].includes(periodic.damageType) : Boolean(getResourceField(periodic.resource)));
 }
 
 function normalizeSkillEffect(effect,type = "add_buff") {
   return {id:String(effect.id ?? "").trim(), name:String(effect.name || effect.id || "효과").trim(), state:effect.state,
     category:effect.category ?? "general",polarity:effect.polarity ?? (type.endsWith("state") ? "harmful" : "beneficial"),tags:[...new Set((Array.isArray(effect.tags) ? effect.tags : String(effect.tags ?? "").split(",")).map(tag=>String(tag).trim()).filter(Boolean))],dispellable:effect.dispellable !== false,
-    dispelMode:effect.dispelMode ?? "id",dispelCategory:effect.dispelCategory ?? "general",dispelPolarity:effect.dispelPolarity ?? "any",
+    dispelMode:effect.dispelMode ?? "id",dispelTags:[...new Set((Array.isArray(effect.dispelTags) ? effect.dispelTags : String(effect.dispelTags ?? "").split(",")).map(tag=>String(tag).trim()).filter(Boolean))],dispelCategory:effect.dispelCategory ?? "general",dispelPolarity:effect.dispelPolarity ?? "any",
     ...(effect.immunity ? {immunity:{scope:effect.immunity.scope,category:effect.immunity.category,state:effect.immunity.state}} : {}),
     stat:effect.stat, sourceStat:effect.sourceStat ?? effect.source_stat ?? "magic", mode:effect.mode, value:Number(effect.value) || 0,
     requiredOwnedSummonEntityId:String(effect.requiredOwnedSummonEntityId ?? effect.required_owned_summon_entity_id ?? "").trim(),
@@ -79,7 +82,8 @@ function normalizeSkillEffect(effect,type = "add_buff") {
     ...(effect.periodic ? {periodic:{type:effect.periodic.type,interval:Math.max(1/60,Number(effect.periodic.interval)),
       value:Number(effect.periodic.value),coefficient:normalizeCoefficient(effect.periodic.coefficient ?? {type:"fixed",value:effect.periodic.value}),
       growthInterval:Math.max(0,Number(effect.periodic.growthInterval) || 0),growthValue:Math.max(0,Number(effect.periodic.growthValue) || 0),
-      damageType:effect.periodic.damageType ?? "magic",resource:normalizeResourceReference(effect.periodic.resource,"HP")}} : {})};
+      damageType:effect.periodic.damageType ?? "magic",resource:normalizeResourceReference(effect.periodic.resource,"HP"),
+      resourceDrains:(Array.isArray(effect.periodic.resourceDrains) ? effect.periodic.resourceDrains : []).map(drain=>({resource:normalizeResourceReference(drain.resource,"MP"),value:Math.max(0,Number(drain.value) || 0)})).filter(drain=>drain.value>0)}} : {})};
 }
 
 function renderTimedEffectFields(action) {
@@ -92,8 +96,9 @@ function renderTimedEffectFields(action) {
     <label>효과 ID<input class="skill-effect-id" value="${escapeHtml(effect.id)}"></label>
     <small>같은 시전자의 같은 ID는 갱신·중첩됩니다. 서로 다른 효과에는 다른 ID를 사용하세요. ID 해제는 해당 ID만, 분류/전체 해제는 ID와 무관하게 같은 종류의 해제 가능한 효과를 제거합니다.</small>
     <div data-action-field="effectDelete">
-      <label>해제 방식<select class="skill-effect-dispel-mode">${options({id:"효과 ID",category:"효과 분류",all:"전체"},effect.dispelMode ?? "id")}</select></label>
+      <label>해제 방식<select class="skill-effect-dispel-mode">${options({id:"효과 ID",category:"효과 분류",tags:"효과 태그",all:"전체"},effect.dispelMode ?? "id")}</select></label>
       <label>해제할 분류<select class="skill-effect-dispel-category">${options(EFFECT_CATEGORY_LABELS,effect.dispelCategory ?? "general")}</select></label>
+      <label>해제할 태그 (쉼표 구분)<input class="skill-effect-dispel-tags" value="${escapeHtml((effect.dispelTags ?? []).join(", "))}" placeholder="예: poison, bleed"></label>
       <label>해제할 성격<select class="skill-effect-dispel-polarity">${options({any:"이로운 효과와 해로운 효과",beneficial:"이로운 효과만",harmful:"해로운 효과만"},effect.dispelPolarity ?? "any")}</select></label>
       <small>상태 제거는 상태만, 버프 제거는 버프만 해제합니다. 해제 불가 효과는 모든 방식에서 유지됩니다.</small>
     </div>
@@ -163,6 +168,7 @@ function renderTimedEffectFields(action) {
         <label>간격당 값 증가<input class="skill-effect-periodic-growth-value" type="number" min="0" step="0.1" value="${periodic.growthValue ?? 0}"></label>
         <label>피해 타입<select class="skill-effect-periodic-damage">${options({physical:"물리",magic:"마법",fixed:"고정"},periodic.damageType)}</select></label>
         <label>회복 자원<select class="skill-effect-periodic-resource">${renderResourceOptions(periodic.resource)}</select></label>
+        <label>추가 자원 감소<input class="skill-effect-periodic-resource-drains" value="${escapeHtml((periodic.resourceDrains ?? []).map(drain=>`${drain.resource}:${drain.value}`).join(", "))}" placeholder="예: MP:1, ST:1"></label>
         <small>첫 적용은 한 간격 뒤입니다. 갱신해도 다음 적용까지의 시간은 유지하며, 중첩 수만큼 회당 수치가 증가합니다. 능력치·행동 제한 없이 쓰려면 위에서 ‘주기 효과만 적용’을 선택하세요.</small>
       </div>
     </div>
@@ -173,14 +179,15 @@ function readSkillEffectFromRow(row) {
   const value = name => row.querySelector(`.skill-effect-${name}`)?.value;
   return {id:value("id"),name:value("name"),stat:value("stat"),sourceStat:value("source-stat"),state:value("state"),mode:value("mode"),requiredOwnedSummonEntityId:value("required-summon") ?? "",tags:String(value("tags") ?? "").split(",").map(tag=>tag.trim()).filter(Boolean),
     category:value("category"),polarity:value("polarity"),dispellable:row.querySelector('.skill-effect-dispellable')?.checked ?? true,
-    dispelMode:value("dispel-mode"),dispelCategory:value("dispel-category"),dispelPolarity:value("dispel-polarity"),
+    dispelMode:value("dispel-mode"),dispelTags:String(value("dispel-tags") ?? "").split(",").map(tag=>tag.trim()).filter(Boolean),dispelCategory:value("dispel-category"),dispelPolarity:value("dispel-polarity"),
     ...(value("immunity-scope") && (row.querySelector('.skill-action-type')?.value === "add_buff" || row.querySelector('.skill-action-field-effect')?.value === "add_buff") ? {immunity:{scope:value("immunity-scope"),category:value("immunity-category"),state:value("immunity-state")}} : {}),
     value:Number(value("value")),nextCastTimePercent:Number(value("next-cast-time-percent")),nextResourceCostPercent:Number(value("next-resource-cost-percent")),nextCooldownPercent:Number(value("next-cooldown-percent")),reflectPercent:Number(value("reflect-percent")),reflectScope:value("reflect-scope"),reflectDamageType:value("reflect-damage-type"),proxyPercent:Number(value("proxy-percent")),proxyPriority:Number(value("proxy-priority")),proxyScope:value("proxy-scope"),maxStacks:Number(value("max-stacks")),stackMode:value("stack-mode"),
     uses:Number(value("uses")),consumeOn:value("consume-on"),consumePeriodic:row.querySelector('.skill-effect-consume-periodic')?.checked ?? false,counterOnMelee:row.querySelector('.skill-effect-counter-on-melee')?.checked ?? false,
     movementStCostPercent:Number(value("movement-st-cost-percent")),movementTriggerDistance:Number(value("movement-trigger-distance")),movementTriggerState:value("movement-trigger-state"),movementTriggerDuration:Number(value("movement-trigger-duration")),
     ...(value("periodic-type") ? {periodic:{type:value("periodic-type"),interval:Number(value("periodic-interval")),value:Number(value("periodic-value")),
       coefficient:{type:value("periodic-coefficient-type"),field:value("periodic-coefficient-field"),calc:value("periodic-coefficient-calc"),value:Number(value("periodic-value"))},
-      growthInterval:Number(value("periodic-growth-interval")),growthValue:Number(value("periodic-growth-value")),damageType:value("periodic-damage"),resource:value("periodic-resource")}} : {})};
+      growthInterval:Number(value("periodic-growth-interval")),growthValue:Number(value("periodic-growth-value")),damageType:value("periodic-damage"),resource:value("periodic-resource"),
+      resourceDrains:String(value("periodic-resource-drains") ?? "").split(",").map(entry=>{const [resource,amount]=entry.split(":");return {resource:String(resource ?? "").trim(),value:Number(amount)};}).filter(drain=>drain.resource && Number.isFinite(drain.value) && drain.value>0)}} : {})};
 }
 
 function updateSkillEffectModeVisibility(select) {
@@ -281,7 +288,7 @@ function recalculateBattleBuffs(unit) {
   restorePassiveStatConversion(unit);
   const previousMaxHp=Math.max(0,Number(unit.maxHp) || 0);
   unit.effectBaseStats ??= {};
-  const buffs = (unit.activeEffects ?? []).flatMap(effect => {
+  const buffs = [...(unit.activeEffects ?? []), ...getBattleFieldAuraEffects(unit)].flatMap(effect => {
     if(effect.kind === "buff" && ["flat","percent","override","convert"].includes(effect.mode)) {
       if (effect.requiredOwnedSummonEntityId) {
         const caster=[...playerSquad,...enemySquad].find(candidate=>candidate.effectCasterId === effect.casterId);
@@ -350,7 +357,13 @@ function matchesEffectDispel(instance, action) {
   const polarity = instance.polarity ?? (instance.kind === "state" ? "harmful" : "beneficial");
   if (config.dispelPolarity && config.dispelPolarity !== "any" && config.dispelPolarity !== polarity) return false;
   const mode = config.dispelMode ?? "id";
-  return mode === "all" || (mode === "category" ? (instance.category ?? "general") === (config.dispelCategory ?? "general") : instance.id === config.id);
+  if (mode === "all") return true;
+  if (mode === "category") return (instance.category ?? "general") === (config.dispelCategory ?? "general");
+  if (mode === "tags") {
+    const tags=new Set(instance.tags ?? []);
+    return (config.dispelTags ?? []).some(tag=>tags.has(tag));
+  }
+  return instance.id === config.id;
 }
 
 function blocksEffectApplication(target, source, config, kind) {
@@ -371,11 +384,15 @@ function applyTimedEffectAction(source,target,action,skill) {
   target.activeEffects ??= [];
   let config = normalizeSkillEffect(action.effect,action.type);
   if (action.type.startsWith("delete_")) {
-    const previousLength = target.activeEffects.length;
-    target.activeEffects = target.activeEffects.filter(effect => !matchesEffectDispel(effect,action));
+    const removed=target.activeEffects.filter(effect => matchesEffectDispel(effect,action));
+    target.activeEffects = target.activeEffects.filter(effect => !removed.includes(effect));
     recalculateBattleBuffs(target);
-    if (target.activeEffects.length !== previousLength) addBattleEventLog(source,`${source.name} → ${target.name}: ${previousLength-target.activeEffects.length}개 효과 해제 (${config.dispelMode === "id" ? config.id : config.dispelMode === "category" ? EFFECT_CATEGORY_LABELS[config.dispelCategory] : "전체"})`);
-    return;
+    if (removed.length) {
+      const scope=config.dispelMode === "id" ? config.id : config.dispelMode === "category" ? EFFECT_CATEGORY_LABELS[config.dispelCategory] : config.dispelMode === "tags" ? config.dispelTags.join(", ") : "전체";
+      addBattleEventLog(source,`${source.name} → ${target.name}: ${removed.length}개 효과 해제 (${scope})`);
+      publishBattleEvents(removed.map(effect=>({type:"dispel",source,target,skill,amount:1,reason:effect.name ?? effect.id})));
+    }
+    return removed.length;
   }
   if (kind === "state" && config.polarity === "harmful") {
     const transferTarget=[...playerSquad,...enemySquad]
@@ -431,6 +448,9 @@ function applyPeriodicEffect(target,effect) {
   const skill = {id:effect.skillId,name:`${effect.name} (주기)`,triggered:effect.triggered};
   if (periodic.type === "damage") applyActionDamage(source,target,action,skill);
   else applyActionHeal(source,target,action,skill);
+  for (const drain of periodic.resourceDrains ?? []) {
+    applyActionResourceDrain(source,target,{type:"drain_resource",drainResource:drain.resource,coefficients:[{type:"fixed",value:drain.value*effect.stacks}],periodic:true},skill);
+  }
 }
 
 function applyTransformation(source,target,action,skill) {

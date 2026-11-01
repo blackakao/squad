@@ -141,12 +141,13 @@
 - 액션의 `allowSelfTarget`은 아군 대상에 시전자 자신을 포함할지 정한다. 생략 기본값은 `true`다.
 - 액션의 `ownedSummonCondition`은 `any`·`alive`·`absent`, `ownedSummonEntityId`는 검사할 소환 Entity ID다. `targetSummonEntityId`는 `target: summon`의 후보를 특정 Entity로 제한한다.
 - 버프 효과의 `requiredOwnedSummonEntityId`는 해당 Entity가 시전자 소유로 생존하는 동안만 능력치 보정을 활성화한다.
-- 주기 효과의 `periodic.coefficient`는 고정값 또는 시전자 능력치 계수이며 적용 순간 기준값을 보관한다. `growthInterval`과 `growthValue`는 시간에 따른 계수 증가를 정의한다. `effect.stackMode: reject`는 같은 효과 ID가 있는 대상을 선택하지 않는다.
+- 주기 효과의 `periodic.coefficient`는 고정값 또는 시전자 능력치 계수이며 적용 순간 기준값을 보관한다. `growthInterval`과 `growthValue`는 시간에 따른 계수 증가를 정의한다. 선택적 `resourceDrains: [{ resource, value }]`는 틱마다 효과 중첩 수를 곱한 MP·ST·BP·커스텀 자원 등의 추가 감소를 적용한다. `effect.stackMode: reject`는 같은 효과 ID가 있는 대상을 선택하지 않는다.
 - `cooldown`: 초 단위 쿨다운
 - `castTime`: 초 단위 시전 시간, 비어 있으면 유닛 기본 시전 속도 사용
 - `castReceivedDamagePercent`: 시전 중 받는 피해 배율, 기본값 100
 - `channel`: 채널링 설정 `{ duration, interval, interruptOnDamage, lockTarget, receivedDamagePercent }`. 대상 고정과 채널 중 받는 피해 비율을 선택적으로 저장한다.
-- `passiveTrigger`: 패시브 발동 조건. 기존 단일 `event`와 선택적 복수 `events`를 지원한다. `battle_entry`는 유닛의 전투 진입 시 한 번 발동한다. 선택적 `damageType`은 `physical`, `magic`, `fixed` 중 일치하는 피해 이벤트만 허용한다. `allowMultiplePerTick`은 같은 전투 틱의 조건 이벤트마다 발동할지 정하며 생략 기본값은 `false`다. 선택적 `recentAttackerMitigation`은 `{ enabled, window, threshold, initialReductionPercent, additionalReductionPercent, maxReductionPercent }`로 최근 고유 공격자 수에 따른 받는 피해 감소를 저장한다.
+- `passiveTrigger`: 패시브 발동 조건. 기존 단일 `event`와 선택적 복수 `events`를 지원한다. `battle_entry`는 유닛의 전투 진입 시 한 번, `dispel`은 소유자가 실제 효과 하나를 해제할 때 발생한다. 선택적 `damageType`은 `physical`, `magic`, `fixed` 중 일치하는 피해 이벤트만 허용한다. `allowMultiplePerTick`은 같은 전투 틱의 조건 이벤트마다 발동할지 정하며 생략 기본값은 `false`다. `requiredTargetEffectTags`와 `damageMultiplierPercent`는 대상이 모든 지정 해로운 효과 태그를 보유할 때 주는 피해 배율을 적용한다. 선택적 `recentAttackerMitigation`은 `{ enabled, window, threshold, initialReductionPercent, additionalReductionPercent, maxReductionPercent }`로 최근 고유 공격자 수에 따른 받는 피해 감소를 저장한다.
+- 상태·버프 제거 효과는 `dispelMode: id|category|tags|all`을 사용한다. 태그 방식의 `dispelTags`는 하나 이상 일치하는 효과를 제거하며 `dispelPolarity`와 `dispellable` 규칙을 함께 적용한다.
 - 계산계수의 `field: triggerActualDamage`는 패시브를 발동시킨 실제 피해량을 참조한다. `triggerActualAmount`는 피해 또는 회복 이벤트의 실제 수치를 공통으로 참조한다. `field: customResourceCurrent`는 `resourceId`에 지정한 시전자 커스텀 자원의 현재값을 참조한다.
 - `resourceCosts`: HP/MP/ST/BP 또는 `custom:<id>` 비용
 - `actions`: 실행 액션 배열
@@ -163,6 +164,9 @@
 - `add_state`, `delete_state`, `add_buff`, `delete_buff`
 - `summon_entity`, `command_summon`
 - `create_field`
+  - 형태: `fieldShape` (`circle`/`line`), `fieldRadius`, `fieldWidth`
+  - 오라: `fieldAuras[]`의 `target`, `stat`, `mode`, `value`; 오라 전용은 `fieldEffect: "none"`
+  - 이동 ST 추가 비용: `fieldMovementStCostCenter`, `fieldMovementStCostFalloff`, `fieldMovementStCostMinimum`
 - `transform`
 - `copy_skill`
 - `revive_ally`, `deploy_reserve`, `swap_reserve`

@@ -176,12 +176,17 @@ function createDefaultAction(type = "deal_damage") {
     ...(TIMED_EFFECT_ACTIONS.includes(type) ? {effect:createDefaultSkillEffect(type)} : {}),
     fieldShape: "circle",
     fieldRadius: type === "create_field" ? 3 : 0,
+    fieldWidth: 2,
     fieldEffect: "deal_damage",
     fieldEffectDuration: 5,
     fieldMoveType: "Push",
     fieldDistance: 1,
     fieldCenter: "target",
     fieldInterval: 1,
+    fieldMovementStCostCenter: 0,
+    fieldMovementStCostFalloff: 0,
+    fieldMovementStCostMinimum: 0,
+    fieldAuras: [],
     ...(type === "copy_skill" ? {copySourceIndex:1,copySlot:1} : {}),
     ...(["swap_reserve","deploy_reserve"].includes(type) ? {reserveIndex:1} : {}),
     ...(type === "revive_ally" ? {reviveHpPercent:50,reviveMpPercent:100,reviveStPercent:100,reviveInvulnerable:0,revivePosition:"death"} : {}),
@@ -309,8 +314,8 @@ function isSkillActionSupported(action) {
   if (!ACTIVE_ACTION_TYPES.includes(action?.type)) return false;
   if (action.targetCooldownScope === "global" && Number(action.targetCooldown) > 0 && !String(action.targetCooldownEffectId ?? "").trim()) return false;
   if (TIMED_EFFECT_ACTIONS.includes(action.type)) return isEffectActionConfigured(action);
-  if (action.type === "create_field") return ["deal_damage","heal","drain_resource","move","add_buff","add_state"].includes(action.fieldEffect ?? "deal_damage")
-    && Number(action.fieldRadius) > 0 && Number(action.fieldInterval) > 0
+  if (action.type === "create_field") return ["none","deal_damage","heal","drain_resource","move","add_buff","add_state"].includes(action.fieldEffect ?? "deal_damage")
+    && (action.fieldShape === "line" ? Number(action.fieldWidth) > 0 : Number(action.fieldRadius) > 0) && Number(action.fieldInterval) > 0
     && ((action.fieldEffect ?? "deal_damage") !== "move" || ["Knockback","Push","Pull"].includes(action.fieldMoveType ?? "Push"))
     && (!["add_buff","add_state"].includes(action.fieldEffect) || isEffectActionConfigured({...action,type:action.fieldEffect}));
   if (action.type === "transform") return isTransformationConfigured(action.transform);
@@ -326,7 +331,8 @@ function getUnsupportedActionNames(skill) {
 
 function isSkillExecutable(skill) {
   if (isChoiceSkill(skill)) return Boolean(getChoiceSkillOption(skill));
-  return Boolean(skill?.actions?.length) && skill.actions.every(isSkillActionSupported)
+  const conditionalDamagePassive=skill?.slot === "passive" && normalizePassiveTrigger(skill.passiveTrigger)?.damageMultiplierPercent != null;
+  return (conditionalDamagePassive || Boolean(skill?.actions?.length)) && skill.actions.every(isSkillActionSupported)
     && (skill.slot !== "passive" || isPassiveTriggerConfigured(skill)) && isSkillChannelConfigured(skill);
 }
 
@@ -661,15 +667,25 @@ function normalizeSkillAction(action = {}) {
       ? Number.isFinite(distanceValue) ? Math.max(1, Math.min(10, distanceValue)) : 10
       : Number(action.distance) || 0,
     duration: normalizeSkillCooldown(action.duration ?? (type === "summon_entity" ? 20 : 0)),
-    fieldShape: String(action.fieldShape ?? action.field_shape ?? "circle"),
+    fieldShape: (action.fieldShape ?? action.field_shape) === "line" ? "line" : "circle",
     fieldRadius: Number(action.fieldRadius ?? action.field_radius) || 0,
-    fieldEffect:["deal_damage","heal","drain_resource","move","add_buff","add_state"].includes(action.fieldEffect ?? action.field_effect) ? (action.fieldEffect ?? action.field_effect) : "deal_damage",
+    fieldWidth:Math.max(0.1,Number(action.fieldWidth ?? action.field_width) || 2),
+    fieldEffect:["none","deal_damage","heal","drain_resource","move","add_buff","add_state"].includes(action.fieldEffect ?? action.field_effect) ? (action.fieldEffect ?? action.field_effect) : "deal_damage",
     fieldEffectDuration:normalizeSkillCooldown(action.fieldEffectDuration ?? action.field_effect_duration ?? 5),
     ...(type === "create_field" && ["add_buff","add_state"].includes(action.fieldEffect ?? action.field_effect) ? {effect:normalizeSkillEffect(action.effect,action.fieldEffect ?? action.field_effect)} : {}),
     fieldMoveType:["Knockback","Push","Pull"].includes(action.fieldMoveType ?? action.field_move_type) ? (action.fieldMoveType ?? action.field_move_type) : "Push",
     fieldDistance:Math.max(1,Math.min(10,Number(action.fieldDistance ?? action.field_distance) || 1)),
     fieldCenter:(action.fieldCenter ?? action.field_center) === "self" ? "self" : "target",
-    fieldInterval:Math.max(1/60,Number(action.fieldInterval ?? action.field_interval) || 1)
+    fieldInterval:Math.max(1/60,Number(action.fieldInterval ?? action.field_interval) || 1),
+    fieldMovementStCostCenter:Math.max(0,Number(action.fieldMovementStCostCenter ?? action.field_movement_st_cost_center) || 0),
+    fieldMovementStCostFalloff:Math.max(0,Number(action.fieldMovementStCostFalloff ?? action.field_movement_st_cost_falloff) || 0),
+    fieldMovementStCostMinimum:Math.max(0,Number(action.fieldMovementStCostMinimum ?? action.field_movement_st_cost_minimum) || 0),
+    fieldAuras:(Array.isArray(action.fieldAuras ?? action.field_auras) ? (action.fieldAuras ?? action.field_auras) : []).map(aura=>({
+      target:aura?.target === "enemy" ? "enemy" : "ally",
+      stat:String(aura?.stat ?? "speed"),
+      mode:aura?.mode === "flat" ? "flat" : "percent",
+      value:Number(aura?.value) || 0
+    })).filter(aura=>aura.value !== 0)
   };
 }
 
@@ -721,7 +737,8 @@ function normalizeSkillJson(skills) {
       ...(normalizePassiveConversions(skill?.passiveConversions) ? {passiveConversions:normalizePassiveConversions(skill.passiveConversions)} : {}),
       ...(normalizeSkillCombo(skill?.combo) ? {combo:normalizeSkillCombo(skill.combo)} : {}),
       resourceCosts: normalizeSkillResourceCosts(skill),
-      actions: isChoiceSkill(skill?.slot) || skill?.selectionModifier ? [] : (Array.isArray(skill?.actions) && skill.actions.length ? skill.actions.map(normalizeSkillAction) : [createDefaultAction()])
+      actions: isChoiceSkill(skill?.slot) || skill?.selectionModifier || (skill?.slot === "passive" && normalizePassiveTrigger(skill?.passiveTrigger)?.damageMultiplierPercent != null)
+        ? [] : (Array.isArray(skill?.actions) && skill.actions.length ? skill.actions.map(normalizeSkillAction) : [createDefaultAction()])
     }))
     .filter(skill => skill.id && skill.name);
 
@@ -1174,7 +1191,7 @@ function formatActionSummary(action) {
   if (!isSkillActionSupported(action)) return `${getUnsupportedActionNames({actions:[action]}).join(", ")} · 미지원`;
   if (TIMED_EFFECT_ACTIONS.includes(action.type)) {
     const effect = action.effect;
-    if (action.type.startsWith("delete_")) return `${ACTION_TYPE_LABELS[action.type]} / ${effect.dispelMode === "all" ? "전체" : effect.dispelMode === "category" ? EFFECT_CATEGORY_LABELS[effect.dispelCategory] : effect.id} / ${effect.dispelPolarity === "harmful" ? "해로운 효과만" : effect.dispelPolarity === "beneficial" ? "이로운 효과만" : "모든 성격"}`;
+    if (action.type.startsWith("delete_")) return `${ACTION_TYPE_LABELS[action.type]} / ${effect.dispelMode === "all" ? "전체" : effect.dispelMode === "category" ? EFFECT_CATEGORY_LABELS[effect.dispelCategory] : effect.dispelMode === "tags" ? (effect.dispelTags ?? []).join(", ") : effect.id} / ${effect.dispelPolarity === "harmful" ? "해로운 효과만" : effect.dispelPolarity === "beneficial" ? "이로운 효과만" : "모든 성격"}`;
     const value = action.type === "add_state" ? STATE_LABELS[effect.state] : effect.mode === "immunity" ? "면역" : effect.mode === "damage_immunity" ? "피해 무시" : effect.mode === "periodic" ? "주기 효과만 적용" : effect.mode === "damage_reflect" ? `실제 피해 ${effect.reflectPercent}% 반사 (${effect.reflectScope === "basic" ? "기본 공격" : effect.reflectScope === "skill" ? "스킬" : "모든 피해"})` : effect.mode === "next_skill_modifier" ? `다음 스킬 시전 ${effect.nextCastTimePercent}% · 비용 ${effect.nextResourceCostPercent}% · 쿨타임 ${effect.nextCooldownPercent}%` : effect.mode === "override" ? `${BUFF_STAT_LABELS[effect.stat]} 최종 ${effect.value}` : effect.mode === "convert" ? `${BUFF_STAT_LABELS[effect.sourceStat]}의 ${effect.value}%를 ${BUFF_STAT_LABELS[effect.stat]}에 전환` : `${BUFF_STAT_LABELS[effect.stat]} ${effect.value}${effect.mode === "percent" ? "%" : ""}`;
     const periodic = effect.periodic ? ` / ${effect.periodic.interval}초마다 ${effect.periodic.value} ${effect.periodic.type === "damage" ? `${ACTION_DAMAGE_TYPE_LABELS[effect.periodic.damageType]} 피해` : `${getResourceLabel(effect.periodic.resource)} 회복`}` : "";
     const immune = effect.immunity ? ` / 면역: ${effect.immunity.scope === "state" ? "상태" : effect.immunity.scope === "harmful" ? "해로운 효과" : "상태·버프"}·${EFFECT_CATEGORY_LABELS[effect.immunity.category] ?? "모든 분류"}·${STATE_LABELS[effect.immunity.state] ?? "모든 상태"}` : "";
@@ -1215,7 +1232,8 @@ function formatActionSummary(action) {
   if (action.type === "create_field") {
     const timed=["add_buff","add_state"].includes(action.fieldEffect);
     const effectText=action.fieldEffect === "move" ? `${ACTION_MOVE_TYPE_LABELS[action.fieldMoveType]} ${action.fieldDistance}` : timed ? `${ACTION_TYPE_LABELS[action.fieldEffect]} (${action.effect?.name || action.effect?.id || "효과"}, ${action.fieldEffectDuration || "무제한"}초)` : ACTION_TYPE_LABELS[action.fieldEffect];
-    return `필드 생성 / ${ACTION_TARGET_LABELS[action.target]}에게 ${effectText} / ${action.fieldCenter === "self" ? "자신" : "대상"} 위치 / 반경 ${action.fieldRadius} / ${action.fieldInterval}초 간격 / ${action.duration || "무제한"}초 / ${rangeText}${action.fieldEffect === "move" || timed ? "" : ` / ${coefficientText}`}`;
+    const shapeText=action.fieldShape === "line" ? `선형 폭 ${action.fieldWidth}` : `반경 ${action.fieldRadius}`;
+    return `필드 생성 / ${ACTION_TARGET_LABELS[action.target]}에게 ${effectText ?? "오라"} / ${action.fieldCenter === "self" ? "자신" : "대상"} 위치 / ${shapeText} / ${action.fieldInterval}초 간격 / ${action.duration || "무제한"}초 / ${rangeText}${["none","move"].includes(action.fieldEffect) || timed ? "" : ` / ${coefficientText}`}`;
   }
   return `${ACTION_TYPE_LABELS[action.type] ?? action.type} / ${ACTION_TARGET_LABELS[action.target] ?? action.target}`;
 }
@@ -1496,6 +1514,7 @@ function renderSkillActionRow(action, index) {
       </label>
       <div class="skill-action-field" data-action-field="fieldSettings">
         <label>필드 적용 효과<select class="skill-action-field-effect" onchange="changeSkillFieldEffect(this)">
+          <option value="none" ${action.fieldEffect === "none" ? "selected" : ""}>효과 없음 (오라 전용)</option>
           <option value="deal_damage" ${action.fieldEffect === "deal_damage" ? "selected" : ""}>피해</option>
           <option value="heal" ${action.fieldEffect === "heal" ? "selected" : ""}>회복</option>
           <option value="drain_resource" ${action.fieldEffect === "drain_resource" ? "selected" : ""}>자원 감소</option>
@@ -1503,12 +1522,19 @@ function renderSkillActionRow(action, index) {
           <option value="add_buff" ${action.fieldEffect === "add_buff" ? "selected" : ""}>버프 부여</option>
           <option value="add_state" ${action.fieldEffect === "add_state" ? "selected" : ""}>상태 부여</option>
         </select></label>
+        <label>필드 형태<select class="skill-action-field-shape"><option value="circle" ${action.fieldShape !== "line" ? "selected" : ""}>원형</option><option value="line" ${action.fieldShape === "line" ? "selected" : ""}>선형</option></select></label>
         <label>강제 이동 방식<select class="skill-action-field-move-type"><option value="Push" ${action.fieldMoveType === "Push" ? "selected" : ""}>중심에서 밀치기</option><option value="Knockback" ${action.fieldMoveType === "Knockback" ? "selected" : ""}>중심에서 넉백</option><option value="Pull" ${action.fieldMoveType === "Pull" ? "selected" : ""}>중심으로 끌어오기</option></select></label>
         <label>강제 이동 거리<input class="skill-action-field-distance" type="number" min="1" max="10" step="0.1" value="${action.fieldDistance ?? 1}"></label>
         <label>설치 중심<select class="skill-action-field-center"><option value="target" ${action.fieldCenter === "target" ? "selected" : ""}>선택 대상 위치</option><option value="self" ${action.fieldCenter === "self" ? "selected" : ""}>시전자 위치</option></select></label>
         <label>필드 반경<input class="skill-action-field-radius" type="number" min="0.1" step="0.1" value="${action.fieldRadius}" placeholder="3"></label>
+        <label>선형 필드 폭<input class="skill-action-field-width" type="number" min="0.1" step="0.1" value="${action.fieldWidth ?? 2}" placeholder="2"></label>
         <label>지속시간 (초, 0: 전투 종료까지)<input class="skill-action-field-duration" type="number" min="0" step="0.1" value="${action.duration}"></label>
         <label>적용 간격 (초)<input class="skill-action-field-interval" type="number" min="${1/60}" step="any" value="${action.fieldInterval}"></label>
+        <label>중심 이동 ST 추가 비용/초<input class="skill-action-field-st-center" type="number" min="0" step="0.1" value="${action.fieldMovementStCostCenter ?? 0}"></label>
+        <label>1m당 ST 비용 감소<input class="skill-action-field-st-falloff" type="number" min="0" step="0.1" value="${action.fieldMovementStCostFalloff ?? 0}"></label>
+        <label>최소 이동 ST 추가 비용/초<input class="skill-action-field-st-minimum" type="number" min="0" step="0.1" value="${action.fieldMovementStCostMinimum ?? 0}"></label>
+        <label>필드 오라 설정<input class="skill-action-field-auras" value="${escapeHtml((action.fieldAuras ?? []).map(aura=>`${aura.target}:${aura.stat}:${aura.mode}:${aura.value}`).join(", "))}" placeholder="ally:castSpeed:percent:-20, enemy:speed:percent:-20"></label>
+        <small>오라는 대상:능력치:방식:값 형식으로 쉼표로 구분합니다. 대상은 ally/enemy, 방식은 percent/flat을 사용합니다.</small>
         <small>생성 순간의 위치에 고정됩니다. 각 간격마다 범위 안의 유효 대상을 다시 찾습니다. 강제 이동은 계수를 사용하지 않고 필드 중심을 기준으로 적용됩니다.</small>
       </div>
       <div class="skill-range-section" data-action-field="range">
@@ -1918,12 +1944,20 @@ function readSkillActionsFromForm() {
       moveSpeed: Number(row.querySelector(".skill-action-move-speed")?.value ?? 1),
       distance: Number(row.querySelector(".skill-action-distance")?.value ?? 0),
       fieldRadius: Number(row.querySelector(".skill-action-field-radius")?.value ?? 0),
+      fieldShape:row.querySelector(".skill-action-field-shape")?.value ?? "circle",
+      fieldWidth:Number(row.querySelector(".skill-action-field-width")?.value ?? 2),
       fieldEffect: row.querySelector(".skill-action-field-effect")?.value,
       fieldEffectDuration:Number(row.querySelector('.skill-effect-duration')?.value ?? 5),
       fieldMoveType:row.querySelector(".skill-action-field-move-type")?.value,
       fieldDistance:Number(row.querySelector(".skill-action-field-distance")?.value ?? 1),
       fieldCenter: row.querySelector(".skill-action-field-center")?.value,
       fieldInterval: Number(row.querySelector(".skill-action-field-interval")?.value ?? 1),
+      fieldMovementStCostCenter:Number(row.querySelector(".skill-action-field-st-center")?.value ?? 0),
+      fieldMovementStCostFalloff:Number(row.querySelector(".skill-action-field-st-falloff")?.value ?? 0),
+      fieldMovementStCostMinimum:Number(row.querySelector(".skill-action-field-st-minimum")?.value ?? 0),
+      fieldAuras:String(row.querySelector(".skill-action-field-auras")?.value ?? "").split(",").map(value=>{
+        const [target,stat,mode,amount]=value.trim().split(":");return {target,stat,mode,value:Number(amount)};
+      }).filter(aura=>["ally","enemy"].includes(aura.target) && aura.stat && ["percent","flat"].includes(aura.mode) && Number.isFinite(aura.value) && aura.value !== 0),
       area: Number(row.querySelector(".skill-action-area")?.value ?? 0),
       areaCenter: row.querySelector(".skill-action-area-center")?.value,
       maxTargets: Number(row.querySelector(".skill-action-max-targets")?.value ?? 0),
@@ -2611,7 +2645,7 @@ function applyActionDamage(source, target, action, skill = null, execution = nul
     applyDamageImmunityCounter(target,source,action,skill,immunity);
     return 0;
   }
-  const rawDamage = getActionCoefficientValue(action, source, target, execution) * getUnitTeamBattleRules(source).damagePercent / 100 * (Number(skill?.weaponDamagePercent ?? 100) / 100);
+  const rawDamage = getActionCoefficientValue(action, source, target, execution) * getUnitTeamBattleRules(source).damagePercent / 100 * (Number(skill?.weaponDamagePercent ?? 100) / 100) * getPassiveTargetDamageMultiplierPercent(source,target) / 100;
   let remainingRaw=Math.max(0,Number(rawDamage) || 0);
   const portions=[];
   for (const route of getDamageProxyRoutes(target,skill)) {
