@@ -1,0 +1,20 @@
+{
+  "settings": {
+    "count": 1000,
+    "teamSize": 1,
+    "workers": 8,
+    "seed": 12345,
+    "maxSeconds": 600,
+    "width": 400,
+    "height": 300,
+    "minSamples": 30
+  },
+  "wallSeconds": 85.7628033,
+  "status": "COMPLETED",
+  "completed": 1000,
+  "dataHash": "900728d3a4758566d0a17d78421ca545e6d6bef1b3a0bec1159d46bdb1da5d09",
+  "engineHash": "8bf220dd50ed1612aeb493fc6ceb33d9a07c066ccc9b185f03f4c6234dbd4788",
+  "resultsHash": "bc7e9a9d6d93641365b280cdb6acc37306f0b52a0cb00ea7a2db38d0ee88087a",
+  "estimated10000Seconds": 857.628033,
+  "profileSummary": []
+}

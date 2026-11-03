@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Squad Auto Battle Prototype</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=20261026-action-log">
+<link rel="stylesheet" href="css/style.css?v=20261103-expected-dps">
 </head>
 <body>
 
@@ -42,7 +42,8 @@
           <label for="simulationPreset">전투 횟수</label>
           <div class="simulation-fields"><select id="simulationPreset" onchange="SimulationPage.preset(this.value)"><option value="100">100회</option><option value="1000">1,000회</option><option value="10000">10,000회</option><option value="custom">직접 입력</option></select><input aria-label="전투 횟수 직접 입력" id="simulationCount" type="number" min="1" max="10000" step="1" value="100" required oninput="document.getElementById('simulationPreset').value='custom'"></div>
           <div class="simulation-fields"><label>전투 규모<select id="simulationTeamSize"><option value="1">1 vs 1</option><option value="2">2 vs 2</option><option value="3" selected>3 vs 3</option></select></label><label>Seed<input id="simulationSeed" type="number" min="0" max="4294967295" step="1" value="12345" required></label></div>
-          <details><summary>상세 설정</summary><div class="simulation-fields"><label>전투 제한시간(초)<input id="simulationMaxSeconds" type="number" min="1" max="3600" value="600" required></label><label>최소 평가 표본<input id="simulationMinSamples" type="number" min="1" max="10000" value="30" required></label></div></details>
+          <p class="simulation-note">Seed는 무작위 편성과 전투 난수의 시작값입니다. 같은 데이터·엔진·조건·Seed로 결과를 재현합니다.</p>
+          <details><summary>상세 설정</summary><div class="simulation-fields"><label>전투 제한시간(초)<input id="simulationMaxSeconds" type="number" min="1" max="3600" value="600" required></label><label>최소 평가 표본<input id="simulationMinSamples" type="number" min="1" max="10000" value="30" required></label><label>동시 전투 계산<select id="simulationWorkers"><option value="0">자동 (CPU에 맞춰 최대 4개)</option><option value="1">1개 (순차)</option><option value="2">2개</option><option value="4">4개</option><option value="6">6개</option><option value="8">8개</option></select></label></div><p class="simulation-note">여러 CPU 코어에 독립 전투를 나눠 계산합니다. 값을 높이면 CPU·메모리 사용량도 늘며, 코어 수에 따라 더 느려질 수 있습니다. 중단 시 계산 중인 전투들까지 마치고 저장합니다.</p></details>
           <button id="simulationStart" type="submit">시뮬레이션 시작</button>
         </fieldset>
       </form>
@@ -1024,10 +1025,10 @@
 <script src="js/layout.js?v=20260817-layout"></script>
 <script src="js/combat-power.js?v=20261014-v1"></script>
 <script src="js/combat-power-ui.js?v=20261014-v1"></script>
-<script src="js/equipment.js?v=20261014-cp-v1"></script>
+<script src="js/equipment.js?v=20261103-expected-dps"></script>
 <script src="js/monster.js?v=20261018-duel"></script>
 <script src="js/faction.js?v=20261005-icons"></script>
-<script src="js/character.js?v=20261018-compact-buttons"></script>
+<script src="js/character.js?v=20261103-expected-dps"></script>
 <script src="js/synergy.js?v=20261011-v1"></script>
 <script src="js/synergy-ui.js?v=20261015-record-images"></script>
 <script src="js/team.js?v=20261018-compact-buttons"></script>
@@ -1038,8 +1039,10 @@
 <script src="js/image-generator.js?v=20261005-image-actions"></script>
 <script src="js/icon-background.js?v=20261009"></script>
 <script src="js/icons.js?v=20261009-icon-background"></script>
+<script src="js/expected-dps.js?v=20261103-v2"></script>
 <script src="js/main.js?v=20261011-synergy-v1"></script>
-<script src="js/simulation.js?v=20261011"></script>
+<script src="js/simulation-analysis.js?v=20261103"></script>
+<script src="js/simulation.js?v=20261103-speed"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="js/bootstrap-ui.js?v=20261011-simulation"></script>
 

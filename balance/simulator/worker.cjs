@@ -7,7 +7,14 @@ function atomic(file,text){const temp=file+'.tmp';fs.writeFileSync(temp,text);fs
 async function main(){
   const dir=path.resolve(process.argv[2]);
   const input=JSON.parse(fs.readFileSync(path.join(dir,'request.json'),'utf8'));
-  let parentGone=false,lastUpdate=0;
+  let parentGone=false,outputClosed=false,lastUpdate=0;
+  process.stdout.on('error',error=>{
+    outputClosed=true;parentGone=true;
+    if(error.code!=='EPIPE')console.error(error.stack || error);
+  });
+  const emit=event=>{
+    if(!outputClosed && !process.stdout.destroyed)process.stdout.write(JSON.stringify(event)+'\n');
+  };
   process.stdin.resume();process.stdin.on('end',()=>{parentGone=true;});
   const journal=fs.openSync(path.join(dir,'battles.ndjson'),'a');
   let run;
@@ -17,15 +24,15 @@ async function main(){
       onBattle:result=>fs.writeSync(journal,JSON.stringify(result)+'\n'),
       onProgress:progress=>{
         if(!progress.completed || performance.now()-lastUpdate>=250 || progress.completed===progress.total){
-          process.stdout.write(JSON.stringify({type:'progress',...progress})+'\n');lastUpdate=performance.now();
+          emit({type:'progress',...progress});lastUpdate=performance.now();
         }
       }});
   } finally {fs.closeSync(journal);}
   atomic(path.join(dir,'result.json'),JSON.stringify(run,null,2)+'\n');
   atomic(path.join(dir,'report.md'),makeReport(run,parseTargets(run.targetMarkdown),'./result.json'));
-  process.stdout.write(JSON.stringify({type:'finished',status:run.status,error:run.error,completed:run.completed,
+  emit({type:'finished',status:run.status,error:run.error,completed:run.completed,
     total:run.settings.count,elapsedSeconds:run.elapsedSeconds,dataHash:run.dataHash,engineHash:run.engineHash,gitRevision:run.gitRevision,
-    averageDuration:run.summary.duration.average})+'\n');
+    averageDuration:run.summary.duration.average});
   process.stdin.pause();
 }
 main().catch(error=>{console.error(error.stack || error);process.exitCode=1;process.stdin.pause();});

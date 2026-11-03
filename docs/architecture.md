@@ -1,5 +1,9 @@
 # 아키텍처
 
+## 기대 DPS 표시
+
+[expected-dps.js](../js/expected-dps.js)는 복사한 캐릭터에 공통 능력치·계수·장비 스킬 보정 함수를 적용하는 읽기 전용 표시 모듈입니다. [equipment.js](../js/equipment.js)의 무기 선택 상세와 [character.js](../js/character.js)의 스킬 hover/focus에서 호출하며 전투 실행이나 저장값을 추가하지 않습니다. [계산 계약·검증 상태](EXPECTED_DPS.md).
+
 ## 캐릭터 1:1 전투
 
 [team.js](../js/team.js)는 duel 모드의 양측 단일 선택·별도 선택 스킬을 관리하며 기존 createSquadFromCharacterIds로 각각 한 명을 생성한다. [battle.js](../js/battle.js)는 시작 시 양측을 다시 구성하고 미선택을 차단한다. 팀 모드의 선택/배율은 적용하지 않으며 전투 루프·저장된 캐릭터·팀 스키마는 유지한다. 검증은 [duel.test.cjs](../tests/duel.test.cjs)에 있다.
@@ -51,6 +55,8 @@
 - `balance/simulator/engine.cjs`: Node VM에서 실제 전투 모듈을 로드하고 가상 시계·seed·출력 어댑터·전체 이벤트 누적을 연결합니다. 전투 수식은 복제하지 않습니다.
 - `balance/simulator/runner.cjs`, `report.cjs`: 균형 무작위 팀 편성·순차 실행·집계·목표 비교·JSON/Markdown 저장·재현 CLI입니다. [전투 재사용 경로](balance/SIMULATION_GUIDE.md)를 참고합니다.
 - `js/simulation.js`: 전투 테스트의 설정·1초 polling·진행률·중단·숫자 정렬·대시보드·목표 편집·이력 조회입니다. 브라우저는 반복 전투를 계산하지 않습니다.
+- `js/simulation-analysis.js`: Node 보고서와 브라우저 과거 결과 조회가 공유하는 순수 1:1 클래스/상대 계열 집계 및 로컬 통계 의견 생성기입니다. 외부 AI 호출 없이 저장된 결과만 분석합니다. `simulation.js`가 클래스 선택·상성표·의견을 표시합니다.
+- `balance/simulator/pool.cjs`, `battle-worker.cjs`: 공통 service 내부의 Worker 풀입니다. 부모가 고정 순서로 편성/seed를 배정하고 Worker마다 독립 엔진을 재사용합니다. 원래 전투 ID 순으로 집계하며 중단/실패 시 추가 배정을 멈추고 진행 전투 결과를 회수합니다. 웹 서버의 단일 Job 정책은 유지합니다.
 - `simulation_jobs.py`: 단일 실행 잠금, 입력 스냅샷, Node 자식 프로세스, 영속 Job/진행 상태·이력·실패 복구를 관리합니다. `server.py`가 `/api/simulations` 및 `/api/simulation-targets`를 연결합니다.
 - `balance/simulator/service.cjs`, `worker.cjs`: CLI와 서버의 공통 실행 서비스 및 stdout 진행 이벤트·전투별 journal·부분 결과 저장 어댑터입니다. 취소는 전투 사이에서 처리하며 실제 전투 틱/규칙은 유지합니다.
 - `js/battle.js`의 선택적 `battleResultSink`: headless 결과 수신 경로입니다. 기본값 null에서는 기존 화면과 전투 기록 저장을 유지합니다.

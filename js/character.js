@@ -128,6 +128,7 @@ function openCharacterModal(index = "") {
 
 function closeCharacterModal() {
   if (characterDeletePending) return;
+  if (typeof hideCharacterSkillValueTooltip === "function") hideCharacterSkillValueTooltip();
   characterModalEl.classList.add("hidden");
   characterFormEl.reset();
   resetPortraitDraft("character");
@@ -197,7 +198,7 @@ function renderCharacterSkillPicker(selectedSkillIds = null) {
   const classSkills = typeof getSkillsForClass === "function" ? getSkillsForClass(characterNameEl.value.trim()) : [];
   const selected = new Set(selectedSkillIds ?? [...characterSkillsEl.querySelectorAll('input[type="checkbox"]:checked')].map(input => input.value));
   characterSkillsEl.innerHTML = classSkills.map(skill => `
-    <label class="character-skill-option">
+    <label class="character-skill-option" data-skill-id="${escapeHtml(skill.id)}" onmouseenter="updateCharacterSkillDpsTooltip(this)" onmouseleave="hideCharacterSkillValueTooltip()" onfocusin="updateCharacterSkillDpsTooltip(this)" onfocusout="hideCharacterSkillValueTooltip()">
       <input type="checkbox" value="${escapeHtml(skill.id)}" ${selected.has(skill.id) ? "checked" : ""}>
       ${recordImagePath(skill.icon) ? `<img src="${escapeHtml(skill.icon)}" alt="" onerror="this.hidden=true">` : `<span class="character-skill-placeholder">${escapeHtml(getSkillShortName(skill).slice(0, 1) || "S")}</span>`}
       <span><strong>${escapeHtml(getSkillShortName(skill))}</strong><small>${escapeHtml(getSkillSlotLabel(skill.slot))}</small></span>

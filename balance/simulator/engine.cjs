@@ -81,6 +81,11 @@ function createEngine(data = loadData(), {width = 400, height = 300} = {}) {
     factionsJson = normalizeFactionJson(inputData.factions);
     entitiesJson = structuredClone(inputData.entities);
     skillsJson = normalizeSkillJson(inputData.skills);
+    // This headless realm owns a fixed skill catalog for the entire run.
+    // Preserve Array.find's first match and object identity; only index lookup changes.
+    const simulationSkillIndex = new Map();
+    for (const skill of skillsJson) if (!simulationSkillIndex.has(skill.id)) simulationSkillIndex.set(skill.id, skill);
+    getSkillById = skillId => simulationSkillIndex.get(skillId);
     characterJson = normalizeCombatJson(inputData.characters, [], 'name');
     teamsJson = normalizeTeamJson(inputData.teams);
     synergiesJson = validateSynergies(inputData.synergies || []);
@@ -88,6 +93,7 @@ function createEngine(data = loadData(), {width = 400, height = 300} = {}) {
     globalThis.roster = characterJson.map((c,id) => ({id,name:c.name,role:c.role}));
     globalThis.simState = () => ({running:isBattleRunning,tick:combatEventTick,
       units:[...playerSquad,...enemySquad]});
+    globalThis.simRunning = () => isBattleRunning;
     battleResultSink = result => { globalThis.simWinner = result; };
     globalThis.prepareSimulation = (teamA,teamB) => {
       nextSummonId = 1;
@@ -136,13 +142,13 @@ function createEngine(data = loadData(), {width = 400, height = 300} = {}) {
     try {
       // gameLoop is also available to compare the UI scheduler against direct ticks.
       if (drive === 'loop') vm.runInContext('lastGameLoopAt = performance.now(); draw=()=>{}; updateStatusUI=()=>{}; window.setTimeout=()=>{};', context);
-      while (context.simState().running && ticks < maxTicks) {
+      while (context.simRunning() && ticks < maxTicks) {
         for (const [unit,row] of rows) if (unit.alive) row.survivalTime += 1 / 60;
         time = 1700000000000 + (++ticks * 1000 / 60);
         if (drive === 'loop') context.gameLoop(); else context.runBattleTick();
         if (errors.length) throw new Error(errors.join('\n'));
       }
-      const timedOut = context.simState().running;
+      const timedOut = context.simRunning();
       const winner = timedOut ? null : ({'승리':'A','패배':'B','무승부':null})[context.simWinner];
       const duration = ticks / 60;
       const result = {battleId,seed,activeSynergies:context.getSimulationSynergies(),teamA:[...teamA],teamB:[...teamB],winner,

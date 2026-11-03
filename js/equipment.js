@@ -651,6 +651,7 @@ function renderInventoryItemDetail() {
   const character = characterJson[selectedEquipmentCharacterIndex];
   const slots = character ? getCharacterEquipmentSlots(character).filter(slot => canEquipItemToSlot(item, slot.key, character)).map(slot => slot.label) : [];
   detail.innerHTML = `<strong>${escapeHtml(item.name)}</strong><div>${escapeHtml(getSlotLabel(item.slot))} · ${escapeHtml(item.weaponCategory ? getWeaponCategoryLabel(item.weaponCategory) : item.armorCategory ? getArmorCategoryLabel(item.armorCategory) : '')}</div><pre>${escapeHtml(getItemStatSummary(item))}</pre><div>장착 가능: ${escapeHtml(slots.join(', ') || '캐릭터를 선택하세요')}</div>`;
+  detail.insertAdjacentHTML('beforeend',renderWeaponDpsPreview(character,item));
 }
 
 function equipSelectedInventoryItem(slotKey) {

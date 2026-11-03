@@ -7,6 +7,7 @@ import re
 import shutil
 import subprocess
 import threading
+import time
 import traceback
 import uuid
 
@@ -30,9 +31,22 @@ def read_json(path):
 
 
 def atomic_json(path, value):
-    temp = path.with_suffix(".tmp")
-    temp.write_text(json.dumps(value, ensure_ascii=False, indent=2), encoding="utf-8")
-    temp.replace(path)
+    temp = path.with_name(path.name + "." + uuid.uuid4().hex + ".tmp")
+    try:
+        temp.write_text(json.dumps(value, ensure_ascii=False, indent=2), encoding="utf-8")
+        for attempt in range(6):
+            try:
+                temp.replace(path)
+                return
+            except OSError as exc:
+                if getattr(exc, "winerror", None) not in (5, 32, 33) or attempt == 5:
+                    raise
+                time.sleep(0.02 * (2 ** attempt))
+    finally:
+        try:
+            temp.unlink(missing_ok=True)
+        except OSError:
+            pass
 
 
 def parse_targets(markdown):
@@ -98,7 +112,7 @@ class SimulationJobs:
                         if journal.exists():
                             job["completed"] = sum(1 for line in journal.read_text(encoding="utf-8").splitlines()
                                                    if line.endswith("}"))
-                    atomic_json(path, job)
+                    self._save_status(job)
                 self.jobs[job["simulationId"]] = job
             except (OSError, ValueError, KeyError):
                 continue
@@ -140,7 +154,7 @@ class SimulationJobs:
             raise SimulationError("실행 설정은 객체여야 합니다.")
         rules = {"count": (100, 1, 10000), "teamSize": (3, 1, 3), "seed": (12345, 0, 4294967295),
                  "maxSeconds": (600, 1, 3600), "width": (400, 100, 4000),
-                 "height": (300, 100, 4000), "minSamples": (30, 1, 10000)}
+                 "height": (300, 100, 4000), "minSamples": (30, 1, 10000), "workers": (0, 0, 8)}
         result = {}
         for key, (default, low, high) in rules.items():
             value = values.get(key, default)
@@ -171,8 +185,8 @@ class SimulationJobs:
             job = {"simulationId": job_id, "startedAt": now(), "finishedAt": None, "status": "RUNNING",
                    "settings": settings, "completed": 0, "total": settings["count"], "elapsedSeconds": 0,
                    "error": None, "resultUrl": f"/api/simulations/{job_id}/result"}
-            self.jobs[job_id] = job
             self._save(job)
+            self.jobs[job_id] = job
             try:
                 with (directory / "error.log").open("w", encoding="utf-8") as errors:
                     process = subprocess.Popen([node, str(self.root / "balance/simulator/worker.cjs"), str(directory)],
@@ -182,18 +196,34 @@ class SimulationJobs:
                 threading.Thread(target=self._monitor, args=(job_id, process), daemon=True).start()
             except OSError as exc:
                 job.update(status="FAILED", finishedAt=now(), error=f"실행기를 시작하지 못했습니다: {exc}")
-                self._save(job)
+                self._save_status(job)
             return dict(job)
 
     def _save(self, job):
         atomic_json(self.storage / job["simulationId"] / "job.json", job)
+
+    def _save_status(self, job):
+        # Metadata failure must not close the worker's progress pipe. The next
+        # update retries; result.json remains authoritative after a restart.
+        previous = job.pop("persistenceWarning", None)
+        try:
+            self._save(job)
+        except OSError as exc:
+            job["persistenceWarning"] = f"작업 상태 저장 지연: {exc}"
+            if previous is None:
+                try:
+                    with (self.storage / job["simulationId"] / "error.log").open("a", encoding="utf-8") as errors:
+                        errors.write(job["persistenceWarning"] + "\n")
+                except OSError:
+                    pass
 
     @staticmethod
     def _run_metadata(run):
         return {"status": run.get("status", "COMPLETED"), "finishedAt": run.get("finishedAt"),
                 "completed": run["summary"]["battles"], "elapsedSeconds": run["elapsedSeconds"],
                 "dataHash": run["dataHash"], "engineHash": run["engineHash"], "gitRevision": run["gitRevision"],
-                "averageDuration": run["summary"]["duration"]["average"], "error": run.get("error")}
+                "averageDuration": run["summary"]["duration"]["average"], "error": run.get("error"),
+                "workers": run.get("settings", {}).get("workers", 1)}
 
     def _monitor(self, job_id, process):
         directory = self.storage / job_id
@@ -204,7 +234,8 @@ class SimulationJobs:
                 if event.get("type") == "progress":
                     with self.lock:
                         self.jobs[job_id].update({key: event[key] for key in ("completed", "total", "elapsedSeconds")})
-                        self._save(self.jobs[job_id])
+                        self.jobs[job_id]["workers"] = event.get("workers", 1)
+                        self._save_status(self.jobs[job_id])
             code = process.wait()
             if code or not (directory / "result.json").exists():
                 raise RuntimeError(f"실행기가 종료되었습니다 (exit {code}).")
@@ -232,7 +263,7 @@ class SimulationJobs:
                 process.stdout.close()
             with self.lock:
                 self.jobs[job_id].update(update)
-                self._save(self.jobs[job_id])
+                self._save_status(self.jobs[job_id])
                 if self.process is process:
                     self.process = None
 
@@ -242,7 +273,7 @@ class SimulationJobs:
             if job_id in self.jobs and job["status"] in ACTIVE:
                 (self.storage / job_id / "cancel").touch()
                 self.jobs[job_id]["status"] = "CANCELLING"
-                self._save(self.jobs[job_id])
+                self._save_status(self.jobs[job_id])
                 return dict(self.jobs[job_id])
             return job
 

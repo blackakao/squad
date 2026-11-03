@@ -354,6 +354,9 @@ button.selected,
 .duel-character-button .category-icon { flex-shrink: 0; }
 .duel-character-name { min-width: 0; overflow-wrap: anywhere; }
 
+.equipment-dps-preview { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--bs-border-color); }
+.equipment-dps-preview small { display: block; margin-top: 4px; color: var(--bs-secondary-color); }
+
 .record-image-name { display: inline-flex; align-items: center; gap: 8px; }
 .record-image-thumb { width: 36px; height: 36px; object-fit: contain; flex: 0 0 36px; }
 .record-image-editor { min-width: 0; border: 1px solid var(--bs-border-color); border-radius: 6px; padding: 12px; margin: 8px 0; }
@@ -860,6 +863,7 @@ button.selected,
 .character-skill-placeholder { display: grid; place-items: center; background: var(--bs-tertiary-bg); font-weight: 700; }
 .character-skill-option > span:last-child { display: grid; }
 .character-skill-option small { color: var(--bs-secondary-color); }
+.character-skill-value-tooltip { position: fixed; z-index: 1200; width: max-content; max-width: min(390px, calc(100vw - 16px)); padding: 9px 11px; border-radius: var(--bs-border-radius); background: #1f2937; color: #fff; font-size: .76rem; line-height: 1.5; white-space: pre-line; pointer-events: none; box-shadow: 0 4px 14px rgba(0, 0, 0, .28); }
 
 .skill-primary-button {
   color: #fff;

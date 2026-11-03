@@ -11,7 +11,7 @@ from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from simulation_jobs import SimulationJobs, SimulationError, parse_targets
+from simulation_jobs import SimulationJobs, SimulationError, parse_targets, atomic_json
 
 
 class SimulationJobTests(unittest.TestCase):
@@ -115,6 +115,65 @@ class SimulationJobTests(unittest.TestCase):
         (directory / 'battles.ndjson').write_text('{"battleId":"battle-1"}\n', encoding='utf-8')
         job = self.manager().get(directory.name)
         self.assertEqual((job['status'], job['completed']), ('FAILED', 1))
+
+    def test_windows_replace_lock_retries_and_preserves_old_file_on_failure(self):
+        target = self.folder / 'state.json'
+        atomic_json(target, {'old': True})
+        replace = Path.replace
+        calls = []
+        def locked(path, destination):
+            calls.append(path)
+            if len(calls) < 3:
+                error = PermissionError('locked')
+                error.winerror = 5
+                raise error
+            return replace(path, destination)
+        with patch.object(Path, 'replace', locked), patch('simulation_jobs.time.sleep'):
+            atomic_json(target, {'new': True})
+        self.assertEqual(json.loads(target.read_text()), {'new': True})
+        with patch.object(Path, 'replace', side_effect=PermissionError('permanent')):
+            with self.assertRaises(PermissionError):
+                atomic_json(target, {'lost': True})
+        self.assertEqual(json.loads(target.read_text()), {'new': True})
+        self.assertEqual(list(self.folder.glob('*.tmp')), [])
+
+    def test_metadata_failure_does_not_abort_real_worker(self):
+        save = self.jobs._save
+        def unavailable(job):
+            if job['completed'] > 0:
+                raise PermissionError('metadata locked')
+            save(job)
+        with patch.object(self.jobs, '_save', side_effect=unavailable):
+            job = self.jobs.start({'count': 3, 'teamSize': 1, 'maxSeconds': 1})
+            done = self.finish(job['simulationId'])
+        self.assertEqual((done['status'], done['completed']), ('COMPLETED', 3))
+        self.assertIn('persistenceWarning', done)
+        self.assertIsNone(self.jobs.process)
+        self.assertEqual(self.jobs.result(job['simulationId'])['summary']['battles'], 3)
+        self.assertEqual(self.manager().get(job['simulationId'])['status'], 'COMPLETED')
+
+    def test_closed_progress_pipe_preserves_worker_results(self):
+        import subprocess
+        directory = self.folder / 'disconnected'
+        directory.mkdir()
+        atomic_json(directory / 'request.json', {'settings': self.jobs.settings(
+            {'count': 10000, 'teamSize': 1, 'maxSeconds': 1, 'workers': 1}),
+            'inputSnapshot': self.jobs._snapshot(), 'targetMarkdown': self.targets.read_text(encoding='utf-8')})
+        process = subprocess.Popen([shutil.which('node'), str(ROOT / 'balance/simulator/worker.cjs'), str(directory)],
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        process.stdout.close()
+        try:
+            self.assertEqual(process.wait(timeout=30), 0)
+            run = json.loads((directory / 'result.json').read_text(encoding='utf-8'))
+            self.assertEqual(run['status'], 'CANCELLED')
+            self.assertLess(run['completed'], 10000)
+            self.assertEqual(run['completed'], len(run['results']))
+        finally:
+            if process.poll() is None:
+                process.kill()
+                process.wait()
+            process.stdin.close()
+            process.stderr.close()
 
 
 if __name__ == '__main__':

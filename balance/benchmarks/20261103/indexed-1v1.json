@@ -1,0 +1,81 @@
+{
+  "settings": {
+    "count": 100,
+    "teamSize": 1,
+    "workers": 1,
+    "seed": 12345,
+    "maxSeconds": 600,
+    "width": 400,
+    "height": 300,
+    "minSamples": 30
+  },
+  "wallSeconds": 11.3604169,
+  "status": "COMPLETED",
+  "completed": 100,
+  "dataHash": "900728d3a4758566d0a17d78421ca545e6d6bef1b3a0bec1159d46bdb1da5d09",
+  "engineHash": "8bf220dd50ed1612aeb493fc6ceb33d9a07c066ccc9b185f03f4c6234dbd4788",
+  "resultsHash": "b75828a241ae0bbd7b2e76e054fc2d1a9eb9559b97ccbd1119af5cdc1938a11e",
+  "estimated10000Seconds": 1136.04169,
+  "profileSummary": [
+    {
+      "name": "getEquippedSkills js/skill.js:931",
+      "ms": 543.52
+    },
+    {
+      "name": "moveUnit js/battle.js:755",
+      "ms": 506.785
+    },
+    {
+      "name": "normalizeSkillAction js/skill.js:574",
+      "ms": 495.628
+    },
+    {
+      "name": "runBattleTick js/battle.js:1685",
+      "ms": 468.887
+    },
+    {
+      "name": "(garbage collector) :0",
+      "ms": 436.186
+    },
+    {
+      "name": "resolveSkillTarget js/battle.js:966",
+      "ms": 391.222
+    },
+    {
+      "name": "resolveSkillActionTarget js/skill.js:2182",
+      "ms": 373.22
+    },
+    {
+      "name": "isSkillExecutable js/skill.js:332",
+      "ms": 342.074
+    },
+    {
+      "name": "canPaySkillResourceCosts js/skill.js:1110",
+      "ms": 330.781
+    },
+    {
+      "name": "runBattle file:///C:/Users/park/Desktop/project/balance/simulator/engine.cjs:114",
+      "ms": 314.422
+    },
+    {
+      "name": "tryUseReadySkill js/battle.js:940",
+      "ms": 307.837
+    },
+    {
+      "name": "normalizeResourceReference js/skill.js:453",
+      "ms": 305.908
+    },
+    {
+      "name": "getUnitResourceState js/skill.js:1067",
+      "ms": 281.653
+    },
+    {
+      "name": "isSkillActionSupported js/skill.js:313",
+      "ms": 251.858
+    },
+    {
+      "name": "isUnitSkillDisabled js/skill.js:913",
+      "ms": 250.718
+    }
+  ]
+}

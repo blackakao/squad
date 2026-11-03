@@ -1,4 +1,5 @@
 'use strict';
+const {build:buildMatchups} = require('../../js/simulation-analysis.js');
 
 function aggregate(results, roster, minSamples = 30) {
   const blank = info => ({...info,battles:0,wins:0,losses:0,draws:0,timeouts:0,totalDamage:0,totalHealing:0,
@@ -46,7 +47,7 @@ function aggregate(results, roster, minSamples = 30) {
   }
   const durations = results.map(r => r.duration).sort((a,b) => a-b);
   const n = durations.length;
-  return {battles:n,timeouts:results.filter(r=>r.termination==='timeout').length,
+  return {matchups:buildMatchups(results,roster,minSamples),battles:n,timeouts:results.filter(r=>r.termination==='timeout').length,
     draws:results.filter(r=>r.termination==='draw').length,
     duration:{average:n ? durations.reduce((a,b)=>a+b,0)/n : 0,
       median:n ? (durations[Math.floor((n-1)/2)]+durations[Math.floor(n/2)])/2 : 0,

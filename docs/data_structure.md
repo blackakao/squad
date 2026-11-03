@@ -23,6 +23,10 @@
 
 ## 저장 위치와 API
 
+2026-11-03 실행 설정 `workers`를 추가했습니다. 시작 요청의 0은 자동, 1~8은 요청 동시 계산 수이며 생략은 0입니다. 실제 `result.json.settings.workers`에는 CPU/총 전투 수에 맞춰 결정한 수를 저장합니다. 진행/이력의 `workers`도 실제 수입니다. 기존 기록의 누락값은 1입니다. 병렬 중단 시 결과 배열에 battleId 번호 간격이 생길 수 있으며 원래 번호순으로 정렬합니다. journal은 완료순이고 completed는 실제 회수한 전투 수입니다.
+
+2026-11-03부터 시뮬레이션 `summary.matchups`에 `version:1`, `battles`(유효 1:1 수), `excludedBattles`, `minSamples`, `possiblePairs/measuredPairs/sufficientPairs`, `classes`를 추가합니다. 클래스 행은 characterId/name/role 및 battles/wins/losses/draws/timeouts/winRate/lowSample, `opponents`(opponentId/name/role별 같은 통계), `roles`(상대 role별 같은 통계)를 가집니다. 미측정 winRate는 null, 측정했지만 승리 없음은 0입니다. 조합 수는 순서 없는 두 클래스 쌍이며 자기 대결은 제외합니다. 기존 원본에는 이 필드가 없어도 되며 브라우저가 저장된 결과로 재집계합니다. 로컬 의견은 파생 문장으로 저장 필드를 추가하지 않습니다. [집계 의미](balance/SIMULATION_GUIDE.md#클래스-상성과-로컬-의견).
+
 밸런스 시뮬레이터는 `balance/results/<UTC>_<횟수>.json`에 실행 메타데이터·게임 입력 스냅샷·전투별 결과·집계 결과를 별도로 저장합니다. `schemaVersion: 1`이며 캐릭터 인덱스, seed, 승자, timeout, 가상 전투시간, 실제 피해·HP 회복·받은 피해·생존시간·시전 이벤트별 수치를 포함합니다. 게임 JSON/API 스키마와 `battle-records.json`은 변경하지 않습니다. [정확한 필드와 집계 정의](balance/SIMULATION_GUIDE.md#지표와-저장-형식)를 참고합니다.
 
 웹 실행은 `balance/jobs/<simulationId>/`에 저장합니다. `request.json`은 settings/inputSnapshot/targetMarkdown, `job.json`은 simulationId/startedAt/finishedAt/status/settings/completed/total/elapsedSeconds/error/resultUrl 및 완료 후 dataHash/engineHash/gitRevision/averageDuration을 보존합니다. 상태는 RUNNING → COMPLETED/FAILED, 중단 요청 시 CANCELLING → CANCELLED입니다. `result.json`은 CLI와 같은 원본 결과에 status/error/completed/finishedAt을 포함하고, `report.md`는 보조 보고서, `battles.ndjson`은 완료 전투 journal, `error.log`는 개발 로그, `cancel`은 중단 요청 표식입니다. 0회 중단도 유효한 결과입니다. 서버 종료로 결과 파일이 없으면 FAILED로 표시하고 journal을 보존합니다. 자동 재실행은 하지 않습니다.

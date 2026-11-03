@@ -24,7 +24,7 @@ function createSampler(poolSize, teamSize, seed) {
 function parseArgs(args) {
   const options = {preset:'quick',seed:12345,maxSeconds:600,width:400,height:300,minSamples:30};
   const keys = {'--count':'count','--preset':'preset','--team-size':'teamSize','--seed':'seed','--max-seconds':'maxSeconds',
-    '--width':'width','--height':'height','--min-samples':'minSamples','--replay':'replay','--battle':'battle'};
+    '--width':'width','--height':'height','--min-samples':'minSamples','--workers':'workers','--replay':'replay','--battle':'battle'};
   for (let i=0;i<args.length;i++) {
     if (args[i]==='--help') {options.help=true;continue;}
     const key=keys[args[i]];
@@ -40,13 +40,14 @@ function parseArgs(args) {
   if (!Number.isInteger(options.seed) || options.seed<0 || options.seed>0xFFFFFFFF) throw new Error('seed must be uint32');
   if (!Number.isFinite(options.maxSeconds) || options.maxSeconds<=0) throw new Error('max-seconds must be positive');
   if (options.width<20 || options.height<20) throw new Error('field dimensions must be at least 20');
+  if(options.workers!==undefined && (!Number.isInteger(options.workers)||options.workers<0||options.workers>8))throw new Error('workers must be 0 (auto) through 8');
   return options;
 }
 
 async function main(args = process.argv.slice(2)) {
   const options=parseArgs(args);
   if (options.help) {
-    console.log('node balance/simulator/runner.cjs [--preset quick|standard|deep] [--count 1000] [--team-size 3] [--seed 12345] [--max-seconds 600] [--width 400 --height 300] [--min-samples 30]\nReplay: --replay balance/results/<run>.json --battle 1');
+    console.log('node balance/simulator/runner.cjs [--preset quick|standard|deep] [--count 1000] [--team-size 3] [--seed 12345] [--max-seconds 600] [--width 400 --height 300] [--min-samples 30] [--workers 0|1|2|4|6|8]\nReplay: --replay balance/results/<run>.json --battle 1');
     return;
   }
   if (options.replay) {
