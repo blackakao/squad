@@ -403,3 +403,42 @@ function syncItemWeaponFields() {
   }
 }
 
+
+// Item summary and filtered list view helpers.
+function formatSignedValue(value) {
+  const number = Number(value) || 0;
+  return number > 0 ? `+${number}` : String(number);
+}
+
+function getItemStatSummary(item) {
+  const weaponSummary = isWeaponItem(item)
+    ? [`무기 카테고리 ${getWeaponCategoryLabel(item.weaponCategory)}`, `착용 방식 ${getHandTypeLabel(item.handType)}`, `착용 가능 슬롯 ${getWeaponSlotTypeLabel(getWeaponCategory(item.weaponCategory)?.slotType)}`, `공격 타입 ${getWeaponAttackTypeLabel(getWeaponCategory(item.weaponCategory)?.attackType)}`, `작동스킬 ${getSkillById(item.attackSkillId)?.name ?? "기본 공격"}`]
+    : [];
+  const armorSummary = isArmorSlot(item.slot)
+    ? [`방어구 카테고리 ${getArmorCategoryLabel(item.armorCategory)}`]
+    : [];
+  const statSummary = ABILITY_ROWS
+    .map(([label, key]) => Number(item[key]) ? `${label} ${formatSignedValue(item[key])}` : "")
+    .filter(Boolean);
+
+  const modifierSummary = getItemExtraDetails({...item,...Object.fromEntries(ITEM_SECONDARY_STATS.map(([,key])=>[key,0]))});
+  return [...weaponSummary, ...armorSummary, ...statSummary, ...modifierSummary].join("\n") || "능력치 없음";
+}
+
+function getFilteredItems(slotFilter) {
+  const equipmentCharacter = characterJson?.[selectedEquipmentCharacterIndex] ?? null;
+  return itemsJson
+    .map((item, index) => ({ item, index }))
+    .filter(({ item }) => {
+      if (slotFilter === "all") {
+        return true;
+      }
+
+      if (isWeaponSlot(slotFilter)) {
+        return isWeaponItem(item) && canEquipItemToSlot(item, slotFilter, equipmentCharacter);
+      }
+
+      return item.slot === slotFilter;
+    });
+}
+
