@@ -891,34 +891,6 @@ function clearBattleEventLogs() {
   renderBattleEventLogs();
 }
 
-function renderBattleActionLogRow(event) {
-  const healing = event.type === 'heal';
-  const label = healing ? (event.resource && event.resource !== 'HP' ? `${event.resource} 회복` : '치유') : '피해';
-  return `<div class="battle-event-log-row ${event.source?.side === 'enemy' ? 'enemy' : 'player'}">
-    <span class="battle-event-log-time">${(event.tick / 60).toFixed(2)}s</span>
-    <span>${escapeHtml(event.source?.name || '환경')} → ${escapeHtml(event.target?.name || '-')}</span>
-    <span>${escapeHtml(event.skillName || (healing ? '회복' : '기본 공격'))}</span>
-    <span class="battle-event-log-amount">${escapeHtml(label)} ${formatBattleEventValue(event.amount)}</span></div>`;
-}
-
-function renderBattleEventLogs() {
-  if (!battleEventLogListEl) return;
-  const list = battleEventLogListEl;
-  const rendered = Number(list.dataset.renderedCount) || 0;
-  if (!battleEventLogs.length || rendered > battleEventLogs.length) {
-    list.innerHTML = '';
-    list.dataset.renderedCount = '0';
-    list.scrollTop = 0;
-  }
-  const count = Number(list.dataset.renderedCount) || 0;
-  const pending = battleEventLogs.slice(count).reverse();
-  if (!pending.length) return;
-  const previousTop = list.scrollTop, previousHeight = list.scrollHeight;
-  list.insertAdjacentHTML('afterbegin', pending.map(renderBattleActionLogRow).join(''));
-  list.dataset.renderedCount = String(battleEventLogs.length);
-  if (previousTop > 0) list.scrollTop = previousTop + list.scrollHeight - previousHeight;
-}
-
 function showBattleScreenTab(tabName) {
   selectedBattleScreenTab = tabName === "log" ? "log" : "status";
   battleStatusTabBtnEl?.classList.toggle("active", selectedBattleScreenTab === "status");
