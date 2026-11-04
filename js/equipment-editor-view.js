@@ -310,7 +310,6 @@ function changeEquipmentItemSlotFilter(slotKey) {
   renderEquipmentItemTable();
 }
 
-async 
 // Item table sorting and rendering.
 function sortItemTable(key) {
   if (!ITEM_TABLE_COLUMNS.some(([k])=>k===key)) return;
