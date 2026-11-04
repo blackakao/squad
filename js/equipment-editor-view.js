@@ -311,3 +311,38 @@ function changeEquipmentItemSlotFilter(slotKey) {
 }
 
 async 
+// Item table sorting and rendering.
+function sortItemTable(key) {
+  if (!ITEM_TABLE_COLUMNS.some(([k])=>k===key)) return;
+  itemTableSort={key,direction:itemTableSort.key===key ? -itemTableSort.direction : 1};
+  renderItemPage();
+}
+function renderItemPage() {
+  if (!itemTableBodyEl) return;
+  initEquipmentFilters();
+  const header=document.getElementById('itemTableHeader');
+  if (!header.children.length) header.innerHTML=ITEM_TABLE_COLUMNS.map(([key,label])=>`<th scope="col" data-sort-key="${key}" onclick="sortItemTable('${key}')"><button type="button" class="item-sort-button">${label}<span aria-hidden="true"></span></button></th>`).join('')+'<th scope="col">수정</th>';
+  header.querySelectorAll('[data-sort-key]').forEach(th=>{
+    const active=th.dataset.sortKey===itemTableSort.key;
+    th.setAttribute('aria-sort',active ? itemTableSort.direction===1 ? 'ascending' : 'descending' : 'none');
+    th.querySelector('span').textContent=active ? itemTableSort.direction===1 ? ' ↑' : ' ↓' : '';
+  });
+  const items=getFilteredItems(selectedItemSlotFilter);
+  if (itemTableSort.key) items.sort((a,b)=>{
+    const x=getItemSortValue(a.item,itemTableSort.key), y=getItemSortValue(b.item,itemTableSort.key);
+    return (typeof x==='number' ? x-y : x.localeCompare(y,'ko',{numeric:true}))*itemTableSort.direction || a.index-b.index;
+  });
+  itemTableBodyEl.innerHTML=items.map(({item,index})=>{
+    const details=getItemExtraDetails(item);
+    const skillCount=normalizeItemSkillModifiers(item.skillModifiers).length;
+    const statDetails=details.slice(0,details.length-skillCount);
+    const summary=[...statDetails.slice(0,2),...(statDetails.length>2 ? [`외 ${statDetails.length-2}`] : []),...(skillCount ? [`스킬 보조 ${skillCount}`] : [])].join(' · ');
+    return `<tr data-item-index="${index}"><td><div class="item-identity">${equipmentItemIcon(item)}<strong>${escapeHtml(item.name)}</strong></div></td>
+      <td>${isWeaponItem(item) ? item.handType==='twoHand' ? '양손' : '한손' : '-'}</td>
+      ${['atk','magic','defense','resistance','attackRange'].map(key=>`<td class="item-number ${Number(item[key]) ? '' : 'item-zero'}">${Number(item[key])||'-'}</td>`).join('')}
+      <td>${escapeHtml(getItemSortValue(item,'skill')||'-')}</td>
+      <td>${details.length ? `<details class="item-extra"><summary>${escapeHtml(summary)}</summary><ul>${details.map(text=>`<li>${escapeHtml(text)}</li>`).join('')}</ul></details>` : '<span class="item-zero">-</span>'}</td>
+      <td><button type="button" onclick="openItemModal(${index})">수정</button></td></tr>`;
+  }).join('') || '<tr><td colspan="10">표시할 아이템이 없습니다.</td></tr>';
+}
+
