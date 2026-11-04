@@ -159,3 +159,182 @@ if (typeof skillModalEl !== "undefined") skillModalEl?.addEventListener("click",
   if (event.target === skillModalEl) closeSkillModal();
 });
 
+
+// Skill action row rendering.
+function renderSkillActionRows(actions) {
+  skillActionsEl.innerHTML = actions.map((action, index) => renderSkillActionRow(normalizeSkillAction(action), index)).join("");
+  skillActionsEl.querySelectorAll(".skill-action-row").forEach(updateSkillActionFieldVisibility);
+  skillActionsEl.querySelectorAll(".skill-action-row").forEach(row => refreshEntityAction(row, true));
+}
+
+function renderSkillActionRow(action, index) {
+  if (!isSkillActionSupported(action)) {
+    const options = action.type === "move"
+      ? `<option value="unsupported_move" selected disabled>${escapeHtml(getUnsupportedActionNames({actions:[action]})[0])} · 미지원 (잠금)</option>${renderActionTypeOptions("")}`
+      : renderActionTypeOptions(action.type);
+    return `<div class="skill-action-row skill-action-row-unsupported" data-action-index="${index}" data-unsupported-action="${escapeHtml(JSON.stringify(action))}">
+      <div class="skill-action-card-header"><div><span>ACTION ${index + 1}</span><strong>지원되지 않는 액션</strong></div><button type="button" onclick="removeSkillActionRow(this)">삭제</button></div>
+      <label class="skill-action-field skill-action-type-field"><span>액션 종류</span><select class="skill-action-type" onchange="renderSkillActionRows(readSkillActionsFromForm())">${options}</select></label>
+      <div class="skill-support-warning">미지원 액션이거나 효과 설정이 누락되었습니다. 원본 데이터는 보존되지만 이 스킬 전체는 전투에서 사용하지 않습니다. 저장하려면 지원 설정으로 바꾸거나 삭제하세요.</div>
+      ${TIMED_EFFECT_ACTIONS.includes(action.type) ? '<button type="button" onclick="replaceMissingEffectAction(this)">기본 효과 설정으로 교체</button>' : ""}
+    </div>`;
+  }
+  const targetOptions = getActionTargetsForType(action.type);
+  return `
+    <div class="skill-action-row" data-action-index="${index}">
+      <div class="skill-action-card-header">
+        <div><span>ACTION ${index + 1}</span><strong>액션 설정</strong></div>
+        <button type="button" onclick="removeSkillActionRow(this)">삭제</button>
+      </div>
+      <label class="skill-action-field skill-action-type-field">
+        <span>액션 종류</span>
+        <select class="skill-action-type" onchange="changeSkillActionType(this)">
+          ${renderActionTypeOptions(action.type)}
+        </select>
+      </label>
+      <label class="skill-action-field skill-action-target-field">
+        <span>대상 (액션별 선택)</span>
+        <select class="skill-action-target">
+          ${targetOptions.map(target => `<option value="${target}" ${target === action.target ? "selected" : ""}>${ACTION_TARGET_LABELS[target] ?? target}</option>`).join("")}
+        </select>
+        <small>각 액션의 사거리 안에서 대상을 찾습니다. 회복은 해당 자원이 부족한 대상을 우선합니다.</small>
+      </label>
+      <div class="skill-action-condition-field">
+        <label class="skill-check-field"><input class="skill-action-allow-self" type="checkbox" ${action.allowSelfTarget !== false ? "checked" : ""}>시전자 자신도 대상 허용</label>
+        <label class="skill-action-field"><span>필수 대상 효과 ID</span><input class="skill-action-required-target-effect-id" value="${escapeHtml(action.requiredTargetEffectId ?? "")}" placeholder="비우면 제한 없음"></label>
+        <label class="skill-action-field"><span>필수 효과 시전자</span><select class="skill-action-required-target-effect-caster"><option value="any" ${action.requiredTargetEffectCaster !== "self" ? "selected" : ""}>누구나</option><option value="self" ${action.requiredTargetEffectCaster === "self" ? "selected" : ""}>이 스킬 시전자</option></select></label>
+        <label class="skill-action-field"><span>대상 HP 이하 (%) · 100: 제한 없음</span><input class="skill-action-target-hp" type="number" min="0" max="100" step="1" value="${action.targetHpBelow ?? 100}"></label>
+        <label class="skill-action-field"><span>대상별 쿨타임 (초) · 0: 제한 없음</span><input class="skill-action-target-cooldown" type="number" min="0" step="0.1" value="${action.targetCooldown ?? 0}"></label>
+        <label class="skill-action-field"><span>대상 제한 범위</span><select class="skill-action-target-cooldown-scope"><option value="caster" ${action.targetCooldownScope !== "global" ? "selected" : ""}>같은 시전자·스킬·액션</option><option value="global" ${action.targetCooldownScope === "global" ? "selected" : ""}>모든 시전자 공유 효과</option></select></label>
+        <label class="skill-action-field"><span>공유 효과 ID</span><input class="skill-action-target-cooldown-effect-id" value="${escapeHtml(action.targetCooldownEffectId ?? "")}" placeholder="예: overdose_lock"></label>
+        <label class="skill-action-field"><span>공유 효과 이름</span><input class="skill-action-target-cooldown-effect-name" value="${escapeHtml(action.targetCooldownEffectName ?? "")}" placeholder="예: 과다투약 금지"></label>
+        <small>시전자별은 같은 시전자의 같은 스킬·액션만 제한합니다. 전체 공유는 대상에게 표시되는 효과를 부여해 모든 시전자의 같은 효과 ID를 제한합니다.</small>
+      </div>
+      <div class="skill-action-condition-field">
+        <label class="skill-action-field"><span>소유 소환수 조건</span><select class="skill-action-owned-summon-condition"><option value="any" ${action.ownedSummonCondition === "any" ? "selected" : ""}>제한 없음</option><option value="alive" ${action.ownedSummonCondition === "alive" ? "selected" : ""}>지정 Entity 생존</option><option value="absent" ${action.ownedSummonCondition === "absent" ? "selected" : ""}>지정 Entity 부재</option></select></label>
+        <label class="skill-action-field"><span>조건 Entity</span><select class="skill-action-owned-summon-entity"><option value="">선택 없음</option>${entitiesJson.map(entity=>`<option value="${escapeHtml(entity.entityId)}" ${action.ownedSummonEntityId === entity.entityId ? "selected" : ""}>${escapeHtml(entity.name)}</option>`).join("")}</select></label>
+        <label class="skill-action-field"><span>대상 소환수 Entity</span><select class="skill-action-target-summon-entity"><option value="">모든 내 소환수</option>${entitiesJson.map(entity=>`<option value="${escapeHtml(entity.entityId)}" ${action.targetSummonEntityId === entity.entityId ? "selected" : ""}>${escapeHtml(entity.name)}</option>`).join("")}</select></label>
+      </div>
+      <label class="skill-action-field" data-action-field="damageType">
+        <span>피해 타입</span>
+        <select class="skill-action-damage-type">
+          ${ACTION_DAMAGE_TYPES.map(type => `<option value="${type}" ${type === action.damageType ? "selected" : ""}>${ACTION_DAMAGE_TYPE_LABELS[type] ?? type}</option>`).join("")}
+        </select>
+      </label>
+      <label class="skill-action-field" data-action-field="moveType">
+        <span>이동 방식</span>
+        <select class="skill-action-move-type" onchange="updateSkillActionFieldVisibility(this)">
+          ${MOVE_ACTION_TYPES.map(type => `<option value="${type}" ${type === action.moveType ? "selected" : ""}>${ACTION_MOVE_TYPE_LABELS[type] ?? type}</option>`).join("")}
+        </select>
+      </label>
+      <label class="skill-action-field" data-action-field="movePlacement">
+        <span>순간이동 도착 위치</span>
+        <select class="skill-action-move-placement">
+          <option value="target" ${action.movePlacement === "target" ? "selected" : ""}>대상 위치</option>
+          <option value="behind" ${action.movePlacement === "behind" ? "selected" : ""}>대상 뒤</option>
+        </select>
+      </label>
+      <label class="skill-action-field" data-action-field="moveSpeed">
+        <span>이동속도</span>
+        <input class="skill-action-move-speed" type="number" min="0" step="0.1" value="${action.moveSpeed}" placeholder="1">
+      </label>
+      <label class="skill-action-field" data-action-field="distance">
+        <span>이동 거리</span>
+        <input class="skill-action-distance" type="number" min="1" max="10" step="1" value="${action.distance}" placeholder="10">
+      </label>
+      <div class="skill-action-field" data-action-field="fieldSettings">
+        <label>필드 적용 효과<select class="skill-action-field-effect" onchange="changeSkillFieldEffect(this)">
+          <option value="none" ${action.fieldEffect === "none" ? "selected" : ""}>효과 없음 (오라 전용)</option>
+          <option value="deal_damage" ${action.fieldEffect === "deal_damage" ? "selected" : ""}>피해</option>
+          <option value="heal" ${action.fieldEffect === "heal" ? "selected" : ""}>회복</option>
+          <option value="drain_resource" ${action.fieldEffect === "drain_resource" ? "selected" : ""}>자원 감소</option>
+          <option value="move" ${action.fieldEffect === "move" ? "selected" : ""}>강제 이동</option>
+          <option value="add_buff" ${action.fieldEffect === "add_buff" ? "selected" : ""}>버프 부여</option>
+          <option value="add_state" ${action.fieldEffect === "add_state" ? "selected" : ""}>상태 부여</option>
+        </select></label>
+        <label>필드 형태<select class="skill-action-field-shape"><option value="circle" ${action.fieldShape !== "line" ? "selected" : ""}>원형</option><option value="line" ${action.fieldShape === "line" ? "selected" : ""}>선형</option></select></label>
+        <label>강제 이동 방식<select class="skill-action-field-move-type"><option value="Push" ${action.fieldMoveType === "Push" ? "selected" : ""}>중심에서 밀치기</option><option value="Knockback" ${action.fieldMoveType === "Knockback" ? "selected" : ""}>중심에서 넉백</option><option value="Pull" ${action.fieldMoveType === "Pull" ? "selected" : ""}>중심으로 끌어오기</option></select></label>
+        <label>강제 이동 거리<input class="skill-action-field-distance" type="number" min="1" max="10" step="0.1" value="${action.fieldDistance ?? 1}"></label>
+        <label>설치 중심<select class="skill-action-field-center"><option value="target" ${action.fieldCenter === "target" ? "selected" : ""}>선택 대상 위치</option><option value="self" ${action.fieldCenter === "self" ? "selected" : ""}>시전자 위치</option></select></label>
+        <label>필드 반경<input class="skill-action-field-radius" type="number" min="0.1" step="0.1" value="${action.fieldRadius}" placeholder="3"></label>
+        <label>선형 필드 폭<input class="skill-action-field-width" type="number" min="0.1" step="0.1" value="${action.fieldWidth ?? 2}" placeholder="2"></label>
+        <label>지속시간 (초, 0: 전투 종료까지)<input class="skill-action-field-duration" type="number" min="0" step="0.1" value="${action.duration}"></label>
+        <label>적용 간격 (초)<input class="skill-action-field-interval" type="number" min="${1/60}" step="any" value="${action.fieldInterval}"></label>
+        <label>중심 이동 ST 추가 비용/초<input class="skill-action-field-st-center" type="number" min="0" step="0.1" value="${action.fieldMovementStCostCenter ?? 0}"></label>
+        <label>1m당 ST 비용 감소<input class="skill-action-field-st-falloff" type="number" min="0" step="0.1" value="${action.fieldMovementStCostFalloff ?? 0}"></label>
+        <label>최소 이동 ST 추가 비용/초<input class="skill-action-field-st-minimum" type="number" min="0" step="0.1" value="${action.fieldMovementStCostMinimum ?? 0}"></label>
+        <label>필드 오라 설정<input class="skill-action-field-auras" value="${escapeHtml((action.fieldAuras ?? []).map(aura=>`${aura.target}:${aura.stat}:${aura.mode}:${aura.value}`).join(", "))}" placeholder="ally:castSpeed:percent:-20, enemy:speed:percent:-20"></label>
+        <small>오라는 대상:능력치:방식:값 형식으로 쉼표로 구분합니다. 대상은 ally/enemy, 방식은 percent/flat을 사용합니다.</small>
+        <small>생성 순간의 위치에 고정됩니다. 각 간격마다 범위 안의 유효 대상을 다시 찾습니다. 강제 이동은 계수를 사용하지 않고 필드 중심을 기준으로 적용됩니다.</small>
+      </div>
+      <div class="skill-range-section" data-action-field="range">
+        <div data-action-field="chain">
+          <label>추가 연쇄 횟수 (0: 사용 안 함)<input class="skill-action-chain-count" type="number" min="0" max="20" step="1" value="${action.chainCount}" onchange="updateSkillActionFieldVisibility(this)"></label>
+          <label>연쇄 거리<input class="skill-action-chain-range" type="number" min="0" step="0.1" value="${action.chainRange}"></label>
+          <label>추가 대상 거리 기준<select class="skill-action-chain-origin"><option value="previous" ${action.chainOrigin !== "primary" ? "selected" : ""}>직전 대상</option><option value="primary" ${action.chainOrigin === "primary" ? "selected" : ""}>최초 주 대상</option></select></label>
+          <small>연쇄 사용 시 원형 광역 대신 첫 대상부터 가까운 다음 대상으로 이어집니다. 같은 대상은 한 번만 적용하며, 횟수 2는 최대 3명입니다. 회복은 부족한 자원이 있는 대상만 이어집니다.</small>
+        </div>
+        <div data-action-field="area">
+          <label>광역 반경 (0: 단일)<input class="skill-action-area" type="number" min="0" step="0.1" value="${action.area}"></label>
+          <label>광역 중심<select class="skill-action-area-center"><option value="target" ${action.areaCenter === "target" ? "selected" : ""}>선택 대상</option><option value="self" ${action.areaCenter === "self" ? "selected" : ""}>자신</option></select></label>
+        </div>
+        <label data-action-field="maxTargets">최대 대상 수 (0: 별도 제한 없음)<input class="skill-action-max-targets" type="number" min="0" step="1" value="${action.maxTargets}"></label>
+        <div class="skill-subsection-header">사거리</div>
+        <label>최소 거리 (0: 제한 없음)<input class="skill-action-min-range" type="number" min="0" step="0.1" value="${action.minRange}"></label>
+        <small>시전자와 지정 대상 사이 거리입니다. 자신·소환·자신 중심 광역에는 적용하지 않으며, 광역 피해의 내부 빈 공간을 만들지는 않습니다. 최대 사거리보다 크면 대상을 선택할 수 없습니다.</small>
+        <div class="skill-range-options">
+          <label><input type="radio" name="skillRangeMode_${index}" value="mainWeapon" class="skill-range-mode" onchange="updateSkillRangeValueVisibility(this)" ${action.rangeMode === "mainWeapon" ? "checked" : ""}> 주장비</label>
+          <label><input type="radio" name="skillRangeMode_${index}" value="custom" class="skill-range-mode" onchange="updateSkillRangeValueVisibility(this)" ${action.rangeMode === "custom" ? "checked" : ""}> 특정값</label>
+          <label class="skill-inline-field skill-range-custom-field${action.rangeMode === "mainWeapon" ? " hidden" : ""}">
+            <span>특정 사거리</span>
+            <input class="skill-range-value" type="number" step="0.1" value="${action.rangeValue}" placeholder="사정거리">
+          </label>
+        </div>
+        <label class="skill-action-field"><span>주장비 사거리 배율 (%)</span><input class="skill-action-range-multiplier" type="number" min="0" step="1" value="${action.rangeMultiplier ?? 100}"></label>
+      </div>
+      <div class="skill-coefficients" data-action-field="coefficients">
+        <div class="skill-coefficient-header">
+          <span>계수</span>
+          <button type="button" onclick="addSkillCoefficientRow(this)">계수 추가</button>
+        </div>
+        <label class="skill-inline-field skill-heal-resource-field" data-action-field="healResource">
+          <span>회복대상값</span>
+          <select class="skill-action-heal-resource">
+            ${renderResourceOptions(action.healResource)}
+          </select>
+          <span>주 자원이 가득 찼을 때 대체 회복</span>
+          <select class="skill-action-full-resource-alternative">
+            <option value="">사용 안 함</option>
+            ${renderResourceOptions(action.fullResourceAlternative)}
+          </select>
+        </label>
+        <label class="skill-inline-field" data-action-field="drainResource">
+          <span>감소 대상 자원</span>
+          <select class="skill-action-drain-resource">
+            ${renderResourceOptions(action.drainResource)}
+          </select>
+        </label>
+        <div class="skill-coefficient-label-row">
+          <span>계수 유형</span>
+          <span>필드</span>
+          <span>값계산</span>
+          <span>값입력</span>
+          <span></span>
+        </div>
+        <div class="skill-coefficient-list">
+          ${action.coefficients.map(coefficient => renderSkillCoefficientRow(coefficient)).join("")}
+        </div>
+      </div>
+      ${renderTransformActionArea(action)}
+      ${renderCopySkillActionArea(action)}
+      ${renderSummonCommandActionArea(action)}
+      ${renderReserveSwapActionArea(action)}
+      ${renderReviveAllyActionArea(action)}
+      ${renderEquipmentSetSwapActionArea(action)}
+      ${renderRuleOverrideActionArea(action)}
+      ${renderTimedEffectFields(action.type === "create_field" ? {...action,type:action.fieldEffect,duration:action.fieldEffectDuration} : action)}
+      ${renderEntityActionArea(action)}
+    </div>
+  `;
+}
+
