@@ -1,5 +1,43 @@
 # 아키텍처
 
+## AI 작업용 빠른 탐색 지도 (2026-11-04)
+
+이 표는 **수정 시작 위치**를 안내합니다. 전역 호출·동적 이벤트·데이터 계약 때문에 관련 파일을 전부 열거한 목록은 아닙니다. 변경 전 실제 호출부와 영향 범위를 확인하세요.
+
+| 변경 목적 | 먼저 확인할 코드·함수 | 함께 확인할 의존성·계약 |
+| --- | --- | --- |
+| 초기화·화면 진입 | `js/main.js: initApp`, `js/ui.js: showPage` | `index.html`의 script 순서·DOM ID, `js/api.js` |
+| 캐릭터 관리·전투 유닛 생성 | `js/character.js: loadCharacterJson, saveCharacterFromForm, createCharacter` | `js/ui.js: applyCharacterStatAbilities`, `js/team.js`, 캐릭터 배열 인덱스·[데이터 구조](data_structure.md) |
+| 팀 편성·전투 참가·1:1 | `js/team.js: renderTeamEditor, createSquadFromCharacterIds, createDuelSquad` | `js/character.js`, `js/battle.js`, `js/synergy.js`, [팀 UI](TEAM_UI.md) |
+| 아이템·장비·스탯 | `js/equipment.js: normalizeItemJson, getCharacterEquipmentBonus, equipItemToSlot` | `js/ui.js: applyCharacterStatAbilities`, `js/stats.js`, `js/category.js`, `js/skill.js` |
+| 스킬 정의·정규화·선택 | `js/skill.js: normalizeSkillJson, normalizeSkillAction, resolveSelectedSkillIds` | `js/skill-effects.js`, `js/skill-passives.js`, `js/skill-channel.js`, [스킬 엔진](SKILL_ENGINE.md) |
+| 스킬 비용·쿨다운·시전 | `js/skill.js: getResolvedSkillCooldownTicks`, `js/battle.js: tryUseReadySkill, startCast, updateCast` | `js/team.js`의 선택 스킬, `js/ui.js`의 전투 표시, 스킬 JSON |
+| 전투 실행·이동·공격 | `js/battle.js: resetUnitForBattle, takeAction, resolveSkillTarget` | `js/ui.js`의 공통 피해·공격 속성 계산, `js/battle-events.js`, `js/record.js` |
+| 소환 Entity | `js/entity.js: getSummonConfiguration, saveEntityEditor` | `entity_store.py`, `server.py`, `js/battle.js`, [Entity 계약](ENTITIES.md) |
+| 공용 시너지 | `js/synergy.js`, `js/synergy-ui.js` | `js/team.js`, `js/character.js`, `js/record.js`, [시너지 계약](synergy/SYNERGY_SYSTEM.md) |
+| 전투 기록·기여도 | `js/battle-events.js`, `js/record.js` | `js/battle.js`, `server.py`, `data/battle-records.json` |
+| 저장·이미지 API | `js/api.js: loadJsonFile, saveJsonFile, uploadImageAsset` | `server.py: BattleHandler`, `entity_store.py`, [저장 구조](data_structure.md) |
+| 기대 DPS·전투력 표시 | `js/expected-dps.js`, `js/combat-power.js` | `js/equipment.js`, `js/character.js`, `js/combat-power-ui.js`; 전투 계산·저장과 구분 |
+| 시뮬레이션·성능 | `js/simulation.js`, `simulation_jobs.py`, `balance/simulator/engine.cjs` | `balance/simulator/service.cjs`, `pool.cjs`, `battle-worker.cjs`, [실행 가이드](balance/SIMULATION_GUIDE.md) |
+| GLB 캐릭터 제작 | `character-viewer.html`, `js/character-viewer/main-assembler.js`, `assembler.js` | `js/character-viewer/equipment-visibility.js`, GLB 카탈로그·로컬 프리셋, [파츠 규격](CHARACTER_PARTS_GLB.md) |
+
+### 실행·의존성 경로
+
+- **브라우저:** `index.html`은 일반 `<script>` 태그로 파일을 순서대로 로드합니다. `js/ui.js`와 `js/api.js`가 먼저 로드되고, 스킬 관련 모듈 → `js/skill.js` → 장비·캐릭터·팀 → `js/battle.js` → `js/main.js` 순으로 이어집니다. `js/expected-dps.js`는 `js/main.js` 앞에 로드됩니다. 파일 분리·이동 시 전역 심볼과 실제 태그 순서를 재확인하세요.
+- **초기화:** `initApp` → 데이터 로드/정규화 → 화면 렌더. 초기화 데이터의 참조 순서는 아래 `모듈 관계` 절을 따릅니다.
+- **저장:** 화면 이벤트 → 도메인 모듈의 저장 함수 → `js/api.js` → `server.py` → `data/*.json`; Entity는 `js/entity.js` → `/api/entities` → `entity_store.py` 및 `data/entities/*.json` 경로입니다. API 조회 시 Entity 자동 이전 가능성을 고려하세요.
+- **전투:** 팀/캐릭터 선택 → `createSquadFromCharacterIds`·`createCharacter` → `js/battle.js`의 전투 틱·스킬 처리 → `js/battle-events.js` 집계 → `js/record.js` 기록 저장. 스킬·장비·시너지 변경은 유닛 생성 시점과 전투 중 보정 양쪽을 확인하세요.
+- **시뮬레이션:** 브라우저 `js/simulation.js` → 서버 Job API → `simulation_jobs.py` → Node 공통 서비스/Worker → 실제 전투 모듈을 로드하는 `engine.cjs` → 결과 저장·조회. 브라우저 화면 자체에서 반복 전투를 계산하지 않습니다.
+- **3D 분리:** `character-viewer.html`의 GLB 조립기와 `character-viewer-legacy.html`의 절차형 JS 뷰어는 별개입니다. Legacy 의존 코드가 현재 GLB 경로에서도 쓰이는지는 제거 전 [감사 보고서](GLB_LEGACY_AUDIT.md)와 실제 호출부를 대조하세요.
+
+### 검증 경로 및 주의
+
+- 기능 변경 시 위 표의 **시작 파일뿐 아니라 호출부·전역 상태·저장 스키마**를 확인합니다. 파일 크기나 줄 수만으로 분리 여부를 결정하지 않습니다.
+- 1:1 전투의 전용 검증은 [duel.test.cjs](../tests/duel.test.cjs), 스킬 엔진의 기존 검증은 [skill-engine.test.cjs](../tests/skill-engine.test.cjs)를 참조합니다. 그 외 기능의 테스트 파일은 실제 존재와 범위를 확인한 뒤 선택합니다.
+- **문서·UI만 변경한 경우**에는 정적 확인을 기본으로 하고, 핵심 로직 변경 시 영향 범위에 맞는 검증을 수행합니다. 세부 실행 정책은 [AGENTS.md](../AGENTS.md)를 따릅니다.
+- 이 지도는 코드 탐색 보조 자료이며, 각 함수의 **전체 호출 관계를 자동 분석해 검증한 결과는 아닙니다.** 특히 동적 HTML 이벤트와 전역 함수는 코드 변경 직전에 다시 추적해야 합니다.
+
+
 ## 기대 DPS 표시
 
 [expected-dps.js](../js/expected-dps.js)는 복사한 캐릭터에 공통 능력치·계수·장비 스킬 보정 함수를 적용하는 읽기 전용 표시 모듈입니다. [equipment.js](../js/equipment.js)의 무기 선택 상세와 [character.js](../js/character.js)의 스킬 hover/focus에서 호출하며 전투 실행이나 저장값을 추가하지 않습니다. [계산 계약·검증 상태](EXPECTED_DPS.md).
