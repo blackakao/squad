@@ -813,3 +813,26 @@ function renderEquipmentSetSwapActionArea(action) {
   </div>`;
 }
 
+
+// Rule override editor fragment.
+function renderRuleOverrideActionArea(action) {
+  const rule=action.ruleOverride ?? {id:"skill_rule",damagePercent:100,receivedDamagePercent:100,healingPercent:100,receivedHealingPercent:100,resourceCostPercent:100,cooldownPercent:100,disableTeamSynergies:false,disableEquipmentEffects:false,disableAllSkills:false,disabledSkillIds:[]};
+  const disabled=new Set(rule.disabledSkillIds ?? []);
+  return `<div class="skill-action-field" data-action-field="ruleOverride">
+    <div class="skill-subsection-header">규칙 변경 설정</div>
+    <label>규칙 ID<input class="skill-rule-id" value="${escapeHtml(rule.id)}" placeholder="예: command_attack"></label>
+    <label>주는 피해(%)<input class="skill-rule-damage" type="number" min="0" step="1" value="${rule.damagePercent}"></label>
+    <label>받는 피해(%)<input class="skill-rule-received-damage" type="number" min="0" step="1" value="${rule.receivedDamagePercent}"></label>
+    <label>주는 치유(%)<input class="skill-rule-healing" type="number" min="0" step="1" value="${rule.healingPercent}"></label>
+    <label>받는 치유(%, 0: 치유 금지)<input class="skill-rule-received-healing" type="number" min="0" step="1" value="${rule.receivedHealingPercent}"></label>
+    <label>스킬 자원 비용(%)<input class="skill-rule-cost" type="number" min="0" step="1" value="${rule.resourceCostPercent}"></label>
+    <label>재사용 대기시간(%)<input class="skill-rule-cooldown" type="number" min="0" step="1" value="${rule.cooldownPercent}"></label>
+    <label class="skill-inline-check"><input class="skill-rule-disable-synergies" type="checkbox" ${rule.disableTeamSynergies ? "checked" : ""}> 팀 편성 시너지 무효</label>
+    <label class="skill-inline-check"><input class="skill-rule-disable-equipment" type="checkbox" ${rule.disableEquipmentEffects ? "checked" : ""}> 장비 능력치·무기 효과 무효</label>
+    <label class="skill-inline-check"><input class="skill-rule-disable-all" type="checkbox" ${rule.disableAllSkills ? "checked" : ""}> 모든 스킬 금지</label>
+    <label>금지할 스킬<select class="skill-rule-disabled-skills" multiple size="6">${skillsJson.map(skill=>`<option value="${escapeHtml(skill.id)}" ${disabled.has(skill.id) ? "selected" : ""}>${escapeHtml(skill.name)} (${getSkillSlotLabel(skill.slot)})</option>`).join("")}</select></label>
+    <label>지속시간 (초, 0: 전투 종료까지)<input class="skill-rule-duration" type="number" min="0" step="0.1" value="${action.duration}"></label>
+    <small>팀 배율에 곱해서 적용합니다. 모든 스킬 금지는 기본 공격·회복과 이후 복제되는 스킬도 차단합니다. 개별 선택은 액티브·패시브·장비 연결 여부와 관계없이 적용됩니다. 같은 규칙 ID를 다시 적용하면 값과 지속시간을 갱신합니다.</small>
+  </div>`;
+}
+
