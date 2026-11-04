@@ -524,34 +524,6 @@ function equipSelectedInventoryItem(slotKey) {
   return dropEquipmentItem({preventDefault() {}, dataTransfer: {getData: () => selectedInventoryItemId}}, slotKey);
 }
 
-function renderEquipmentAbilityPreview() {
-  const character = characterJson[selectedEquipmentCharacterIndex];
-  const combatPowerEl = document.getElementById('equipmentCombatPower');
-  if (!character) {
-    equipmentAbilityPreviewEl.innerHTML = "";
-    combatPowerEl.innerHTML = "";
-    return;
-  }
-
-  combatPowerEl.innerHTML = renderCombatPowerComparison(
-    getCharacterCombatPower({...character, equipment: {}}),
-    getCharacterCombatPower(character), ['무장비', '현재']
-  );
-  equipmentAbilityPreviewEl.innerHTML = renderAbilityTable(
-    getCharacterBaseWithoutEquipment(character),
-    applyCharacterStatAbilities(character)
-  );
-  equipmentAbilityPreviewEl.querySelectorAll('tbody tr').forEach(row => {
-    const delta = row.lastElementChild;
-    delta.classList.toggle('equipment-delta', delta.textContent.trim() !== '-');
-  });
-}
-
-function selectEquipmentCharacter(index) {
-  selectedEquipmentCharacterIndex = index;
-  renderEquipmentPage();
-}
-
 function dragEquipmentItem(event, itemId, sourceSlot = "") {
   endEquipmentDrag();
   const item = getItemById(itemId);
