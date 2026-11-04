@@ -133,3 +133,33 @@ async function getPortraitForSave(type, previousPortrait = "", assetName = "") {
   return normalizePortrait(draft.dataUrl) || normalizePortrait(previousPortrait);
 }
 
+
+// Portrait thumbnail and browser image cache.
+function renderPortraitCell(portrait, label) {
+  const normalizedPortrait = normalizePortrait(portrait);
+
+  if (!normalizedPortrait) {
+    return `<span class="empty-text">없음</span>`;
+  }
+
+  return `<img class="portrait-thumb" src="${normalizedPortrait}" alt="${escapeHtml(label)} 초상화">`;
+}
+
+function getCachedPortraitImage(portrait) {
+  const normalizedPortrait = normalizePortrait(portrait);
+
+  if (!normalizedPortrait) {
+    return null;
+  }
+
+  const cached = portraitImageCache.get(normalizedPortrait);
+  if (cached) {
+    return cached;
+  }
+
+  const image = new Image();
+  image.src = normalizedPortrait;
+  portraitImageCache.set(normalizedPortrait, image);
+  return image;
+}
+
