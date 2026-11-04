@@ -185,3 +185,38 @@ function renderEquipmentSetControls() {
   equipmentSetControlsEl.innerHTML = `<label>장비 세트 <select aria-label="장비 세트" onchange="activateEquipmentSet(this.value)">${normalized.equipmentSets.map((set, index) => `<option value="${index}" ${index === normalized.activeEquipmentSet ? "selected" : ""}>${escapeHtml(set.name)}</option>`).join("")}</select></label><button type="button" onclick="copyActiveEquipmentSet()" ${normalized.equipmentSets.length >= 3 ? "disabled" : ""}>복제</button><button type="button" onclick="deleteActiveEquipmentSet()" ${normalized.equipmentSets.length <= 1 ? "disabled" : ""}>삭제</button>`;
 }
 
+
+// Equipment inventory list and detail rendering.
+function renderEquipmentItemTable() {
+  const query = document.getElementById("equipmentItemSearch").value.trim().toLocaleLowerCase();
+  const filteredItems = getFilteredItems(selectedEquipmentItemSlotFilter).filter(({item}) => item.name.toLocaleLowerCase().includes(query));
+  document.getElementById("equipmentItemCount").textContent = `${filteredItems.length}개`;
+  equipmentItemTableBodyEl.innerHTML = filteredItems.map(({ item }) => `
+    <button type="button" class="inventory-item ${selectedInventoryItemId === item.id ? 'selected' : ''}" draggable="true" data-item-id="${escapeHtml(item.id)}"
+      aria-pressed="${selectedInventoryItemId === item.id}" title="${escapeHtml(item.name + '\n' + getSlotLabel(item.slot) + '\n' + getItemStatSummary(item))}"
+      onclick="selectInventoryItem(this.dataset.itemId)" ondragstart="dragEquipmentItem(event, this.dataset.itemId)" ondragend="endEquipmentDrag()">
+      ${equipmentItemIcon(item)}<span class="inventory-item-name">${escapeHtml(item.name)}</span>
+    </button>
+  `).join("") || `<p class="empty-text">조건에 맞는 아이템이 없습니다.</p>`;
+  renderInventoryItemDetail();
+}
+
+function selectInventoryItem(itemId) {
+  selectedInventoryItemId = itemId;
+  equipmentItemTableBodyEl.querySelectorAll('[data-item-id]').forEach(el => {
+    el.classList.toggle('selected', el.dataset.itemId === itemId);
+    el.setAttribute('aria-pressed', String(el.dataset.itemId === itemId));
+  });
+  renderInventoryItemDetail();
+}
+
+function renderInventoryItemDetail() {
+  const item = getItemById(selectedInventoryItemId);
+  const detail = document.getElementById('equipmentItemDetail');
+  if (!item) { detail.textContent = '아이템을 선택하면 상세정보를 확인할 수 있습니다.'; return; }
+  const character = characterJson[selectedEquipmentCharacterIndex];
+  const slots = character ? getCharacterEquipmentSlots(character).filter(slot => canEquipItemToSlot(item, slot.key, character)).map(slot => slot.label) : [];
+  detail.innerHTML = `<strong>${escapeHtml(item.name)}</strong><div>${escapeHtml(getSlotLabel(item.slot))} · ${escapeHtml(item.weaponCategory ? getWeaponCategoryLabel(item.weaponCategory) : item.armorCategory ? getArmorCategoryLabel(item.armorCategory) : '')}</div><pre>${escapeHtml(getItemStatSummary(item))}</pre><div>장착 가능: ${escapeHtml(slots.join(', ') || '캐릭터를 선택하세요')}</div>`;
+  detail.insertAdjacentHTML('beforeend',renderWeaponDpsPreview(character,item));
+}
+
