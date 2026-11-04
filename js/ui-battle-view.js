@@ -166,3 +166,43 @@ function renderBattleEventLogs() {
   if (previousTop > 0) list.scrollTop = previousTop + list.scrollHeight - previousHeight;
 }
 
+
+// Battle screen tabs, canvas sizing and modal controls.
+function showBattleScreenTab(tabName) {
+  selectedBattleScreenTab = tabName === "log" ? "log" : "status";
+  battleStatusTabBtnEl?.classList.toggle("active", selectedBattleScreenTab === "status");
+  battleLogTabBtnEl?.classList.toggle("active", selectedBattleScreenTab === "log");
+  battleStatusPanelEl?.classList.toggle("hidden", selectedBattleScreenTab !== "status");
+  battleLogPanelEl?.classList.toggle("hidden", selectedBattleScreenTab !== "log");
+
+  if (selectedBattleScreenTab === "status") {
+    resizeCanvas();
+  } else {
+    renderBattleEventLogs();
+  }
+}
+
+window.showBattleScreenTab = showBattleScreenTab;
+
+function resizeCanvas() {
+  if (!canvas?.parentElement) {
+    return;
+  }
+
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width;
+  canvas.height = rect.height;
+  scale = canvas.width / 400;
+}
+
+function openBattleScreenModal() {
+  battleScreenModalEl.classList.remove("hidden");
+  showBattleScreenTab(selectedBattleScreenTab);
+  resizeCanvas();
+  updateStatusUI();
+  renderBattleEventLogs();
+}
+
+function closeBattleScreenModal() {
+  battleScreenModalEl.classList.add("hidden");
+}
