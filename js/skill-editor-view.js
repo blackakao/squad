@@ -422,3 +422,101 @@ function removeSkillActionRow(button) {
   button.closest(".skill-action-row").remove();
 }
 
+
+// Action-field visibility and movement form controls.
+function updateSkillActionFieldVisibility(selectOrRow) {
+  const row = selectOrRow.closest?.(".skill-action-row") ?? selectOrRow;
+  if (row.dataset.unsupportedAction) return;
+  const type = row.querySelector(".skill-action-type")?.value ?? "deal_damage";
+  const fieldEffect = row.querySelector(".skill-action-field-effect")?.value ?? "deal_damage";
+  const fieldTimedEffect = type === "create_field" && ["add_buff","add_state"].includes(fieldEffect);
+  updateSkillActionTargetOptions(row, type);
+  normalizeMoveFields(row, type);
+  const hiddenFieldsByType = {
+    deal_damage: ["healResource", "drainResource", "moveType", "distance", "fieldSettings"],
+    heal: ["damageType", "drainResource", "moveType", "distance", "fieldSettings", "moveSpeed"],
+    drain_resource: ["damageType", "healResource", "moveType", "distance", "fieldSettings", "moveSpeed"],
+    command_summon:["damageType","healResource","drainResource","moveType","distance","moveSpeed","coefficients","fieldSettings"],
+    move: ["damageType", "healResource", "drainResource", "coefficients", "fieldSettings"],
+    transform:["damageType","healResource","drainResource","moveType","distance","moveSpeed","coefficients","fieldSettings","range"],
+    copy_skill:["damageType","healResource","drainResource","moveType","distance","moveSpeed","coefficients","fieldSettings","range"],
+    swap_reserve:["damageType","healResource","drainResource","moveType","distance","moveSpeed","coefficients","fieldSettings","range"],
+    deploy_reserve:["damageType","healResource","drainResource","moveType","distance","moveSpeed","coefficients","fieldSettings","range"],
+    revive_ally:["damageType","healResource","drainResource","moveType","distance","moveSpeed","coefficients","fieldSettings"],
+    swap_equipment_set:["damageType","healResource","drainResource","moveType","distance","moveSpeed","coefficients","fieldSettings","range"],
+    override_rule:["damageType","healResource","drainResource","moveType","distance","moveSpeed","coefficients","fieldSettings","range"]
+  };
+  const hiddenFields = [...(hiddenFieldsByType[type] ?? [])];
+  if (!TIMED_EFFECT_ACTIONS.includes(type) && !fieldTimedEffect) hiddenFields.push("timedEffect");
+  else {
+    hiddenFields.push("coefficients", "damageType", "healResource", "drainResource", "moveType", "distance", "moveSpeed");
+    if (!fieldTimedEffect) hiddenFields.push("fieldSettings");
+    if (type.startsWith("delete_")) hiddenFields.push("effectAdd");
+    else hiddenFields.push("effectDelete");
+    const effectType=fieldTimedEffect ? fieldEffect : type;
+    if (effectType !== "add_buff") hiddenFields.push("effectBuff");
+    if (effectType !== "add_state") hiddenFields.push("effectState");
+  }
+  if (!supportsActionArea(type) && type !== "create_field") hiddenFields.push("area", "chain", "maxTargets");
+  else if (TIMED_EFFECT_ACTIONS.includes(type)) hiddenFields.push("chain");
+  if (type === "create_field") hiddenFields.push("area","chain","moveType","distance","moveSpeed");
+  else hiddenFields.push("fieldSettings");
+  if (Number(row.querySelector(".skill-action-chain-count")?.value) > 0) hiddenFields.push("area");
+  if (type !== "summon_entity") hiddenFields.push("summon");
+  else hiddenFields.push("coefficients", "damageType", "healResource", "drainResource", "moveType", "distance", "fieldSettings");
+  if(type !== "transform") hiddenFields.push("transform");
+  if(type !== "copy_skill") hiddenFields.push("copySkill");
+  if(type !== "command_summon") hiddenFields.push("summonCommand");
+  if(!["swap_reserve","deploy_reserve"].includes(type)) hiddenFields.push("reserveSwap");
+  if(type !== "revive_ally") hiddenFields.push("reviveAlly");
+  if(type !== "swap_equipment_set") hiddenFields.push("equipmentSetSwap");
+  if(type !== "override_rule") hiddenFields.push("ruleOverride");
+  const moveType = row.querySelector(".skill-action-move-type")?.value ?? "Dash";
+  if (type !== "move" || moveType !== "Dash") {
+    hiddenFields.push("moveSpeed");
+  }
+  if (type !== "move" || moveType !== "Teleport") {
+    hiddenFields.push("movePlacement");
+  }
+
+  row.querySelectorAll("[data-action-field]").forEach(field => {
+    field.classList.toggle("hidden", hiddenFields.includes(field.dataset.actionField));
+  });
+}
+
+function updateSkillActionTargetOptions(row, type) {
+  const select = row.querySelector(".skill-action-target");
+  const currentValue = select.value;
+  const targets = getActionTargetsForType(type);
+  const nextValue = targets.includes(currentValue) ? currentValue : targets[targets.length - 1];
+  select.innerHTML = targets
+    .map(target => `<option value="${target}" ${target === nextValue ? "selected" : ""}>${ACTION_TARGET_LABELS[target] ?? target}</option>`)
+    .join("");
+}
+
+function normalizeMoveFields(row, type) {
+  if (type !== "move") {
+    return;
+  }
+
+  const moveTypeSelect = row.querySelector(".skill-action-move-type");
+  if (!MOVE_ACTION_TYPES.includes(moveTypeSelect.value)) {
+    moveTypeSelect.value = "Dash";
+  }
+
+  const distanceInput = row.querySelector(".skill-action-distance");
+  const distanceValue = Number(distanceInput.value);
+  if (!Number.isFinite(distanceValue) || distanceValue < 1) {
+    distanceInput.value = 10;
+  } else if (distanceValue > 10) {
+    distanceInput.value = 10;
+  }
+}
+
+function updateSkillRangeValueVisibility(radio) {
+  const section = radio.closest(".skill-range-section");
+  const checked = section.querySelector(".skill-range-mode:checked");
+  const customField = section.querySelector(".skill-range-custom-field");
+  customField.classList.toggle("hidden", checked?.value !== "custom");
+}
+
