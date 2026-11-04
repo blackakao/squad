@@ -998,7 +998,6 @@ function copyUnitSkill(source, target, action) {
   source.skillCooldownTotals ??= {};
   source.skillCooldownTotals[copy.id] = 0;
   publishBattleEvents([{type:"skill_copy",source,target,skill:copy,reason:original.name}]);
-  addBattleEventLog(source,`${source.name}: ${target.name}의 ${original.name} 복제`);
   return copy;
 }
 
@@ -1015,7 +1014,6 @@ function applyRuleOverride(source,target,action,skill=null) {
     interruptBattleCast(target,"스킬 금지 규칙");
   }
   publishBattleEvents([{type:"rule_override",source,target,skill,reason:instance.id}]);
-  addBattleEventLog(target,`${target.name}: ${instance.id} 규칙 적용 (${action.duration || "전투 종료까지"}초)`);
   return instance;
 }
 
@@ -2426,12 +2424,10 @@ function swapBattleEquipmentSet(source,target,action,skill=null) {
   const index=Math.max(0,Math.min(2,Math.floor(Number(action.equipmentSetIndex)||1)-1));
   const loadout=target.equipmentLoadouts?.[index];
   if (!loadout) {
-    addBattleEventLog(source,`${target.name}: 장비 세트 ${index+1} 없음`);
     return false;
   }
   applyBattleEquipmentLoadout(target,loadout,index);
   publishBattleEvents([{type:"equipment_set_swap",source,target,skill,reason:loadout.name}]);
-  addBattleEventLog(source,`${target.name}: ${loadout.name} 장비 세트로 교체`);
   return true;
 }
 
@@ -2634,14 +2630,12 @@ function applyActionDamage(source, target, action, skill = null, execution = nul
   if (target.reviveInvulnerableTicks > 0) {
     const context={source,target,skill,periodic:action.periodic,damageType:action.damageType,amount:0,hpDamage:0,barrierDamage:0};
     publishBattleEvents([{...context,type:"hit"},{...context,type:"damaged"}]);
-    addBattleEventLog(target,`${target.name}: 부활 무적으로 피해 무시`);
     return 0;
   }
   const immunity=consumeDamageImmunity(target,Boolean(action.periodic));
   if (immunity) {
     const context={source,target,skill,periodic:action.periodic,damageType:action.damageType,amount:0,hpDamage:0,barrierDamage:0};
     publishBattleEvents([{...context,type:"hit"},{...context,type:"damaged"}]);
-    addBattleEventLog(target,`${target.name}: ${immunity.name} 효과로 피해 무시`);
     applyDamageImmunityCounter(target,source,action,skill,immunity);
     return 0;
   }
@@ -2672,9 +2666,7 @@ function applyActionDamage(source, target, action, skill = null, execution = nul
   publishBattleEvents(events);
   for(const [index,portion] of portions.entries()) {
     if(results[index].actual>0) triggerEffect(portion.recipient,"damage");
-    if(portion.proxy) addBattleEventLog(target,`${target.name}의 피해 ${formatBattleEventValue(results[index].actual)}를 ${portion.recipient.name}이 대리 수신`);
   }
-  addBattleEventLog(source, `${source.name}가 ${target.name}에게 ${skill?.name ?? "공격"} 행동을 하여 총 ${formatBattleEventValue(actualTotal)} 피해 발생`);
   portions.forEach((portion,index)=>applyDamageReflection(portion.recipient,source,action,skill,results[index].actual,reflections[index]));
   return actualTotal;
 }
@@ -2706,7 +2698,6 @@ function applyDamageReflection(reflector,attacker,originalAction,originalSkill,a
   const action={type:"deal_damage",target:"enemy",coefficients:[{type:"fixed",value:actualDamage*percent/100}],damageType,periodic:false,reflected:true};
   const reflectedSkill={id:`reflected_${originalSkill?.id ?? "damage"}`,name:`${effects.map(effect=>effect.name).join(" + ")} (반사)`,slot:"passive",triggered:true};
   const reflected=applyActionDamage(reflector,attacker,action,reflectedSkill);
-  if(reflected>0) addBattleEventLog(reflector,`${reflector.name}: ${attacker.name}에게 ${formatBattleEventValue(reflected)} 피해 반사`);
   return reflected;
 }
 
@@ -2740,7 +2731,6 @@ function applyDamagePortion(source,target,action,skill,rawDamage,skipImmunity=fa
   target.stats.taken+=actual;
   const channelEvents=target.channelAction && actual>0 && normalizeSkillChannel(target.channelAction.skill.channel).interruptOnDamage
     ? finishBattleChannel(target,"피해",{deferEvents:true}) : [];
-  if(immunity) addBattleEventLog(target,`${target.name}: ${immunity.name} 효과로 대리 피해 무시`);
   return {actual,hpDamage,barrierDamage,deathEvents,channelEvents,
     context:{source,target,skill,periodic:action.periodic,damageType:action.damageType,amount:actual,hpDamage,barrierDamage}};
 }
@@ -2778,7 +2768,6 @@ function applyActionHeal(source, target, action, skill = null, execution = null)
     source.stats.heal += resourceResult.gained;
     if (resourceResult.gained > 0) publishBattleEvents([{type:"heal",source,target,skill,periodic:action.periodic,amount:resourceResult.gained,resource:normalizeResourceReference(appliedResource,"HP")}]);
     triggerEffect(target, "heal");
-    addBattleEventLog(source, `${source.name}가 ${target.name}에게 ${skill?.name ?? "회복"} 행동을 하여 ${formatBattleEventValue(resourceResult.gained)} ${getResourceLabel(appliedResource)} 회복 발생`);
     return resourceResult.gained;
   }
 
@@ -2788,7 +2777,6 @@ function applyActionHeal(source, target, action, skill = null, execution = null)
   source.stats.heal += gained;
   if (gained > 0) publishBattleEvents([{type:"heal",source,target,skill,periodic:action.periodic,amount:gained,resource:"HP"}]);
   triggerEffect(target, "heal");
-  addBattleEventLog(source, `${source.name}가 ${target.name}에게 ${skill?.name ?? "회복"} 행동을 하여 ${formatBattleEventValue(gained)} HP 회복 발생`);
   return gained;
 }
 
@@ -2805,7 +2793,6 @@ function applyActionResourceDrain(source,target,action,skill=null,execution=null
   const deathEvents=resource === "HP" ? syncAliveState(target,{source,skill,reason:"HP 자원 소진",deferEvents:true}) : [];
   if (drained > 0) publishBattleEvents([{type:"resource_drain",source,target,skill,amount:drained,resource},...deathEvents]);
   else if (deathEvents.length) publishBattleEvents(deathEvents);
-  addBattleEventLog(source,`${source.name}가 ${target.name}의 ${resource}를 ${formatBattleEventValue(drained)} 감소`);
   return drained;
 }
 
@@ -2893,7 +2880,6 @@ function applySummonCommand(source,target,action,skill=null) {
     target.hp=0;syncAliveState(target,{source,skill,reason:"소환 해제"});target.pendingAction=null;target.castTimer=0;
   } else return false;
   publishBattleEvents([{type:"summon_command",source,target,skill,reason:action.summonCommand}]);
-  addBattleEventLog(source,`${source.name}: ${target.name} 소환수 명령 (${{hold:"정지",release:"행동 재개",recall:"복귀",dismiss:"해제"}[action.summonCommand]})`);
   return true;
 }
 
@@ -2932,7 +2918,6 @@ function markActionTargetCooldown(source, target, action, skill) {
       state:"periodic",category:"general",polarity:"harmful",dispellable:true,stacks:1,remainingTicks,usesRemaining:null,
       skillId:skill?.id,casterName:source?.name};
     if (existing) Object.assign(existing,marker); else target.activeEffects.push(marker);
-    addBattleEventLog(source,`${source.name} → ${target.name}: ${marker.name} (${action.targetCooldown}초)`);
     return;
   }
   if (!actionTargetCooldowns.has(source)) actionTargetCooldowns.set(source, new Map());
