@@ -138,7 +138,6 @@ function handlePassiveBattleEvent(event, context) {
     const resourceSpent=spendSkillResourceCosts(owner,skill);
     syncAliveState(owner,{source:owner,skill:{...skill,triggered:true},reason:"패시브 자원 소모"});
     if (!owner.alive) continue;
-    addBattleEventLog(owner,`${owner.name}: 패시브 ${skill.name} 발동 (${PASSIVE_TRIGGER_LABELS[triggerType]})`);
     applySkill(owner,preferred,{...skill,triggered:true},createSkillExecutionContext(resourceSpent,event));
   }
 }
