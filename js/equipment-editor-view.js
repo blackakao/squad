@@ -346,3 +346,60 @@ function renderItemPage() {
   }).join('') || '<tr><td colspan="10">표시할 아이템이 없습니다.</td></tr>';
 }
 
+
+// Equipment filter and item editor presentation helpers.
+function getSlotLabel(slotKey) {
+  return EQUIPMENT_SLOTS.find(slot => slot.key === slotKey)?.label ?? slotKey;
+}
+
+function getSlotOptionsHtml() {
+  return `<option value="all">전체</option>${EQUIPMENT_SLOTS.map(slot => `<option value="${slot.key}">${slot.label}</option>`).join("")}`;
+}
+
+function initEquipmentFilters() {
+  if (itemSlotFilterEl) {
+    itemSlotFilterEl.innerHTML = getSlotOptionsHtml();
+    itemSlotFilterEl.value = selectedItemSlotFilter;
+  }
+
+  if (equipmentItemSlotFilterEl) {
+    equipmentItemSlotFilterEl.innerHTML = getSlotOptionsHtml();
+    equipmentItemSlotFilterEl.value = selectedEquipmentItemSlotFilter;
+  }
+}
+
+function syncItemWeaponFields() {
+  const isWeapon = isWeaponSlot(itemSlotEl.value);
+  const isArmor = isArmorSlot(itemSlotEl.value);
+  const weaponCategory = getWeaponCategory(itemWeaponCategoryEl.value);
+  document.querySelectorAll(".item-weapon-field").forEach(row => {
+    row.classList.toggle("hidden", !isWeapon);
+  });
+  document.querySelectorAll(".item-armor-field").forEach(row => {
+    row.classList.toggle("hidden", !isArmor);
+  });
+  if (isWeapon && weaponCategory) {
+    itemHandTypeEl.value = getHandTypeLabel(weaponCategory.handType);
+    itemWeaponSlotTypeEl.value = getWeaponSlotTypeLabel(weaponCategory.slotType);
+    itemAttackRangeEl.value = weaponCategory.attackRange;
+    itemAttackSpeedEl.value = weaponCategory.attackSpeed;
+    itemCastSpeedEl.value = weaponCategory.castSpeed;
+    itemAttackRangeEl.disabled = true;
+    itemAttackSpeedEl.disabled = true;
+    itemCastSpeedEl.disabled = true;
+    if (itemAttackSkillEl) {
+      itemAttackSkillEl.disabled = false;
+    }
+  } else {
+    itemHandTypeEl.value = "";
+    itemWeaponSlotTypeEl.value = "";
+    itemAttackRangeEl.disabled = false;
+    itemAttackSpeedEl.disabled = false;
+    itemCastSpeedEl.disabled = false;
+    if (itemAttackSkillEl) {
+      itemAttackSkillEl.value = "";
+      itemAttackSkillEl.disabled = true;
+    }
+  }
+}
+
