@@ -432,7 +432,7 @@ function equipSelectedInventoryItem(slotKey) {
   return dropEquipmentItem({preventDefault() {}, dataTransfer: {getData: () => selectedInventoryItemId}}, slotKey);
 }
 
-function dropEquipmentItem(event, slotKey) {
+async function dropEquipmentItem(event, slotKey) {
   event.preventDefault();
   const character = characterJson[selectedEquipmentCharacterIndex];
   const item = getItemById(event.dataTransfer.getData("text/plain"));
