@@ -520,3 +520,195 @@ function updateSkillRangeValueVisibility(radio) {
   customField.classList.toggle("hidden", checked?.value !== "custom");
 }
 
+
+// Action form manipulation and value readers.
+function addSkillCoefficientRow(button) {
+  const list = button.closest(".skill-coefficients").querySelector(".skill-coefficient-list");
+  list.insertAdjacentHTML("beforeend", renderSkillCoefficientRow(createDefaultCoefficient()));
+}
+
+function refreshSkillCoefficientRow(select) {
+  const row = select.closest(".skill-coefficient-row");
+  row.outerHTML = renderSkillCoefficientRow({
+    type: select.value,
+    field: row.querySelector(".skill-coefficient-field")?.value,
+    calc: row.querySelector(".skill-coefficient-calc")?.value,
+    effectId: row.querySelector(".skill-coefficient-effect-id-input")?.value,
+    effectTag: row.querySelector(".skill-coefficient-effect-tag-input")?.value,
+    stackSourceField: row.querySelector(".skill-coefficient-stack-source")?.value,
+    resourceId: row.querySelector(".skill-coefficient-resource-id-input")?.value,
+    value: Number(row.querySelector(".skill-coefficient-value").value)
+  });
+}
+
+function addSkillResourceCostRow(button) {
+  const list = button.closest(".skill-resource-cost").querySelector(".skill-resource-cost-list");
+  list.insertAdjacentHTML("beforeend", renderSkillResourceCostRow(createDefaultResourceCost()));
+}
+
+function removeSkillResourceCostRow(button) {
+  const list = button.closest(".skill-resource-cost-list");
+  if (list.querySelectorAll(".skill-resource-cost-row").length <= 1) {
+    alert("자원 소모는 최소 1개 필요합니다.");
+    return;
+  }
+  button.closest(".skill-resource-cost-row").remove();
+}
+
+function removeSkillCoefficientRow(button) {
+  const list = button.closest(".skill-coefficient-list");
+  if (list.querySelectorAll(".skill-coefficient-row").length <= 1) {
+    alert("계수는 최소 1개 필요합니다.");
+    return;
+  }
+  button.closest(".skill-coefficient-row").remove();
+}
+
+function readSkillCoefficientsFromRow(row) {
+  const coefficients = [...row.querySelectorAll(".skill-coefficient-row")].map(coefficientRow => normalizeCoefficient({
+    type: coefficientRow.querySelector(".skill-coefficient-type")?.value,
+    field: coefficientRow.querySelector(".skill-coefficient-field")?.value,
+    calc: coefficientRow.querySelector(".skill-coefficient-calc")?.value,
+    effectId: coefficientRow.querySelector(".skill-coefficient-effect-id-input")?.value,
+    effectTag: coefficientRow.querySelector(".skill-coefficient-effect-tag-input")?.value,
+    stackSourceField: coefficientRow.querySelector(".skill-coefficient-stack-source")?.value,
+    resourceId: coefficientRow.querySelector(".skill-coefficient-resource-id-input")?.value,
+    value: Number(coefficientRow.querySelector(".skill-coefficient-value")?.value)
+  }));
+  return coefficients.length ? coefficients : [createDefaultCoefficient()];
+}
+
+function readSkillResourceCostsFromList(list) {
+  const costs = [...(list?.querySelectorAll(".skill-resource-cost-row") ?? [])].map(costRow => normalizeResourceCost({
+    resource: costRow.querySelector(".skill-resource-cost-resource")?.value,
+    mode: costRow.querySelector(".skill-resource-cost-mode")?.value,
+    value: Number(costRow.querySelector(".skill-resource-cost-value")?.value)
+  }));
+  return costs.length ? costs : createDefaultResourceCosts();
+}
+
+function readSkillResourceCostsFromForm() {
+  return readSkillResourceCostsFromList(skillResourceCostsEl);
+}
+
+function readSkillRangeFromRow(row) {
+  const checked = row.querySelector(".skill-range-mode:checked");
+  const rangeValueInput = row.querySelector(".skill-range-value");
+  return normalizeRange({
+    rangeMode: checked?.value ?? "mainWeapon",
+    rangeValue: Number(rangeValueInput?.value ?? 1)
+  });
+}
+
+function readSkillActionsFromForm() {
+  return [...skillActionsEl.querySelectorAll(".skill-action-row")].map(row => {
+    const type = row.querySelector(".skill-action-type").value;
+    if (row.dataset.unsupportedAction) {
+      const original = JSON.parse(row.dataset.unsupportedAction);
+      if (type === "unsupported_move" || (type === original.type && original.type !== "move")) return original;
+      return normalizeSkillAction(createDefaultAction(type));
+    }
+    const range = readSkillRangeFromRow(row);
+    return normalizeSkillAction({
+      type,
+      target: row.querySelector(".skill-action-target")?.value,
+      rangeMode: range.rangeMode,
+      rangeValue: range.rangeValue,
+      minRange: Number(row.querySelector(".skill-action-min-range")?.value ?? 0),
+      allowSelfTarget: row.querySelector(".skill-action-allow-self")?.checked ?? true,
+      requiredTargetEffectId:row.querySelector(".skill-action-required-target-effect-id")?.value ?? "",
+      requiredTargetEffectCaster:row.querySelector(".skill-action-required-target-effect-caster")?.value ?? "any",
+      targetHpBelow: Number(row.querySelector(".skill-action-target-hp")?.value ?? 100),
+      targetCooldown: Number(row.querySelector(".skill-action-target-cooldown")?.value ?? 0),
+      targetCooldownScope: row.querySelector(".skill-action-target-cooldown-scope")?.value ?? "caster",
+      targetCooldownEffectId: row.querySelector(".skill-action-target-cooldown-effect-id")?.value ?? "",
+      targetCooldownEffectName: row.querySelector(".skill-action-target-cooldown-effect-name")?.value ?? "",
+      ownedSummonCondition:row.querySelector(".skill-action-owned-summon-condition")?.value ?? "any",
+      ownedSummonEntityId:row.querySelector(".skill-action-owned-summon-entity")?.value ?? "",
+      targetSummonEntityId:row.querySelector(".skill-action-target-summon-entity")?.value ?? "",
+      fullResourceAlternative:row.querySelector(".skill-action-full-resource-alternative")?.value ?? "",
+      ...(TIMED_EFFECT_ACTIONS.includes(type) || (type === "create_field" && ["add_buff","add_state"].includes(row.querySelector('.skill-action-field-effect')?.value)) ? {effect:readSkillEffectFromRow(row)} : {}),
+      ...(type === "transform" ? {transform:{id:row.querySelector('.skill-transform-id')?.value,name:row.querySelector('.skill-transform-name')?.value,
+        mode:row.querySelector('.skill-transform-mode')?.value,modifiers:Object.fromEntries([...row.querySelectorAll('.skill-transform-stat')].map(input=>[input.dataset.stat,Number(input.value)])),
+        skillIds:[...row.querySelectorAll('.skill-transform-skills option:checked')].map(option=>option.value),
+        attackSkillId:row.querySelector('.skill-transform-attack-skill')?.value ?? "",
+        receivedDamagePercent:Number(row.querySelector('.skill-transform-received-damage')?.value ?? 100),
+        immobile:Boolean(row.querySelector('.skill-transform-immobile')?.checked),
+        exitHpBelow:Number(row.querySelector('.skill-transform-exit-hp')?.value ?? 0),
+        retreatHpBelow:Number(row.querySelector('.skill-transform-retreat-hp')?.value ?? 0)}} : {}),
+      ...(type === "copy_skill" ? {
+        copySourceIndex:Number(row.querySelector('.skill-copy-source-index')?.value ?? 1),
+        copySlot:Number(row.querySelector('.skill-copy-slot')?.value ?? 1)
+      } : {}),
+      ...(["swap_reserve","deploy_reserve"].includes(type) ? {
+        reserveIndex:Number(row.querySelector('.skill-reserve-index')?.value ?? 1)
+      } : {}),
+      ...(type === "revive_ally" ? {
+        reviveHpPercent:Number(row.querySelector('.skill-revive-hp')?.value ?? 50),
+        reviveMpPercent:Number(row.querySelector('.skill-revive-mp')?.value ?? 100),
+        reviveStPercent:Number(row.querySelector('.skill-revive-st')?.value ?? 100),
+        reviveInvulnerable:Number(row.querySelector('.skill-revive-invulnerable')?.value ?? 0),
+        revivePosition:row.querySelector('.skill-revive-position')?.value ?? "death"
+      } : {}),
+      ...(type === "command_summon" ? {summonCommand:row.querySelector('.skill-summon-command')?.value ?? "hold"} : {}),
+      ...(type === "swap_equipment_set" ? {
+        equipmentSetIndex:Number(row.querySelector('.skill-equipment-set-index')?.value ?? 1)
+      } : {}),
+      ...(type === "override_rule" ? {ruleOverride:{
+        id:row.querySelector('.skill-rule-id')?.value,
+        disableTeamSynergies:Boolean(row.querySelector('.skill-rule-disable-synergies')?.checked),
+        disableEquipmentEffects:Boolean(row.querySelector('.skill-rule-disable-equipment')?.checked),
+        disableAllSkills:Boolean(row.querySelector('.skill-rule-disable-all')?.checked),
+        disabledSkillIds:[...row.querySelectorAll('.skill-rule-disabled-skills option:checked')].map(option=>option.value),
+        damagePercent:Number(row.querySelector('.skill-rule-damage')?.value ?? 100),
+        receivedDamagePercent:Number(row.querySelector('.skill-rule-received-damage')?.value ?? 100),
+        healingPercent:Number(row.querySelector('.skill-rule-healing')?.value ?? 100),
+        receivedHealingPercent:Number(row.querySelector('.skill-rule-received-healing')?.value ?? 100),
+        resourceCostPercent:Number(row.querySelector('.skill-rule-cost')?.value ?? 100),
+        cooldownPercent:Number(row.querySelector('.skill-rule-cooldown')?.value ?? 100)
+      }} : {}),
+      chainCount: Number(row.querySelector(".skill-action-chain-count")?.value ?? 0),
+      chainRange: Number(row.querySelector(".skill-action-chain-range")?.value ?? 3),
+      chainOrigin:row.querySelector(".skill-action-chain-origin")?.value ?? "previous",
+      rangeMultiplier:Number(row.querySelector(".skill-action-range-multiplier")?.value ?? 100),
+      coefficients: type === "move" ? [] : readSkillCoefficientsFromRow(row),
+      healResource: row.querySelector(".skill-action-heal-resource")?.value ?? "HP",
+      drainResource: row.querySelector(".skill-action-drain-resource")?.value ?? "MP",
+      damageType: row.querySelector(".skill-action-damage-type")?.value ?? "physical",
+      moveType: row.querySelector(".skill-action-move-type")?.value ?? "Walk",
+      movePlacement: row.querySelector(".skill-action-move-placement")?.value ?? "target",
+      moveSpeed: Number(row.querySelector(".skill-action-move-speed")?.value ?? 1),
+      distance: Number(row.querySelector(".skill-action-distance")?.value ?? 0),
+      fieldRadius: Number(row.querySelector(".skill-action-field-radius")?.value ?? 0),
+      fieldShape:row.querySelector(".skill-action-field-shape")?.value ?? "circle",
+      fieldWidth:Number(row.querySelector(".skill-action-field-width")?.value ?? 2),
+      fieldEffect: row.querySelector(".skill-action-field-effect")?.value,
+      fieldEffectDuration:Number(row.querySelector('.skill-effect-duration')?.value ?? 5),
+      fieldMoveType:row.querySelector(".skill-action-field-move-type")?.value,
+      fieldDistance:Number(row.querySelector(".skill-action-field-distance")?.value ?? 1),
+      fieldCenter: row.querySelector(".skill-action-field-center")?.value,
+      fieldInterval: Number(row.querySelector(".skill-action-field-interval")?.value ?? 1),
+      fieldMovementStCostCenter:Number(row.querySelector(".skill-action-field-st-center")?.value ?? 0),
+      fieldMovementStCostFalloff:Number(row.querySelector(".skill-action-field-st-falloff")?.value ?? 0),
+      fieldMovementStCostMinimum:Number(row.querySelector(".skill-action-field-st-minimum")?.value ?? 0),
+      fieldAuras:String(row.querySelector(".skill-action-field-auras")?.value ?? "").split(",").map(value=>{
+        const [target,stat,mode,amount]=value.trim().split(":");return {target,stat,mode,value:Number(amount)};
+      }).filter(aura=>["ally","enemy"].includes(aura.target) && aura.stat && ["percent","flat"].includes(aura.mode) && Number.isFinite(aura.value) && aura.value !== 0),
+      area: Number(row.querySelector(".skill-action-area")?.value ?? 0),
+      areaCenter: row.querySelector(".skill-action-area-center")?.value,
+      maxTargets: Number(row.querySelector(".skill-action-max-targets")?.value ?? 0),
+      entityId: row.querySelector('.skill-action-entity-id')?.value,
+      summonCenter:row.querySelector('.skill-action-summon-center')?.value ?? "self",
+      inheritStats:Object.fromEntries([...row.querySelectorAll('.skill-action-inherit-stat')].map(input=>[input.dataset.stat,Number(input.value)])),
+      count: Number(row.querySelector('.skill-action-count')?.value ?? 1),
+      limit: Number(row.querySelector('.skill-action-limit')?.value ?? 3),
+      protectOwnerPercent: Number(row.querySelector('.skill-action-protect-percent')?.value ?? 0),
+      protectOwnerScope: row.querySelector('.skill-action-protect-scope')?.value ?? "all",
+      protectOwnerPriority: Number(row.querySelector('.skill-action-protect-priority')?.value ?? 0),
+      transferStateScope: row.querySelector('.skill-action-transfer-state')?.value ?? "none",
+      transferStatePriority: Number(row.querySelector('.skill-action-transfer-priority')?.value ?? 0),
+      duration: Number(row.querySelector(type === "create_field" ? '.skill-action-field-duration' : type === "transform" ? '.skill-transform-duration' : type === "override_rule" ? '.skill-rule-duration' : ["swap_reserve","deploy_reserve"].includes(type) ? '.skill-reserve-duration' : TIMED_EFFECT_ACTIONS.includes(type) ? '.skill-effect-duration' : '.skill-action-duration')?.value ?? (type === "create_field" ? 0 : 20))
+    });
+  });
+}
+
