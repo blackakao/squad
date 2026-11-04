@@ -145,3 +145,43 @@ function equipmentItemIcon(item, slotKey = "") {
 }
 
 // Match the existing equipment bonus policy: a two-handed item is counted once.
+
+// Equipment slots and set control rendering.
+function renderEquipmentSlots() {
+  const character = characterJson[selectedEquipmentCharacterIndex];
+  if (!character) {
+    equipmentSlotGridEl.innerHTML = `<div class="empty-text">캐릭터를 선택하세요.</div>`;
+    return;
+  }
+
+  const equipment = createEquipmentSlots(character.equipment, character);
+  const rules = normalizeEquipmentRules(character.equipmentRules);
+  equipmentSlotGridEl.innerHTML = `<div class="equipment-rule-summary">추가 무기 ${rules.extraWeaponSlots}칸 · 양손 무기 ${rules.twoHandSingleSlot ? "단일 슬롯" : "두 슬롯 점유"} · 집중 감산 ${rules.sameTargetWeaponPenaltyPercent}%</div>` + getCharacterEquipmentSlots(character).map(slot => {
+    const item = getItemById(equipment[slot.key]);
+    return `
+      <div class="equipment-slot ${item ? "occupied" : ""}" data-slot="${slot.key}" ondragover="allowEquipmentDrop(event)" ondragleave="this.classList.remove('drop-hover')" ondrop="dropEquipmentItem(event, '${slot.key}')">
+        <div class="equipment-slot-title">${renderCategoryIcon("slot", slot.key, slot.label)}</div>
+        <button type="button" class="equipment-slot-target" aria-label="${escapeHtml(slot.label)}: ${escapeHtml(item?.name || '비어 있음')}" onclick="equipSelectedInventoryItem('${slot.key}')" ${item ? `draggable="true" data-item-id="${escapeHtml(item.id)}" ondragstart="dragEquipmentItem(event, this.dataset.itemId, '${slot.key}')" ondragend="endEquipmentDrag()"` : ""}>
+          ${equipmentItemIcon(item, slot.key)}
+        </button>
+        <div class="equipment-slot-item ${item ? "" : "empty"}">
+          ${item ? escapeHtml(item.name) : "비어 있음"}
+        </div>
+        <button type="button" class="equipment-unequip" aria-label="${escapeHtml(slot.label)} 해제" onclick="unequipItem('${slot.key}')" ${item ? "" : "disabled"}>해제</button>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderEquipmentSetControls() {
+  const character = characterJson[selectedEquipmentCharacterIndex];
+  if (!character) {
+    equipmentSetControlsEl.innerHTML = "";
+    return;
+  }
+  const normalized = normalizeCharacterEquipmentSets(character);
+  character.equipmentSets = normalized.equipmentSets;
+  character.activeEquipmentSet = normalized.activeEquipmentSet;
+  equipmentSetControlsEl.innerHTML = `<label>장비 세트 <select aria-label="장비 세트" onchange="activateEquipmentSet(this.value)">${normalized.equipmentSets.map((set, index) => `<option value="${index}" ${index === normalized.activeEquipmentSet ? "selected" : ""}>${escapeHtml(set.name)}</option>`).join("")}</select></label><button type="button" onclick="copyActiveEquipmentSet()" ${normalized.equipmentSets.length >= 3 ? "disabled" : ""}>복제</button><button type="button" onclick="deleteActiveEquipmentSet()" ${normalized.equipmentSets.length <= 1 ? "disabled" : ""}>삭제</button>`;
+}
+
