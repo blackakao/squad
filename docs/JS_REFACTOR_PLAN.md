@@ -50,3 +50,11 @@
 - `js/skill.js`에 전투 실행 로직과 함께 `renderTransformActionArea`, `renderRuleOverrideActionArea` 등 표시 함수가 남아 있음. UI/전투 함수가 교차하므로 줄 범위 일괄 이동은 금지하고 함수별 의존성 검토 후 분리.
 - **검증:** GitHub 원격 파일 정적 확인. 브라우저의 스킬 목록·모달·액션 편집·저장·재로드와 Node VM 시뮬레이터 실행 검증은 **미실행**. 분리 완료를 동작 검증 완료로 간주하지 않음.
 - **다음 게이트:** 브라우저에서 스킬 편집·저장·재로드 및 콘솔 오류를 확인하고, `node --test tests/skill-engine.test.cjs`와 `node --test tests/balance-simulator.test.cjs`를 관련 환경에서 각 1회 실행한 후 나머지 UI 함수 이동.
+
+## 공통 UI 분리 후 점검 (2026-11-04)
+
+- `ui.js`에서 초상화 편집·미리보기·캐시 함수는 `ui-portrait-editor.js`, 전투 상태·툴팁·로그 표시 및 전투 모달은 `ui-battle-view.js`, 페이지 이동·직업/진영 선택 옵션은 `ui-page-navigation.js`로 분리. 기존 전역 함수명 유지.
+- `ui.js`의 `createStats`부터 `createDefaultCharacterJson`까지는 능력치·전투 규칙·공격 속도·피해·회복·캐릭터 기본값에 관련된 공유 계산 함수이므로 **검증 없이 이동하지 않음**.
+- `normalizeCombatJson`은 장비 세트·전투 규칙·초상화 정규화 등을 결합한 데이터 경계이며, headless 시뮬레이터에서도 참조함. 이동 시 Node VM의 로딩 순서·테스트 픽스처를 동시에 검증해야 함.
+- `recordBattleActionLog`, `clearBattleEventLogs`, `getBattleUnitSide`, `formatBattleEventValue`는 전투 로그 상태 또는 데이터 처리로 남겨둠.
+- **검증 게이트:** 브라우저에서 메뉴 전환, 초상화 미리보기·저장, 전투 상태/로그/모달 확인; `node --test tests/skill-engine.test.cjs` 및 `node --test tests/balance-simulator.test.cjs` 회귀 테스트. 본 단계에서 실제 실행 검증은 수행하지 않음.
