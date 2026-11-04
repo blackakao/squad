@@ -189,7 +189,6 @@ function summonBattleUnits(source, action, skill, target = source) {
     (unit.owner.summons ??= []).push(unit);
     squad.push(unit);
     registerBattleContribution(unit);
-    addBattleEventLog(source, `${source.name}: ${config.name} 소환`);
   }
 }
 
@@ -230,7 +229,6 @@ function updateSummonLifetimes() {
       syncAliveState(unit,{reason:"소환 수명 종료"});
       unit.pendingAction = null;
       unit.castTimer = 0;
-      addBattleEventLog(unit, `${unit.name}: 소환 시간 종료`);
     }
   });
 }
@@ -347,7 +345,6 @@ function syncAliveState(unit, context = {}) {
         unit.revivesRemaining--;
         unit.reviveTicks = Math.max(1, Math.ceil(normalizeBattleRules(unit.battleRules).reviveDelay * BASE_ATTACK_COOLDOWN));
         unit.isWaiting = true;
-        addBattleEventLog(unit, `${unit.name}: 부활 대기 (${(unit.reviveTicks / BASE_ATTACK_COOLDOWN).toFixed(1)}초)`);
       }
       events.push({type:"death",source:context.source ?? null,target:unit,skill:context.skill,periodic:context.periodic,reason:context.reason ?? "HP 소진"});
       if (unit.isSummon && !unit.isEntityPreview) pendingSummonDeaths.add(unit);
@@ -385,7 +382,6 @@ function activateWaitingUnit(unit, type) {
   unit.skillBubbleText = "";
   unit.skillBubbleIcon = "";
   publishBattleEvents([{type:type === "revive" ? "revive" : "battle_entry",source:unit,target:unit}]);
-  addBattleEventLog(unit, `${unit.name}: ${type === "revive" ? "부활" : preserveState ? "예비대 투입" : "전투 진입"}`);
 }
 
 function getReserveCandidates(source) {
@@ -418,7 +414,6 @@ function swapBattleUnitWithReserve(source, target, action) {
     reserve.temporaryReserveTicks=Math.max(1,Math.ceil(action.duration*BASE_ATTACK_COOLDOWN));
   }
   publishBattleEvents([{type:"reserve_swap",source,target,reserve}]);
-  addBattleEventLog(source,`${target.name} 퇴장 · ${reserve.name} 투입`);
   return reserve;
 }
 
@@ -435,7 +430,6 @@ function reviveBattleUnitWithSkill(source,target,action,skill) {
     target.x=target.battleStartX;target.y=target.battleStartY;clampPosition(target);
   }
   publishBattleEvents([{type:"revive",source,target,skill}]);
-  addBattleEventLog(source,`${source.name}: ${target.name} 부활`);
   return true;
 }
 
@@ -446,7 +440,6 @@ function deployReserveWithSkill(source,action,skill) {
   reserve.x=source.x;reserve.y=source.y;activateWaitingUnit(reserve,"swap");
   if (Number(action.duration) > 0) reserve.temporaryReserveTicks=Math.max(1,Math.ceil(action.duration*BASE_ATTACK_COOLDOWN));
   publishBattleEvents([{type:"reserve_deploy",source,target:reserve,skill}]);
-  addBattleEventLog(source,`${reserve.name} 예비대 증원`);
   return reserve;
 }
 
@@ -461,7 +454,6 @@ function returnTemporaryReserveUnit(unit) {
     returning.reservedForTemporarySwap=false;
     if (returning.isReserve && returning.isWaiting && returning.hp > 0) {
       returning.x=unit.x;returning.y=unit.y;activateWaitingUnit(returning,"swap");
-      addBattleEventLog(returning,`${returning.name}: 시간제 교대 복귀`);
     }
   }
 }
@@ -638,7 +630,6 @@ function prepareBattleSession({ openScreen = true } = {}) {
   isBattleRunning = true;
   [...playerSquad, ...enemySquad].filter(unit => unit.alive).forEach(unit => {
     publishBattleEvents([{type:"battle_entry",source:unit,target:unit}]);
-    addBattleEventLog(unit, `${unit.name}: 전투 진입`);
   });
   updateBattleButton();
   return true;
@@ -1166,7 +1157,6 @@ function createBattleField(source,target,action,skill) {
     remainingTicks:action.duration > 0 ? Math.max(1,Math.ceil(action.duration*BASE_ATTACK_COOLDOWN)) : null,
     nextTick:Math.max(1,Math.ceil(action.fieldInterval*BASE_ATTACK_COOLDOWN))});
   publishBattleEvents([{type:"field_create",source,target,skill}]);
-  addBattleEventLog(source,`${source.name}: ${skill?.name ?? "필드"} 생성 (${line ? `폭 ${action.fieldWidth}` : `반경 ${action.fieldRadius}`})`);
 }
 
 function getPointToSegmentDistance(x,y,startX,startY,endX,endY) {
