@@ -1152,10 +1152,6 @@ function formatBattleEventValue(value) {
   return Number.isInteger(number) ? String(number) : number.toFixed(1);
 }
 
-function addBattleEventLog(source, message) {
-  // Legacy prose is intentionally not collected; use numeric event outcomes.
-}
-
 function recordBattleActionLog(event) {
   if (!['damaged', 'heal'].includes(event.type) || !(event.amount > 0)) return;
   battleEventLogs.push(event);
