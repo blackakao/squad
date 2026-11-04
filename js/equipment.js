@@ -524,65 +524,7 @@ function equipSelectedInventoryItem(slotKey) {
   return dropEquipmentItem({preventDefault() {}, dataTransfer: {getData: () => selectedInventoryItemId}}, slotKey);
 }
 
-function dragEquipmentItem(event, itemId, sourceSlot = "") {
-  endEquipmentDrag();
-  const item = getItemById(itemId);
-  if (!item) { event.preventDefault(); return; }
-  selectInventoryItem(itemId);
-  const preview = event.currentTarget.querySelector('.equipment-icon').cloneNode(true);
-  preview.classList.add('equipment-drag-preview');
-  preview.querySelectorAll('img').forEach(img => img.removeAttribute('data-icon-background'));
-  document.body.appendChild(preview);
-  equipmentDragState = {itemId, sourceSlot, source: event.currentTarget, preview};
-  event.dataTransfer.setData("text/plain", itemId);
-  event.dataTransfer.effectAllowed = 'copyMove';
-  event.dataTransfer.setDragImage(preview, 34, 34);
-  event.currentTarget.classList.add('is-dragging');
-  const character = characterJson[selectedEquipmentCharacterIndex];
-  equipmentSlotGridEl.querySelectorAll('[data-slot]').forEach(el => {
-    const allowed = !!character && canEquipItemToSlot(item, el.dataset.slot, character);
-    el.classList.toggle('drop-allowed', allowed);
-    el.classList.toggle('drop-blocked', !allowed);
-  });
-}
-
-function allowEquipmentDrop(event) {
-  if (!equipmentDragState) return;
-  event.preventDefault();
-  const allowed = event.currentTarget.classList.contains('drop-allowed');
-  event.dataTransfer.dropEffect = allowed ? 'copy' : 'none';
-  event.currentTarget.classList.toggle('drop-hover', allowed);
-}
-
-function endEquipmentDrag() {
-  equipmentDragState?.preview.remove();
-  equipmentDragState?.source.classList.remove('is-dragging');
-  equipmentDragState = null;
-  equipmentSlotGridEl.querySelectorAll('[data-slot]').forEach(el => el.classList.remove('drop-allowed', 'drop-blocked', 'drop-hover'));
-  document.querySelector('.equipment-inventory')?.classList.remove('drop-hover');
-}
-
-function allowInventoryReturn(event) {
-  if (!equipmentDragState?.sourceSlot) return;
-  event.preventDefault();
-  event.dataTransfer.dropEffect = 'move';
-  event.currentTarget.classList.add('drop-hover');
-}
-
-function returnEquipmentItem(event) {
-  if (!equipmentDragState?.sourceSlot) return;
-  event.preventDefault();
-  const slot = equipmentDragState.sourceSlot;
-  endEquipmentDrag();
-  return unequipItem(slot);
-}
-
-function changeEquipmentItemSlotFilter(slotKey) {
-  selectedEquipmentItemSlotFilter = slotKey;
-  renderEquipmentItemTable();
-}
-
-async function dropEquipmentItem(event, slotKey) {
+function dropEquipmentItem(event, slotKey) {
   event.preventDefault();
   const character = characterJson[selectedEquipmentCharacterIndex];
   const item = getItemById(event.dataTransfer.getData("text/plain"));
