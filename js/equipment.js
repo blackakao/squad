@@ -491,26 +491,6 @@ const ITEM_TABLE_COLUMNS = [['name','이름'],['handType','착용방식'],['atk'
 const ITEM_SECONDARY_STATS = [['HP','hp'],['MP','mp'],['ST','st'],['이동속도','speed'],['공격속도','attackSpeed'],['시전속도','castSpeed']];
 let itemTableSort = {key:'', direction:1};
 let itemMutationPending = false;
-function getItemCategoryLabel(item) {
-  return isWeaponItem(item) ? getWeaponCategoryLabel(item.weaponCategory) : isArmorSlot(item.slot) ? getArmorCategoryLabel(item.armorCategory) : getSlotLabel(item.slot);
-}
-function getItemExtraDetails(item) {
-  return [...ITEM_SECONDARY_STATS.filter(([,key])=>Number(item[key])).map(([label,key])=>`${label} ${formatSignedValue(item[key])}`),
-    ...CHARACTER_STAT_DEFS.filter(({key})=>Number(item.statModifiers?.[key])).map(({label,key})=>`${label} ${formatSignedValue(item.statModifiers[key])}`),
-    ...normalizeItemSkillModifiers(item.skillModifiers).map(row=>{
-      const skill=getSkillById(row.skillId);
-      const target=getItemSkillTargets(skill).find(t=>t.target===row.target && t.signature===row.signature);
-      return `${skill?.name ?? '삭제된 스킬'} · ${target?.label ?? '대상 변경됨 (미적용)'} ${formatSignedValue(row.value)}`;
-    })];
-}
-function getItemSortValue(item,key) {
-  if (['atk','magic','defense','resistance','attackRange'].includes(key)) return Number(item[key])||0;
-  if (key==='category') return getItemCategoryLabel(item);
-  if (key==='handType') return getHandTypeLabel(item.handType);
-  if (key==='skill') return isWeaponItem(item) ? getSkillById(item.attackSkillId)?.name ?? '기본 공격' : '';
-  if (key==='extra') return getItemExtraDetails(item).join(' · ');
-  return item.name;
-}
 async function saveItemFromForm(event) {
   event.preventDefault();
   if (itemMutationPending) return;
