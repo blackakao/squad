@@ -712,3 +712,36 @@ function readSkillActionsFromForm() {
   });
 }
 
+
+// Custom-resource editor controls (browser only).
+function renderCustomResourceEditor(container, resources = []) {
+  if (!container) return;
+  container.innerHTML = normalizeCustomResourceDefinitions(resources).map(renderCustomResourceRow).join("");
+}
+
+function renderCustomResourceRow(resource = {}) {
+  const normalized = normalizeCustomResourceDefinitions([{ id: resource.id || "resource", name: resource.name, initial: resource.initial, max: resource.max }])[0];
+  return `<div class="custom-resource-row">
+    <label>ID<input class="custom-resource-id" value="${escapeHtml(resource.id ? normalized.id : "")}" placeholder="soul"></label>
+    <label>이름<input class="custom-resource-name" value="${escapeHtml(resource.name ? normalized.name : "")}" placeholder="영혼 포인트"></label>
+    <label>초기값<input class="custom-resource-initial" type="number" min="0" step="0.1" value="${Number(resource.initial) || 0}"></label>
+    <label>최대값<input class="custom-resource-max" type="number" min="0" step="0.1" value="${Number(resource.max) || 100}"></label>
+    <button type="button" onclick="this.closest('.custom-resource-row').remove()">삭제</button>
+  </div>`;
+}
+
+function addCustomResourceRow(container) {
+  if (!container) return;
+  container.insertAdjacentHTML("beforeend", renderCustomResourceRow({ max: 100 }));
+}
+
+function readCustomResourcesFromEditor(container) {
+  if (!container) return [];
+  return normalizeCustomResourceDefinitions([...container.querySelectorAll(".custom-resource-row")].map(row => ({
+    id: row.querySelector(".custom-resource-id")?.value,
+    name: row.querySelector(".custom-resource-name")?.value,
+    initial: row.querySelector(".custom-resource-initial")?.value,
+    max: row.querySelector(".custom-resource-max")?.value
+  })));
+}
+
