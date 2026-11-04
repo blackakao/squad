@@ -389,7 +389,6 @@ function applyTimedEffectAction(source,target,action,skill) {
     recalculateBattleBuffs(target);
     if (removed.length) {
       const scope=config.dispelMode === "id" ? config.id : config.dispelMode === "category" ? EFFECT_CATEGORY_LABELS[config.dispelCategory] : config.dispelMode === "tags" ? config.dispelTags.join(", ") : "전체";
-      addBattleEventLog(source,`${source.name} → ${target.name}: ${removed.length}개 효과 해제 (${scope})`);
       publishBattleEvents(removed.map(effect=>({type:"dispel",source,target,skill,amount:1,reason:effect.name ?? effect.id})));
     }
     return removed.length;
@@ -400,7 +399,6 @@ function applyTimedEffectAction(source,target,action,skill) {
         && (unit.transferStateScope === "all" || unit.transferStateScope === config.category))
       .sort((a,b)=>a.transferStatePriority-b.transferStatePriority)[0];
     if (transferTarget) {
-      addBattleEventLog(target,`${target.name}: ${config.name} 상태이상을 ${transferTarget.name}에게 이전`);
       target=transferTarget;
     }
   }
@@ -411,7 +409,6 @@ function applyTimedEffectAction(source,target,action,skill) {
     config={...config,stat:resolvedStat,adaptiveStat:"adaptiveOffense"};
   }
   if (blocksEffectApplication(target,source,config,kind)) {
-    addBattleEventLog(source,`${source.name} → ${target.name}: ${config.name} 부여 차단 (면역)`);
     return;
   }
   const existingAny = target.activeEffects.find(effect => effect.kind === kind && effect.id === config.id);
@@ -431,7 +428,6 @@ function applyTimedEffectAction(source,target,action,skill) {
   else target.activeEffects.push(instance);
   recalculateBattleBuffs(target);
   if (kind === "state" && (config.state === "stun" || (config.state === "silence" && (target.pendingAction?.type === "skill" || target.channelAction?.type === "skill")))) interruptBattleCast(target,config.name);
-  addBattleEventLog(source,`${source.name} → ${target.name}: ${config.name} ${stacks}중첩 (${action.duration || "무제한"}초)`);
 }
 
 function applyPeriodicEffect(target,effect) {
@@ -466,7 +462,6 @@ function applyTransformation(source,target,action,skill) {
   target.activeEffects.push(instance);
   recalculateBattleBuffs(target);
   publishBattleEvents([...removed.map(effect=>({type:"transform_end",source:target,target,skill,reason:`${effect.name} 교체`})),{type:"transform_start",source,target,skill,reason:transform.name}]);
-  addBattleEventLog(target,`${target.name}: ${transform.name} 변신 (${action.duration || "무제한"}초)`);
 }
 
 function updateBattleEffects() {
@@ -486,7 +481,6 @@ function updateBattleEffects() {
       if (!unit.alive) return false;
       if (effect.kind === "transform" && effect.exitHpBelow > 0 && unit.maxHp > 0 && unit.hp / unit.maxHp * 100 <= effect.exitHpBelow) {
         unit.retreatHpBelow=Math.max(Number(unit.retreatHpBelow) || 0,Number(effect.retreatHpBelow) || 0);
-        addBattleEventLog(unit,`${unit.name}: ${effect.name} 저체력 자동 해제`);
         publishBattleEvents([{type:"transform_end",source:unit,target:unit,skill:{id:effect.skillId,name:effect.name},reason:"저체력 자동 해제"}]);
         return false;
       }
@@ -497,7 +491,6 @@ function updateBattleEffects() {
       }
       if (!unit.alive) return false;
       if (effect.remainingTicks === null || --effect.remainingTicks > 0) return true;
-      addBattleEventLog(unit,`${unit.name}: ${effect.name} 만료`);
       if(effect.kind === "transform") publishBattleEvents([{type:"transform_end",source:unit,target:unit,skill:{id:effect.skillId,name:effect.name},reason:"만료"}]);
       return false;
     });
@@ -524,14 +517,12 @@ function processMovementEffectTriggers(unit) {
       id:`${effect.id}_movement_trigger`,name:`${effect.name} · 이동 발동`,state:effect.movementTriggerState,
       category:effect.category,polarity:"harmful",dispellable:true,maxStacks:1,stackMode:"refresh"
     }},{id:effect.skillId,name:effect.name,triggered:effect.triggered});
-    addBattleEventLog(unit,`${unit.name}: ${effect.name} 이동 거리 ${effect.movementTriggerDistance}m 도달`);
   }
 }
 
 function consumeBattleEffectUse(unit,effect,reason) {
   if (effect.usesRemaining === null || effect.usesRemaining == null) return false;
   effect.usesRemaining--;
-  addBattleEventLog(unit,`${unit.name}: ${effect.name} 횟수 소모 (${Math.max(0,effect.usesRemaining)}회 남음, ${reason})`);
   if (effect.usesRemaining <= 0) {
     unit.activeEffects = (unit.activeEffects ?? []).filter(candidate => candidate !== effect);
     recalculateBattleBuffs(unit);
