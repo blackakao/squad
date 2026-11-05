@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
@@ -634,6 +634,7 @@
       <div class="form-row">
         <label for="monsterRole">계열</label>
         <select id="monsterRole" required></select>
+        <label>개체 등급 (기본 2)<input id="monsterEntityGrade" type="number" min="1" max="10" step="1" value="2"></label>
       </div>
       <div class="form-row">
         <label for="monsterSkills">사용 스킬</label>
@@ -716,6 +717,7 @@
       <div class="form-row">
         <label for="characterRole">계열</label>
         <select id="characterRole" required></select>
+        <label>개체 등급 (기본 2)<input id="characterEntityGrade" type="number" min="1" max="10" step="1" value="2"></label>
       </div>
       <div class="form-row">
         <label for="characterFaction">진영</label>
@@ -856,6 +858,10 @@
               <label>발동 이벤트<select id="skillPassiveEvent" multiple size="3"></select><small>여러 이벤트를 함께 선택할 수 있습니다.</small></label>
               <label>발동 확률 (%)<input id="skillPassiveChance" type="number" min="0" max="100" step="0.1" value="100"></label>
               <label>피해 유형<select id="skillPassiveDamageType"><option value="">전체</option><option value="physical">물리</option><option value="magic">마법</option><option value="fixed">고정</option></select></label>
+              <label class="skill-check-field skill-form-field-wide"><input id="skillPassiveTargetState" type="checkbox">해로운 상태이상 대상에게 피해 배율 적용</label>
+              <label>공격 적중 시 상태이상 연장 (초)<input id="skillPassiveStateExtension" type="number" min="0" step="0.1" value="0"></label>
+              <label class="skill-check-field skill-form-field-wide"><input id="skillPassivePreserveSleep" type="checkbox">자신의 공격은 수면을 깨우지 않음</label>
+              <label class="skill-check-field skill-form-field-wide"><input id="skillPassiveSkillOnly" type="checkbox">액티브 스킬 시전에만 발동</label>
               <label class="skill-check-field skill-form-field-wide"><input id="skillPassiveBasicAttackOnly" type="checkbox">기본 공격 적중에만 발동</label>
               <label class="skill-check-field skill-form-field-wide"><input id="skillPassivePeriodic" type="checkbox">주기 피해·회복도 발동 조건에 포함</label>
               <label class="skill-check-field skill-form-field-wide"><input id="skillPassiveMultiplePerTick" type="checkbox">같은 전투 틱의 모든 조건 이벤트에 각각 발동</label>
@@ -1011,13 +1017,13 @@
 <script src="js/portrait/hair-colors.js?v=20261007-parts1"></script>
 <script src="js/portrait/imported-catalog.js?v=20261009-equipment1"></script>
 <script src="js/portrait/catalog.js?v=20261007-parts1"></script>
-<script src="js/ui.js?v=20261026-action-log"></script>
+<script src="js/ui.js?v=20261106-entity-portraits"></script>
 <script src="js/ui-portrait-editor.js?v=20261104-refactor1"></script>
 <script src="js/ui-battle-view.js?v=20261104-refactor1"></script>
 <script src="js/ui-page-navigation.js?v=20261104-refactor1"></script>
 <script src="js/portrait/bridge.js?v=20260929-bald1"></script>
 <script src="js/api.js?v=20260914-image-assets"></script>
-<script src="js/record-images.js?v=20261019-runtime-skill-icons-2"></script>
+<script src="js/record-images.js?v=20261106-entity-portraits"></script>
 <script src="js/category.js?v=20261005-icons"></script>
 <script src="js/battle-events.js?v=20261026-action-log"></script>
 <script src="js/skill-channel.js?v=20260929-team-rules"></script>
@@ -1025,7 +1031,7 @@
 <script src="js/skill-effects.js?v=20261020-summon-link"></script>
   <script src="js/skill.js?v=20261020-summon-branch"></script>
 <script src="js/skill-editor-view.js?v=20261104-refactor1"></script>
-<script src="js/entity.js?v=20261020-attack-type"></script>
+<script src="js/entity.js?v=20261106-entity-portraits"></script>
 <script src="js/layout.js?v=20260817-layout"></script>
 <script src="js/combat-power.js?v=20261014-v1"></script>
 <script src="js/combat-power-ui.js?v=20261014-v1"></script>

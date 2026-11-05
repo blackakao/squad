@@ -3,7 +3,7 @@
   "name": "덩치",
   "role": "melee",
   "description": "악마에게 연결되어 피해의 60%를 대신 받는 마법 근접 소환수.",
-  "icon": "",
+  "icon": "assets/images/entities/악마_덩치.png",
   "summonType": "temporary",
   "attackType": "magic",
   "tags": [

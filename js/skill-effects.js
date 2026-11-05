@@ -1,6 +1,6 @@
 const TIMED_EFFECT_ACTIONS = ["add_buff", "delete_buff", "add_state", "delete_state"];
 const BUFF_STAT_LABELS = {atk:"공격력", magic:"마력", adaptiveOffense:"적응형 공격 능력치", maxHp:"최대 HP", defense:"방어력", resistance:"저항력", speed:"이동속도", attackRange:"사거리", attackSpeed:"공격 간격(초)", castSpeed:"기본 시전시간(초)"};
-const STATE_LABELS = {stun:"기절", root:"이동 불가", silence:"침묵", periodic:"주기 효과만 적용"};
+const STATE_LABELS = {stun:"기절", root:"이동 불가", silence:"침묵", disarm:"기본 공격 금지", flee:"도주", polymorph:"양 변이 (공격·스킬 금지·도주)", sleep:"수면", charm:"현혹 (시전자에게 접근)", periodic:"주기 효과만 적용"};
 const EFFECT_CATEGORY_LABELS = {general:"일반",physical:"물리",magic:"마법"};
 const EFFECT_CONSUME_LABELS = {hit:"자신이 적중",damaged:"자신이 피격",heal:"자신이 회복",cast_complete:"자신의 시전 완료"};
 let nextEffectCasterId = 1;
@@ -32,6 +32,8 @@ function isEffectActionConfigured(action) {
   if (effect.periodic && !isPeriodicEffectConfigured(effect.periodic)) return false;
   if (action.type === "add_buff" && effect.mode === "immunity") return Boolean(effect.immunity);
   if (action.type === "add_buff" && effect.mode === "damage_immunity") return true;
+  if (action.type === "add_buff" && effect.mode === "disguise") return true;
+  if (action.type === "add_buff" && effect.mode === "melee_reaction") return Boolean(effect.reactionSkillId);
   if (action.type === "add_buff" && effect.mode === "damage_reflect") return Number(effect.reflectPercent)>0 && Number.isFinite(Number(effect.reflectPercent)) && ["all","basic","skill"].includes(effect.reflectScope ?? "all") && ["fixed","same"].includes(effect.reflectDamageType ?? "fixed");
   if (action.type === "add_buff" && effect.mode === "next_skill_modifier") return [effect.nextCastTimePercent,effect.nextResourceCostPercent,effect.nextCooldownPercent].every(value=>Number.isFinite(Number(value)) && Number(value)>=0);
   if (action.type === "add_buff" && effect.mode === "damage_proxy") return Number(effect.proxyPercent) > 0 && Number(effect.proxyPercent) <= 100
@@ -70,6 +72,10 @@ function normalizeSkillEffect(effect,type = "add_buff") {
     proxyPriority:Number.isFinite(Number(effect.proxyPriority)) ? Math.max(0,Math.min(999,Math.floor(Number(effect.proxyPriority)))) : 100,
     proxyScope:["all","basic","skill"].includes(effect.proxyScope) ? effect.proxyScope : "all",
     counterOnMelee:effect.counterOnMelee === true,
+    reactionSkillId:String(effect.reactionSkillId ?? "").trim(),
+    movementSpeedPercent:Number.isFinite(Number(effect.movementSpeedPercent)) ? Math.max(0,Number(effect.movementSpeedPercent)) : 100,
+    breakDamagePercent:Math.max(0,Number(effect.breakDamagePercent) || 0),
+    hitThreshold:Math.max(1,Math.min(100,Math.floor(Number(effect.hitThreshold) || 1))),
     movementStCostPercent:Number.isFinite(Number(effect.movementStCostPercent ?? effect.movement_st_cost_percent)) ? Math.max(0,Number(effect.movementStCostPercent ?? effect.movement_st_cost_percent)) : 100,
     movementTriggerDistance:Number.isFinite(Number(effect.movementTriggerDistance ?? effect.movement_trigger_distance)) ? Math.max(0,Number(effect.movementTriggerDistance ?? effect.movement_trigger_distance)) : 0,
     movementTriggerState:Object.hasOwn(STATE_LABELS,effect.movementTriggerState ?? effect.movement_trigger_state) ? (effect.movementTriggerState ?? effect.movement_trigger_state) : "stun",
@@ -106,6 +112,7 @@ function renderTimedEffectFields(action) {
       <label>효과 분류<select class="skill-effect-category">${options(EFFECT_CATEGORY_LABELS,effect.category ?? "general")}</select></label>
       <label>효과 성격<select class="skill-effect-polarity">${options({beneficial:"이로운 효과",harmful:"해로운 효과"},effect.polarity ?? "beneficial")}</select></label>
       <label><input class="skill-effect-dispellable" type="checkbox" ${effect.dispellable !== false ? "checked" : ""}>해제 가능</label>
+      <label class="skill-effect-reaction-settings ${effect.mode === "melee_reaction" ? "" : "hidden"}">근접 피격 반응 스킬<select class="skill-effect-reaction-skill"><option value="">사용 안 함</option>${skillsJson.filter(skill=>skill.slot !== "passive" && isSkillExecutable(skill)).map(skill=>`<option value="${escapeHtml(skill.id)}" ${effect.reactionSkillId === skill.id ? "selected" : ""}>${escapeHtml(skill.name)}</option>`).join("")}</select></label>
       <label>효과 이름<input class="skill-effect-name" value="${escapeHtml(effect.name)}"></label>
       <label>효과 태그 (쉼표 구분)<input class="skill-effect-tags" value="${escapeHtml((effect.tags ?? []).join(", "))}" placeholder="예: disease"></label>
       <label>지속시간 (초, 0: 전투 종료까지)<input class="skill-effect-duration" type="number" min="0" step="0.1" value="${action.duration ?? 5}"></label>
@@ -122,7 +129,7 @@ function renderTimedEffectFields(action) {
       <small>효과가 적용된 뒤 누적 이동 거리가 기준에 도달하면 지정 상태를 1회 부여합니다.</small>
       <div data-action-field="effectBuff">
         <label>능력치<select class="skill-effect-stat">${options(BUFF_STAT_LABELS,effect.stat)}</select></label>
-        <label>계산<select class="skill-effect-mode" onchange="updateSkillEffectModeVisibility(this)"><option value="flat" ${effect.mode === "flat" ? "selected" : ""}>고정값 가산</option><option value="percent" ${effect.mode === "percent" ? "selected" : ""}>기본 능력치의 % 가산</option><option value="override" ${effect.mode === "override" ? "selected" : ""}>최종값 고정 (0: 삭제)</option><option value="convert" ${effect.mode === "convert" ? "selected" : ""}>다른 능력치의 % 전환</option><option value="next_skill_modifier" ${effect.mode === "next_skill_modifier" ? "selected" : ""}>다음 1회 스킬 보정</option><option value="damage_reflect" ${effect.mode === "damage_reflect" ? "selected" : ""}>받은 피해 반사</option><option value="periodic" ${effect.mode === "periodic" ? "selected" : ""}>주기 효과만 적용</option><option value="immunity" ${effect.mode === "immunity" ? "selected" : ""}>능력치 변경 없이 면역 적용</option><option value="damage_immunity" ${effect.mode === "damage_immunity" ? "selected" : ""}>피해 무시</option><option value="damage_proxy" ${effect.mode === "damage_proxy" ? "selected" : ""}>피해 대리 수신</option></select></label>
+        <label>계산<select class="skill-effect-mode" onchange="updateSkillEffectModeVisibility(this)"><option value="flat" ${effect.mode === "flat" ? "selected" : ""}>고정값 가산</option><option value="percent" ${effect.mode === "percent" ? "selected" : ""}>기본 능력치의 % 가산</option><option value="override" ${effect.mode === "override" ? "selected" : ""}>최종값 고정 (0: 삭제)</option><option value="convert" ${effect.mode === "convert" ? "selected" : ""}>다른 능력치의 % 전환</option><option value="next_skill_modifier" ${effect.mode === "next_skill_modifier" ? "selected" : ""}>다음 1회 스킬 보정</option><option value="damage_reflect" ${effect.mode === "damage_reflect" ? "selected" : ""}>받은 피해 반사</option><option value="periodic" ${effect.mode === "periodic" ? "selected" : ""}>주기 효과만 적용</option><option value="immunity" ${effect.mode === "immunity" ? "selected" : ""}>능력치 변경 없이 면역 적용</option><option value="damage_immunity" ${effect.mode === "damage_immunity" ? "selected" : ""}>피해 무시</option><option value="damage_proxy" ${effect.mode === "damage_proxy" ? "selected" : ""}>피해 대리 수신</option><option value="disguise" ${effect.mode === "disguise" ? "selected" : ""}>적 외형 위장·직접 타겟 제외</option><option value="melee_reaction" ${effect.mode === "melee_reaction" ? "selected" : ""}>근접 피격 반응 스킬</option></select></label>
         <div class="skill-effect-reflect-settings ${effect.mode === "damage_reflect" ? "" : "hidden"}">
           <label>반사 비율 (%)<input class="skill-effect-reflect-percent" type="number" min="0.1" step="0.1" value="${effect.reflectPercent ?? 20}"></label>
           <label>반사 대상 피해<select class="skill-effect-reflect-scope">${options({all:"모든 피해",basic:"기본 공격",skill:"스킬 피해"},effect.reflectScope ?? "all")}</select></label>
@@ -157,6 +164,9 @@ function renderTimedEffectFields(action) {
         <small>음수는 감소입니다. 공격 간격·기본 시전시간은 감소할수록 빨라집니다. 스킬에 직접 지정한 시전시간은 바꾸지 않습니다.</small>
       </div>
       <label data-action-field="effectState">상태<select class="skill-effect-state">${options(STATE_LABELS,effect.state)}</select></label>
+      <label data-action-field="effectState">상태 적용에 필요한 적중 횟수<input class="skill-effect-hit-threshold" type="number" min="1" max="100" step="1" value="${effect.hitThreshold ?? 1}"></label>
+      <label data-action-field="effectState">해제 누적 피해 (최대 HP %, 0: 피해로 해제하지 않음)<input class="skill-effect-break-damage" type="number" min="0" step="0.1" value="${effect.breakDamagePercent ?? 0}"></label>
+      <label data-action-field="effectState">상태 이동속도 (%)<input class="skill-effect-movement-speed-percent" type="number" min="0" step="1" value="${effect.movementSpeedPercent ?? 100}"></label>
       <div>
         <label>주기 효과<select class="skill-effect-periodic-type">${options({"":"없음",damage:"주기 피해",heal:"주기 회복"},periodic.type)}</select></label>
         <label>적용 간격 (초)<input class="skill-effect-periodic-interval" type="number" min="${1/60}" step="any" value="${periodic.interval}"></label>
@@ -178,6 +188,9 @@ function renderTimedEffectFields(action) {
 function readSkillEffectFromRow(row) {
   const value = name => row.querySelector(`.skill-effect-${name}`)?.value;
   return {id:value("id"),name:value("name"),stat:value("stat"),sourceStat:value("source-stat"),state:value("state"),mode:value("mode"),requiredOwnedSummonEntityId:value("required-summon") ?? "",tags:String(value("tags") ?? "").split(",").map(tag=>tag.trim()).filter(Boolean),
+    reactionSkillId:value("reaction-skill") ?? "",
+    movementSpeedPercent:Number(value("movement-speed-percent") ?? 100),
+    hitThreshold:Number(value("hit-threshold") ?? 1),breakDamagePercent:Number(value("break-damage") ?? 0),
     category:value("category"),polarity:value("polarity"),dispellable:row.querySelector('.skill-effect-dispellable')?.checked ?? true,
     dispelMode:value("dispel-mode"),dispelTags:String(value("dispel-tags") ?? "").split(",").map(tag=>tag.trim()).filter(Boolean),dispelCategory:value("dispel-category"),dispelPolarity:value("dispel-polarity"),
     ...(value("immunity-scope") && (row.querySelector('.skill-action-type')?.value === "add_buff" || row.querySelector('.skill-action-field-effect')?.value === "add_buff") ? {immunity:{scope:value("immunity-scope"),category:value("immunity-category"),state:value("immunity-state")}} : {}),
@@ -191,6 +204,7 @@ function readSkillEffectFromRow(row) {
 }
 
 function updateSkillEffectModeVisibility(select) {
+  select.closest('[data-action-field="effectAdd"]')?.querySelector('.skill-effect-reaction-settings')?.classList.toggle('hidden',select.value !== 'melee_reaction');
   select.closest('[data-action-field="effectBuff"]')?.querySelector('.skill-effect-proxy-settings')?.classList.toggle('hidden',select.value !== 'damage_proxy');
   select.closest('[data-action-field="effectBuff"]')?.querySelector('.skill-effect-convert-settings')?.classList.toggle('hidden',select.value !== 'convert');
   select.closest('[data-action-field="effectBuff"]')?.querySelector('.skill-effect-next-skill-settings')?.classList.toggle('hidden',select.value !== 'next_skill_modifier');
@@ -228,7 +242,31 @@ function changeSkillFieldEffect(select) {
 }
 
 function hasBattleState(unit, state) {
-  return (unit.activeEffects ?? []).some(effect => effect.kind === "state" && effect.state === state);
+  return (unit.activeEffects ?? []).some(effect => effect.kind === "state" && (effect.state === state
+    || (effect.state === "polymorph" && ["disarm","silence","flee"].includes(state))
+    || (effect.state === "sleep" && state === "stun")
+    || (effect.state === "charm" && ["disarm","silence"].includes(state))));
+}
+
+function canDirectlyTarget(source,target) {
+  return source.side === target.side || (target.targetable !== false && !(target.suspendedTicks>0)
+    && !(target.activeEffects ?? []).some(effect=>effect.kind === "buff" && effect.mode === "disguise"));
+}
+
+function processStateDamage(source,target,action,actual) {
+  if (!(actual>0) || !target.alive) return;
+  const direct=!action.periodic && !action.reflected && !action.countered && source.side !== target.side;
+  const modifiers=direct ? getPassiveAttackStateModifiers(source) : {extension:0,preserveSleep:false};
+  const removed=new Set();
+  for (const effect of target.activeEffects ?? []) {
+    if (effect.kind !== "state" || effect.polarity !== "harmful") continue;
+    if (!(effect.state === "sleep" && modifiers.preserveSleep) && effect.breakDamagePercent>0) {
+      effect.damageTaken=(effect.damageTaken ?? 0)+actual;
+      if (effect.damageTaken >= effect.breakDamageThreshold) {removed.add(effect);continue;}
+    }
+    if (modifiers.extension>0 && Number.isFinite(effect.remainingTicks)) effect.remainingTicks+=Math.ceil(modifiers.extension*BASE_ATTACK_COOLDOWN);
+  }
+  if (removed.size) {target.activeEffects=target.activeEffects.filter(effect=>!removed.has(effect));recalculateBattleBuffs(target);}
 }
 
 function getUnitPassiveConversions(unit) {
@@ -289,6 +327,8 @@ function recalculateBattleBuffs(unit) {
   const previousMaxHp=Math.max(0,Number(unit.maxHp) || 0);
   unit.effectBaseStats ??= {};
   const buffs = [...(unit.activeEffects ?? []), ...getBattleFieldAuraEffects(unit)].flatMap(effect => {
+    if (effect.kind === "state" && effect.movementSpeedPercent != null && effect.movementSpeedPercent !== 100)
+      return [{stat:"speed",value:effect.movementSpeedPercent-100,mode:"percent",stacks:effect.stacks ?? 1}];
     if(effect.kind === "buff" && ["flat","percent","override","convert"].includes(effect.mode)) {
       if (effect.requiredOwnedSummonEntityId) {
         const caster=[...playerSquad,...enemySquad].find(candidate=>candidate.effectCasterId === effect.casterId);
@@ -411,6 +451,12 @@ function applyTimedEffectAction(source,target,action,skill) {
   if (blocksEffectApplication(target,source,config,kind)) {
     return;
   }
+  if (kind === "state" && config.hitThreshold>1) {
+    target.effectHitCounts ??= {};
+    const key=`${source.effectCasterId}:${config.id}`;
+    target.effectHitCounts[key]=Math.min(config.hitThreshold,(target.effectHitCounts[key] ?? 0)+1);
+    if (target.effectHitCounts[key]<config.hitThreshold) return;
+  }
   const existingAny = target.activeEffects.find(effect => effect.kind === kind && effect.id === config.id);
   if (config.stackMode === "reject" && existingAny) return;
   const existing = target.activeEffects.find(effect => effect.kind === kind && effect.id === config.id && effect.casterId === source.effectCasterId);
@@ -419,6 +465,7 @@ function applyTimedEffectAction(source,target,action,skill) {
   const periodicCoefficient=config.periodic?.coefficient;
   const periodicSourceBase=periodicCoefficient?.type === "calculated" ? getCoefficientBaseValue(periodicCoefficient,source,target) : 0;
   const instance = {...config,periodic:config.periodic,periodicSourceBase,periodicElapsedTicks:0,immunity:config.immunity,kind,stacks,casterId:source.effectCasterId,casterName:source.name,
+    damageTaken:0,breakDamageThreshold:Math.max(0,Number(target.maxHp) || 0)*config.breakDamagePercent/100,
     ...(config.mode === "convert" ? {conversionBase:sourceBase} : {}),
     skillId:skill?.id,triggered:Boolean(skill?.triggered),remainingTicks:action.duration > 0 ? Math.max(1,Math.ceil(action.duration * BASE_ATTACK_COOLDOWN)) : null,
     usesRemaining:config.mode === "next_skill_modifier" ? 1 : config.uses > 0 ? config.uses : null,
@@ -426,8 +473,30 @@ function applyTimedEffectAction(source,target,action,skill) {
     nextPeriodicTick:config.periodic ? (existing?.periodic?.interval === config.periodic.interval ? existing.nextPeriodicTick : null) ?? Math.max(1,Math.ceil(config.periodic.interval * BASE_ATTACK_COOLDOWN)) : null};
   if (existing) Object.assign(existing,instance);
   else target.activeEffects.push(instance);
+  if (config.mode === "disguise") {
+    const enemies=getActiveBattleEntities(target.side === "enemy" ? playerSquad : enemySquad);
+    instance.disguisePortrait=enemies.sort((a,b)=>distance(target,a)-distance(target,b))[0]?.portrait ?? "";
+    if (existing) existing.disguisePortrait=instance.disguisePortrait;
+  }
   recalculateBattleBuffs(target);
-  if (kind === "state" && (config.state === "stun" || (config.state === "silence" && (target.pendingAction?.type === "skill" || target.channelAction?.type === "skill")))) interruptBattleCast(target,config.name);
+  if (kind === "state" && ["disarm","polymorph","flee","sleep","charm"].includes(config.state)) {
+    for (const state of target.weaponAttackStates ?? []) {state.castTimer=0;state.target=null;}
+  }
+  if (kind === "state" && (["stun","polymorph","flee","sleep","charm"].includes(config.state)
+    || (config.state === "disarm" && (target.pendingAction?.type === "attack" || target.weaponAttackStates?.some(state=>state.castTimer>0)))
+    || (config.state === "silence" && (target.pendingAction?.type === "skill" || target.channelAction?.type === "skill")))) interruptBattleCast(target,config.name);
+}
+
+// Reactions use the existing action executor and cannot recursively react to reactions.
+function applyMeleeReaction(defender, attacker, action, skill, effects) {
+  if (!defender?.alive || !attacker?.alive || action.periodic || action.reflected || action.countered || skill?.triggered
+    || getActionRangePixels(attacker,action) > ATTACK_RANGE_UNIT) return;
+  for (const effect of effects) {
+    if (!defender.alive || !attacker.alive || !defender.activeEffects?.includes(effect)) continue;
+    const reaction=getSkillById(effect.reactionSkillId);
+    if (!reaction || !isSkillExecutable(reaction) || isUnitSkillDisabled(defender,reaction)) continue;
+    applySkill(defender,attacker,{...reaction,triggered:true});
+  }
 }
 
 function applyPeriodicEffect(target,effect) {

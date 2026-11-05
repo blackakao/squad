@@ -106,6 +106,7 @@ function openCharacterModal(index = "") {
   resetPortraitDraft("character", character?.portrait ?? "");
   resetPortraitAppearance(character?.appearance);
   characterRoleEl.value = character?.role ?? "melee";
+  document.getElementById("characterEntityGrade").value=character?.entityGrade ?? 2;
   renderCharacterFactionOptions();
   characterFactionEl.value = character?.faction ?? getDefaultFactionName();
   renderCharacterSkillPicker(character?.skillIds ?? []);
@@ -145,6 +146,7 @@ async function saveCharacterFromForm(event) {
   const character = applyCharacterStatAbilities({
     name: characterNameEl.value.trim(),
     role: characterRoleEl.value,
+    entityGrade:Math.max(1,Math.min(10,Math.floor(Number(document.getElementById("characterEntityGrade").value) || 2))),
     faction: characterFactionEl.value,
     skillIds: [...characterSkillsEl.querySelectorAll('input[type="checkbox"]:checked')].map(input => input.value),
     equipmentRules: normalizeEquipmentRules({
@@ -271,7 +273,7 @@ function createCharacter(characterData, index, side = "player", synergyModifiers
     const equipped = applyCharacterStatAbilities({...derivedCharacter,equipment:set.equipment});
     const weapon = getEquippedWeaponItemForCombat(equipped);
     return {name:set.name,attributes:getCharacterEffectiveAttributes(equipped),itemSkillModifiers:getCharacterItemSkillModifiers(equipped),maxHp:equipped.hp,maxMp:equipped.mp,maxSt:equipped.st,baseBp:Math.max(0,Number(equipped.bp)||0),
-      atk:equipped.atk,magic:equipped.magic,speed:equipped.speed,attackSpeed:equipped.attackSpeed,castSpeed:equipped.castSpeed,
+      atk:equipped.atk,magic:equipped.magic,speed:equipped.speed,attackSpeed:equipped.attackSpeed,castSpeed:equipped.castSpeed,armorCategory:getCharacterArmorCategory(equipped),
       defense:equipped.defense,resistance:equipped.resistance,attackRange:equipped.attackRange,attackType:equipped.attackType,
       attackSkillId:weapon?.attackSkillId ?? "",weaponAttacks:getCharacterWeaponAttacks(equipped),
       sameTargetWeaponPenaltyPercent:equipped.equipmentRules.sameTargetWeaponPenaltyPercent,
@@ -297,6 +299,7 @@ function createCharacter(characterData, index, side = "player", synergyModifiers
     side,
     role,
     name: derivedCharacter.name,
+    entityGrade:derivedCharacter.entityGrade ?? 2,
     hp: derivedCharacter.hp,
     maxHp: derivedCharacter.hp,
     mp: derivedCharacter.mp,
@@ -314,6 +317,7 @@ function createCharacter(characterData, index, side = "player", synergyModifiers
     attackSpeed: derivedCharacter.attackSpeed,
     castSpeed: derivedCharacter.castSpeed,
     attackType: derivedCharacter.attackType,
+    armorCategory:getCharacterArmorCategory(derivedCharacter),
     attackSkillId: equippedWeapon?.attackSkillId ?? "",
     weaponAttacks: getCharacterWeaponAttacks(derivedCharacter),
     sameTargetWeaponPenaltyPercent: derivedCharacter.equipmentRules.sameTargetWeaponPenaltyPercent,

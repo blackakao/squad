@@ -3,7 +3,7 @@
   "name": "악마장군",
   "role": "melee",
   "description": "2초마다 자신 중심 3m에 광역 마법 공격을 하는 임시 소환수.",
-  "icon": "",
+  "icon": "assets/images/entities/악마_악마장군.png",
   "summonType": "temporary",
   "attackType": "magic",
   "attackSkillId": "skill_entity_demon_general_attack",

@@ -661,7 +661,7 @@ function normalizePortrait(value) {
     return portrait;
   }
 
-  if (portrait.startsWith("assets/images/portraits/")) {
+  if (portrait.startsWith("assets/images/portraits/") || /^assets\/images\/entities\/[^/\\?#]+\.(png|jpe?g|webp|gif)$/i.test(portrait)) {
     return portrait;
   }
 
@@ -682,6 +682,7 @@ function normalizeCombatJson(items, defaults, nameKey) {
       const role = normalizeRole(item.role);
       const normalizedItem = {
         [nameKey]: String(item[nameKey] ?? item.label ?? item.name ?? "").trim(),
+        ...(item.entityGrade != null ? {entityGrade:Math.max(1,Math.min(10,Math.floor(Number(item.entityGrade) || 2)))} : {}),
         hp: Number(item.hp),
         mp: normalizeCombatValue(item.mp, getDefaultAbility(role, "mp"), 0),
         st: normalizeCombatValue(item.st, getDefaultAbility(role, "st"), 0),

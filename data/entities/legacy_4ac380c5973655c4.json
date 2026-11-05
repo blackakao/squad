@@ -3,7 +3,7 @@
   "name": "야수",
   "role": "melee",
   "description": "",
-  "icon": "",
+  "icon": "assets/images/entities/조련사_야수_늑대.png",
   "tags": [
     "summon"
   ],

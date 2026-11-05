@@ -1,0 +1,29 @@
+{
+  "entityId": "jester_clone",
+  "name": "분신",
+  "description": "누구게의 임시 분신. 주요 능력치는 소환 액션의 대체 계승으로 본체의 5%를 사용한다.",
+  "icon": "assets/images/entities/광대_분신.png",
+  "role": "ranged",
+  "ai": "ranged",
+  "attackType": "magic",
+  "attackSkillId": "",
+  "summonType": "temporary",
+  "tags": [
+    "summon",
+    "jester",
+    "clone"
+  ],
+  "stats": {
+    "hp": 1,
+    "mp": 0,
+    "st": 0,
+    "atk": 0,
+    "magic": 0,
+    "defense": 0,
+    "resistance": 0,
+    "speed": 0,
+    "attackSpeed": 1,
+    "castTime": 0,
+    "attackRange": 5
+  }
+}

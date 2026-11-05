@@ -3,7 +3,7 @@
   "name": "16미리 무반동포",
   "role": "ranged",
   "description": "5초마다 대상 주변 2m를 공격하는 고정식 무반동포.",
-  "icon": "",
+  "icon": "assets/images/entities/갑사_16미리무반동포.png",
   "summonType": "temporary",
   "attackType": "physical",
   "attackSkillId": "skill_entity_engineer_recoilless_attack",

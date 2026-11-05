@@ -186,6 +186,7 @@ function renderSkillActionRow(action, index) {
         <div><span>ACTION ${index + 1}</span><strong>액션 설정</strong></div>
         <button type="button" onclick="removeSkillActionRow(this)">삭제</button>
       </div>
+      <div class="skill-action-field" data-action-field="damageType"><span>대상 방어구별 피해 배율 (빈칸: 1)</span>${Object.entries({plate:"판금",chain:"사슬",leather:"가죽",cloth:"천"}).map(([key,label])=>`<label>${label}<input class="skill-action-armor-factor" data-armor="${key}" type="number" min="0" step="0.01" value="${action.armorMultipliers?.[key] ?? ""}"></label>`).join("")}</div>
       <label class="skill-action-field skill-action-type-field">
         <span>액션 종류</span>
         <select class="skill-action-type" onchange="changeSkillActionType(this)">
@@ -200,6 +201,14 @@ function renderSkillActionRow(action, index) {
         <small>각 액션의 사거리 안에서 대상을 찾습니다. 회복은 해당 자원이 부족한 대상을 우선합니다.</small>
       </label>
       <div class="skill-action-condition-field">
+        <label>효과 기준 소환수<select class="skill-action-origin-entity"><option value="">시전자</option>${entitiesJson.map(entity=>`<option value="${escapeHtml(entity.entityId)}" ${action.originEntityId === entity.entityId ? "selected" : ""}>${escapeHtml(entity.name)} (내 소환수 각각)</option>`).join("")}</select></label>
+        <label><input class="skill-action-battlefield-area" type="checkbox" ${action.battlefieldArea ? "checked" : ""}>전장 전체 광역</label>
+        <label>거리 감쇠 간격 (m, 0: 없음)<input class="skill-action-falloff-step" type="number" min="0" step="0.1" value="${action.distanceFalloff?.step ?? 0}"></label>
+        <label>간격당 피해 감소 (%p)<input class="skill-action-falloff-percent" type="number" min="0" step="1" value="${action.distanceFalloff?.percent ?? 0}"></label>
+        <label>최소 피해 계수 (%)<input class="skill-action-falloff-minimum" type="number" min="0" max="100" step="1" value="${action.distanceFalloff?.minimum ?? 10}"></label>
+        <label><input class="skill-action-transfer-drained" type="checkbox" ${action.transferDrainedResource ? "checked" : ""}>실제로 감소시킨 자원을 시전자가 흡수</label>
+        <label>대상 최대 등급 (0: 제한 없음)<input class="skill-action-max-grade" type="number" min="0" max="10" step="1" value="${action.targetMaxGrade ?? 0}"></label>
+        <label><input class="skill-action-require-damage" type="checkbox" ${action.requirePreviousDamage ? "checked" : ""}>직전 액션으로 실제 피해를 준 대상에게만 적용</label>
         <label class="skill-check-field"><input class="skill-action-allow-self" type="checkbox" ${action.allowSelfTarget !== false ? "checked" : ""}>시전자 자신도 대상 허용</label>
         <label class="skill-action-field"><span>필수 대상 효과 ID</span><input class="skill-action-required-target-effect-id" value="${escapeHtml(action.requiredTargetEffectId ?? "")}" placeholder="비우면 제한 없음"></label>
         <label class="skill-action-field"><span>필수 효과 시전자</span><select class="skill-action-required-target-effect-caster"><option value="any" ${action.requiredTargetEffectCaster !== "self" ? "selected" : ""}>누구나</option><option value="self" ${action.requiredTargetEffectCaster === "self" ? "selected" : ""}>이 스킬 시전자</option></select></label>
@@ -211,6 +220,14 @@ function renderSkillActionRow(action, index) {
         <small>시전자별은 같은 시전자의 같은 스킬·액션만 제한합니다. 전체 공유는 대상에게 표시되는 효과를 부여해 모든 시전자의 같은 효과 ID를 제한합니다.</small>
       </div>
       <div class="skill-action-condition-field">
+        <label>효과 기준 소환수<select class="skill-action-origin-entity"><option value="">시전자</option>${entitiesJson.map(entity=>`<option value="${escapeHtml(entity.entityId)}" ${action.originEntityId === entity.entityId ? "selected" : ""}>${escapeHtml(entity.name)} (내 소환수 각각)</option>`).join("")}</select></label>
+        <label><input class="skill-action-battlefield-area" type="checkbox" ${action.battlefieldArea ? "checked" : ""}>전장 전체 광역</label>
+        <label>거리 감쇠 간격 (m, 0: 없음)<input class="skill-action-falloff-step" type="number" min="0" step="0.1" value="${action.distanceFalloff?.step ?? 0}"></label>
+        <label>간격당 피해 감소 (%p)<input class="skill-action-falloff-percent" type="number" min="0" step="1" value="${action.distanceFalloff?.percent ?? 0}"></label>
+        <label>최소 피해 계수 (%)<input class="skill-action-falloff-minimum" type="number" min="0" max="100" step="1" value="${action.distanceFalloff?.minimum ?? 10}"></label>
+        <label><input class="skill-action-transfer-drained" type="checkbox" ${action.transferDrainedResource ? "checked" : ""}>실제로 감소시킨 자원을 시전자가 흡수</label>
+        <label>대상 최대 등급 (0: 제한 없음)<input class="skill-action-max-grade" type="number" min="0" max="10" step="1" value="${action.targetMaxGrade ?? 0}"></label>
+        <label><input class="skill-action-require-damage" type="checkbox" ${action.requirePreviousDamage ? "checked" : ""}>직전 액션으로 실제 피해를 준 대상에게만 적용</label>
         <label class="skill-action-field"><span>소유 소환수 조건</span><select class="skill-action-owned-summon-condition"><option value="any" ${action.ownedSummonCondition === "any" ? "selected" : ""}>제한 없음</option><option value="alive" ${action.ownedSummonCondition === "alive" ? "selected" : ""}>지정 Entity 생존</option><option value="absent" ${action.ownedSummonCondition === "absent" ? "selected" : ""}>지정 Entity 부재</option></select></label>
         <label class="skill-action-field"><span>조건 Entity</span><select class="skill-action-owned-summon-entity"><option value="">선택 없음</option>${entitiesJson.map(entity=>`<option value="${escapeHtml(entity.entityId)}" ${action.ownedSummonEntityId === entity.entityId ? "selected" : ""}>${escapeHtml(entity.name)}</option>`).join("")}</select></label>
         <label class="skill-action-field"><span>대상 소환수 Entity</span><select class="skill-action-target-summon-entity"><option value="">모든 내 소환수</option>${entitiesJson.map(entity=>`<option value="${escapeHtml(entity.entityId)}" ${action.targetSummonEntityId === entity.entityId ? "selected" : ""}>${escapeHtml(entity.name)}</option>`).join("")}</select></label>
@@ -479,6 +496,9 @@ function updateSkillActionFieldVisibility(selectOrRow) {
     hiddenFields.push("movePlacement");
   }
 
+  if (type === "command_summon" && row.querySelector(".skill-summon-command")?.value === "relocate") {
+    for (const key of ["coefficients","damageType"]) {const index=hiddenFields.indexOf(key);if(index>=0) hiddenFields.splice(index,1);}
+  }
   row.querySelectorAll("[data-action-field]").forEach(field => {
     field.classList.toggle("hidden", hiddenFields.includes(field.dataset.actionField));
   });
@@ -619,6 +639,14 @@ function readSkillActionsFromForm() {
       requiredTargetEffectId:row.querySelector(".skill-action-required-target-effect-id")?.value ?? "",
       requiredTargetEffectCaster:row.querySelector(".skill-action-required-target-effect-caster")?.value ?? "any",
       targetHpBelow: Number(row.querySelector(".skill-action-target-hp")?.value ?? 100),
+      originEntityId:row.querySelector(".skill-action-origin-entity")?.value ?? "",
+      battlefieldArea:row.querySelector(".skill-action-battlefield-area")?.checked ?? false,
+      distanceFalloff:{step:Number(row.querySelector(".skill-action-falloff-step")?.value ?? 0),percent:Number(row.querySelector(".skill-action-falloff-percent")?.value ?? 0),minimum:Number(row.querySelector(".skill-action-falloff-minimum")?.value ?? 10)},
+      transferDrainedResource:row.querySelector(".skill-action-transfer-drained")?.checked ?? false,
+      pathWidth:Number(row.querySelector(".skill-summon-path-width")?.value ?? 1),
+      suspensionEffectId:row.querySelector(".skill-summon-suspension-effect")?.value ?? "",
+      targetMaxGrade:Number(row.querySelector(".skill-action-max-grade")?.value ?? 0),
+      requirePreviousDamage:row.querySelector(".skill-action-require-damage")?.checked ?? false,
       targetCooldown: Number(row.querySelector(".skill-action-target-cooldown")?.value ?? 0),
       targetCooldownScope: row.querySelector(".skill-action-target-cooldown-scope")?.value ?? "caster",
       targetCooldownEffectId: row.querySelector(".skill-action-target-cooldown-effect-id")?.value ?? "",
@@ -672,6 +700,7 @@ function readSkillActionsFromForm() {
       chainOrigin:row.querySelector(".skill-action-chain-origin")?.value ?? "previous",
       rangeMultiplier:Number(row.querySelector(".skill-action-range-multiplier")?.value ?? 100),
       coefficients: type === "move" ? [] : readSkillCoefficientsFromRow(row),
+      armorMultipliers:Object.fromEntries([...row.querySelectorAll(".skill-action-armor-factor")].filter(input=>input.value !== "").map(input=>[input.dataset.armor,Number(input.value)])),
       healResource: row.querySelector(".skill-action-heal-resource")?.value ?? "HP",
       drainResource: row.querySelector(".skill-action-drain-resource")?.value ?? "MP",
       damageType: row.querySelector(".skill-action-damage-type")?.value ?? "physical",
@@ -698,6 +727,9 @@ function readSkillActionsFromForm() {
       areaCenter: row.querySelector(".skill-action-area-center")?.value,
       maxTargets: Number(row.querySelector(".skill-action-max-targets")?.value ?? 0),
       entityId: row.querySelector('.skill-action-entity-id')?.value,
+      copyAppearance:row.querySelector(".skill-action-copy-appearance")?.checked ?? false,
+      retreatBehindSummons:row.querySelector(".skill-action-retreat-summons")?.checked ?? false,
+      inheritMode:row.querySelector(".skill-action-inherit-mode")?.value ?? "add",
       summonCenter:row.querySelector('.skill-action-summon-center')?.value ?? "self",
       inheritStats:Object.fromEntries([...row.querySelectorAll('.skill-action-inherit-stat')].map(input=>[input.dataset.stat,Number(input.value)])),
       count: Number(row.querySelector('.skill-action-count')?.value ?? 1),
@@ -707,7 +739,7 @@ function readSkillActionsFromForm() {
       protectOwnerPriority: Number(row.querySelector('.skill-action-protect-priority')?.value ?? 0),
       transferStateScope: row.querySelector('.skill-action-transfer-state')?.value ?? "none",
       transferStatePriority: Number(row.querySelector('.skill-action-transfer-priority')?.value ?? 0),
-      duration: Number(row.querySelector(type === "create_field" ? '.skill-action-field-duration' : type === "transform" ? '.skill-transform-duration' : type === "override_rule" ? '.skill-rule-duration' : ["swap_reserve","deploy_reserve"].includes(type) ? '.skill-reserve-duration' : TIMED_EFFECT_ACTIONS.includes(type) ? '.skill-effect-duration' : '.skill-action-duration')?.value ?? (type === "create_field" ? 0 : 20))
+      duration: Number(row.querySelector(type === "create_field" ? '.skill-action-field-duration' : type === "command_summon" ? '.skill-command-duration' : type === "transform" ? '.skill-transform-duration' : type === "override_rule" ? '.skill-rule-duration' : ["swap_reserve","deploy_reserve"].includes(type) ? '.skill-reserve-duration' : TIMED_EFFECT_ACTIONS.includes(type) ? '.skill-effect-duration' : '.skill-action-duration')?.value ?? (type === "create_field" ? 0 : 20))
     });
   });
 }
@@ -779,7 +811,10 @@ function renderCopySkillActionArea(action) {
 function renderSummonCommandActionArea(action) {
   return `<div class="skill-action-field" data-action-field="summonCommand">
     <div class="skill-subsection-header">소환수 명령 설정</div>
-    <label>명령<select class="skill-summon-command"><option value="hold" ${action.summonCommand === "hold" ? "selected" : ""}>정지</option><option value="release" ${action.summonCommand === "release" ? "selected" : ""}>행동 재개</option><option value="recall" ${action.summonCommand === "recall" ? "selected" : ""}>소환자 위치로 복귀</option><option value="dismiss" ${action.summonCommand === "dismiss" ? "selected" : ""}>소환 해제</option></select></label>
+    <label>명령<select class="skill-summon-command" onchange="updateSkillActionFieldVisibility(this)"><option value="hold" ${action.summonCommand === "hold" ? "selected" : ""}>정지</option><option value="release" ${action.summonCommand === "release" ? "selected" : ""}>행동 재개</option><option value="recall" ${action.summonCommand === "recall" ? "selected" : ""}>소환자 위치로 복귀</option><option value="dismiss" ${action.summonCommand === "dismiss" ? "selected" : ""}>소환 해제</option><option value="relocate" ${action.summonCommand === "relocate" ? "selected" : ""}>대상 위치로 이동·경로 피해</option><option value="suspend" ${action.summonCommand === "suspend" ? "selected" : ""}>일시 숨김 후 복원</option></select></label>
+    <label>이동 경로 폭 (m)<input class="skill-summon-path-width" type="number" min="0.1" step="0.1" value="${action.pathWidth ?? 1}"></label>
+    <label>숨김 시간 (초)<input class="skill-command-duration" type="number" min="0.1" step="0.1" value="${action.duration || 5}"></label>
+    <label>숨김을 유지할 시전자 버프 ID (빈칸: 시간만 사용)<input class="skill-summon-suspension-effect" value="${escapeHtml(action.suspensionEffectId ?? "")}"></label>
     <small>정지는 이동과 자체 행동을 멈추고, 행동 재개는 Entity의 원래 AI와 이동속도를 복구합니다. 광역 반경과 최대 대상 수로 여러 소환수에게 동시에 명령할 수 있습니다.</small>
   </div>`;
 }

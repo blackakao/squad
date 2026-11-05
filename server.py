@@ -37,6 +37,7 @@ ASSET_IMAGE_DIRS = {
     "portraits": ROOT / "assets" / "images" / "portraits",
     "skills": ROOT / "assets" / "images" / "skills",
     "synergies": ROOT / "assets" / "images" / "synergies",
+    "entities": ROOT / "assets" / "images" / "entities",
     "items": ROOT / "assets" / "images" / "items",
     "icons": ROOT / "assets" / "images" / "icons",
     "generated": ROOT / "assets" / "images" / "generated",
@@ -251,7 +252,7 @@ class BattleHandler(SimpleHTTPRequestHandler):
 
         if path.startswith("/api/assets/"):
             kind = path.removeprefix("/api/assets/").strip("/")
-            if kind not in {"skills", "synergies"}:
+            if kind not in {"skills", "synergies", "entities"}:
                 self.send_json_error(404, "Unknown image library")
                 return
             folder = ASSET_IMAGE_DIRS[kind]

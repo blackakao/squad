@@ -241,6 +241,12 @@ function getItemById(itemId) {
   return itemsJson.find(item => item.id === itemId);
 }
 
+function getCharacterArmorCategory(character) {
+  // Mixed armor uses the torso first, then the first equipped armor piece.
+  const torso=getItemById(character?.equipment?.top);
+  return torso?.armorCategory || getCharacterModifierItems(character).find(item=>item.armorCategory)?.armorCategory || "";
+}
+
 function getCharacterEquipmentBonus(character) {
   const equipment = createEquipmentSlots(character?.equipment, character);
   const countedTwoHandIds = new Set();

@@ -67,6 +67,7 @@ function openMonsterModal(index = "") {
   monsterResistanceEl.value = monster?.resistance ?? getDefaultAbility(monster?.role ?? "melee", "resistance");
   monsterAttackRangeEl.value = monster?.attackRange ?? getDefaultAbility(monster?.role ?? "melee", "attackRange");
   monsterRoleEl.value = monster?.role ?? "melee";
+  document.getElementById("monsterEntityGrade").value=monster?.entityGrade ?? 2;
   monsterSkillsEl.innerHTML = getCharacterSkillOptionsHtml(monster?.skillIds ?? []);
   renderCustomResourceEditor(monsterCustomResourcesEl, monster?.customResources);
   monsterModalEl.classList.remove("hidden");
@@ -98,6 +99,7 @@ async function saveMonsterFromForm(event) {
     resistance: Number(monsterResistanceEl.value),
     attackRange: Number(monsterAttackRangeEl.value),
     role: monsterRoleEl.value,
+    entityGrade:Math.max(1,Math.min(10,Math.floor(Number(document.getElementById("monsterEntityGrade").value) || 2))),
     skillIds: [...monsterSkillsEl.selectedOptions].map(option => option.value),
     customResources: readCustomResourcesFromEditor(monsterCustomResourcesEl),
     portrait: await getPortraitForSave("monster", previousMonster?.portrait, monsterLabelEl.value.trim())
@@ -183,6 +185,7 @@ function createEnemy(monsterIndex) {
     attackType: monster.attackType,
     attackSkillId: monster.attackSkillId ?? "",
     skillIds: [...(monster.skillIds ?? [])],
+    entityGrade:monster.entityGrade ?? 2,
     sourceMonsterIndex: monsterIndex,
     defense: monster.defense,
     resistance: monster.resistance,

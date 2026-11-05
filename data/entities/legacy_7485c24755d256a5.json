@@ -3,7 +3,7 @@
   "name": "노포",
   "role": "ranged",
   "description": "",
-  "icon": "",
+  "icon": "assets/images/entities/갑사_노포.png",
   "tags": [
     "summon"
   ],

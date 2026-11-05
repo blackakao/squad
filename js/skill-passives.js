@@ -38,6 +38,10 @@ function renderPassiveTriggerForm(skill = null) {
   document.getElementById("skillPassiveChance").value = trigger?.chance ?? 100;
   document.getElementById("skillPassiveDamageType").value = trigger?.damageType ?? "";
   document.getElementById("skillPassiveBasicAttackOnly").checked = trigger?.basicAttackOnly ?? false;
+  document.getElementById("skillPassiveSkillOnly").checked = trigger?.skillOnly ?? false;
+  document.getElementById("skillPassiveTargetState").checked=trigger?.requiredTargetState ?? false;
+  document.getElementById("skillPassiveStateExtension").value=trigger?.stateDurationExtension ?? 0;
+  document.getElementById("skillPassivePreserveSleep").checked=trigger?.preserveSleep ?? false;
   document.getElementById("skillPassivePeriodic").checked = trigger?.includePeriodic ?? false;
   document.getElementById("skillPassiveMultiplePerTick").checked = trigger?.allowMultiplePerTick ?? false;
   document.getElementById("skillPassiveRequiredTargetTags").value=(trigger?.requiredTargetEffectTags ?? []).join(", ");
@@ -70,19 +74,35 @@ function updateSkillTypeFields() {
 function readPassiveTriggerForm() {
   const mitigationEnabled=document.getElementById("skillPassiveRecentAttackersEnabled").checked;
   const events=[...document.getElementById("skillPassiveEvent").selectedOptions].map(option=>option.value);
+  const requiredTargetEffectTags=String(document.getElementById("skillPassiveRequiredTargetTags").value ?? "").split(",").map(tag=>tag.trim()).filter(Boolean);
+  const conditionalDamage=document.getElementById("skillPassiveTargetState").checked || requiredTargetEffectTags.length>0;
   return normalizePassiveTrigger({event:events[0] ?? "",events,
+    skillOnly:document.getElementById("skillPassiveSkillOnly").checked,
+    requiredTargetState:document.getElementById("skillPassiveTargetState").checked,
+    stateDurationExtension:Number(document.getElementById("skillPassiveStateExtension").value),
+    preserveSleep:document.getElementById("skillPassivePreserveSleep").checked,
     chance:Number(document.getElementById("skillPassiveChance").value),damageType:document.getElementById("skillPassiveDamageType").value,basicAttackOnly:document.getElementById("skillPassiveBasicAttackOnly").checked,includePeriodic:document.getElementById("skillPassivePeriodic").checked,allowMultiplePerTick:document.getElementById("skillPassiveMultiplePerTick").checked,
-    requiredTargetEffectTags:String(document.getElementById("skillPassiveRequiredTargetTags").value ?? "").split(",").map(tag=>tag.trim()).filter(Boolean),damageMultiplierPercent:Number(document.getElementById("skillPassiveDamageMultiplier").value),
+    requiredTargetEffectTags,...(conditionalDamage ? {damageMultiplierPercent:Number(document.getElementById("skillPassiveDamageMultiplier").value)} : {}),
     ...(mitigationEnabled ? {recentAttackerMitigation:{enabled:true,window:Number(document.getElementById("skillPassiveRecentAttackersWindow").value),threshold:Number(document.getElementById("skillPassiveRecentAttackersThreshold").value),initialReductionPercent:Number(document.getElementById("skillPassiveRecentAttackersInitial").value),additionalReductionPercent:Number(document.getElementById("skillPassiveRecentAttackersAdditional").value),maxReductionPercent:Number(document.getElementById("skillPassiveRecentAttackersMax").value)}} : {})});
 }
 
-function getPassiveTargetDamageMultiplierPercent(source,target) {
+function getPassiveAttackStateModifiers(source) {
+  const passives=resolveSelectedSkillIds(source.skillIds,source.skillSelections).map(getSkillById)
+    .filter(skill=>skill?.slot === "passive" && isSkillExecutable(skill) && !isUnitSkillDisabled(source,skill));
+  return {extension:passives.reduce((sum,skill)=>sum+Math.max(0,Number(skill.passiveTrigger?.stateDurationExtension) || 0),0),
+    preserveSleep:passives.some(skill=>skill.passiveTrigger?.preserveSleep === true)};
+}
+
+function getPassiveTargetDamageMultiplierPercent(source,target,action=null) {
   if (!source?.alive || !target?.alive) return 100;
   return resolveSelectedSkillIds(source.skillIds,source.skillSelections).map(getSkillById)
     .filter(skill=>skill?.slot === "passive" && !isUnitSkillDisabled(source,skill))
     .reduce((percent,skill)=>{
       const trigger=normalizePassiveTrigger(skill.passiveTrigger);
-      if (!(trigger?.damageMultiplierPercent >= 0) || !trigger.requiredTargetEffectTags?.length) return percent;
+      if (!(trigger?.damageMultiplierPercent >= 0)) return percent;
+      if (trigger.requiredTargetState) return !action?.periodic && !action?.reflected
+        && (target.activeEffects ?? []).some(effect=>effect.kind === "state" && effect.polarity === "harmful") ? percent*trigger.damageMultiplierPercent/100 : percent;
+      if (!trigger.requiredTargetEffectTags?.length) return percent;
       const harmfulTags=new Set((target.activeEffects ?? []).filter(effect=>effect.polarity === "harmful").flatMap(effect=>effect.tags ?? []));
       return trigger.requiredTargetEffectTags.every(tag=>harmfulTags.has(tag)) ? percent*trigger.damageMultiplierPercent/100 : percent;
     },100);
@@ -123,6 +143,7 @@ function handlePassiveBattleEvent(event, context) {
     if (!owner.alive) break;
     const trigger = skill.passiveTrigger;
     if (trigger.damageMultiplierPercent != null) continue;
+    if (trigger.skillOnly && getSkillById(event.skillId)?.slot !== "active") continue;
     if (!(trigger.events ?? [trigger.event]).includes(triggerType) || (event.periodic && !trigger.includePeriodic)) continue;
     if (trigger.damageType && event.damageType !== trigger.damageType) continue;
     if (trigger.basicAttackOnly && getSkillById(event.skillId)?.slot !== "basic") continue;

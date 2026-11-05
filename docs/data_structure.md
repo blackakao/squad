@@ -1,11 +1,38 @@
 # 데이터 구조
 
+### 별소환사 지원 필드 (2026-11-06)
+
+- Entity 선택 불리언 `commandOnly`(기본 false), `targetable`·`collidable`(기본 true). `star_companion`은 true/false/false다. 기존 Entity 파일은 일괄 변경하지 않는다. 서버는 해당 필드가 있으면 불리언만 허용한다.
+- 액션 `originEntityId`(기본 빈 문자열)는 시전자가 직접 소유한 해당 Entity들을 기준점으로 지정한다. 별 정의는 `data/entities/star_companion.json`, 스킬 ID 접두사는 `skill_class_star_`다. 새 캐릭터 별소환사를 추가했으며 궁극기 데이터는 추가하지 않았다.
+- `summonCommand`에 `relocate`·`suspend`를 추가했다. 명령의 `target`은 기존 summon 외 enemy·self를 허용한다. `pathWidth`는 이동 경로 피해의 폭(m), `duration`은 숨김 초, `suspensionEffectId`는 숨김을 유지할 시전자 버프 ID다. 생략 시 독립 시간제를 사용한다.
+- 피해 액션 `battlefieldArea`(기본 false), `distanceFalloff: {step, percent, minimum}`(거리 간격 m·간격당 감소 %p·최소 계수 %)를 지원한다. step 0은 감쇠 없음이다.
+- `transferDrainedResource`(기본 false)는 실제 감소한 자원을 시전자의 최대치까지 회복한다. 추적 필드의 기준 객체 참조와 숨김 타이머·연결 버프는 전투 런타임 전용이다. 기존 API 경로와 JSON 최상위 형식은 유지한다.
+
+### 몽마 지원 필드 (2026-11-05)
+
+- 캐릭터·몬스터·Entity의 선택 필드 `entityGrade`: 1~10 정수, 생략 기본값 2. 기존 파일을 일괄 변경하지 않는다. 캐릭터·몬스터 정규화와 전투 유닛 생성, Entity 편집·서버 검증·소환 생성에 전달한다.
+- 액션 `targetMaxGrade`: 최대 허용 숫자 등급, 0은 제한 없음. `requirePreviousDamage`: 직전 액션의 실제 피해 대상만 후속 액션 허용(기본 false).
+- 상태 `sleep`·`charm`. `effect.breakDamagePercent`는 적용 순간 최대 HP 대비 누적 피해 해제 비율, 기본 0(해제 없음). `effect.hitThreshold`는 시전자·대상·효과별 적용에 필요한 횟수, 기본 1이다.
+- 패시브 `requiredTargetState`(기본 false), `stateDurationExtension`(초, 기본 0), `preserveSleep`(기본 false). 무한한 꿈은 기존 `damageMultiplierPercent: 120`과 함께 사용한다.
+- 버프 `mode: disguise`: 적 외형 위장과 새로운 직접 대상 선정 제외. 복사한 초상화·피해 누적·적중 횟수는 전투 런타임 전용이며 사용자 JSON에 저장하지 않는다.
+
+### 광대 지원 필드 (2026-11-05)
+
+- 소환 액션: `copyAppearance`·`retreatBehindSummons`(기본 false), `inheritMode`(`add` 기본 / `replace`). 능력치 비율은 기존 `inheritStats`를 사용한다. `jester_clone` Entity를 추가했다.
+- 상태: `disarm`(기본 공격 차단), `flee`(도주), `polymorph`(양 외형·기본 공격 차단·침묵·도주). 선택적 `effect.movementSpeedPercent`는 상태와 함께 해제되는 이동속도 보정이며 생략 기본값은 100이다. 음메에에는 50을 사용한다.
+- 버프: `mode: melee_reaction`, `reactionSkillId`(실행할 보조 스킬 ID). 광대의 반응 보조 스킬은 `slot: basic`이며 캐릭터 `skillIds`에 넣지 않는다.
+- 패시브: `passiveTrigger.skillOnly`(기본 false). 계수 `triggerMpSpent`는 완료 이벤트의 실제 MP 비용, `magicPerMovedMeter`는 마력 × 같은 실행의 마지막 이동 액션 거리(m)를 참조한다.
+- 피해 액션: `armorMultipliers: { plate, chain, leather, cloth }`는 선택적 음수 없는 배율이다. 생략한 유형은 1이다. 전투 유닛의 `armorCategory`는 장비에서 파생하며 사용자 캐릭터 JSON에 추가하지 않는다.
+- 완료 이벤트: 읽기 전용 `resourceSpent` 객체를 추가했다. 기존 저장 API와 JSON 최상위 형식은 유지한다.
+
 ## 이동·규칙 액션 확장
 
 - 순간이동 액션의 선택 필드 `movePlacement`는 `target` 또는 `behind`이다. 누락된 기존 데이터는 `target`으로 정규화한다.
 - `override_rule.target`은 `self`, `ally`, `enemy`를 지원한다. 기존 데이터의 기본값은 `ally`이다.
 
 ## 스킬·시너지 개별 그림
+
+소환수는 별도 `portrait` 필드를 만들지 않고 `data/entities/<id>.json`의 기존 `icon`에 `assets/images/entities/파일명`을 저장한다. 빈 값은 기본 도형 표시이며 전투 유닛 생성 시 `portrait`로 전달한다. [편집·외형 복제 규칙](ENTITIES.md).
 
 `data/skills.json`과 `data/synergies.json` 레코드는 선택적 `icon` 문자열을 가진다. 값은 `assets/images/skills/파일명` 또는 `assets/images/synergies/파일명`이며 빈 문자열/필드 생략은 그림 없음이다. 스킬 정규화는 이 필드를 보존한다. 기존 데이터를 일괄 수정하지 않는다. 공통 `iconMappings`와는 별개이며 전투 계산 필드가 아니다. [그림 API·수명](RECORD_IMAGES.md).
 

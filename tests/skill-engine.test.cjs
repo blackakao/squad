@@ -4,6 +4,350 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const path = require('node:path');
 
+function starEngine() {
+  const e=engine();e.skillsJson=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8')));
+  e.starEntity=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','entities/star_companion.json'),'utf8'));
+  vm.runInContext('entitiesJson.push(starEntity)',e);
+  e.star=id=>e.getSkillById('skill_class_star_'+id);
+  return e;
+}
+
+test('star companion enters once, never moves or attacks, and follows its own aura position', () => {
+  const e=starEngine(),source=unit(e),enemy=unit(e,'enemy',130);enemy.resistance=40;
+  source.skillIds=[e.star('companion').id];e.publishBattleEvents([{type:'battle_entry',source,target:source}]);
+  const stars=e.getLivingOwnedSummons(source,'star_companion');assert.equal(stars.length,1);
+  const star=stars[0];star.x=120;star.y=100;e.refreshTrackedBattleFields();
+  assert.equal(enemy.resistance,30);assert.equal(star.targetable,false);assert.equal(star.collidable,false);
+  e.moveUnit(star,[enemy]);e.takeAction(star,[source,star],[enemy]);assert.equal(star.x,120);assert.equal(enemy.hp,100);
+  star.x=500;e.refreshTrackedBattleFields();assert.equal(enemy.resistance,40);
+  assert.equal(e.resolveSkillActionTarget(enemy,e.getUnitSkill(enemy).actions[0],star),source);
+  source.alive=false;assert.equal(e.canSquadContinueBattle(e.playerSquad),false);
+  e.updateSummonLifetimes();assert.equal(e.getLivingOwnedSummons(source).length,0);
+});
+
+test('star resistance reductions stack per star and suspension removes only that star aura', () => {
+  const e=starEngine(),source=unit(e),enemy=unit(e,'enemy',130);enemy.resistance=40;
+  const passive=structuredClone(e.star('companion'));passive.actions[0].count=2;passive.actions[0].limit=2;
+  e.applySkill(source,source,passive);
+  const stars=e.getLivingOwnedSummons(source);assert.equal(stars.length,2);
+  stars.forEach((star,i)=>{star.x=120+i;star.y=100;});e.refreshTrackedBattleFields();assert.equal(enemy.resistance,20);
+  stars[0].suspendedTicks=10;e.refreshTrackedBattleFields();assert.equal(enemy.resistance,30);
+  for(let i=0;i<10;i++)e.updateSummonLifetimes();assert.equal(enemy.resistance,20);
+});
+
+test('star relocation damages every enemy on the path once and updates aura without moving the summoner', () => {
+  const e=starEngine(),source=unit(e),end=unit(e,'enemy',200),mid=unit(e,'enemy',150),off=unit(e,'enemy',150),ally=unit(e,'player',160);
+  off.y=110;source.magic=50;
+  e.applySkill(source,source,e.star('companion'));const star=source.summons[0];star.x=120;star.y=100;
+  e.applySkill(source,end,e.star('relocate'));
+  assert.equal(star.x,200);assert.equal(star.y,100);assert.equal(source.x,100);
+  assert.equal(end.hp,60);assert.equal(mid.hp,60);assert.equal(off.hp,100);assert.equal(ally.hp,100);
+  assert.equal(star.moveDistanceTotal,8);
+});
+
+test('star tether tracks both endpoints, ticks once per second for five seconds, and stops after owner death', () => {
+  const e=starEngine(),source=unit(e),target=unit(e,'enemy',150);target.maxHp=target.hp=1000;
+  e.applySkill(source,source,e.star('companion'));const star=source.summons[0];star.x=200;star.y=100;
+  e.applySkill(source,target,e.star('interstellar'));
+  for(let i=0;i<59;i++)e.updateBattleFields();assert.equal(target.hp,1000);
+  e.updateBattleFields();assert.equal(target.hp,990);
+  source.y=star.y=target.y=200;star.x=250;target.x=200;
+  for(let i=0;i<240;i++)e.updateBattleFields();assert.equal(target.hp,950);
+  assert.equal(vm.runInContext('battleFields.filter(f=>f.action.fieldShape === "line").length',e),0);
+  e.applySkill(source,target,e.star('interstellar'));source.alive=false;
+  for(let i=0;i<60;i++)e.updateBattleFields();assert.equal(target.hp,950);
+});
+
+test('star radiance uses distance from each star with two meter steps and ten percent floor', () => {
+  const e=starEngine(),source=unit(e),near=unit(e,'enemy',119.9),edge=unit(e,'enemy',120),far=unit(e,'enemy',900),ally=unit(e,'player',120);
+  source.magic=100;[near,edge,far].forEach(t=>{t.hp=t.maxHp=1000;});
+  e.applySkill(source,source,e.star('companion'));const star=source.summons[0];star.x=100;star.y=100;
+  source.x=500;e.applySkill(source,near,e.star('radiance'));
+  assert.equal(near.hp,900);assert.equal(edge.hp,910);assert.equal(far.hp,990);assert.equal(ally.hp,100);
+});
+
+test('star absorption suspends commands aura and gravity, grants damage immunity, then restores same star', () => {
+  const e=starEngine(),source=unit(e),enemy=unit(e,'enemy',130);enemy.resistance=40;
+  source.skillIds=[e.star('companion').id,e.star('weak_gravity').id];
+  e.publishBattleEvents([{type:'battle_entry',source,target:source}]);const star=source.summons[0];star.x=120;star.y=100;e.refreshTrackedBattleFields();
+  assert.equal(enemy.resistance,30);e.applySkill(source,source,e.star('absorb'));
+  assert.equal(e.getLivingOwnedSummons(source).length,0);assert.equal(enemy.resistance,40);
+  assert.equal(e.resolveSkillActionTarget(source,e.star('relocate').actions[0],enemy,e.star('relocate')),null);
+  e.applyActionDamage(enemy,source,e.normalizeSkillAction({type:'deal_damage',damageType:'fixed',coefficients:[{type:'fixed',value:50}]}));assert.equal(source.hp,100);
+  for(let i=0;i<60;i++){e.updateBattleEffects();e.updateBattleFields();e.updateSummonLifetimes();}assert.equal(enemy.mp,100);
+  for(let i=0;i<240;i++){e.updateBattleEffects();e.updateBattleFields();e.updateSummonLifetimes();}
+  assert.equal(e.getLivingOwnedSummons(source)[0],star);assert.equal(star.x,120);assert.equal(enemy.resistance,30);
+  e.applyActionDamage(enemy,source,e.normalizeSkillAction({type:'deal_damage',damageType:'fixed',coefficients:[{type:'fixed',value:50}]}));assert.equal(source.hp,50);
+});
+
+test('star weak gravity drains actual MP and transfers the same amount capped by owner maximum', () => {
+  const e=starEngine(),source=unit(e),enemy=unit(e,'enemy',130);source.mp=0;enemy.mp=2;
+  e.applySkill(source,source,e.star('companion'));source.summons[0].x=120;source.summons[0].y=100;
+  e.applySkill(source,source,e.star('weak_gravity'));
+  for(let i=0;i<60;i++)e.updateBattleFields();assert.equal(enemy.mp,0);assert.equal(source.mp,2);
+  enemy.mp=10;source.mp=99;for(let i=0;i<60;i++)e.updateBattleFields();assert.equal(enemy.mp,7);assert.equal(source.mp,100);
+  enemy.x=500;for(let i=0;i<60;i++)e.updateBattleFields();assert.equal(enemy.mp,7);
+});
+
+test('star suspension follows the linked immunity buff duration and ends on dispel', () => {
+  const e=starEngine(),source=unit(e),enemy=unit(e,'enemy',130);
+  e.applySkill(source,source,e.star('companion'));const star=source.summons[0];
+  e.applySkill(source,source,e.star('absorb'));
+  source.activeEffects.find(effect=>effect.id==='star_force').remainingTicks=600;
+  for(let i=0;i<300;i++){e.updateBattleEffects();e.updateSummonLifetimes();}
+  assert.ok(star.suspendedTicks>0);
+  e.applyTimedEffectAction(enemy,source,e.normalizeSkillAction({type:'delete_buff',effect:{id:'star_force',dispelMode:'id'}}));
+  e.updateSummonLifetimes();assert.equal(star.suspendedTicks,0);assert.equal(e.getLivingOwnedSummons(source)[0],star);
+});
+
+test('star skills and new character roundtrip and no ultimate is implemented', () => {
+  const e=starEngine(),all=e.skillsJson.filter(s=>s.id.startsWith('skill_class_star_'));
+  assert.equal(all.length,6);all.forEach(s=>assert.ok(e.isSkillExecutable(s),s.name));
+  const character=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','characters.json'),'utf8')).find(c=>c.name==='별소환사');
+  assert.ok(character);assert.equal(character.skillIds.length,6);assert.ok(!all.some(s=>s.name.includes('또다른')));
+  const copy=e.normalizeSkillJson(JSON.parse(JSON.stringify(all)));
+  assert.equal(copy.find(s=>s.id===e.star('radiance').id).actions[0].distanceFalloff.step,2);
+  assert.equal(copy.find(s=>s.id===e.star('relocate').id).actions[0].summonCommand,'relocate');
+});
+
+function succubusEngine() {
+  const e=engine();
+  e.skillsJson=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8')));
+  e.succubus=id=>e.getSkillById('skill_class_succubus_'+id);
+  return e;
+}
+
+test('succubus direct attacks extend finite harmful states and increase damage only against states', () => {
+  const e=succubusEngine(),source=unit(e),target=unit(e,'enemy',105);
+  source.skillIds=[e.succubus('endless_dream').id];target.hp=target.maxHp=1000;
+  const attack=e.normalizeSkillAction({type:'deal_damage',rangeMode:'custom',rangeValue:1,damageType:'fixed',coefficients:[{type:'fixed',value:10}]});
+  const add=(id,kind,duration,polarity='harmful')=>e.applyTimedEffectAction(source,target,e.normalizeSkillAction({type:'add_state',duration,effect:{id,name:id,state:kind,polarity}}));
+  assert.equal(e.applyActionDamage(source,target,attack),10);
+  add('root','root',5);add('forever','root',0);add('friendly','root',5,'beneficial');
+  assert.equal(e.applyActionDamage(source,target,attack),12);
+  assert.equal(target.activeEffects.find(x=>x.id==='root').remainingTicks,360);
+  assert.equal(target.activeEffects.find(x=>x.id==='forever').remainingTicks,null);
+  assert.equal(target.activeEffects.find(x=>x.id==='friendly').remainingTicks,300);
+  assert.equal(e.applyActionDamage(source,target,{...attack,periodic:true}),10);
+  assert.equal(target.activeEffects.find(x=>x.id==='root').remainingTicks,360);
+  e.clearBattleEffects(target);
+  e.applyTimedEffectAction(source,target,e.normalizeSkillAction({type:'add_buff',duration:5,effect:{id:'slow',name:'slow',mode:'percent',stat:'speed',value:-10,polarity:'harmful'}}));
+  assert.equal(e.applyActionDamage(source,target,attack),10);
+});
+
+test('succubus sleep preserves its damage budget for the passive owner but wakes to other accumulated damage', () => {
+  const e=succubusEngine(),source=unit(e),other=unit(e),target=unit(e,'enemy',130);
+  source.skillIds=[e.succubus('endless_dream').id];target.maxHp=target.hp=1000;
+  e.applySkill(source,target,e.succubus('dream'));
+  const attack=e.normalizeSkillAction({type:'deal_damage',rangeMode:'custom',rangeValue:5,damageType:'fixed',coefficients:[{type:'fixed',value:60}]});
+  e.applyActionDamage(source,target,attack);
+  assert.ok(e.hasBattleState(target,'sleep'));assert.equal(target.activeEffects[0].damageTaken,0);assert.equal(target.activeEffects[0].remainingTicks,360);
+  e.applyActionDamage(other,target,attack);assert.ok(e.hasBattleState(target,'sleep'));
+  e.applyActionDamage(other,target,attack);assert.equal(e.hasBattleState(target,'sleep'),false);
+  assert.equal(e.hasBattleState(target,'stun'),false);
+});
+
+test('succubus sleep interrupts casting and charm approaches its own caster without attacking', () => {
+  const e=succubusEngine(),source=unit(e),target=unit(e,'enemy',130);
+  target.speed=1;target.role='ranged';target.skillIds=[e.succubus('precious_target').id];
+  e.startCast(target,{type:'attack',target:source,skill:e.getUnitSkill(target)});
+  e.applySkill(source,target,e.succubus('dream'));
+  assert.equal(target.pendingAction,null);e.moveUnit(target,[source]);assert.equal(target.x,130);
+  assert.equal(e.tryUseReadySkill(target,[target],[source]),false);
+  e.clearBattleEffects(target);e.applySkill(source,target,e.succubus('fascination'));
+  const x=target.x;e.moveUnit(target,[source]);assert.ok(target.x<x);
+  assert.equal(e.tryUseReadySkill(target,[target],[source]),false);
+  e.applyTimedEffectAction(source,target,e.normalizeSkillAction({type:'add_state',duration:1,effect:{id:'root',name:'root',state:'root'}}));
+  const rooted=target.x;e.moveUnit(target,[source]);assert.equal(target.x,rooted);
+  e.clearBattleEffects(target);assert.ok(e.tryUseReadySkill(target,[target],[source]));
+});
+
+test('succubus charming strike counts actual hits per caster and target, refreshes at three and resets for battle', () => {
+  const e=succubusEngine(),a=unit(e),b=unit(e),target=unit(e,'enemy',105),second=unit(e,'enemy',106);
+  target.hp=target.maxHp=second.hp=second.maxHp=1000;
+  const strike=e.succubus('charming_strike');
+  e.applySkill(a,target,strike);e.applySkill(a,target,strike);assert.equal(e.hasBattleState(target,'charm'),false);
+  e.applySkill(b,target,strike);e.applySkill(a,second,strike);assert.equal(e.hasBattleState(second,'charm'),false);
+  e.applySkill(a,target,strike);assert.ok(e.hasBattleState(target,'charm'));
+  assert.equal(target.activeEffects.find(x=>x.state==='charm').remainingTicks,300);
+  e.updateBattleEffects();e.applySkill(a,target,strike);
+  assert.equal(target.activeEffects.find(x=>x.state==='charm').remainingTicks,300);
+  e.resetUnitForBattle(target);e.applySkill(a,target,strike);assert.equal(e.hasBattleState(target,'charm'),false);
+  assert.equal(target.hp,988);
+});
+
+test('succubus hit threshold ignores immune damage and never transfers a lethal strike to another target', () => {
+  const e=succubusEngine(),source=unit(e),target=unit(e,'enemy',105),second=unit(e,'enemy',106);
+  const strike=e.succubus('charming_strike');
+  e.applyTimedEffectAction(target,target,e.normalizeSkillAction({type:'add_buff',effect:{id:'immune',name:'immune',mode:'damage_immunity'}}));
+  for(let i=0;i<3;i++)e.applySkill(source,target,strike);
+  assert.equal(Object.keys(target.effectHitCounts).length,0);
+  e.clearBattleEffects(target);target.hp=1;e.applySkill(source,target,strike);
+  assert.equal(target.alive,false);assert.equal(Object.keys(second.effectHitCounts).length,0);
+});
+
+test('succubus dream selection defaults to sleep and respects numeric grade eligibility without consuming on failure', () => {
+  const e=succubusEngine(),source=unit(e),target=unit(e,'enemy',130);
+  const choice=e.succubus('dream_choice');source.skillIds=[choice.id];
+  assert.equal(e.getEquippedSkills(source)[0].id,e.succubus('dream').id);
+  target.entityGrade=3;assert.equal(e.tryUseReadySkill(source,[source],[target]),false);assert.equal(source.mp,100);
+  target.entityGrade=2;assert.ok(e.tryUseReadySkill(source,[source],[target]));
+  for(let i=0;i<60;i++)e.updateCast(source);
+  assert.ok(e.hasBattleState(target,'sleep'));assert.equal(source.mp,90);
+  source.skillSelections={[choice.id]:'charm'};
+  assert.equal(e.getEquippedSkills(source)[0].id,e.succubus('fascination').id);
+});
+
+test('succubus disguise blocks new direct targets while existing projectiles and self-centered area still hit', () => {
+  const e=succubusEngine(),source=unit(e),attacker=unit(e,'enemy',130);
+  attacker.portrait='assets/images/enemy.png';source.portrait='assets/images/owner.png';
+  const attack=skill(e,{type:'deal_damage',target:'enemy',rangeMode:'custom',rangeValue:5,damageType:'fixed',coefficients:[{type:'fixed',value:10}]});
+  e.dispatchSkillActions(attacker,source,attack,true,true);assert.equal(e.projectiles.length,1);
+  e.applySkill(source,source,e.succubus('precious_target'));
+  assert.equal(source.activeEffects[0].disguisePortrait,attacker.portrait);
+  assert.equal(source.side,'player');assert.equal(source.portrait,'assets/images/owner.png');
+  assert.equal(e.resolveSkillActionTarget(attacker,attack.actions[0],source,attack),null);
+  assert.equal(e.findTarget(attacker,[source]),undefined);
+  const summon=skill(e,{type:'summon_entity',summon:{count:1,target:'enemy',summonCenter:'target'}});
+  assert.equal(e.resolveSkillActionTarget(attacker,summon.actions[0],source,summon),null);
+  e.updateProjectiles();assert.equal(source.hp,90);
+  const area=skill(e,{...attack.actions[0],area:5,areaCenter:'self'});
+  e.applySkill(attacker,source,area);assert.equal(source.hp,80);
+  for(let i=0;i<300;i++)e.updateBattleEffects();
+  assert.equal(e.resolveSkillActionTarget(attacker,attack.actions[0],source,attack),source);
+});
+
+test('succubus data roundtrips passive controls, grade limits, threshold and choice without inventing a second skill', () => {
+  const e=succubusEngine(),all=e.skillsJson.filter(s=>s.id.startsWith('skill_class_succubus_'));
+  assert.equal(all.length,6);for(const s of all)assert.ok(e.isSkillExecutable(s),s.name);
+  const normalized=e.normalizeSkillJson(JSON.parse(JSON.stringify(all)));
+  const passive=normalized.find(s=>s.id===e.succubus('endless_dream').id);
+  assert.equal(passive.passiveTrigger.stateDurationExtension,1);assert.ok(passive.passiveTrigger.preserveSleep);
+  assert.equal(e.succubus('dream').actions[0].targetMaxGrade,2);
+  assert.equal(e.succubus('charming_strike').actions[1].effect.hitThreshold,3);
+  const character=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','characters.json'),'utf8')).find(c=>c.name==='몽마');
+  assert.equal(character.skillIds.length,4);assert.ok(character.skillIds.includes(e.succubus('dream_choice').id));
+});
+
+function jesterEngine() {
+  const e=engine();
+  e.skillsJson=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8')));
+  e.cloneEntity=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','entities','jester_clone.json'),'utf8'));
+  vm.runInContext('entitiesJson.push(cloneEntity)',e);
+  e.jester=id=>e.getSkillById('skill_class_jester_'+id);
+  return e;
+}
+
+test('jester mana refund uses actual completed active cast cost and excludes interrupts and basic attacks', () => {
+  const e=jesterEngine(),source=unit(e),target=unit(e,'enemy',130);
+  source.skillIds=[e.jester('light_prank').id,e.jester('no_attack').id];
+  source.maxMp=source.mp=200;
+  assert.ok(e.tryUseReadySkill(source,[source],[target]));
+  assert.equal(source.mp,190);
+  for(let i=0;i<60;i++) e.updateCast(source);
+  assert.equal(source.mp,193);
+  assert.equal(e.getBattleEvents('cast_complete')[0].resourceSpent.MP,10);
+  source.skillCooldowns[e.jester('no_attack').id]=0;
+  assert.ok(e.tryUseReadySkill(source,[source],[target]));
+  e.interruptBattleCast(source,'test');assert.equal(source.mp,183);
+  e.publishBattleEvents([{type:'cast_complete',source,target,skill:e.jester('spring_reaction'),resourceSpent:{MP:100}}]);
+  assert.equal(source.mp,183);
+  // A modified cost must refund its actual expenditure rather than the stored base cost.
+  e.publishBattleEvents([{type:'cast_complete',source,target,skill:e.jester('no_attack'),resourceSpent:{MP:20}}]);
+  assert.equal(source.mp,189);
+});
+
+test('jester disarm cancels basic casts and independent weapons while allowing active skills', () => {
+  const e=jesterEngine(),source=unit(e),target=unit(e,'enemy',130);
+  e.startCast(target,{type:'attack',target:source,skill:e.getUnitSkill(target)});
+  target.weaponAttackStates=[{castTimer:30,target:source,cooldown:0}];
+  e.applySkill(source,target,e.jester('no_attack'));
+  assert.equal(target.pendingAction,null);assert.equal(target.weaponAttackStates[0].castTimer,0);
+  assert.ok(e.hasBattleState(target,'disarm'));assert.equal(e.hasBattleState(target,'silence'),false);
+  target.skillIds=[e.jester('surprise_spring').id];
+  assert.ok(e.tryUseReadySkill(target,[target],[source]));
+  assert.ok(target.activeEffects.some(effect=>effect.id==='jester_spring'));
+  e.startCast(target,{type:'attack',target:source,skill:e.getUnitSkill(target)});
+  assert.equal(target.pendingAction,null);
+  for(let i=0;i<300;i++) e.updateBattleEffects();
+  assert.equal(e.hasBattleState(target,'disarm'),false);
+});
+
+test('jester clones inherit exactly five percent, copy portrait, expire, and leave caster behind', () => {
+  const e=jesterEngine(),source=unit(e),target=unit(e,'enemy',400);
+  source.portrait='assets/images/test.png';source.speed=2;source.defense=40;source.resistance=60;
+  const before=JSON.stringify(e.cloneEntity);
+  e.applySkill(source,source,e.jester('guess_who'));
+  assert.equal(source.summons.length,3);
+  for(const clone of source.summons) {
+    assert.equal(clone.maxHp,5);assert.equal(clone.maxMp,5);assert.equal(clone.magic,1);
+    assert.equal(clone.speed,.1);assert.equal(clone.defense,2);assert.equal(clone.resistance,3);
+    assert.equal(clone.portrait,source.portrait);assert.ok(source.x<clone.x);
+    assert.equal(clone.summonTicks,600);
+  }
+  e.applySkill(source,source,e.jester('guess_who'));assert.equal(source.summons.length,3);
+  assert.equal(JSON.stringify(e.cloneEntity),before);
+  for(let i=0;i<600;i++) e.updateSummonLifetimes();
+  assert.equal(e.getLivingOwnedSummons(source).length,0);
+});
+
+test('jester spring reacts to direct melee only, scales by actual knockback and armor, and cannot loop', () => {
+  for(const [armor,factor] of Object.entries({plate:.25,chain:5,leather:1,cloth:1.5,none:1})) {
+    const e=jesterEngine(),source=unit(e),attacker=unit(e,'enemy',125);
+    source.hp=source.maxHp=10000;attacker.hp=attacker.maxHp=10000;attacker.speed=2;attacker.armorCategory=armor;
+    e.applySkill(source,source,e.jester('surprise_spring'));
+    e.applySkill(attacker,attacker,e.jester('surprise_spring'));
+    const attack=e.normalizeSkillAction({type:'deal_damage',target:'enemy',rangeMode:'custom',rangeValue:1,damageType:'fixed',coefficients:[{type:'fixed',value:10}]});
+    e.applyActionDamage(attacker,source,{...attack,periodic:true});assert.equal(attacker.hp,10000);
+    e.applyActionDamage(attacker,source,{...attack,rangeValue:5});assert.equal(attacker.hp,10000);
+    e.applyActionDamage(attacker,source,attack);
+    assert.equal(attacker.x,225);assert.equal(attacker.hp,10000-source.magic*10*factor);
+    assert.equal(attacker.speed,1.4);assert.ok(attacker.activeEffects.some(effect=>effect.name==='헥헥' && effect.category==='physical'));
+    assert.equal(source.hp,9970);assert.equal(source.x,100);
+  }
+});
+
+test('jester spring measures collision-limited travel and has no reaction after expiry', () => {
+  const e=jesterEngine(),source=unit(e,'player',900),attacker=unit(e,'enemy',925);
+  attacker.hp=attacker.maxHp=10000;attacker.armorCategory='cloth';
+  e.applySkill(source,source,e.jester('surprise_spring'));
+  const attack=e.normalizeSkillAction({type:'deal_damage',rangeMode:'custom',rangeValue:1,damageType:'fixed',coefficients:[{type:'fixed',value:1}]});
+  e.applyActionDamage(attacker,source,attack);
+  const meters=(attacker.x-925)/10;
+  assert.ok(meters>0 && meters<10);assert.equal(attacker.hp,10000-source.magic*meters*1.5);
+  for(let i=0;i<300;i++) e.updateBattleEffects();
+  const hp=attacker.hp;e.applyActionDamage(attacker,source,attack);assert.equal(attacker.hp,hp);
+});
+
+test('jester sheep affects enemies in radius, interrupts casts, flees slowly and restores after expiry or dispel', () => {
+  const e=jesterEngine(),source=unit(e),near=unit(e,'enemy',130),far=unit(e,'enemy',160),ally=unit(e,'player',125);
+  near.speed=2;near.role='melee';near.skillIds=[e.jester('surprise_spring').id];
+  e.startCast(near,{type:'attack',target:source,skill:e.getUnitSkill(near)});
+  e.applySkill(source,near,e.jester('shepherd_boy'));
+  assert.equal(near.hp,90);assert.equal(far.hp,100);assert.equal(ally.hp,100);
+  assert.equal(near.pendingAction,null);assert.equal(near.speed,1);
+  for(const state of ['polymorph','silence','disarm','flee']) assert.ok(e.hasBattleState(near,state));
+  assert.equal(e.tryUseReadySkill(near,[near],[source]),false);
+  const x=near.x;e.moveUnit(near,[source]);assert.ok(near.x>x);
+  for(let i=0;i<180;i++) e.updateBattleEffects();
+  assert.equal(e.hasBattleState(near,'polymorph'),false);assert.equal(near.speed,2);
+  assert.ok(e.tryUseReadySkill(near,[near],[source]));
+  e.applySkill(source,near,e.jester('shepherd_boy'));
+  e.applyTimedEffectAction(source,near,e.normalizeSkillAction({type:'delete_state',effect:{id:'jester_sheep',dispelMode:'id'}}));
+  assert.equal(e.hasBattleState(near,'flee'),false);assert.equal(near.speed,2);
+});
+
+test('jester registered skills are executable and assigned without equipping reaction helper', () => {
+  const e=jesterEngine();
+  const skills=e.skillsJson.filter(s=>s.id.startsWith('skill_class_jester_'));
+  assert.equal(skills.length,6);for(const s of skills) assert.ok(e.isSkillExecutable(s),s.name);
+  const character=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','characters.json'),'utf8')).find(c=>c.name==='광대');
+  assert.equal(character.skillIds.length,5);assert.ok(!character.skillIds.includes(e.jester('spring_reaction').id));
+  const normalized=e.normalizeSkillJson(JSON.parse(JSON.stringify(skills)));
+  assert.ok(normalized.find(s=>s.id===e.jester('guess_who').id).actions[0].copyAppearance);
+  assert.equal(normalized.find(s=>s.id===e.jester('spring_reaction').id).actions[1].armorMultipliers.chain,5);
+});
+
 test('owner contribution survives repeated removal, groups templates and separates identical owners', () => {
   const e=engine(), a=unit(e), b=unit(e), enemy=unit(e,'enemy');
   a.name=b.name='same';a.id=b.id=0;

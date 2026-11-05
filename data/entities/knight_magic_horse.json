@@ -3,7 +3,7 @@
   "name": "마법말",
   "role": "tank",
   "description": "기사에게 연결되어 피해의 20%를 대신 받는 마법 말.",
-  "icon": "",
+  "icon": "assets/images/entities/기사_마법말.png",
   "summonType": "temporary",
   "attackType": "physical",
   "tags": [

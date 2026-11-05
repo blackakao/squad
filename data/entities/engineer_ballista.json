@@ -3,7 +3,7 @@
   "name": "노포",
   "role": "ranged",
   "description": "3초마다 단발 물리 공격을 하는 고정식 노포.",
-  "icon": "",
+  "icon": "assets/images/entities/갑사_노포.png",
   "summonType": "temporary",
   "attackType": "physical",
   "attackSkillId": "",

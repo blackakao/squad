@@ -19,6 +19,25 @@ def entity(entity_id="wolf"):
 
 
 class EntityTests(unittest.TestCase):
+    def test_command_entity_flags_validation(self):
+        legacy = self.store.validate(entity())
+        for flag in ("commandOnly", "targetable", "collidable"):
+            self.assertNotIn(flag, legacy)
+            for value in (True, False):
+                self.assertEqual(self.store.validate(dict(legacy, **{flag: value}))[flag], value)
+            for invalid in (0, "true", None):
+                with self.assertRaises(EntityError):
+                    self.store.validate(dict(legacy, **{flag: invalid}))
+
+    def test_entity_grade_validation_and_legacy_default(self):
+        legacy = self.store.validate(entity())
+        self.assertNotIn("entityGrade", legacy)
+        for grade in (1, 2, 10):
+            self.assertEqual(self.store.validate(dict(legacy, entityGrade=grade))["entityGrade"], grade)
+        for invalid in (0, 11, 1.5, True, "2", None):
+            with self.assertRaises(EntityError):
+                self.store.validate(dict(legacy, entityGrade=invalid))
+
     def test_summon_lifecycle_roundtrip_and_legacy_default(self):
         legacy = entity()
         self.store.save(legacy, create=True)

@@ -3,7 +3,7 @@ const recordImageCache = new Map();
 
 function recordImagePath(value) {
   const path = typeof value === 'string' ? value : '';
-  return /^assets\/images\/(skills|synergies)\/[^/\\?#]+\.(png|jpe?g|webp|gif)$/i.test(path) ? path : '';
+  return /^assets\/images\/(skills|synergies|entities)\/[^/\\?#]+\.(png|jpe?g|webp|gif)$/i.test(path) ? path : '';
 }
 
 function getCachedRecordImage(value) {
@@ -21,7 +21,8 @@ function renderRecordImageName(record) {
   return `<span class="record-image-name">${path ? `<img class="record-image-thumb" src="${escapeHtml(path)}" alt="" loading="lazy" onerror="this.hidden=true">` : ''}<span>${escapeHtml(record?.name || '')}</span></span>`;
 }
 
-function openRecordImageEditor(kind, value = '') {
+function openRecordImageEditor(kind, value = '', options = {}) {
+  const validate = options.validate || recordImagePath;
   const host = document.getElementById(`${kind}ImageEditor`);
   host.innerHTML = `<fieldset class="record-image-editor"><legend>그림</legend>
     <div class="record-image-controls"><img class="record-image-preview" alt="선택한 그림" hidden>
@@ -31,12 +32,13 @@ function openRecordImageEditor(kind, value = '') {
     <details><summary>보관함에서 선택</summary><button type="button" class="record-image-refresh">목록 새로고침</button><div class="record-image-gallery"></div></details>
     <p class="record-image-status" role="status" aria-live="polite"></p></fieldset>`;
   const editor = host.firstElementChild;
-  editor.imagePath = recordImagePath(value);
+  editor.imagePath = validate(value);
   editor.imageBusy = false;
   const preview = editor.querySelector('img');
   const status = editor.querySelector('.record-image-status');
   const select = path => {
-    editor.imagePath = recordImagePath(path);
+    editor.imagePath = validate(path);
+    options.onSelect?.(editor.imagePath);
     preview.hidden = !editor.imagePath;
     if (editor.imagePath) preview.src = editor.imagePath; else preview.removeAttribute('src');
     editor.querySelectorAll('.record-image-gallery button').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.path === editor.imagePath)));
@@ -96,6 +98,7 @@ function openRecordImageEditor(kind, value = '') {
     }
   };
   refresh();
+  return select;
 }
 
 function getRecordImageSelection(kind) {

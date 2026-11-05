@@ -1,5 +1,11 @@
 # 아키텍처
 
+별 기준 액션은 `skill.js`의 `originEntityId` 실행 경로에서 기존 액션을 소유자의 능력치로 실행한다. `battle.js`가 명령 전용 소환수의 행동·충돌/지속 인원 제외·숨김 생명주기 및 원형/선형 추적 필드를 처리한다. Entity 설정·편집은 `entity.js`, 선택 불리언 검증은 `entity_store.py`, 명령·거리 감쇠·자원 흡수 UI는 `skill-editor-view.js`에 연결했다. [별소환사 계약](SKILL_ENGINE.md#별소환사-지원-확장-2026-11-06).
+
+몽마의 수면·현혹·위장은 `skill-effects.js`, 직접 공격의 상태 보정은 `skill-passives.js`, 피해·적중 대상 연결·등급 필터는 `skill.js`가 담당한다. `battle.js`는 현혹 접근과 위장 표시·타겟 선정을 처리한다. `entityGrade`는 `ui.js` 정규화 및 캐릭터·몬스터·Entity 편집/전투 생성에 연결하며 Entity API의 정수 검증은 `entity_store.py`에서 수행한다. [계약](SKILL_ENGINE.md#몽마-지원-확장-2026-11-05).
+
+광대 지원은 기존 모듈 경계를 유지한다. 완료 비용 스냅샷은 `battle-events.js` → `skill-passives.js`의 환급 계수로 전달하며, 근접 피해는 `skill.js` → `skill-effects.js`의 반응 실행을 호출한다. 방어구 유형은 `equipment.js`에서 산출해 `character.js`의 전투 유닛·장비 세트에 전달한다. 분신 배치는 `battle.js`, 대체 능력치 계승은 `entity.js`가 처리한다. [계약](SKILL_ENGINE.md#광대-지원-확장-2026-11-05).
+
 ## AI 작업용 빠른 탐색 지도 (2026-11-04)
 
 이 표는 **수정 시작 위치**를 안내합니다. 전역 호출·동적 이벤트·데이터 계약 때문에 관련 파일을 전부 열거한 목록은 아닙니다. 변경 전 실제 호출부와 영향 범위를 확인하세요.

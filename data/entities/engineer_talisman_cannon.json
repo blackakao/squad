@@ -3,7 +3,7 @@
   "name": "부적포",
   "role": "ranged",
   "description": "1초마다 연발 물리 공격을 하는 고정식 부적포.",
-  "icon": "",
+  "icon": "assets/images/entities/갑사_부적포.png",
   "summonType": "temporary",
   "attackType": "physical",
   "attackSkillId": "",

@@ -52,7 +52,7 @@ function finishBattleChannel(unit,reason=null,options={}) {
   } else unit.attackCooldown=getAttackCooldown(unit);
   const events=[{type:reason ? "channel_interrupt" : "channel_complete",source:unit,target:action.target,skill:action.skill,reason}];
   if (reason) events.push({type:"cast_interrupt",source:unit,target:action.target,skill:action.skill,reason});
-  else events.push({type:"cast_complete",source:unit,target:action.target,skill:action.skill});
+  else events.push({type:"cast_complete",source:unit,target:action.target,skill:action.skill,resourceSpent:action.resourceSpent});
   if (!options.deferEvents) publishBattleEvents(events);
   addBattleEventLog(unit,`${unit.name}: ${action.skill.name} 채널링 ${reason ? `중단 (${reason})` : "완료"}`);
   return events;

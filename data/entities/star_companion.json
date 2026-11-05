@@ -1,0 +1,31 @@
+{
+  "entityId": "star_companion",
+  "name": "별",
+  "description": "명령으로만 이동하는 비충돌·적 타겟 제외 위치 표식형 소환수. 자체 이동·기본 공격은 하지 않는다.",
+  "icon": "assets/images/entities/별소환사_별.png",
+  "role": "special",
+  "ai": "stationary",
+  "attackType": "magic",
+  "attackSkillId": "",
+  "summonType": "temporary",
+  "commandOnly": true,
+  "targetable": false,
+  "collidable": false,
+  "tags": [
+    "summon",
+    "star"
+  ],
+  "stats": {
+    "hp": 1,
+    "mp": 0,
+    "st": 0,
+    "atk": 0,
+    "magic": 0,
+    "defense": 0,
+    "resistance": 0,
+    "speed": 0,
+    "attackSpeed": 1,
+    "castTime": 0,
+    "attackRange": 1
+  }
+}

@@ -90,6 +90,7 @@ function publishBattleEvents(events) {
       skillId:event.skill?.id ?? null,skillName:event.skill?.name ?? "",
       amount:Number(event.amount) || 0,hpDamage:Number(event.hpDamage) || 0,barrierDamage:Number(event.barrierDamage) || 0,
       damageType:event.damageType ?? null,resource:event.resource ?? null,moveType:event.moveType ?? null,
+      resourceSpent:Object.freeze({...event.resourceSpent}),
       periodic:Boolean(event.periodic),triggered:Boolean(event.triggered || event.skill?.triggered),reason:event.reason ?? null,depth:combatEventDepth});
     combatEventQueue.push({snapshot,source:event.source,target:event.target,depth:combatEventDepth});
   }

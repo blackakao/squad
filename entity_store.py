@@ -60,6 +60,12 @@ class EntityStore:
         if not all(isinstance(entity.get(key, ""), str) for key in ("description", "icon")):
             raise EntityError("설명과 아이콘은 문자열이어야 합니다.")
         stats = entity.get("stats", {})
+        for flag in ("commandOnly", "targetable", "collidable"):
+            if flag in entity and not isinstance(entity[flag], bool):
+                raise EntityError(f"{flag}는 불리언이어야 합니다.")
+        grade = entity.get("entityGrade", 2)
+        if isinstance(grade, bool) or not isinstance(grade, int) or not 1 <= grade <= 10:
+            raise EntityError("entityGrade는 1~10 사이 정수여야 합니다.")
         if not isinstance(stats, dict):
             raise EntityError("능력치는 객체여야 합니다.")
         for key in ("hp", "mp", "st", "atk", "magic", "defense", "resistance", "speed", "attackSpeed", "castTime", "attackRange"):

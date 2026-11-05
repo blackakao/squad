@@ -1161,7 +1161,7 @@
     "slot": "active",
     "cooldown": 5,
     "castTime": 0,
-    "castReceivedDamagePercent": 100,
+    "castReceivedDamagePercent": 95,
     "channel": {
       "duration": 3,
       "interval": 1,
@@ -1216,7 +1216,7 @@
         "maxTargets": 0,
         "critical": 0,
         "penetration": 0,
-        "moveType": "Walk",
+        "moveType": "Dash",
         "movePlacement": "target",
         "moveSpeed": 1,
         "distance": 0,
@@ -1225,7 +1225,7 @@
         "fieldRadius": 0,
         "fieldWidth": 2,
         "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 5,
+        "fieldEffectDuration": 0,
         "fieldMoveType": "Push",
         "fieldDistance": 1,
         "fieldCenter": "target",
@@ -9364,6 +9364,7 @@
     ]
   },
   {
+    "icon": "assets/images/skills/요정 사냥꾼_피와독.png",
     "id": "skill_class_fairy_hunter_blood_and_poison",
     "name": "요정 사냥꾼 · 피와독",
     "className": "요정 사냥꾼",
@@ -9399,6 +9400,7 @@
     "actions": []
   },
   {
+    "icon": "assets/images/skills/요정 사냥꾼_날카로운 화살.png",
     "id": "skill_class_fairy_hunter_sharp_arrow",
     "name": "요정 사냥꾼 · 날카로운 화살",
     "className": "요정 사냥꾼",
@@ -9537,6 +9539,7 @@
     ]
   },
   {
+    "icon": "assets/images/skills/요정 사냥꾼_나비독.png",
     "id": "skill_class_fairy_hunter_butterfly_poison",
     "name": "요정 사냥꾼 · 나비독",
     "className": "요정 사냥꾼",
@@ -9678,7 +9681,7 @@
     "id": "skill_class_admiral_tidal_wave",
     "name": "제독 · 해일",
     "className": "제독",
-    "icon": "assets/images/skills/_-20261101230524336637.png",
+    "icon": "assets/images/skills/제독_해일.png",
     "description": "해일로 마법 피해를 주고 대상을 5m 밀어냅니다.",
     "slot": "active",
     "cooldown": 5,
@@ -9813,7 +9816,7 @@
     "id": "skill_class_admiral_vortex",
     "name": "제독 · 소용돌이",
     "className": "제독",
-    "icon": "assets/images/skills/_-20261101230540566269.png",
+    "icon": "assets/images/skills/제독_소용돌이.png",
     "description": "6m 범위 소용돌이를 10초간 설치해 매초 마력 20% 피해를 주며 중심에 가까울수록 이동 ST 비용을 높입니다.",
     "slot": "active",
     "cooldown": 20,
@@ -9898,7 +9901,7 @@
     "id": "skill_class_admiral_sea_road",
     "name": "제독 · 바닷길",
     "className": "제독",
-    "icon": "assets/images/skills/_-20261101231017800168.png",
+    "icon": "assets/images/skills/제독_바닷길.png",
     "description": "자신과 대상 사이에 5초간 폭 2m의 바닷길을 만듭니다. 아군은 시전시간이 20% 감소하고 적은 이동·공격·시전이 느려집니다.",
     "slot": "active",
     "cooldown": 10,
@@ -10883,5 +10886,735 @@
         "fieldAuras": []
       }
     ]
+  },
+  {
+    "icon": "assets/images/skills/광대_가벼운 장난.png",
+    "id": "skill_class_jester_light_prank",
+    "name": "광대 · 가벼운 장난",
+    "className": "광대",
+    "slot": "passive",
+    "castTime": 0,
+    "cooldown": 0,
+    "description": "액티브 스킬을 정상 시전 완료하면 실제 소모한 MP의 30%를 환급한다. 중단 시 환급하지 않는다.",
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "heal",
+        "target": "self",
+        "rangeMode": "custom",
+        "rangeValue": 5,
+        "healResource": "MP",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "triggerMpSpent",
+            "calc": "percent",
+            "value": 30
+          }
+        ]
+      }
+    ],
+    "passiveTrigger": {
+      "event": "cast_complete",
+      "chance": 100,
+      "skillOnly": true,
+      "allowMultiplePerTick": true
+    }
+  },
+  {
+    "icon": "assets/images/skills/광대_공격금지.png",
+    "id": "skill_class_jester_no_attack",
+    "name": "광대 · 공격금지",
+    "className": "광대",
+    "slot": "active",
+    "castTime": 1,
+    "cooldown": 15,
+    "description": "5초간 나는야 평화주의자를 부여하여 기본 공격을 금지한다. 이동과 스킬 사용은 허용한다.",
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 10
+      }
+    ],
+    "actions": [
+      {
+        "type": "add_state",
+        "target": "enemy",
+        "rangeMode": "custom",
+        "rangeValue": 5,
+        "duration": 5,
+        "effect": {
+          "id": "jester_pacifist",
+          "name": "나는야 평화주의자",
+          "category": "magic",
+          "polarity": "harmful",
+          "dispellable": true,
+          "maxStacks": 1,
+          "stackMode": "refresh",
+          "state": "disarm"
+        }
+      }
+    ]
+  },
+  {
+    "icon": "assets/images/skills/광대_누구게.png",
+    "id": "skill_class_jester_guess_who",
+    "name": "광대 · 누구게",
+    "className": "광대",
+    "slot": "active",
+    "castTime": 1.5,
+    "cooldown": 8,
+    "description": "본체 외형과 주요 능력치 5%를 가진 분신 3체를 10초간 소환하고 본체는 분신 뒤로 이동한다.",
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 10
+      }
+    ],
+    "actions": [
+      {
+        "type": "summon_entity",
+        "target": "self",
+        "rangeMode": "custom",
+        "rangeValue": 5,
+        "entityId": "jester_clone",
+        "count": 3,
+        "limit": 3,
+        "duration": 10,
+        "copyAppearance": true,
+        "retreatBehindSummons": true,
+        "inheritMode": "replace",
+        "inheritStats": {
+          "hp": 5,
+          "mp": 5,
+          "st": 5,
+          "atk": 5,
+          "magic": 5,
+          "defense": 5,
+          "resistance": 5,
+          "speed": 5
+        }
+      }
+    ]
+  },
+  {
+    "icon": "assets/images/skills/광대_깜짝스프링.png",
+    "id": "skill_class_jester_surprise_spring",
+    "name": "광대 · 깜짝스프링",
+    "className": "광대",
+    "slot": "active",
+    "castTime": 0,
+    "cooldown": 15,
+    "description": "5초간 근접 직접 피격 시 공격자를 10m 넉백하고 실제 이동 거리에 비례한 마법 피해와 3초간 이동속도 -30% 헥헥을 부여한다.",
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 10
+      }
+    ],
+    "actions": [
+      {
+        "type": "add_buff",
+        "target": "self",
+        "rangeMode": "custom",
+        "rangeValue": 5,
+        "duration": 5,
+        "effect": {
+          "id": "jester_spring",
+          "name": "깜짝스프링",
+          "category": "magic",
+          "polarity": "beneficial",
+          "dispellable": true,
+          "maxStacks": 1,
+          "stackMode": "refresh",
+          "mode": "melee_reaction",
+          "reactionSkillId": "skill_class_jester_spring_reaction"
+        }
+      }
+    ]
+  },
+  {
+    "icon": "assets/images/skills/광대_양치기소년.png",
+    "id": "skill_class_jester_shepherd_boy",
+    "name": "광대 · 양치기소년",
+    "className": "광대",
+    "slot": "active",
+    "castTime": 2,
+    "cooldown": 20,
+    "description": "자신 주변 5m 적에게 마력 50% 피해를 주고 3초간 양으로 변이시킨다. 공격·스킬 사용 불가, 이동속도 50% 감소, 도주만 가능하다.",
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 10
+      }
+    ],
+    "actions": [
+      {
+        "type": "deal_damage",
+        "target": "enemy",
+        "rangeMode": "custom",
+        "rangeValue": 5,
+        "area": 5,
+        "areaCenter": "self",
+        "damageType": "magic",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "magic",
+            "calc": "percent",
+            "value": 50
+          }
+        ]
+      },
+      {
+        "type": "add_state",
+        "target": "enemy",
+        "rangeMode": "custom",
+        "rangeValue": 5,
+        "area": 5,
+        "areaCenter": "self",
+        "duration": 3,
+        "effect": {
+          "id": "jester_sheep",
+          "name": "음메에에",
+          "category": "magic",
+          "polarity": "harmful",
+          "dispellable": true,
+          "maxStacks": 1,
+          "stackMode": "refresh",
+          "state": "polymorph",
+          "movementSpeedPercent": 50
+        }
+      }
+    ]
+  },
+  {
+    "icon": "assets/images/skills/광대_깜짝스프링.png",
+    "id": "skill_class_jester_spring_reaction",
+    "name": "광대 · 깜짝스프링 반응",
+    "className": "광대",
+    "slot": "basic",
+    "castTime": 0,
+    "cooldown": 0,
+    "description": "깜짝스프링 버프의 근접 피격 반응 전용. 실제 넉백 거리 × 마력 × 방어구 배율 피해와 헥헥을 적용한다.",
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "move",
+        "target": "enemy",
+        "rangeMode": "custom",
+        "rangeValue": 30,
+        "moveType": "Knockback",
+        "distance": 10
+      },
+      {
+        "type": "deal_damage",
+        "target": "enemy",
+        "rangeMode": "custom",
+        "rangeValue": 30,
+        "damageType": "magic",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "magicPerMovedMeter",
+            "calc": "percent",
+            "value": 100
+          }
+        ],
+        "armorMultipliers": {
+          "plate": 0.25,
+          "chain": 5,
+          "leather": 1,
+          "cloth": 1.5
+        }
+      },
+      {
+        "type": "add_buff",
+        "target": "enemy",
+        "rangeMode": "custom",
+        "rangeValue": 30,
+        "duration": 3,
+        "effect": {
+          "id": "jester_panting",
+          "name": "헥헥",
+          "category": "physical",
+          "polarity": "harmful",
+          "dispellable": true,
+          "maxStacks": 1,
+          "stackMode": "refresh",
+          "mode": "percent",
+          "stat": "speed",
+          "value": -30
+        }
+      }
+    ]
+  },
+  {
+    "icon": "assets/images/skills/몽마_무한한 꿈.png",
+    "id": "skill_class_succubus_endless_dream",
+    "name": "몽마 · 무한한 꿈",
+    "className": "몽마",
+    "slot": "passive",
+    "castTime": 0,
+    "cooldown": 0,
+    "description": "직접 공격의 실제 피해 발생 시 대상의 해로운 상태이상 지속시간을 1초 늘린다. 상태이상이 있는 적에게 직접 공격 피해 +20%. 자신의 공격은 수면을 깨우지 않으며 해제 누적 피해에도 포함하지 않는다.",
+    "resourceCosts": [],
+    "actions": [],
+    "passiveTrigger": {
+      "event": "hit",
+      "chance": 100,
+      "requiredTargetState": true,
+      "damageMultiplierPercent": 120,
+      "stateDurationExtension": 1,
+      "preserveSleep": true
+    }
+  },
+  {
+    "icon": "assets/images/skills/몽마_매혹의 일격.png",
+    "id": "skill_class_succubus_charming_strike",
+    "name": "몽마 · 매혹의 일격",
+    "className": "몽마",
+    "slot": "active",
+    "castTime": 0,
+    "cooldown": 4,
+    "description": "공격력 120% 근접 물리 피해. 같은 시전자가 같은 대상에게 이 스킬로 3회 이상 실제 피해를 주면 5초간 현혹한다. 누적 피해 최대 HP 10%로 현혹 해제.",
+    "resourceCosts": [
+      {
+        "resource": "ST",
+        "mode": "fixed",
+        "value": 10
+      }
+    ],
+    "actions": [
+      {
+        "type": "deal_damage",
+        "target": "enemy",
+        "rangeMode": "custom",
+        "rangeValue": 1,
+        "damageType": "physical",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "atk",
+            "calc": "percent",
+            "value": 120
+          }
+        ]
+      },
+      {
+        "type": "add_state",
+        "target": "enemy",
+        "rangeMode": "custom",
+        "rangeValue": 1,
+        "duration": 5,
+        "requirePreviousDamage": true,
+        "effect": {
+          "id": "succubus_strike_charm",
+          "name": "매혹의 일격 · 현혹",
+          "state": "charm",
+          "category": "magic",
+          "polarity": "harmful",
+          "dispellable": true,
+          "maxStacks": 1,
+          "stackMode": "refresh",
+          "hitThreshold": 3,
+          "breakDamagePercent": 10
+        }
+      }
+    ]
+  },
+  {
+    "icon": "assets/images/skills/몽마_꿈.png",
+    "id": "skill_class_succubus_dream_choice",
+    "name": "몽마 · 꿈/현혹",
+    "className": "몽마",
+    "slot": "choice_prebattle",
+    "castTime": 0,
+    "cooldown": 8,
+    "description": "전투 전에 꿈(수면) 또는 현혹을 선택한다. 기본 선택은 꿈이다.",
+    "resourceCosts": [],
+    "actions": [],
+    "choice": {
+      "defaultOptionId": "dream",
+      "options": [
+        {
+          "id": "dream",
+          "label": "꿈 · 수면",
+          "skillId": "skill_class_succubus_dream"
+        },
+        {
+          "id": "charm",
+          "label": "현혹 · 접근",
+          "skillId": "skill_class_succubus_fascination"
+        }
+      ]
+    }
+  },
+  {
+    "icon": "assets/images/skills/몽마_소중한 대상.png",
+    "id": "skill_class_succubus_precious_target",
+    "name": "몽마 · 소중한 대상",
+    "className": "몽마",
+    "slot": "active",
+    "castTime": 0,
+    "cooldown": 8,
+    "description": "5초간 가까운 적 외형으로 위장해 적의 새로운 직접 타겟 선정에서 제외된다. 진영은 유지하고 광역 피해와 이미 발사된 투사체는 받는다.",
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 10
+      }
+    ],
+    "actions": [
+      {
+        "type": "add_buff",
+        "target": "self",
+        "rangeMode": "custom",
+        "rangeValue": 5,
+        "duration": 5,
+        "effect": {
+          "id": "succubus_disguise",
+          "name": "소중한 대상",
+          "mode": "disguise",
+          "category": "magic",
+          "polarity": "beneficial",
+          "dispellable": true,
+          "maxStacks": 1,
+          "stackMode": "refresh"
+        }
+      }
+    ]
+  },
+  {
+    "icon": "assets/images/skills/몽마_꿈.png",
+    "id": "skill_class_succubus_dream",
+    "name": "몽마 · 꿈",
+    "className": "몽마",
+    "slot": "active",
+    "castTime": 1,
+    "cooldown": 8,
+    "description": "2급 이하 적 하나를 5초간 수면에 빠뜨린다. 누적 피해가 최대 HP의 10%에 도달하면 해제된다.",
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 10
+      }
+    ],
+    "actions": [
+      {
+        "type": "add_state",
+        "target": "enemy",
+        "rangeMode": "custom",
+        "rangeValue": 5,
+        "duration": 5,
+        "targetMaxGrade": 2,
+        "effect": {
+          "id": "succubus_sleep",
+          "name": "꿈",
+          "state": "sleep",
+          "category": "magic",
+          "polarity": "harmful",
+          "dispellable": true,
+          "maxStacks": 1,
+          "stackMode": "refresh",
+          "breakDamagePercent": 10
+        }
+      }
+    ]
+  },
+  {
+    "icon": "assets/images/skills/몽마_현혹.png",
+    "id": "skill_class_succubus_fascination",
+    "name": "몽마 · 현혹",
+    "className": "몽마",
+    "slot": "active",
+    "castTime": 1,
+    "cooldown": 8,
+    "description": "2급 이하 적 하나가 5초간 공격·스킬을 멈추고 시전자에게 접근한다. 누적 피해가 최대 HP의 10%에 도달하면 해제된다.",
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 10
+      }
+    ],
+    "actions": [
+      {
+        "type": "add_state",
+        "target": "enemy",
+        "rangeMode": "custom",
+        "rangeValue": 5,
+        "duration": 5,
+        "targetMaxGrade": 2,
+        "effect": {
+          "id": "succubus_charm",
+          "name": "현혹",
+          "state": "charm",
+          "category": "magic",
+          "polarity": "harmful",
+          "dispellable": true,
+          "maxStacks": 1,
+          "stackMode": "refresh",
+          "breakDamagePercent": 10
+        }
+      }
+    ]
+  },
+  {
+    "icon": "assets/images/skills/별소환사_별.png",
+    "id": "skill_class_star_companion",
+    "name": "별소환사 · 별",
+    "className": "별소환사",
+    "slot": "passive",
+    "castTime": 0,
+    "cooldown": 0,
+    "description": "전투 진입 시 명령 전용 별 1체를 소환한다. 별은 자체 이동·공격을 하지 않으며 주변 3m 적의 마법 저항력을 별마다 10 감소시킨다.",
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "summon_entity",
+        "target": "self",
+        "rangeMode": "custom",
+        "rangeValue": 10000,
+        "entityId": "star_companion",
+        "count": 1,
+        "limit": 1,
+        "duration": 0
+      },
+      {
+        "type": "create_field",
+        "target": "enemy",
+        "rangeMode": "custom",
+        "rangeValue": 10000,
+        "originEntityId": "star_companion",
+        "fieldShape": "circle",
+        "fieldRadius": 3,
+        "fieldEffect": "none",
+        "fieldInterval": 1,
+        "duration": 0,
+        "fieldAuras": [
+          {
+            "target": "enemy",
+            "stat": "resistance",
+            "mode": "flat",
+            "value": -10
+          }
+        ]
+      }
+    ],
+    "passiveTrigger": {
+      "event": "battle_entry",
+      "chance": 100
+    }
+  },
+  {
+    "icon": "assets/images/skills/별소환사_별의이동.png",
+    "id": "skill_class_star_relocate",
+    "name": "별소환사 · 별의이동",
+    "className": "별소환사",
+    "slot": "active",
+    "castTime": 0,
+    "cooldown": 3,
+    "description": "현재 적 위치로 별을 즉시 이동시키고 폭 1m의 이동 경로에 있는 모든 적에게 마력 80% 마법 피해를 준다.",
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 10
+      }
+    ],
+    "actions": [
+      {
+        "type": "command_summon",
+        "target": "enemy",
+        "rangeMode": "custom",
+        "rangeValue": 10000,
+        "originEntityId": "star_companion",
+        "summonCommand": "relocate",
+        "pathWidth": 1,
+        "damageType": "magic",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "magic",
+            "calc": "percent",
+            "value": 80
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "icon": "assets/images/skills/별소환사_성간거리.png",
+    "id": "skill_class_star_interstellar",
+    "name": "별소환사 · 성간거리",
+    "className": "별소환사",
+    "slot": "active",
+    "castTime": 0,
+    "cooldown": 15,
+    "description": "5초간 소환사와 별 사이를 연결하는 폭 1m 광선을 생성한다. 양 끝점을 추적하며 매초 마력 50% 마법 피해를 준다.",
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 10
+      }
+    ],
+    "actions": [
+      {
+        "type": "create_field",
+        "target": "enemy",
+        "rangeMode": "custom",
+        "rangeValue": 10000,
+        "originEntityId": "star_companion",
+        "fieldShape": "line",
+        "fieldWidth": 1,
+        "fieldEffect": "deal_damage",
+        "fieldInterval": 1,
+        "damageType": "magic",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "magic",
+            "calc": "percent",
+            "value": 50
+          }
+        ],
+        "duration": 5
+      }
+    ]
+  },
+  {
+    "icon": "assets/images/skills/별소환사_별빛방출.png",
+    "id": "skill_class_star_radiance",
+    "name": "별소환사 · 별빛방출",
+    "className": "별소환사",
+    "slot": "active",
+    "castTime": 0,
+    "cooldown": 10,
+    "description": "별을 중심으로 전장 전체 적에게 마력 100% 마법 피해. 거리 2m마다 계수 10%p 감소, 최소 계수 10%.",
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 10
+      }
+    ],
+    "actions": [
+      {
+        "type": "deal_damage",
+        "target": "enemy",
+        "rangeMode": "custom",
+        "rangeValue": 10000,
+        "originEntityId": "star_companion",
+        "battlefieldArea": true,
+        "damageType": "magic",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "magic",
+            "calc": "percent",
+            "value": 100
+          }
+        ],
+        "distanceFalloff": {
+          "step": 2,
+          "percent": 10,
+          "minimum": 10
+        }
+      }
+    ]
+  },
+  {
+    "icon": "assets/images/skills/별소환사_별흡수.png",
+    "id": "skill_class_star_absorb",
+    "name": "별소환사 · 별흡수",
+    "className": "별소환사",
+    "slot": "active",
+    "castTime": 0,
+    "cooldown": 20,
+    "description": "별을 5초간 숨기고 스타포스로 피해를 무시한다. 숨김 중 별 오라·명령·광선·흡수는 정지하고 종료 후 같은 위치의 별을 복원한다.",
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 10
+      }
+    ],
+    "actions": [
+      {
+        "type": "add_buff",
+        "target": "self",
+        "rangeMode": "custom",
+        "rangeValue": 10000,
+        "ownedSummonCondition": "alive",
+        "ownedSummonEntityId": "star_companion",
+        "duration": 5,
+        "effect": {
+          "id": "star_force",
+          "name": "스타포스",
+          "mode": "damage_immunity",
+          "category": "magic",
+          "polarity": "beneficial",
+          "uses": 0,
+          "maxStacks": 1,
+          "stackMode": "refresh",
+          "dispellable": true
+        }
+      },
+      {
+        "type": "command_summon",
+        "target": "self",
+        "rangeMode": "custom",
+        "rangeValue": 10000,
+        "originEntityId": "star_companion",
+        "summonCommand": "suspend",
+        "suspensionEffectId": "star_force",
+        "duration": 5
+      }
+    ]
+  },
+  {
+    "icon": "assets/images/skills/별소환사_약한 중력.png",
+    "id": "skill_class_star_weak_gravity",
+    "name": "별소환사 · 약한 중력",
+    "className": "별소환사",
+    "slot": "passive",
+    "castTime": 0,
+    "cooldown": 0,
+    "description": "선택 패시브. 장착하면 별 주변 3m의 적마다 매초 MP를 최대 3 감소시키고 실제 감소량을 소환사가 흡수한다. 별마다 독립 적용.",
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "create_field",
+        "target": "enemy",
+        "rangeMode": "custom",
+        "rangeValue": 10000,
+        "originEntityId": "star_companion",
+        "fieldShape": "circle",
+        "fieldRadius": 3,
+        "fieldEffect": "drain_resource",
+        "fieldInterval": 1,
+        "drainResource": "MP",
+        "transferDrainedResource": true,
+        "coefficients": [
+          {
+            "type": "fixed",
+            "value": 3
+          }
+        ],
+        "duration": 0
+      }
+    ],
+    "passiveTrigger": {
+      "event": "battle_entry",
+      "chance": 100
+    }
   }
 ]

@@ -32,11 +32,15 @@ function getSummonConfiguration(source, action) {
   if (!entity) return null;
   const stats={...entity.stats};
   const sourceFields={hp:"maxHp",mp:"maxMp",st:"maxSt",atk:"atk",magic:"magic",defense:"defense",resistance:"resistance",speed:"speed"};
-  for(const stat of SUMMON_INHERIT_STATS) stats[stat]=(Number(stats[stat]) || 0)+(Number(source?.[sourceFields[stat]]) || 0)*(Number(action.inheritStats?.[stat]) || 0)/100;
+  for(const stat of SUMMON_INHERIT_STATS) stats[stat]=(action.inheritMode === "replace" ? 0 : Number(stats[stat]) || 0)+(Number(source?.[sourceFields[stat]]) || 0)*(Number(action.inheritStats?.[stat]) || 0)/100;
+  stats.hp=Math.max(1,stats.hp);
   return {...stats, entityId:entity.entityId,name:entity.name,icon:entity.icon,role:entity.role,ai:entity.ai,attackType:entity.attackType === "magic" ? "magic" : "physical",attackSkillId:String(entity.attackSkillId ?? ""),
     summonType:entity.summonType === "persistent" ? "persistent" : "temporary",
     speed:entity.ai === "stationary" ? 0 : stats.speed,
     count:action.count ?? 1,limit:action.limit ?? 3,lifetime:action.duration ?? 20,summonCenter:action.summonCenter ?? "self",
+    copyAppearance:action.copyAppearance === true,
+    entityGrade:Math.max(1,Math.min(10,Math.floor(Number(entity.entityGrade) || 2))),
+    commandOnly:entity.commandOnly === true,targetable:entity.targetable !== false,collidable:entity.collidable !== false,
     protectOwnerPercent:action.protectOwnerPercent ?? 0,protectOwnerScope:action.protectOwnerScope ?? "all",
     protectOwnerPriority:action.protectOwnerPriority ?? 0,transferStateScope:action.transferStateScope ?? "none",
     transferStatePriority:action.transferStatePriority ?? 0};
@@ -68,6 +72,9 @@ function renderEntityActionArea(action) {
       <label>동시 유지 수<input class="skill-action-limit" type="number" min="1" max="20" step="1" value="${action.limit ?? 3}"></label>
       <label>유지시간(초, 0: 무제한)<input class="skill-action-duration" type="number" min="0" step="0.1" value="${action.duration ?? 20}"></label>
       <label>소환 위치<select class="skill-action-summon-center"><option value="self" ${action.summonCenter !== "target" ? "selected" : ""}>시전자 주변</option><option value="target" ${action.summonCenter === "target" ? "selected" : ""}>선택 대상 주변</option></select></label>
+      <label><input type="checkbox" class="skill-action-copy-appearance" ${action.copyAppearance ? "checked" : ""}>시전자 외형 복제</label>
+      <label><input type="checkbox" class="skill-action-retreat-summons" ${action.retreatBehindSummons ? "checked" : ""}>소환 후 소환수 뒤로 이동</label>
+      <label>계승 방식<select class="skill-action-inherit-mode"><option value="add">Entity 능력치에 가산</option><option value="replace" ${action.inheritMode === "replace" ? "selected" : ""}>계승 능력치로 대체</option></select></label>
       <div class="skill-subsection-header">소환자 능력치 계승 (%)</div>
       ${SUMMON_INHERIT_STATS.map(stat=>`<label>${ENTITY_STAT_FIELDS[stat] ?? stat}<input class="skill-action-inherit-stat" data-stat="${stat}" type="number" min="0" max="1000" step="1" value="${action.inheritStats?.[stat] ?? 0}"></label>`).join("")}
       <label>소환자 피해 대리(%)<input class="skill-action-protect-percent" type="number" min="0" max="100" step="1" value="${action.protectOwnerPercent ?? 0}"></label>
@@ -177,8 +184,13 @@ function ensureEntityEditor() {
     <h4>Entity 편집</h4><form id="entityEditorForm" onsubmit="saveEntityEditor(event)">
       <label>Entity ID (생성 시 빈칸: 자동)<input name="entityId" pattern="[a-z0-9](?:[a-z0-9]|_|-){0,79}"></label>
       <label>이름<input name="name" required></label><label>설명<textarea name="description"></textarea></label>
+      <label><input name="commandOnly" type="checkbox">명령 전용 (자체 이동·기본 공격 없음)</label>
+      <label><input name="targetable" type="checkbox" checked>적의 공격 대상·전투 지속 인원에 포함</label>
+      <label><input name="collidable" type="checkbox" checked>개체 충돌 적용</label>
+      <label>개체 등급 (기본 2)<input name="entityGrade" type="number" min="1" max="10" step="1" value="2"></label>
       <label>소환수 종류<select name="summonType"><option value="temporary">임시 · 사망/소멸 시 제거</option><option value="persistent">영구 · 사망 객체 보존</option></select></label>
       <label>아이콘 URL / assets 경로<input name="icon"></label>
+      <div id="entitiesImageEditor"></div>
       <label>역할<select name="role">${options(ENTITY_ROLES)}</select></label>
       <label>태그 (쉼표 구분)<input name="tags"></label>
       <fieldset><legend>능력치</legend><div class="entity-stat-grid">${Object.entries(ENTITY_STAT_FIELDS).map(([key,label])=>`<label>${label}<input name="${key}" type="number" min="${key==='hp'?1:['attackSpeed','attackRange'].includes(key)?0.1:0}" max="100000" step="any" required></label>`).join('')}</div></fieldset>
@@ -199,7 +211,16 @@ function openEntityEditor(button, edit = false) {
   entityEditorOriginalId = edit ? entity.entityId : '';
   const form = document.getElementById('entityEditorForm');
   for(const key of ['entityId','name','description','icon','role','ai']) form.elements[key].value = entity[key] || '';
+  const selectPortrait = openRecordImageEditor('entities', entity.icon, {
+    validate: safeEntityIcon,
+    onSelect: path => { form.elements.icon.value = path; }
+  });
+  form.elements.icon.onchange = () => selectPortrait(form.elements.icon.value);
   form.elements.summonType.value = entity.summonType ?? 'temporary';
+  form.elements.entityGrade.value=entity.entityGrade ?? 2;
+  form.elements.commandOnly.checked=entity.commandOnly === true;
+  form.elements.targetable.checked=entity.targetable !== false;
+  form.elements.collidable.checked=entity.collidable !== false;
   form.elements.attackType.value = entity.attackType === 'magic' ? 'magic' : 'physical';
   form.elements.attackSkillId.value = entity.attackSkillId ?? '';
   form.elements.tags.value = entity.tags.join(', ');
@@ -224,8 +245,11 @@ function updateEntitySaveMode() {
 
 function readEntityEditor() {
   const form = document.getElementById('entityEditorForm');
+  getRecordImageSelection('entities'); // Block saving/previewing while an upload is in progress.
   return {entityId:form.elements.entityId.value.trim(),name:form.elements.name.value.trim(),description:form.elements.description.value,
     summonType:form.elements.summonType.value,
+    entityGrade:Math.max(1,Math.min(10,Math.floor(Number(form.elements.entityGrade.value) || 2))),
+    commandOnly:form.elements.commandOnly.checked,targetable:form.elements.targetable.checked,collidable:form.elements.collidable.checked,
     icon:form.elements.icon.value.trim(),role:form.elements.role.value,ai:form.elements.ai.value,attackType:form.elements.attackType.value,attackSkillId:form.elements.attackSkillId.value,tags:form.elements.tags.value.split(',').map(s=>s.trim()).filter(Boolean),
     stats:Object.fromEntries(Object.keys(ENTITY_STAT_FIELDS).map(key=>[key,Number(form.elements[key].value)]))};
 }
@@ -263,6 +287,8 @@ function stopEntityPreview() {
 function startEntityPreview() {
   const form = document.getElementById('entityEditorForm');
   if(!form.reportValidity()) return;
+  try { getRecordImageSelection('entities'); }
+  catch(error) { document.getElementById('entityEditorError').textContent = error.message; return; }
   stopEntityPreview();
   const entity = readEntityEditor(), preview = document.getElementById('entityPreviewCanvas'), pen = preview.getContext('2d');
   preview.classList.remove('hidden');
