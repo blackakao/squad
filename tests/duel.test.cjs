@@ -5,13 +5,22 @@ const fs = require('node:fs');
 const path = require('node:path');
 const {SOURCES, ROOT, loadData} = require('../balance/simulator/engine.cjs');
 
+test('rune choices appear in formation summaries for both sides and preserve independent selections',()=>{
+ const run=fixture();run(`runesJson=data.runes.map(normalizeRune);globalThis.runeId=characterJson.findIndex(c=>c.skillIds.includes('skill_class_rune_master'));duelCharacterIds={player:[runeId],enemy:[runeId]};`);
+ const html=run('renderDuelSkillChoices()');assert.equal((html.match(/rune-choice-panel/g)||[]).length,2);assert.equal((html.match(/<select/g)||[]).length,6);
+ run(`duelSkillChoices.player[runeId]={'skill_class_rune_master':['rune_flame','rune_crescent','rune_bullet']};`);
+ assert.equal(run(`getRuneLoadout({skillSelections:duelSkillChoices.player[runeId]},getSkillById('skill_class_rune_master'))[0]`),'rune_flame');
+ assert.equal(run(`getRuneLoadout({skillSelections:duelSkillChoices.enemy[runeId]},getSkillById('skill_class_rune_master'))[0]`),'rune_moon');
+});
+
 function fixture() {
-  const context = vm.createContext({structuredClone,Math,Date,performance,document:{getElementById:id=>id==='battleCanvas'?{width:400,height:300,getContext:()=>null}:null},log(){},logWarn(){},logError(){},alert(){}});
+  const context = vm.createContext({structuredClone,Math,Date,performance,addEventListener(){},removeEventListener(){},document:{addEventListener(){},removeEventListener(){},getElementById:id=>id==='battleCanvas'?{width:400,height:300,getContext:()=>null}:null},log(){},logWarn(){},logError(){},alert(){}});
   context.window=context;
   for(const name of SOURCES) vm.runInContext(fs.readFileSync(path.join(ROOT,'js',name+'.js'),'utf8'),context);
   context.data=loadData();
+  context.data.monsters=JSON.parse(fs.readFileSync(path.join(ROOT,'data/monsters.json'),'utf8'));
   const run=code=>vm.runInContext(code,context);
-  run(`categoriesJson=normalizeCategoryJson(data.categories);itemsJson=normalizeItemJson(data.items);factionsJson=normalizeFactionJson(data.factions);skillsJson=normalizeSkillJson(data.skills);entitiesJson=data.entities;characterJson=normalizeCombatJson(data.characters,[],'name');
+  run(`monsterJson=normalizeCombatJson(data.monsters,[],'label');categoriesJson=normalizeCategoryJson(data.categories);itemsJson=normalizeItemJson(data.items);factionsJson=normalizeFactionJson(data.factions);skillsJson=normalizeSkillJson(data.skills);entitiesJson=data.entities;characterJson=normalizeCombatJson(data.characters,[],'name');
     updateBattleButton=()=>{};clearBattleEventLogs=()=>{};addBattleEventLog=()=>{};
     teamsJson=[{name:'stale',memberIds:[0,1],activeMemberCount:2,battleRules:{damagePercent:300},synergyRules:[]}];
     selectedBattleTeamIds.add(0);selectedBattleCharacterIds.add(1);battleMode='duel';`);
@@ -21,10 +30,10 @@ function fixture() {
 test('duel enforces both selections and ignores previous team participants/rules',()=>{
   const run=fixture();
   assert.equal(run(`prepareBattleSession({openScreen:false})`),false);
-  run(`duelCharacterIds={player:0,enemy:1}`);
+  run(`duelCharacterIds={player:[0],enemy:[1]}`);
   assert.equal(run(`prepareBattleSession({openScreen:false})`),true);
   assert.equal(run(`playerSquad.length`),1);
-  assert.equal(run(`enemySquad.length`),1);
+  assert.equal(run(`enemySquad.filter(unit=>!unit.isSummon).length`),1);
   assert.equal(run(`activeBattleSideRules.player.damagePercent`),100);
   assert.equal(run(`activeBattleSideRules.enemy.damagePercent`),100);
   assert.equal(run(`playerSquad[0].startsInReserve || enemySquad[0].startsInReserve`),false);
@@ -32,14 +41,14 @@ test('duel enforces both selections and ignores previous team participants/rules
 
 test('mirror duel uses independent units and rebuilds both sides on repeat',()=>{
   const run=fixture();
-  run(`duelCharacterIds={player:0,enemy:0};prepareBattleSession({openScreen:false})`);
+  run(`duelCharacterIds={player:[0],enemy:[0]};prepareBattleSession({openScreen:false})`);
   assert.equal(run(`playerSquad[0]===enemySquad[0]`),false);
   assert.equal(run(`playerSquad[0].side`),'player');
   assert.equal(run(`enemySquad[0].side`),'enemy');
   run(`globalThis.saved=JSON.stringify(characterJson);playerSquad[0].hp=0;enemySquad[0].hp=0;prepareBattleSession({openScreen:false})`);
   assert.equal(run(`playerSquad[0].hp>0 && enemySquad[0].hp>0`),true);
   assert.equal(run(`JSON.stringify(characterJson)===saved`),true);
-  run(`duelCharacterIds.enemy=999999`);
+  run(`duelCharacterIds.enemy=[999999]`);
   assert.equal(run(`prepareBattleSession({openScreen:false})`),false);
 });
 
@@ -48,4 +57,15 @@ test('normal mode still selects stored team members and team rules',()=>{
   run(`battleMode='team';selectedBattleCharacterIds.clear();rebuildPlayerSquadFromSelection();snapshotActiveBattleSideRules()`);
   assert.equal(run(`playerSquad.length`),2);
   assert.equal(run(`activeBattleSideRules.player.damagePercent`),300);
+});
+
+test('mixed formation admits monsters on both sides and rejects more than ten',()=>{
+ const run=fixture();
+ run(`duelCharacterIds={player:[0,2],enemy:[0]};duelMonsterIds={player:[0,0],enemy:[0,0,0]}`);
+ assert.equal(run(`prepareBattleSession({openScreen:false})`),true);
+ assert.equal(run(`playerSquad.filter(u=>!u.isSummon).length`),4);
+ assert.equal(run(`enemySquad.filter(u=>!u.isSummon).length`),4);
+ assert.equal(run(`playerSquad.every(u=>u.side==='player') && enemySquad.every(u=>u.side==='enemy')`),true);
+ run(`duelMonsterIds.player=Array(9).fill(0)`);
+ assert.equal(run(`prepareBattleSession({openScreen:false})`),false);
 });

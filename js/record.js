@@ -28,6 +28,7 @@ function normalizeRecordJson(records) {
     return {
       name: String(member.name ?? "").trim(),
       role: String(member.role ?? "").trim(),
+      ...(member.portrait !== undefined ? { portrait: normalizePortrait(member.portrait) } : {}),
       hp: Number(member.hp) || 0,
       maxHp: Number(member.maxHp) || 0,
       mp: Number(member.mp) || 0,
@@ -35,8 +36,9 @@ function normalizeRecordJson(records) {
       st: Number(member.st) || 0,
       maxSt: Number(member.maxSt) || 0,
       dps: Number(member.dps) || 0,
+      hps: Number(member.hps ?? member.contribution?.total?.hps) || 0,
       ...(member.contribution ? {eventId:member.eventId,contribution:structuredClone(member.contribution),
-        damageDealt:Number(member.damageDealt)||0,healingDone:Number(member.healingDone)||0,hps:Number(member.hps)||0,kills:Number(member.kills)||0} : {})
+        damageDealt:Number(member.damageDealt)||0,healingDone:Number(member.healingDone)||0,kills:Number(member.kills)||0} : {})
     };
   };
 
@@ -82,23 +84,41 @@ function renderMemberTable(members) {
         <tr>
           <th>이름</th>
           <th>계열</th>
-          <th>HP</th>
-          <th title="소환수의 피해 기여도를 포함합니다.">DPS</th>
+          <th title="막대는 잔여 HP 비율, DPS와 HPS는 소환수의 피해·치유 기여도를 포함합니다.">HP / DPS / HPS</th>
         </tr>
       </thead>
       <tbody>
         ${sortedMembers.map(member => `
           <tr>
-            <td>${member.contribution ? `<button type="button" class="record-contribution-toggle" aria-expanded="false" onclick="toggleRecordContribution(this)">▶ ${escapeHtml(member.name)}</button>` : escapeHtml(member.name)}</td>
-            <td>${escapeHtml(getRoleLabel(member.role))}</td>
-            <td>${Math.floor(member.hp)} / ${member.maxHp}</td>
-            <td>${member.dps.toFixed(1)}</td>
+            <td><div class="record-member-identity">${renderRecordPortrait(member)}${member.contribution ? `<button type="button" class="record-contribution-toggle" aria-expanded="false" onclick="toggleRecordContribution(this)">▶ ${escapeHtml(member.name)}</button>` : `<span>${escapeHtml(member.name)}</span>`}</div></td>
+            <td>${member.role ? renderCategoryIcon('role', normalizeRole(member.role), getRoleLabel(member.role)) : '-'}</td>
+            <td>${renderRecordHpBar(member)}</td>
           </tr>
-          ${member.contribution ? `<tr class="record-contribution-row" hidden><td colspan="4">${renderMemberContribution(member)}</td></tr>` : ''}
+          ${member.contribution ? `<tr class="record-contribution-row" hidden><td colspan="3">${renderMemberContribution(member)}</td></tr>` : ''}
         `).join("")}
       </tbody>
     </table>
   `;
+}
+
+function renderRecordPortrait(member) {
+  const definition = member.portrait === undefined
+    ? characterJson.find(character => character.name === member.name)
+      || monsterJson.find(monster => monster.label === member.name.replace(/-\d+$/, ''))
+    : null;
+  const portrait = normalizePortrait(member.portrait ?? definition?.portrait);
+  return `<span class="record-member-portrait">${portrait
+    ? renderPortraitCell(portrait, member.name)
+    : `<span class="skill-class-placeholder">${escapeHtml(member.name.slice(0, 1) || '?')}</span>`}</span>`;
+}
+
+function renderRecordHpBar(member) {
+  const maxHp = Number(member.maxHp) || 0;
+  const percent = maxHp > 0 ? Math.min(100, Math.max(0, (Number(member.hp) || 0) / maxHp * 100)) : 0;
+  return `<div class="record-hp-bar${percent === 0 ? ' record-hp-empty' : ''}" role="meter" aria-label="${escapeHtml(member.name)} 잔여 HP" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}" aria-valuetext="${maxHp > 0 ? `${percent.toFixed(1)}%` : '정보 없음'}">
+    <span class="record-hp-fill" style="width:${percent}%"></span>
+    <span class="record-hp-label"><span>${maxHp <= 0 ? 'HP 정보 없음' : percent === 0 ? 'HP 소진' : 'HP'}</span><span>DPS ${(Number(member.dps) || 0).toFixed(1)}</span><span>HPS ${(Number(member.hps ?? member.contribution?.total?.hps) || 0).toFixed(1)}</span></span>
+  </div>`;
 }
 
 function renderMemberContribution(member) {
@@ -225,6 +245,7 @@ function createRecordMembers(units, durationSeconds) {
     return {
       name: unit.name,
       role: unit.role,
+      portrait: normalizePortrait(unit.portrait),
       hp: Math.max(0, Math.floor(Number(unit.hp) || 0)),
       maxHp: Number(unit.maxHp) || 0,
       mp: Math.max(0, Math.floor(Number(unit.mp) || 0)),

@@ -73,8 +73,17 @@ document.addEventListener("focusout", event => {
   if (event.target.closest?.(".battle-skill-tooltip")) hideBattleSkillTooltip();
 });
 
-function renderStatus(units, colorResolver) {
-  return units.filter(unit => !unit.isSummon).map(unit => {
+// Presentation-only classification; summon lifetimes and combat rules stay independent.
+const MAIN_SUMMON_STATUS_ENTITY_IDS = new Set([
+  'knight_magic_horse',
+  'star_companion', 'legacy_4ac380c5973655c4', 'puppet_doll',
+  'legacy_bbbcdbbdb4595aa3', 'demon_brute'
+]);
+
+function renderStatus(units, colorResolver, summonRows = false) {
+  return units.filter(unit => summonRows ? unit.isSummon : !unit.isSummon).map(unit => {
+    const companions = summonRows ? [] : units.filter(summon => summon.isSummon && !summon.removed
+      && (summon.owner ?? summon.summoner) === unit && MAIN_SUMMON_STATUS_ENTITY_IDS.has(summon.entityId));
     const hpRatio = Math.max(0, (unit.hp / unit.maxHp) * 100);
     const hpText = `${Math.floor(unit.hp)} / ${unit.maxHp}`;
     const maxMp = Math.max(0, Number(unit.maxMp ?? DEFAULT_RESOURCE_VALUE));
@@ -103,8 +112,8 @@ function renderStatus(units, colorResolver) {
     const reviveProtectionText = unit.reviveInvulnerableTicks > 0 ? ` · 부활 무적 ${(unit.reviveInvulnerableTicks / BASE_ATTACK_COOLDOWN).toFixed(1)}초` : "";
 
     return `
-      <div class="unit-status">
-        <div>${unit.name} (${getRoleLabel(unit.role)})${reviveProtectionText}</div>
+      <div class="unit-status${summonRows ? ' main-summon-status' : ''}">
+        <div>${summonRows ? `<span class="main-summon-label">↳ 주소환수 · ${escapeHtml((unit.owner ?? unit.summoner)?.name ?? '')}</span> ` : ''}${escapeHtml(unit.name)} (${getRoleLabel(unit.role)})${!unit.alive ? ' · 전투 불능' : unit.suspendedTicks>0 ? ' · 일시 비활성' : ''}${reviveProtectionText}</div>
         <div class="hp-track">
           <div class="hp-fill" style="width:${hpRatio}%; background:${colorResolver(unit)};"></div>
           <div class="hp-label">HP ${hpText} · ${dpsText}</div>
@@ -126,6 +135,7 @@ function renderStatus(units, colorResolver) {
           <div class="hp-label">${castText}</div>
         </div>
         ${renderBattleSkillRow(unit)}
+        ${companions.length ? `<div class="main-summon-group" aria-label="${escapeHtml(unit.name)}의 주소환수">${renderStatus(companions,colorResolver,true)}</div>` : ''}
       </div>
     `;
   }).join("");

@@ -10,6 +10,7 @@ import urllib.parse
 import urllib.request
 import subprocess
 from datetime import datetime
+from rune_store import validate_runes
 from entity_store import EntityStore, EntityError
 from simulation_jobs import SimulationJobs, SimulationError
 import threading
@@ -569,7 +570,11 @@ class BattleHandler(SimpleHTTPRequestHandler):
             data = json.loads(payload)
             if not isinstance(data, list):
                 raise ValueError("JSON root must be an array")
-            if api_file_path == DATA_DIR / "skills.json":
+            if api_file_path == DATA_DIR / "runes.json":
+                with ENTITY_STORE.lock:
+                    validate_runes(data, self.read_json(DATA_DIR / "skills.json"))
+                    self.write_json(api_file_path, data)
+            elif api_file_path == DATA_DIR / "skills.json":
                 ENTITY_STORE.save_skills(data)
             else:
                 self.write_json(api_file_path, data)

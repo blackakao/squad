@@ -5,6 +5,7 @@ import math
 import re
 import threading
 import uuid
+from rune_store import validate_runes
 from pathlib import Path
 
 
@@ -60,9 +61,12 @@ class EntityStore:
         if not all(isinstance(entity.get(key, ""), str) for key in ("description", "icon")):
             raise EntityError("설명과 아이콘은 문자열이어야 합니다.")
         stats = entity.get("stats", {})
-        for flag in ("commandOnly", "targetable", "collidable"):
+        for flag in ("commandOnly", "targetable", "collidable", "ownerDiesOnDeath"):
             if flag in entity and not isinstance(entity[flag], bool):
                 raise EntityError(f"{flag}는 불리언이어야 합니다.")
+        incoming = entity.get("receivedDamagePercent", 100)
+        if isinstance(incoming, bool) or not isinstance(incoming, (int, float)) or not math.isfinite(incoming) or not 0 <= incoming <= 100000:
+            raise EntityError("receivedDamagePercent는 0~100000 숫자여야 합니다.")
         grade = entity.get("entityGrade", 2)
         if isinstance(grade, bool) or not isinstance(grade, int) or not 1 <= grade <= 10:
             raise EntityError("entityGrade는 1~10 사이 정수여야 합니다.")
@@ -120,6 +124,7 @@ class EntityStore:
 
     def save_skills(self, skills):
         with self.lock:
+            validate_runes(self.read(self.data_dir / "runes.json", []), skills)
             for skill in skills:
                 for action in skill.get("actions", []):
                     if action.get("type") == "summon_entity":

@@ -62,5 +62,23 @@
     } else lines.push(duel ? '1:1 완료 전투가 없어 클래스 간 직접 상성은 평가하지 않습니다. 팀전 승률은 아군 조합의 영향도 포함합니다.' : '상대별 통계를 불러오지 못해 직접 상성 분석은 보류합니다.');
     return lines;
   }
-  return {build,summarize,roleLabels};
+  function recommendCombinations(summary, minSamples=30) {
+    const minimum=Number.isInteger(minSamples) && minSamples>0 ? minSamples : 30;
+    const measured=(summary.combinations || []).filter(c=>c.battles>0).map(c=>({...c,
+      winRate:100*c.wins/c.battles,lowSample:c.battles<minimum}));
+    const compare=(a,b)=>b.winRate-a.winRate || b.battles-a.battles ||
+      JSON.stringify(a.ids).localeCompare(JSON.stringify(b.ids));
+    const eligible=measured.filter(c=>!c.lowSample).sort(compare);
+    const provisional=measured.filter(c=>c.lowSample).sort(compare);
+    const candidates=eligible.length ? eligible : provisional;
+    const lines=[];
+    if(!summary.battles || !measured.length)return {lines:['완료된 조합 데이터가 없어 추천할 수 없습니다.'],top:[],provisional:[],minimum};
+    lines.push(`선택한 기록에서 측정한 ${measured.length}개 조합 중 최소 ${minimum}회 출전 기준을 충족한 조합은 ${eligible.length}개입니다.`);
+    const best=candidates[0],ties=candidates.filter(c=>c.wins*best.battles===best.wins*c.battles).length;
+    lines.push(`${eligible.length?'표본 기준 충족 조합 중 최고 관측 승률':'표본 부족 조합 중 임시 최고 관측 승률'}은 ${best.name}: ${best.winRate.toFixed(2)}% (${best.wins}승 / ${best.battles}회)입니다.${ties>1?` 같은 승률의 조합이 ${ties}개이며 출전 수가 많은 조합을 먼저 표시합니다.`:''}`);
+    if(!eligible.length)lines.push('모든 조합이 표본 부족입니다. 아래 조합은 재검증 후보이며 최상 조합으로 확정하지 않습니다.');
+    lines.push('정확히 같은 구성원의 팀끼리 집계합니다. 무승부·시간 초과를 승률 분모에 포함하며, 상대 구성과 진영 차이는 보정하지 않습니다. 테스트하지 않은 조합의 성능이나 구성원 간 시너지 원인은 추정하지 않습니다.');
+    return {lines,top:eligible.slice(0,5),provisional:provisional.slice(0,5),minimum};
+  }
+  return {build,summarize,roleLabels,recommendCombinations};
 });

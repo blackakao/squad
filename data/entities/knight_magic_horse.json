@@ -6,6 +6,9 @@
   "icon": "assets/images/entities/기사_마법말.png",
   "summonType": "temporary",
   "attackType": "physical",
+  "commandOnly": true,
+  "targetable": false,
+  "collidable": false,
   "tags": [
     "summon",
     "knight",

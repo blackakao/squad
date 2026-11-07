@@ -39,7 +39,6 @@ function startBattleChannel(unit,action,skill) {
   unit.channelPulseTimer=Math.max(1,Math.ceil(channel.interval*BASE_ATTACK_COOLDOWN));
   unit.vx=0;unit.vy=0;unit.isMoving=false;
   publishBattleEvents([{type:"channel_start",source:unit,target:action.target,skill}]);
-  addBattleEventLog(unit,`${unit.name}: ${skill.name} 채널링 시작 (${channel.duration}초)`);
 }
 
 function finishBattleChannel(unit,reason=null,options={}) {
@@ -54,7 +53,6 @@ function finishBattleChannel(unit,reason=null,options={}) {
   if (reason) events.push({type:"cast_interrupt",source:unit,target:action.target,skill:action.skill,reason});
   else events.push({type:"cast_complete",source:unit,target:action.target,skill:action.skill,resourceSpent:action.resourceSpent});
   if (!options.deferEvents) publishBattleEvents(events);
-  addBattleEventLog(unit,`${unit.name}: ${action.skill.name} 채널링 ${reason ? `중단 (${reason})` : "완료"}`);
   return events;
 }
 

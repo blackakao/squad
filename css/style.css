@@ -220,6 +220,15 @@ button.selected,
   margin-bottom: 10px;
 }
 
+.main-summon-group {
+  margin: 4px 0 0 10px;
+  padding: 5px 0 0 8px;
+  border-left: 3px solid var(--bs-info);
+}
+.main-summon-status { margin-bottom: 6px; padding: 5px; background: var(--bs-tertiary-bg); border-radius: 4px; font-size: .9em; }
+.main-summon-status:last-child { margin-bottom: 0; }
+.main-summon-label { color: var(--bs-info-text-emphasis); font-size: .85em; }
+
 .battle-skill-row { display: flex; gap: 4px; padding-top: 4px; min-height: 30px; }
 .battle-skill-tooltip { position: relative; display: inline-flex; flex: 0 0 30px; outline: none; }
 .battle-skill-floating-tooltip { position: fixed; z-index: 1100; width: max-content; max-width: 240px; padding: 5px 8px; border-radius: 5px; background: #1f2937; color: #fff; font-size: 12px; line-height: 1.35; white-space: pre-line; pointer-events: none; box-shadow: 0 2px 8px rgba(0, 0, 0, .28); }
@@ -1419,47 +1428,47 @@ button.selected,
   padding: var(--category-table-cell-padding);
 }
 
-.record-table th:first-child,
-.record-table td:first-child,
-.record-table th:last-child,
-.record-table td:last-child {
+.record-table > thead > tr > th:first-child,
+.record-table > tbody > tr > td:first-child,
+.record-table > thead > tr > th:last-child,
+.record-table > tbody > tr > td:last-child {
   text-align: center;
 }
 
-.record-table th:nth-child(1),
-.record-table td:nth-child(1) {
+.record-table > thead > tr > th:nth-child(1),
+.record-table > tbody > tr > td:nth-child(1) {
   width: var(--data-table-select-width);
 }
 
-.record-table th:nth-child(2),
-.record-table td:nth-child(2) {
+.record-table > thead > tr > th:nth-child(2),
+.record-table > tbody > tr > td:nth-child(2) {
   width: var(--record-date-width);
 }
 
-.record-table th:nth-child(3),
-.record-table td:nth-child(3) {
+.record-table > thead > tr > th:nth-child(3),
+.record-table > tbody > tr > td:nth-child(3) {
   width: var(--record-result-width);
 }
 
-.record-table th:nth-child(4),
-.record-table td:nth-child(4),
-.record-table th:nth-child(5),
-.record-table td:nth-child(5) {
+.record-table > thead > tr > th:nth-child(4),
+.record-table > tbody > tr > td:nth-child(4),
+.record-table > thead > tr > th:nth-child(5),
+.record-table > tbody > tr > td:nth-child(5) {
   width: calc((100% - var(--record-member-fixed-width)) / 2);
 }
 
-.record-table th:nth-child(6),
-.record-table td:nth-child(6) {
+.record-table > thead > tr > th:nth-child(6),
+.record-table > tbody > tr > td:nth-child(6) {
   width: var(--record-duration-width);
 }
 
-.record-table td:nth-child(4),
-.record-table td:nth-child(5) {
+.record-table > tbody > tr > td:nth-child(4),
+.record-table > tbody > tr > td:nth-child(5) {
   padding: var(--record-member-padding);
 }
 
-.record-table th:nth-child(7),
-.record-table td:nth-child(7) {
+.record-table > thead > tr > th:nth-child(7),
+.record-table > tbody > tr > td:nth-child(7) {
   min-width: 260px;
   text-align: left;
   vertical-align: top;
@@ -1501,10 +1510,18 @@ button.selected,
 .team-skill-choice { display: grid; grid-template-columns: minmax(100px, 1fr) minmax(120px, 1fr); gap: 8px; align-items: center; }
 @media (max-width: 720px) { .skill-choice-option-row, .battle-skill-choice-row { grid-template-columns: 1fr; } }
 
-.member-table th:nth-child(1), .member-table td:nth-child(1) { width: 34%; }
-.member-table th:nth-child(2), .member-table td:nth-child(2) { width: 24%; }
-.member-table th:nth-child(3), .member-table td:nth-child(3) { width: 24%; }
-.member-table th:nth-child(4), .member-table td:nth-child(4) { width: 18%; }
+.member-table th:nth-child(1), .member-table td:nth-child(1) { width: 40%; }
+.member-table th:nth-child(2), .member-table td:nth-child(2) { width: 20%; }
+.member-table th:nth-child(3), .member-table td:nth-child(3) { width: 40%; }
+.record-member-identity { display: flex; align-items: center; gap: 6px; text-align: left; overflow-wrap: anywhere; }
+.record-member-portrait { display: inline-flex; flex: 0 0 28px; align-items: center; justify-content: center; }
+.record-member-portrait .portrait-thumb { width: 28px; height: 28px; object-fit: cover; }
+.record-member-identity .record-contribution-toggle { text-align: left; overflow-wrap: anywhere; min-width: 0; }
+.record-hp-bar { position: relative; width: 100%; box-sizing: border-box; overflow: hidden; border-radius: 4px; background: #e2e8f0; min-height: 28px; border: 1px solid #64748b; }
+.record-hp-empty { background: #f3e4e4; border-color: #b08080; }
+.record-hp-fill { position: absolute; inset: 0 auto 0 0; background: #86d8ac; }
+.record-hp-label { position: relative; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 2px 8px; padding: 5px 4px; color: #172b3a; font-weight: 600; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.record-hp-label > span { display: inline-block; }
 .record-contribution-toggle { border: 0; background: none; padding: 2px; color: #245ca6; font: inherit; cursor: pointer; }
 .record-contribution-row[hidden] { display: none; }
 .record-contribution { text-align: left; line-height: 1.7; overflow-wrap: anywhere; }

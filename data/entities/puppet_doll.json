@@ -1,0 +1,30 @@
+{
+  "entityId": "puppet_doll",
+  "name": "인형",
+  "description": "주요 능력치는 주인의 50%, 받는 피해 10%, 사망 시 주인 사망.",
+  "icon": "assets/images/entities/인형술사_인형.png",
+  "role": "melee",
+  "ai": "melee",
+  "attackType": "physical",
+  "attackSkillId": "",
+  "summonType": "persistent",
+  "ownerDiesOnDeath": true,
+  "receivedDamagePercent": 10,
+  "tags": [
+    "summon",
+    "puppet"
+  ],
+  "stats": {
+    "hp": 1,
+    "mp": 0,
+    "st": 0,
+    "atk": 0,
+    "magic": 0,
+    "defense": 0,
+    "resistance": 0,
+    "speed": 0,
+    "attackSpeed": 1,
+    "castTime": 0,
+    "attackRange": 1
+  }
+}

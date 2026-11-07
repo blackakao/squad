@@ -141,6 +141,7 @@ class SimulationJobs:
         data = {name: read_json(self.data_dir / (name + ".json")) for name in
                 ("characters", "categories", "items", "skills", "factions", "teams")}
         data["synergies"] = read_json(self.data_dir / "synergies.json") if (self.data_dir / "synergies.json").exists() else []
+        data["runes"] = read_json(self.data_dir / "runes.json") if (self.data_dir / "runes.json").exists() else []
         if any(not isinstance(value, list) for value in data.values()):
             raise SimulationError("게임 데이터는 배열이어야 합니다.")
         data["entities"] = [read_json(path) for path in sorted((self.data_dir / "entities").glob("*.json"))]
@@ -152,7 +153,7 @@ class SimulationJobs:
     def settings(values):
         if not isinstance(values, dict):
             raise SimulationError("실행 설정은 객체여야 합니다.")
-        rules = {"count": (100, 1, 10000), "teamSize": (3, 1, 3), "seed": (12345, 0, 4294967295),
+        rules = {"count": (100, 1, 10000), "teamSize": (3, 1, 10), "seed": (12345, 0, 4294967295),
                  "maxSeconds": (600, 1, 3600), "width": (400, 100, 4000),
                  "height": (300, 100, 4000), "minSamples": (30, 1, 10000), "workers": (0, 0, 8)}
         result = {}

@@ -201,6 +201,7 @@ function renderSkillActionRow(action, index) {
         <small>각 액션의 사거리 안에서 대상을 찾습니다. 회복은 해당 자원이 부족한 대상을 우선합니다.</small>
       </label>
       <div class="skill-action-condition-field">
+        ${action.type === "advance_runes" ? `<label>앞당기는 시간 (초)<input class="skill-rune-advance-seconds" type="number" min="0" step="0.1" value="${action.runeAdvanceSeconds ?? 1}"></label>` : ""}
         <label>효과 기준 소환수<select class="skill-action-origin-entity"><option value="">시전자</option>${entitiesJson.map(entity=>`<option value="${escapeHtml(entity.entityId)}" ${action.originEntityId === entity.entityId ? "selected" : ""}>${escapeHtml(entity.name)} (내 소환수 각각)</option>`).join("")}</select></label>
         <label><input class="skill-action-battlefield-area" type="checkbox" ${action.battlefieldArea ? "checked" : ""}>전장 전체 광역</label>
         <label>거리 감쇠 간격 (m, 0: 없음)<input class="skill-action-falloff-step" type="number" min="0" step="0.1" value="${action.distanceFalloff?.step ?? 0}"></label>
@@ -639,6 +640,8 @@ function readSkillActionsFromForm() {
       requiredTargetEffectId:row.querySelector(".skill-action-required-target-effect-id")?.value ?? "",
       requiredTargetEffectCaster:row.querySelector(".skill-action-required-target-effect-caster")?.value ?? "any",
       targetHpBelow: Number(row.querySelector(".skill-action-target-hp")?.value ?? 100),
+      runeAdvanceSeconds:Number(row.querySelector(".skill-rune-advance-seconds")?.value ?? 1),
+      commandHealRadius:Number(row.querySelector(".skill-command-heal-radius")?.value ?? 0),commandHealPercent:Number(row.querySelector(".skill-command-heal-percent")?.value ?? 0),
       originEntityId:row.querySelector(".skill-action-origin-entity")?.value ?? "",
       battlefieldArea:row.querySelector(".skill-action-battlefield-area")?.checked ?? false,
       distanceFalloff:{step:Number(row.querySelector(".skill-action-falloff-step")?.value ?? 0),percent:Number(row.querySelector(".skill-action-falloff-percent")?.value ?? 0),minimum:Number(row.querySelector(".skill-action-falloff-minimum")?.value ?? 10)},
@@ -661,6 +664,7 @@ function readSkillActionsFromForm() {
         skillIds:[...row.querySelectorAll('.skill-transform-skills option:checked')].map(option=>option.value),
         attackSkillId:row.querySelector('.skill-transform-attack-skill')?.value ?? "",
         receivedDamagePercent:Number(row.querySelector('.skill-transform-received-damage')?.value ?? 100),
+        damageExitStun:Number(row.querySelector(".skill-transform-damage-exit-stun")?.value ?? 0),
         immobile:Boolean(row.querySelector('.skill-transform-immobile')?.checked),
         exitHpBelow:Number(row.querySelector('.skill-transform-exit-hp')?.value ?? 0),
         retreatHpBelow:Number(row.querySelector('.skill-transform-retreat-hp')?.value ?? 0)}} : {}),
@@ -792,6 +796,7 @@ function renderTransformActionArea(action) {
     <label>형태 기본 공격<select class="skill-transform-attack-skill">${getSkillOptionsHtml(transform.attackSkillId)}</select></label>
     <label>받는 피해 (%)<input class="skill-transform-received-damage" type="number" min="0" step="1" value="${transform.receivedDamagePercent}"></label>
     <label class="skill-check-field"><input class="skill-transform-immobile" type="checkbox" ${transform.immobile ? "checked" : ""}>형태 유지 중 이동 불가</label>
+    <label>피해 시 해제 후 기절 (초, 0: 미사용)<input class="skill-transform-damage-exit-stun" type="number" min="0" step="0.1" value="${transform.damageExitStun}"></label>
     <label>자동 해제 HP 이하 (%)<input class="skill-transform-exit-hp" type="number" min="0" max="100" step="1" value="${transform.exitHpBelow}"></label>
     <label>해제 후 후퇴 HP 이하 (%)<input class="skill-transform-retreat-hp" type="number" min="0" max="100" step="1" value="${transform.retreatHpBelow}"></label>
     <div class="skill-transform-modifiers">${TRANSFORM_STATS.map(stat=>`<label>${BUFF_STAT_LABELS[stat] ?? stat}<input class="skill-transform-stat" data-stat="${stat}" type="number" step="0.1" value="${transform.modifiers[stat]}"></label>`).join("")}</div>
@@ -811,7 +816,8 @@ function renderCopySkillActionArea(action) {
 function renderSummonCommandActionArea(action) {
   return `<div class="skill-action-field" data-action-field="summonCommand">
     <div class="skill-subsection-header">소환수 명령 설정</div>
-    <label>명령<select class="skill-summon-command" onchange="updateSkillActionFieldVisibility(this)"><option value="hold" ${action.summonCommand === "hold" ? "selected" : ""}>정지</option><option value="release" ${action.summonCommand === "release" ? "selected" : ""}>행동 재개</option><option value="recall" ${action.summonCommand === "recall" ? "selected" : ""}>소환자 위치로 복귀</option><option value="dismiss" ${action.summonCommand === "dismiss" ? "selected" : ""}>소환 해제</option><option value="relocate" ${action.summonCommand === "relocate" ? "selected" : ""}>대상 위치로 이동·경로 피해</option><option value="suspend" ${action.summonCommand === "suspend" ? "selected" : ""}>일시 숨김 후 복원</option></select></label>
+    <label>공격 후 치유 반경 (m)<input class="skill-command-heal-radius" type="number" min="0" value="${action.commandHealRadius ?? 0}"></label><label>피해 대비 치유 (%)<input class="skill-command-heal-percent" type="number" min="0" value="${action.commandHealPercent ?? 0}"></label>
+    <label>명령<select class="skill-summon-command" onchange="updateSkillActionFieldVisibility(this)"><option value="hold" ${action.summonCommand === "hold" ? "selected" : ""}>정지</option><option value="release" ${action.summonCommand === "release" ? "selected" : ""}>행동 재개</option><option value="recall" ${action.summonCommand === "recall" ? "selected" : ""}>소환자 위치로 복귀</option><option value="dismiss" ${action.summonCommand === "dismiss" ? "selected" : ""}>소환 해제</option><option value="relocate" ${action.summonCommand === "relocate" ? "selected" : ""}>대상 위치로 이동·경로 피해</option><option value="attack" ${action.summonCommand === "attack" ? "selected" : ""}>공격·주변 치유</option><option value="suspend" ${action.summonCommand === "suspend" ? "selected" : ""}>일시 숨김 후 복원</option></select></label>
     <label>이동 경로 폭 (m)<input class="skill-summon-path-width" type="number" min="0.1" step="0.1" value="${action.pathWidth ?? 1}"></label>
     <label>숨김 시간 (초)<input class="skill-command-duration" type="number" min="0.1" step="0.1" value="${action.duration || 5}"></label>
     <label>숨김을 유지할 시전자 버프 ID (빈칸: 시간만 사용)<input class="skill-summon-suspension-effect" value="${escapeHtml(action.suspensionEffectId ?? "")}"></label>

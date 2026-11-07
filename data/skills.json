@@ -2127,13 +2127,13 @@
   },
   {
     "id": "skill_class_fire_ignite",
-    "name": "화염술사 · 점화 (기본형)",
+    "name": "화염술사 · 점화",
     "className": "화염술사",
     "icon": "assets/images/skills/화염술사_점화.png",
     "description": "",
     "slot": "active",
-    "cooldown": 8,
-    "castTime": 0.5,
+    "cooldown": 0,
+    "castTime": 1.5,
     "castReceivedDamagePercent": 100,
     "channel": {
       "duration": 0,
@@ -2176,7 +2176,7 @@
             "type": "calculated",
             "field": "magic",
             "calc": "percent",
-            "value": 100,
+            "value": 120,
             "effectId": ""
           }
         ],
@@ -2212,16 +2212,16 @@
   },
   {
     "id": "skill_class_fire_meditation",
-    "name": "화염술사 · 불꽃 명상 (기본형)",
+    "name": "화염술사 · 불꽃 명상",
     "className": "화염술사",
     "icon": "assets/images/skills/화염술사_불꽃 명상.png",
-    "description": "",
+    "description": "3초 동안 매초 현재 부족한 MP의 10%를 회복합니다. 피해를 받으면 중단됩니다.",
     "slot": "active",
-    "cooldown": 8,
-    "castTime": 0.5,
+    "cooldown": 20,
+    "castTime": 0,
     "castReceivedDamagePercent": 100,
     "channel": {
-      "duration": 0,
+      "duration": 3,
       "interval": 1,
       "interruptOnDamage": true,
       "lockTarget": false,
@@ -2258,11 +2258,10 @@
         "chainOrigin": "previous",
         "coefficients": [
           {
-            "type": "fixed",
-            "field": "atk",
+            "type": "calculated",
+            "field": "missingMp",
             "calc": "percent",
-            "value": 20,
-            "effectId": ""
+            "value": 10
           }
         ],
         "healResource": "MP",
@@ -2297,13 +2296,13 @@
   },
   {
     "id": "skill_class_fire_drunken",
-    "name": "화염술사 · 드렁큰 올리지 (기본형)",
+    "name": "화염술사 · 드렁큰 올리지",
     "className": "화염술사",
     "icon": "assets/images/skills/화염술사_드렁큰 올리지.png",
     "description": "",
     "slot": "active",
-    "cooldown": 8,
-    "castTime": 0,
+    "cooldown": 12,
+    "castTime": 3,
     "castReceivedDamagePercent": 100,
     "channel": {
       "duration": 0,
@@ -2346,7 +2345,7 @@
             "type": "calculated",
             "field": "magic",
             "calc": "percent",
-            "value": 300,
+            "value": 250,
             "effectId": ""
           }
         ],
@@ -3065,21 +3064,11 @@
   },
   {
     "id": "skill_class_puppet_heal",
-    "name": "인형술사 · 악귀치유 (기본형)",
+    "name": "인형술사 · 악귀저주",
     "className": "인형술사",
-    "icon": "assets/images/skills/인형술사_악귀치유.png",
-    "description": "",
     "slot": "active",
-    "cooldown": 8,
+    "cooldown": 15,
     "castTime": 0.5,
-    "castReceivedDamagePercent": 100,
-    "channel": {
-      "duration": 0,
-      "interval": 1,
-      "interruptOnDamage": true,
-      "lockTarget": false,
-      "receivedDamagePercent": 100
-    },
     "resourceCosts": [
       {
         "resource": "MP",
@@ -3093,60 +3082,34 @@
         "target": "ally",
         "rangeMode": "custom",
         "rangeValue": 5,
-        "rangeMultiplier": 100,
-        "minRange": 0,
-        "allowSelfTarget": true,
-        "requiredTargetEffectId": "",
-        "requiredTargetEffectCaster": "any",
-        "targetHpBelow": 100,
-        "targetCooldown": 0,
-        "targetCooldownScope": "caster",
-        "targetCooldownEffectId": "",
-        "targetCooldownEffectName": "",
-        "ownedSummonCondition": "any",
-        "ownedSummonEntityId": "",
-        "targetSummonEntityId": "",
-        "chainCount": 0,
-        "chainRange": 3,
-        "chainOrigin": "previous",
+        "maxTargets": 1,
+        "healResource": "HP",
         "coefficients": [
           {
             "type": "calculated",
-            "field": "magic",
+            "field": "atk",
             "calc": "percent",
-            "value": 100,
-            "effectId": ""
+            "value": 100
           }
-        ],
-        "healResource": "HP",
-        "fullResourceAlternative": "",
-        "drainResource": "MP",
-        "damageType": "physical",
-        "area": 0,
-        "areaCenter": "target",
-        "maxTargets": 0,
-        "critical": 0,
-        "penetration": 0,
-        "moveType": "Walk",
-        "movePlacement": "target",
-        "moveSpeed": 1,
-        "distance": 0,
-        "duration": 0,
-        "fieldShape": "circle",
-        "fieldRadius": 0,
-        "fieldWidth": 2,
-        "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 5,
-        "fieldMoveType": "Push",
-        "fieldDistance": 1,
-        "fieldCenter": "target",
-        "fieldInterval": 1,
-        "fieldMovementStCostCenter": 0,
-        "fieldMovementStCostFalloff": 0,
-        "fieldMovementStCostMinimum": 0,
-        "fieldAuras": []
+        ]
+      },
+      {
+        "type": "add_buff",
+        "target": "ally",
+        "rangeMode": "custom",
+        "rangeValue": 5,
+        "maxTargets": 1,
+        "duration": 10,
+        "effect": {
+          "id": "puppet_cursed_power",
+          "name": "저주받은 힘",
+          "mode": "percent",
+          "stat": "adaptiveOffense",
+          "value": 30
+        }
       }
-    ]
+    ],
+    "icon": "assets/images/skills/인형술사_악귀저주.png"
   },
   {
     "id": "skill_class_spellblade_strike",
@@ -4947,10 +4910,10 @@
     "name": "저격수 · 저격",
     "className": "저격수",
     "icon": "assets/images/skills/저격수_저격.png",
-    "description": "3초 동안 저격하며 시전 중 받는 피해가 30% 증가합니다. 주무기 사거리 200%에서 공격력 300%의 물리 피해를 줍니다.",
+    "description": "4초간 조준 후 주무기 사거리 200%에서 공격력 300%의 물리 피해를 줍니다. 시전 중 받는 피해가 30% 증가합니다.",
     "slot": "active",
-    "cooldown": 8,
-    "castTime": 3,
+    "cooldown": 5,
+    "castTime": 4,
     "castReceivedDamagePercent": 130,
     "channel": {
       "duration": 0,
@@ -5029,10 +4992,10 @@
   },
   {
     "id": "skill_class_sniper_mode",
-    "name": "저격수 · 저격모드",
+    "name": "저격수 · 집중",
     "className": "저격수",
-    "icon": "assets/images/skills/저격수_저격모드.png",
-    "description": "저격모드로 전환해 공격력과 사거리가 30% 증가하고 이동할 수 없으며, 받는 피해가 30% 증가합니다. HP 30% 이하에서 모드를 해제하고 적에게서 후퇴합니다.",
+    "icon": "assets/images/skills/저격수_집중.png",
+    "description": "저격모드에서 공격력과 사거리가 30% 증가합니다. 실제 피해를 받으면 모드가 해제되고 2초간 기절합니다.",
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
@@ -5105,10 +5068,11 @@
           },
           "skillIds": [],
           "attackSkillId": "",
-          "receivedDamagePercent": 130,
-          "immobile": true,
-          "exitHpBelow": 30,
-          "retreatHpBelow": 30
+          "receivedDamagePercent": 100,
+          "immobile": false,
+          "exitHpBelow": 0,
+          "retreatHpBelow": 0,
+          "damageExitStun": 2
         },
         "critical": 0,
         "penetration": 0,
@@ -11616,5 +11580,781 @@
       "event": "battle_entry",
       "chance": 100
     }
+  },
+  {
+    "icon": "assets/images/skills/수도승_연환.png",
+    "id": "skill_class_ascetic_chain",
+    "name": "수도승 · 연환",
+    "className": "수도승",
+    "slot": "passive",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "description": "기본 공격·공격 스킬의 실제 적중마다 5초간 연환 1중첩, 최대 10중첩. 중첩당 공격속도 +2%·공격력 +1%, 10중첩에서는 이동속도 +20%. 마지막 적중 후 5초가 지나면 전부 초기화된다. 주기·반사·패시브 추가 피해는 중첩을 쌓지 않는다.",
+    "passiveTrigger": {
+      "event": "hit",
+      "chance": 100,
+      "includePeriodic": false,
+      "allowMultiplePerTick": true
+    },
+    "actions": [
+      {
+        "type": "add_buff",
+        "target": "self",
+        "rangeMode": "custom",
+        "rangeValue": 0,
+        "duration": 5,
+        "effect": {
+          "id": "ascetic_chain",
+          "name": "연환",
+          "category": "general",
+          "polarity": "beneficial",
+          "dispellable": true,
+          "stat": "atk",
+          "mode": "percent",
+          "value": 1,
+          "maxStacks": 10,
+          "stackMode": "stack",
+          "stackBonuses": [
+            {
+              "stat": "attackSpeed",
+              "mode": "attack_rate_percent",
+              "value": 2,
+              "minStacks": 1,
+              "perStack": true
+            },
+            {
+              "stat": "speed",
+              "mode": "percent",
+              "value": 20,
+              "minStacks": 10,
+              "perStack": false
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "icon": "assets/images/skills/수도승_퇴마공.png",
+    "id": "skill_class_ascetic_exorcism",
+    "name": "수도승 · 퇴마공",
+    "className": "수도승",
+    "slot": "active",
+    "castTime": 0,
+    "cooldown": 8,
+    "description": "0.5초 간격의 3단 연계. 공격력 120% 물리 → 마력 150% 마법 → 공격력 170% 물리 피해를 주고 완주 후 8초 재사용 대기. 각 단계는 ST 10·MP 10을 소모한다.",
+    "resourceCosts": [
+      {
+        "resource": "ST",
+        "mode": "fixed",
+        "value": 10
+      },
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 10
+      }
+    ],
+    "actions": [
+      {
+        "type": "deal_damage",
+        "target": "enemy",
+        "rangeMode": "custom",
+        "rangeValue": 1,
+        "damageType": "physical",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "atk",
+            "calc": "percent",
+            "value": 120
+          }
+        ]
+      }
+    ],
+    "combo": {
+      "stepCooldown": 0.5,
+      "stages": [
+        {
+          "name": "1타 · 퇴마의 권",
+          "actions": [
+            {
+              "type": "deal_damage",
+              "target": "enemy",
+              "rangeMode": "custom",
+              "rangeValue": 1,
+              "damageType": "physical",
+              "coefficients": [
+                {
+                  "type": "calculated",
+                  "field": "atk",
+                  "calc": "percent",
+                  "value": 120
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "2타 · 신성한 기",
+          "actions": [
+            {
+              "type": "deal_damage",
+              "target": "enemy",
+              "rangeMode": "custom",
+              "rangeValue": 1,
+              "damageType": "magic",
+              "coefficients": [
+                {
+                  "type": "calculated",
+                  "field": "magic",
+                  "calc": "percent",
+                  "value": 150
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "3타 · 퇴마의 격",
+          "actions": [
+            {
+              "type": "deal_damage",
+              "target": "enemy",
+              "rangeMode": "custom",
+              "rangeValue": 1,
+              "damageType": "physical",
+              "coefficients": [
+                {
+                  "type": "calculated",
+                  "field": "atk",
+                  "calc": "percent",
+                  "value": 170
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "completionActions": []
+    }
+  },
+  {
+    "icon": "assets/images/skills/저격수_외로운 저격수.png",
+    "id": "skill_class_sniper_solitude",
+    "name": "저격수 · 외로운 저격수",
+    "className": "저격수",
+    "slot": "passive",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "passiveTrigger": {
+      "event": "alone",
+      "chance": 100,
+      "aloneRadius": 5,
+      "aloneLossDuration": 2,
+      "aloneLossDamagePercent": 130
+    },
+    "actions": [
+      {
+        "type": "add_buff",
+        "target": "self",
+        "duration": 0,
+        "effect": {
+          "id": "sniper_solitude",
+          "name": "외로운 저격수",
+          "stat": "atk",
+          "mode": "percent",
+          "value": 20,
+          "dispellable": true
+        }
+      }
+    ]
+  },
+  {
+    "icon": "assets/images/skills/저격수_그림자 대피.png",
+    "id": "skill_class_sniper_shadow",
+    "name": "저격수 · 그림자 대피",
+    "className": "저격수",
+    "slot": "active",
+    "castTime": 0,
+    "cooldown": 30,
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "add_buff",
+        "target": "self",
+        "targetHpBelow": 30,
+        "duration": 5,
+        "effect": {
+          "id": "sniper_camouflage",
+          "name": "위장",
+          "mode": "stealth",
+          "breakOnAttack": true
+        }
+      },
+      {
+        "type": "add_buff",
+        "target": "self",
+        "targetHpBelow": 30,
+        "duration": 5,
+        "effect": {
+          "id": "sniper_camouflage_speed",
+          "name": "위장 · 이동속도",
+          "stat": "speed",
+          "mode": "percent",
+          "value": 30,
+          "breakOnAttack": true
+        }
+      }
+    ]
+  },
+  {
+    "icon": "assets/images/skills/화염술사_불꽃.png",
+    "id": "skill_class_fire_flame",
+    "name": "화염술사 · 불꽃",
+    "className": "화염술사",
+    "slot": "passive",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "passiveTrigger": {
+      "event": "hit",
+      "chance": 100,
+      "skillOnly": true
+    },
+    "actions": [
+      {
+        "type": "add_buff",
+        "target": "enemy",
+        "duration": 5,
+        "effect": {
+          "id": "fire_flame",
+          "name": "불꽃",
+          "mode": "damage_pool",
+          "value": 10,
+          "maxStacks": 3,
+          "stackMode": "stack",
+          "polarity": "harmful",
+          "category": "magic",
+          "dispellable": true
+        }
+      }
+    ]
+  },
+  {
+    "icon": "assets/images/skills/화염술사_불꽃도마뱀.png",
+    "id": "skill_class_fire_lizard",
+    "name": "화염술사 · 불꽃도마뱀",
+    "className": "화염술사",
+    "slot": "active",
+    "castTime": 2,
+    "cooldown": 3,
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 10
+      }
+    ],
+    "actions": [
+      {
+        "type": "add_state",
+        "target": "enemy",
+        "rangeMode": "custom",
+        "rangeValue": 5,
+        "maxTargets": 1,
+        "duration": 8,
+        "effect": {
+          "id": "fire_lizard",
+          "name": "불꽃도마뱀",
+          "state": "periodic",
+          "polarity": "harmful",
+          "category": "magic",
+          "maxStacks": 1,
+          "stackMode": "refresh",
+          "periodic": {
+            "type": "damage",
+            "interval": 1,
+            "damageType": "magic",
+            "coefficient": {
+              "type": "calculated",
+              "field": "magic",
+              "calc": "percent",
+              "value": 20
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    "icon": "assets/images/skills/인형술사_인형의 주인.png",
+    "id": "skill_class_puppet_master",
+    "name": "인형술사 · 인형의 주인",
+    "className": "인형술사",
+    "slot": "passive",
+    "cooldown": 0,
+    "castTime": 0,
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "summon_entity",
+        "entityId": "puppet_doll",
+        "target": "self",
+        "duration": 0,
+        "count": 1,
+        "limit": 1,
+        "inheritMode": "replace",
+        "inheritStats": {
+          "hp": 50,
+          "mp": 50,
+          "st": 50,
+          "atk": 50,
+          "magic": 50,
+          "defense": 50,
+          "resistance": 50,
+          "speed": 50
+        }
+      }
+    ],
+    "passiveTrigger": {
+      "event": "battle_entry",
+      "chance": 100,
+      "healingCurseDuration": 30
+    }
+  },
+  {
+    "icon": "assets/images/skills/인형술사_악귀공격.png",
+    "id": "skill_class_puppet_attack",
+    "name": "인형술사 · 악귀공격",
+    "className": "인형술사",
+    "slot": "active",
+    "cooldown": 5,
+    "castTime": 0,
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 10
+      }
+    ],
+    "actions": [
+      {
+        "type": "command_summon",
+        "target": "enemy",
+        "originEntityId": "puppet_doll",
+        "summonCommand": "attack",
+        "rangeMode": "custom",
+        "rangeValue": 1,
+        "maxTargets": 1,
+        "damageType": "physical",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "atk",
+            "calc": "percent",
+            "value": 100
+          }
+        ],
+        "commandHealRadius": 5,
+        "commandHealPercent": 100
+      }
+    ]
+  },
+  {
+    "icon": "assets/images/skills/인형술사_저주받은 교단.png",
+    "id": "skill_class_puppet_cult",
+    "name": "인형술사 · 저주받은 교단",
+    "className": "인형술사",
+    "slot": "active",
+    "cooldown": 30,
+    "castTime": 1,
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 10
+      }
+    ],
+    "actions": [
+      {
+        "type": "add_buff",
+        "target": "ally",
+        "area": 7,
+        "areaCenter": "self",
+        "rangeMode": "custom",
+        "rangeValue": 7,
+        "maxTargets": 0,
+        "duration": 3,
+        "effect": {
+          "id": "puppet_cursed_cult",
+          "name": "저주받은 교단",
+          "mode": "basic_echo",
+          "value": 100,
+          "echoHealPercent": 100
+        }
+      }
+    ]
+  },
+  {
+    "icon": "assets/images/skills/인형술사_인형의 춤.png",
+    "id": "skill_class_puppet_dance",
+    "name": "인형술사 · 인형의 춤",
+    "className": "인형술사",
+    "slot": "active",
+    "cooldown": 12,
+    "castTime": 0,
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 10
+      }
+    ],
+    "actions": [
+      {
+        "type": "deal_damage",
+        "target": "enemy",
+        "area": 4,
+        "areaCenter": "self",
+        "rangeMode": "custom",
+        "rangeValue": 4,
+        "maxTargets": 0,
+        "damageType": "physical",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "atk",
+            "calc": "percent",
+            "value": 80
+          }
+        ]
+      },
+      {
+        "type": "deal_damage",
+        "target": "enemy",
+        "originEntityId": "puppet_doll",
+        "area": 4,
+        "areaCenter": "self",
+        "rangeMode": "custom",
+        "rangeValue": 4,
+        "maxTargets": 0,
+        "damageType": "physical",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "atk",
+            "calc": "percent",
+            "value": 80
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "skill_class_rune_master",
+    "name": "룬술사 · 룬",
+    "className": "룬술사",
+    "slot": "passive",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "passiveTrigger": {
+      "event": "battle_entry",
+      "chance": 100,
+      "runeCount": 3,
+      "defaultRuneIds": [
+        "rune_moon",
+        "rune_crescent",
+        "rune_bullet"
+      ]
+    },
+    "actions": [
+      {
+        "type": "install_runes",
+        "target": "self"
+      }
+    ]
+  },
+  {
+    "id": "skill_class_rune_strike",
+    "name": "룬술사 · 룬일격",
+    "className": "룬술사",
+    "slot": "active",
+    "castTime": 0,
+    "cooldown": 5,
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 10
+      }
+    ],
+    "actions": [
+      {
+        "type": "deal_damage",
+        "target": "enemy",
+        "rangeMode": "custom",
+        "rangeValue": 1,
+        "maxTargets": 1,
+        "damageType": "magic",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "magic",
+            "calc": "percent",
+            "value": 130
+          }
+        ]
+      },
+      {
+        "type": "advance_runes",
+        "target": "self",
+        "runeAdvanceSeconds": 1
+      }
+    ]
+  },
+  {
+    "id": "skill_rune_effect_moon",
+    "name": "룬 효과 · 달룬",
+    "className": "룬",
+    "slot": "active",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "heal",
+        "target": "ally",
+        "healResource": "HP",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "magic",
+            "calc": "percent",
+            "value": 2
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "skill_rune_effect_crescent",
+    "name": "룬 효과 · 초승달룬",
+    "className": "룬",
+    "slot": "active",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "heal",
+        "target": "ally",
+        "healResource": "MP",
+        "coefficients": [
+          {
+            "type": "fixed",
+            "value": 20
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "skill_rune_effect_bullet",
+    "name": "룬 효과 · 총알룬",
+    "className": "룬",
+    "slot": "active",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "add_buff",
+        "target": "ally",
+        "duration": 1,
+        "effect": {
+          "id": "rune_bullet_speed",
+          "name": "총알같은 속도",
+          "stat": "speed",
+          "mode": "percent",
+          "value": 100
+        }
+      }
+    ]
+  },
+  {
+    "id": "skill_rune_effect_flame",
+    "name": "룬 효과 · 불꽃룬",
+    "className": "룬",
+    "slot": "active",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "deal_damage",
+        "target": "enemy",
+        "damageType": "magic",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "magic",
+            "calc": "percent",
+            "value": 30
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "skill_class_cheer_encourage",
+    "name": "응원가 · 모두 힘내",
+    "className": "응원가",
+    "slot": "active",
+    "castTime": 0,
+    "cooldown": 10,
+    "resourceCosts": [
+      {
+        "resource": "ST",
+        "mode": "fixed",
+        "value": 10
+      }
+    ],
+    "actions": [
+      {
+        "type": "heal",
+        "healResource": "HP",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "atk",
+            "calc": "percent",
+            "value": 5
+          }
+        ],
+        "target": "ally",
+        "rangeMode": "custom",
+        "rangeValue": 6,
+        "area": 6,
+        "areaCenter": "self",
+        "maxTargets": 0
+      },
+      {
+        "type": "heal",
+        "healResource": "ST",
+        "coefficients": [
+          {
+            "type": "fixed",
+            "value": 20
+          }
+        ],
+        "target": "ally",
+        "rangeMode": "custom",
+        "rangeValue": 6,
+        "area": 6,
+        "areaCenter": "self",
+        "maxTargets": 0
+      }
+    ]
+  },
+  {
+    "id": "skill_class_cheer_passion",
+    "name": "응원가 · 응원-정열",
+    "className": "응원가",
+    "slot": "active",
+    "castTime": 0,
+    "cooldown": 15,
+    "resourceCosts": [
+      {
+        "resource": "ST",
+        "mode": "fixed",
+        "value": 10
+      }
+    ],
+    "actions": [
+      {
+        "type": "add_buff",
+        "duration": 4,
+        "effect": {
+          "id": "cheer_passion",
+          "name": "정열",
+          "stat": "attackSpeed",
+          "mode": "attack_rate_percent",
+          "value": 30,
+          "stackBonuses": [
+            {
+              "stat": "castSpeed",
+              "mode": "cast_time_percent",
+              "value": -30,
+              "minStacks": 1,
+              "perStack": false
+            },
+            {
+              "stat": "speed",
+              "mode": "percent",
+              "value": 20,
+              "minStacks": 1,
+              "perStack": false
+            }
+          ]
+        },
+        "target": "ally",
+        "rangeMode": "custom",
+        "rangeValue": 6,
+        "area": 6,
+        "areaCenter": "self",
+        "maxTargets": 0
+      }
+    ]
+  },
+  {
+    "id": "skill_class_cheer_freedom",
+    "name": "응원가 · 자 날뛰어봐",
+    "className": "응원가",
+    "slot": "active",
+    "castTime": 0,
+    "cooldown": 20,
+    "resourceCosts": [
+      {
+        "resource": "ST",
+        "mode": "fixed",
+        "value": 10
+      }
+    ],
+    "actions": [
+      {
+        "type": "delete_state",
+        "target": "ally",
+        "rangeMode": "custom",
+        "rangeValue": 5,
+        "maxTargets": 1,
+        "effect": {
+          "id": "cheer_cleanse",
+          "dispelMode": "all",
+          "dispelPolarity": "harmful"
+        }
+      },
+      {
+        "type": "add_buff",
+        "target": "ally",
+        "rangeMode": "custom",
+        "rangeValue": 5,
+        "maxTargets": 1,
+        "duration": 5,
+        "effect": {
+          "id": "cheer_freedom",
+          "name": "자유로움",
+          "mode": "immunity",
+          "immunity": {
+            "scope": "state",
+            "category": "all",
+            "state": "all"
+          }
+        }
+      }
+    ]
   }
 ]

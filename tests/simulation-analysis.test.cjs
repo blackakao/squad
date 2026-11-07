@@ -1,6 +1,28 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict');
 const {build,summarize}=require('../js/simulation-analysis.js');
+const {recommendCombinations}=require('../js/simulation-analysis.js');
+test('recommendations separate lucky small samples, count all appearances and preserve history',()=>{
+  const summary={battles:101,combinations:[
+    {ids:[1,2],name:'검증팀',battles:100,wins:60,losses:20,draws:10,timeouts:10},
+    {ids:[3,4],name:'한번승리',battles:1,wins:1,losses:0,draws:0,timeouts:0}]};
+  const before=JSON.stringify(summary),r=recommendCombinations(summary,30);
+  assert.equal(r.top[0].name,'검증팀');assert.equal(r.top[0].winRate,60);
+  assert.equal(r.provisional[0].winRate,100);assert.equal(JSON.stringify(summary),before);
+});
+test('sparse ten-member teams report tied provisional candidates rather than a confirmed best',()=>{
+  const combinations=Array.from({length:7},(_,i)=>({ids:Array.from({length:10},(_,j)=>i*10+j),
+    name:'팀'+i,battles:i+1,wins:i+1}));
+  const r=recommendCombinations({battles:28,combinations},30);
+  assert.equal(r.top.length,0);assert.equal(r.provisional.length,5);
+  assert.equal(r.provisional[0].name,'팀6');
+  assert.match(r.lines.join(' '),/같은 승률의 조합이 7개/);
+  assert.match(r.lines.join(' '),/최상 조합으로 확정하지/);
+});
+test('empty and historical missing combination data do not invent recommendations',()=>{
+  assert.deepEqual(recommendCombinations({battles:0,combinations:[]}).top,[]);
+  assert.deepEqual(recommendCombinations({battles:12}).provisional,[]);
+});
 const roster=[{id:0,name:'A',role:'tank'},{id:1,name:'B',role:'melee'},{id:2,name:'C',role:'melee'},{id:3,name:'D',role:'healer'}];
 const duel=(a,b,winner,termination='victory')=>({teamA:[a],teamB:[b],winner,termination});
 test('duels count both perspectives, draws/timeouts, weighted roles and unmeasured classes',()=>{

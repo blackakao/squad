@@ -1,0 +1,38 @@
+[
+  {
+    "id": "rune_moon",
+    "name": "달룬",
+    "radius": 20,
+    "interval": 8,
+    "installationSide": "ally",
+    "color": "#93c5fd",
+    "effectSkillId": "skill_rune_effect_moon"
+  },
+  {
+    "id": "rune_crescent",
+    "name": "초승달룬",
+    "radius": 15,
+    "interval": 10,
+    "installationSide": "ally",
+    "color": "#a78bfa",
+    "effectSkillId": "skill_rune_effect_crescent"
+  },
+  {
+    "id": "rune_bullet",
+    "name": "총알룬",
+    "radius": 20,
+    "interval": 10,
+    "installationSide": "ally",
+    "color": "#facc15",
+    "effectSkillId": "skill_rune_effect_bullet"
+  },
+  {
+    "id": "rune_flame",
+    "name": "불꽃룬",
+    "radius": 15,
+    "interval": 10,
+    "installationSide": "enemy",
+    "color": "#fb923c",
+    "effectSkillId": "skill_rune_effect_flame"
+  }
+]

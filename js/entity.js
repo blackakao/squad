@@ -40,6 +40,7 @@ function getSummonConfiguration(source, action) {
     count:action.count ?? 1,limit:action.limit ?? 3,lifetime:action.duration ?? 20,summonCenter:action.summonCenter ?? "self",
     copyAppearance:action.copyAppearance === true,
     entityGrade:Math.max(1,Math.min(10,Math.floor(Number(entity.entityGrade) || 2))),
+    ownerDiesOnDeath:entity.ownerDiesOnDeath === true,receivedDamagePercent:Math.max(0,Number(entity.receivedDamagePercent ?? 100)),
     commandOnly:entity.commandOnly === true,targetable:entity.targetable !== false,collidable:entity.collidable !== false,
     protectOwnerPercent:action.protectOwnerPercent ?? 0,protectOwnerScope:action.protectOwnerScope ?? "all",
     protectOwnerPriority:action.protectOwnerPriority ?? 0,transferStateScope:action.transferStateScope ?? "none",
@@ -184,6 +185,7 @@ function ensureEntityEditor() {
     <h4>Entity 편집</h4><form id="entityEditorForm" onsubmit="saveEntityEditor(event)">
       <label>Entity ID (생성 시 빈칸: 자동)<input name="entityId" pattern="[a-z0-9](?:[a-z0-9]|_|-){0,79}"></label>
       <label>이름<input name="name" required></label><label>설명<textarea name="description"></textarea></label>
+      <label><input name="ownerDiesOnDeath" type="checkbox">사망 시 소환자도 사망</label><label>받는 피해 (%)<input name="receivedDamagePercent" type="number" min="0" max="100000" value="100"></label>
       <label><input name="commandOnly" type="checkbox">명령 전용 (자체 이동·기본 공격 없음)</label>
       <label><input name="targetable" type="checkbox" checked>적의 공격 대상·전투 지속 인원에 포함</label>
       <label><input name="collidable" type="checkbox" checked>개체 충돌 적용</label>
@@ -218,6 +220,8 @@ function openEntityEditor(button, edit = false) {
   form.elements.icon.onchange = () => selectPortrait(form.elements.icon.value);
   form.elements.summonType.value = entity.summonType ?? 'temporary';
   form.elements.entityGrade.value=entity.entityGrade ?? 2;
+  form.elements.ownerDiesOnDeath.checked=entity.ownerDiesOnDeath === true;
+  form.elements.receivedDamagePercent.value=entity.receivedDamagePercent ?? 100;
   form.elements.commandOnly.checked=entity.commandOnly === true;
   form.elements.targetable.checked=entity.targetable !== false;
   form.elements.collidable.checked=entity.collidable !== false;
@@ -249,6 +253,7 @@ function readEntityEditor() {
   return {entityId:form.elements.entityId.value.trim(),name:form.elements.name.value.trim(),description:form.elements.description.value,
     summonType:form.elements.summonType.value,
     entityGrade:Math.max(1,Math.min(10,Math.floor(Number(form.elements.entityGrade.value) || 2))),
+    ownerDiesOnDeath:form.elements.ownerDiesOnDeath.checked,receivedDamagePercent:Number(form.elements.receivedDamagePercent.value),
     commandOnly:form.elements.commandOnly.checked,targetable:form.elements.targetable.checked,collidable:form.elements.collidable.checked,
     icon:form.elements.icon.value.trim(),role:form.elements.role.value,ai:form.elements.ai.value,attackType:form.elements.attackType.value,attackSkillId:form.elements.attackSkillId.value,tags:form.elements.tags.value.split(',').map(s=>s.trim()).filter(Boolean),
     stats:Object.fromEntries(Object.keys(ENTITY_STAT_FIELDS).map(key=>[key,Number(form.elements[key].value)]))};

@@ -1,4 +1,5 @@
-﻿function resetUnitForBattle(unit) {
+function resetUnitForBattle(unit) {
+  unit.proximityPassiveActive = {};
   restorePassiveStatConversion(unit);
   restorePassiveResourceConversion(unit);
   clearBattleEffects(unit);
@@ -164,6 +165,7 @@ function clearBattleSummons() {
   projectiles = [];
   pendingSummonDeaths.clear();
   battleFields = [];
+  if (typeof resetBattleRunes === "function") resetBattleRunes();
   battleEntitySnapshot = null;
 }
 
@@ -220,6 +222,7 @@ function createSummonedBattleUnit(source, config) {
       summonType: config.summonType === "persistent" ? "persistent" : "temporary",
       entityId: config.entityId, summonTemplateName: config.name, role: config.role, ai: config.ai,
       entityGrade:config.entityGrade ?? 2,
+      ownerDiesOnDeath:config.ownerDiesOnDeath === true,entityReceivedDamagePercent:config.receivedDamagePercent ?? 100,
       commandOnly:config.commandOnly === true,targetable:config.targetable !== false,collidable:config.collidable !== false,
       summonBaseAi:config.ai,summonBaseSpeed:config.speed,
       isEntityPreview: Boolean(source.isEntityPreview),
@@ -379,6 +382,10 @@ function syncAliveState(unit, context = {}) {
       }
       events.push({type:"death",source:context.source ?? null,target:unit,skill:context.skill,periodic:context.periodic,reason:context.reason ?? "HP 소진"});
       if (unit.isSummon && !unit.isEntityPreview) pendingSummonDeaths.add(unit);
+      if (unit.isSummon && unit.ownerDiesOnDeath && unit.owner?.alive) {
+        unit.owner.hp=0;
+        events.push(...syncAliveState(unit.owner,{...context,deferEvents:true,reason:"소환수 사망 연동"}));
+      }
     }
   }
   if (!context.deferEvents) publishBattleEvents(events);
@@ -586,6 +593,7 @@ async function finishBattle(result) {
   [...playerSquad, ...enemySquad].forEach(clearBattleEffects);
   clearBattleSummons();
   battleFields = [];
+  if (typeof resetBattleRunes === "function") resetBattleRunes();
   battleRecordsJson.unshift(record);
   recordPage = 1;
   try {
@@ -609,14 +617,15 @@ function prepareBattleSession({ openScreen = true } = {}) {
   skillAreaImpacts = [];
   skillChainImpacts = [];
   battleFields = [];
+  if (typeof resetBattleRunes === "function") resetBattleRunes();
   playerSquad = playerSquad.filter(unit => !unit.isSummon);
   enemySquad = enemySquad.filter(unit => !unit.isSummon);
   projectiles = [];
   rebuildPlayerSquadFromSelection();
   if (battleMode === 'duel') {
     enemySquad = createDuelSquad('enemy');
-    if (playerSquad.length !== 1 || enemySquad.length !== 1) {
-      alert('1:1 대결은 양쪽 캐릭터를 한 명씩 선택해주세요.');
+    if (playerSquad.length < 1 || enemySquad.length < 1 || playerSquad.length > 10 || enemySquad.length > 10) {
+      alert('양쪽 진영에 캐릭터와 몬스터를 합쳐 각각 1~10명을 선택해주세요.');
       return false;
     }
   }
@@ -684,6 +693,7 @@ function abortBattle() {
   skillAreaImpacts = [];
   skillChainImpacts = [];
   battleFields = [];
+  if (typeof resetBattleRunes === "function") resetBattleRunes();
   if (!isBattleRunning) {
     return;
   }
@@ -1017,7 +1027,7 @@ function startCast(unit, action) {
   const skill = action.skill ?? getUnitSkill(unit, action.type === "heal" ? DEFAULT_HEAL_SKILL_ID : DEFAULT_ATTACK_SKILL_ID);
   if (!isSkillExecutable(skill)) return;
   const castTime = normalizeSkillCastTime(unit.isSummon && action.type !== "skill" ? unit.castSpeed : skill?.castTime);
-  const castDuration = Math.round((castTime == null ? getCastDuration(unit) : castTime * BASE_ATTACK_COOLDOWN) * (action.skillModifier?.castTimePercent ?? 100) / 100);
+  const castDuration = Math.round((castTime == null ? getCastDuration(unit) : castTime * BASE_ATTACK_COOLDOWN) * (action.skillModifier?.castTimePercent ?? 100) / 100 * (unit.effectCastTimeMultiplier ?? 1));
 
   markAction(unit);
   const pendingAction = { ...action, skill };
@@ -1046,12 +1056,13 @@ function updateCast(unit) {
   unit.castTimer--;
   if (unit.castTimer <= 0) {
     const action = unit.pendingAction;
+    const completedCastDuration=unit.castDuration;
 
     unit.pendingAction = null;
     unit.castDuration = 0;
     resolveCastAction(unit, action);
     if (action.type !== "skill" && !unit.channelAction) {
-      setCooldownAfterCast(unit, getCastDuration(unit));
+      setCooldownAfterCast(unit, completedCastDuration);
     }
   }
 
@@ -1072,6 +1083,7 @@ function resolveCastAction(unit, action) {
   if (completedSkill.slot !== "passive" && normalizeSkillChannel(completedSkill.channel).duration > 0) {
     startBattleChannel(unit,action,completedSkill);return;
   }
+  breakAttackConcealment(unit,completedSkill);
   publishBattleEvents([{type:"cast_complete",source:unit,target:action.target,skill:completedSkill,resourceSpent:action.resourceSpent}]);
   if (!unit.alive || hasBattleState(unit,"stun") || (action.type === "skill" && hasBattleState(unit,"silence"))) return;
 
@@ -1149,8 +1161,8 @@ function updateIndependentWeaponAttacks(unit,enemies,startNew=true) {
     markAction(unit);
     state.target=target;
     state.focusTarget=target;
-    state.cooldown=Math.max(1,Math.round(BASE_ATTACK_COOLDOWN*state.weapon.attackSpeed));
-    state.castTimer=Math.max(0,Math.round(BASE_ATTACK_COOLDOWN*state.weapon.castSpeed));
+    state.cooldown=Math.max(1,Math.round(BASE_ATTACK_COOLDOWN*state.weapon.attackSpeed/(unit.effectAttackRateMultiplier ?? 1)));
+    state.castTimer=Math.max(0,Math.round(BASE_ATTACK_COOLDOWN*state.weapon.castSpeed*(unit.effectCastTimeMultiplier ?? 1)));
     if (state.castTimer<=0) resolving.push(state);
   });
   resolving.forEach(state=>resolveIndependentWeaponAttack(unit,state));
@@ -1268,6 +1280,7 @@ function getBattleFieldMovementStCostFlat(unit) {
 }
 
 function updateBattleFields() {
+  if (typeof updateBattleRunes === "function") updateBattleRunes();
   battleFields=battleFields.filter(field => {
     const {source,skill,action}=field;
     if (source.removed) return false;
@@ -1389,10 +1402,12 @@ function applyHeal(healer, target, skill = getUnitSkill(healer, DEFAULT_HEAL_SKI
 }
 
 function doAttack(attacker, target, skill = getUnitSkill(attacker, DEFAULT_ATTACK_SKILL_ID)) {
+  breakAttackConcealment(attacker,skill);
   applySkill(attacker, target, skill);
 }
 
 function spawnProjectile(source, target, type, skill) {
+  breakAttackConcealment(source,skill);
   dispatchSkillActions(source, target, skill, true, true);
 }
 
@@ -1443,7 +1458,84 @@ function updateProjectiles() {
   projectiles = activeProjectiles.filter(projectile => !projectile.source.removed);
 }
 
+let battleFloatingNumbers = [];
+let battleEffectDisplayTimes = new WeakMap();
+
+function isMountedCompanion(unit) {
+  return unit?.isSummon && unit.entityId === "knight_magic_horse";
+}
+
+function collectBattleFloatingNumber(event, {source,target}) {
+  if (isMountedCompanion(target)) return;
+  if (!target || target.isEntityPreview || !(event.amount > 0)) return;
+  if (event.type !== "damaged" && !(event.type === "heal" && event.resource === "HP")) return;
+  const healing=event.type === "heal";
+  battleFloatingNumbers.push({x:target.x,y:target.y,tick:combatEventTick,
+    lane:battleFloatingNumbers.filter(item=>item.x===target.x && item.y===target.y && combatEventTick-item.tick<12).length%4,
+    text:`${healing ? "+" : "−"}${Number(event.amount.toFixed(1))}`,
+    color:healing ? "#22c55e" : source?.isSummon ? "#f97316" : "#ef4444"});
+  if (battleFloatingNumbers.length>160) battleFloatingNumbers.shift();
+}
+subscribeBattleEvent("damaged",collectBattleFloatingNumber);
+subscribeBattleEvent("heal",collectBattleFloatingNumber);
+
+function drawBattleFloatingNumbers() {
+  ctx.save();ctx.textAlign="center";ctx.textBaseline="middle";
+  ctx.font=`bold ${14*scale}px Arial`;ctx.lineWidth=3*scale;ctx.strokeStyle="#111827";
+  for (const item of battleFloatingNumbers) {
+    const age=combatEventTick-item.tick;
+    if(age<0 || age>=60) continue;
+    ctx.globalAlpha=Math.min(1,(60-age)/20);
+    const x=item.x+(item.lane-1.5)*10*scale,y=item.y-(25+age*.55+item.lane*12)*scale;
+    ctx.fillStyle=item.color;ctx.strokeText(item.text,x,y);ctx.fillText(item.text,x,y);
+  }
+  ctx.restore();
+}
+
+function getBattleEffectIconEntries(unit) {
+  const groups=new Map();
+  for (const effect of unit.activeEffects ?? []) {
+    if (effect.remainingTicks !== null && !(effect.remainingTicks>0)) continue;
+    const key=JSON.stringify([effect.skillId || effect.id,effect.casterId,effect.polarity ?? (effect.kind === "state" ? "harmful" : "beneficial"),effect.remainingTicks,effect.stacks]);
+    if (!groups.has(key)) groups.set(key,effect);
+  }
+  return [...groups.values()];
+}
+
+function drawBattleEffectIcons(unit,statusOffset) {
+  const effects=getBattleEffectIconEntries(unit);
+  const size=20*scale,gap=3*scale,columns=6;
+  effects.forEach((effect,index)=>{
+    const row=Math.floor(index/columns),count=Math.min(columns,effects.length-row*columns);
+    const x=unit.x-(count*(size+gap)-gap)/2+(index%columns)*(size+gap);
+    const y=unit.y-statusOffset-(38+row*25)*scale;
+    const remaining=effect.remainingTicks;
+    let timing=battleEffectDisplayTimes.get(effect);
+    if(!timing || remaining>timing.last) timing={total:remaining,last:remaining};
+    timing.last=remaining;battleEffectDisplayTimes.set(effect,timing);
+    const skill=getSkillById(effect.skillId);
+    const icon=skill?.icon && typeof getCachedRecordImage === "function" ? getCachedRecordImage(skill.icon) : null;
+    const harmful=(effect.polarity ?? (effect.kind === "state" ? "harmful" : "beneficial")) === "harmful";
+    ctx.save();ctx.fillStyle="#172033";ctx.fillRect(x,y,size,size);
+    if(icon?.complete && icon.naturalWidth>0) ctx.drawImage(icon,x,y,size,size);
+    else {ctx.fillStyle="#fff";ctx.font=`bold ${11*scale}px Arial`;ctx.textAlign="center";ctx.fillText((effect.name || skill?.name || "효과").slice(0,1),x+size/2,y+size*.65);}
+    if(remaining!==null && timing.total>0) {
+      ctx.save();ctx.beginPath();ctx.rect(x,y,size,size);ctx.clip();
+      ctx.fillStyle="rgba(0,0,0,.58)";ctx.beginPath();ctx.moveTo(x+size/2,y+size/2);
+      ctx.arc(x+size/2,y+size/2,size,-Math.PI/2,-Math.PI/2+2*Math.PI*Math.min(1,remaining/timing.total));ctx.closePath();ctx.fill();ctx.restore();
+    }
+    ctx.strokeStyle=harmful ? "#ef4444" : "#22c55e";ctx.lineWidth=2*scale;ctx.strokeRect(x,y,size,size);
+    ctx.font=`bold ${9*scale}px Arial`;ctx.textAlign="center";ctx.lineWidth=2*scale;ctx.strokeStyle="#111827";ctx.fillStyle="#fff";
+    const label=remaining===null ? "∞" : `${Math.ceil(remaining/BASE_ATTACK_COOLDOWN)}s`;
+    ctx.strokeText(label,x+size/2,y+size-2*scale);ctx.fillText(label,x+size/2,y+size-2*scale);
+    if(effect.stacks>1) {ctx.textAlign="right";ctx.fillText(`×${effect.stacks}`,x+size,y+8*scale);}
+    ctx.restore();
+  });
+  return Math.ceil(effects.length/columns)*25*scale;
+}
+
 function updateEffects() {
+  battleFloatingNumbers=battleFloatingNumbers.filter(item=>combatEventTick-item.tick<60 && combatEventTick>=item.tick);
   [...playerSquad, ...enemySquad].forEach(unit => {
     if (unit.effectTimer > 0) {
       unit.effectTimer--;
@@ -1519,7 +1611,7 @@ function drawSkillBubble(unit, statusOffset) {
 }
 
 function drawUnit(unit, isEnemy) {
-  if (!unit.alive || unit.suspendedTicks>0) {
+  if (!unit.alive || unit.suspendedTicks>0 || isMountedCompanion(unit)) {
     return;
   }
 
@@ -1571,12 +1663,8 @@ function drawUnit(unit, isEnemy) {
   ctx.font = `${10 * scale}px Arial`;
   ctx.fillText(unit.name, unit.x - 12 * scale, unit.y - statusOffset - 4 * scale);
 
-  drawSkillBubble(unit, statusOffset);
-  const effectsText = getBattleEffectLabel(unit);
-  if (effectsText) {
-    ctx.save();ctx.fillStyle="#7c3aed";ctx.font=`${10 * scale}px Arial`;ctx.textAlign="center";
-    ctx.fillText(effectsText,unit.x,unit.y + statusOffset + 12 * scale);ctx.restore();
-  }
+  const effectHeight=drawBattleEffectIcons(unit,statusOffset);
+  drawSkillBubble(unit, statusOffset+effectHeight);
 }
 
 function drawProjectiles() {
@@ -1694,9 +1782,11 @@ function draw() {
   enemySquad.forEach(unit => drawUnit(unit, true));
   drawProjectiles();
   drawSkillChains();
+  drawBattleFloatingNumbers();
 }
 
 function drawBattleFields() {
+  if (typeof drawBattleRunes === "function") drawBattleRunes();
   battleFields.forEach(field=>{
     if (!refreshBattleFieldGeometry(field)) return;
     const color=field.source.side === "enemy" ? "#ef4444" : ["heal","add_buff"].includes(field.action.fieldEffect) ? "#16a34a" : field.action.fieldEffect === "move" ? "#0891b2" : "#7c3aed";
@@ -1722,6 +1812,7 @@ function resetGame() {
   skillAreaImpacts = [];
   skillChainImpacts = [];
   battleFields = [];
+  if (typeof resetBattleRunes === "function") resetBattleRunes();
   isBattleRunning = false;
   gameSpeed = 1;
   playerSquad = [];
@@ -1732,7 +1823,8 @@ function resetGame() {
   selectedBattleTeamIds.clear();
   selectedBattleCharacterIds.clear();
   selectedEnemyTeamIndex = "";
-  duelCharacterIds = {player:'',enemy:''};
+  duelCharacterIds = {player:[],enemy:[]};
+  duelMonsterIds = {player:[],enemy:[]};
   duelSkillChoices = {player:{},enemy:{}};
   projectiles = [];
   battleStartedAt = null;

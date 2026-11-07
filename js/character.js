@@ -229,7 +229,7 @@ async function deleteCharacterFromModal() {
   playerSquad = [];
   enemySquad = [];
   selectedEnemyTeamIndex = "";
-  duelCharacterIds = {player:'',enemy:''};
+  duelCharacterIds = {player:[],enemy:[]};
   duelSkillChoices = {player:{},enemy:{}};
   selectedBattleCharacterIds.clear();
   selectedBattleTeamIds.clear();

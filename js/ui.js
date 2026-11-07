@@ -267,6 +267,7 @@ const ST_PHYSICAL_ATTACK_COST = 10;
 const EXHAUSTED_MOVE_MULTIPLIER = 0.5;
 const EXHAUSTED_ATTACK_SPEED_MULTIPLIER = 0.7;
 const API_URLS = {
+  runes: "/api/runes",
   synergies: "/api/synergies",
   iconMappings: "/api/icon-mappings",
   monsters: "/api/monsters",
@@ -342,8 +343,9 @@ let selectedBattleTeamIds = new Set();
 let selectedBattleCharacterIds = new Set();
 let selectedEnemyTeamIndex = "";
 let selectedPreBattleSkillChoices = {};
-let battleMode = "monster";
-let duelCharacterIds = {player: '', enemy: ''};
+let battleMode = "duel";
+let duelCharacterIds = {player: [], enemy: []};
+let duelMonsterIds = {player: [], enemy: []};
 let duelSkillChoices = {player: {}, enemy: {}};
 let selectedBattleScreenTab = "status";
 let battleEventLogs = [];

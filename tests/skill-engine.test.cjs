@@ -4,6 +4,413 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const path = require('node:path');
 
+test('knight mount is invisible and untargetable but still shares damage and appears under its owner',()=>{
+ const e=engine();e.skillsJson=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8')));
+ e.horseDefinition=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','entities','knight_magic_horse.json'),'utf8'));vm.runInContext('entitiesJson.push(horseDefinition)',e);
+ const knight=unit(e),enemy=unit(e,'enemy',110);knight.hp=knight.maxHp=1000;knight.speed=2;
+ const passive=e.getSkillById('skill_class_knight_magic_horse');knight.skillIds=[passive.id];e.applySkill(knight,knight,passive);const horse=e.getLivingOwnedSummons(knight,'knight_magic_horse')[0];assert.ok(horse);
+ assert.equal(horse.commandOnly,true);assert.equal(horse.targetable,false);assert.equal(horse.collidable,false);assert.equal(e.isMountedCompanion(horse),true);e.drawUnit(horse,false);
+ assert.equal(e.getActiveBattleEntities(e.playerSquad).includes(horse),false);
+ const area=e.normalizeSkillAction({type:'deal_damage',target:'enemy',area:20,areaCenter:'self',damageType:'fixed',coefficients:[{type:'fixed',value:100}]});e.applySkill(enemy,knight,skill(e,area));assert.equal(knight.hp,920);assert.equal(horse.hp,980);
+ const x=horse.x;e.moveUnit(horse,[enemy]);e.takeAction(horse,[knight,horse],[enemy]);assert.equal(horse.x,x);assert.equal(horse.pendingAction,null);
+ e.document={addEventListener(){}};e.getRoleLabel=String;e.getUnitDps=()=>0;e.recordImagePath=()=>'';
+ vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','ui-battle-view.js'),'utf8'),e);
+ const html=e.renderStatus(e.playerSquad,()=> 'blue');assert.ok(html.includes('main-summon-group'));assert.ok(html.includes(horse.name));assert.ok(html.includes('980 / 1000'));
+});
+
+function cheerEngine() {
+ const e=engine();e.skillsJson=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8')));
+ e.cheer=id=>e.getSkillById('skill_class_cheer_'+id);return e;
+}
+
+test('cheer encourage restores attack based HP and twenty ST independently within six metres',()=>{
+ const e=cheerEngine(),s=unit(e),ally=unit(e,'player',160),far=unit(e,'player',161);s.atk=100;s.mp=40;s.skillIds=[e.cheer('encourage').id];
+ for(const u of [s,ally,far]){u.hp=50;u.st=50;}
+ assert.equal(e.tryUseReadySkill(s,[s,ally,far],[]),true);assert.equal(s.mp,40);assert.equal(s.st,60);assert.equal(s.hp,55);assert.equal(ally.hp,55);assert.equal(ally.st,70);assert.equal(far.hp,50);assert.equal(far.st,50);
+ assert.equal(s.skillCooldowns[e.cheer('encourage').id],600);
+ ally.hp=100;ally.st=10;e.applySkill(s,ally,e.cheer('encourage'));assert.equal(ally.hp,100);assert.equal(ally.st,30);
+});
+
+test('cheer passion bundles attack rate movement and all cast time, restoring every modifier on dispel or expiry',()=>{
+ const e=cheerEngine(),s=unit(e),ally=unit(e,'player',110);ally.attackSpeed=2;ally.castSpeed=2;ally.speed=2;
+ e.applySkill(s,s,e.cheer('passion'));assert.ok(Math.abs(ally.attackSpeed-2/1.3)<1e-12);assert.equal(ally.speed,2.4);assert.equal(ally.castSpeed,2);assert.equal(ally.effectCastTimeMultiplier,.7);assert.equal(ally.activeEffects.length,1);
+ e.applyTimedEffectAction(s,ally,e.normalizeSkillAction({type:'delete_buff',effect:{id:'cheer_passion',dispelMode:'id'}}));assert.equal(ally.attackSpeed,2);assert.equal(ally.speed,2);assert.equal(ally.effectCastTimeMultiplier,1);
+ e.applySkill(s,s,e.cheer('passion'));for(let i=0;i<240;i++)e.updateBattleEffects();assert.equal(ally.attackSpeed,2);assert.equal(ally.speed,2);assert.equal(ally.effectCastTimeMultiplier,1);
+});
+
+test('cheer cast modifier affects explicit skill fallback basic and independent weapon once, without changing an ongoing cast',()=>{
+ const e=cheerEngine(),s=unit(e),target=unit(e,'enemy',105);s.castSpeed=.5;s.attackSpeed=2;
+ e.applySkill(s,s,e.cheer('passion'));const basic=e.getUnitSkill(s);e.startCast(s,{type:'attack',target,skill:basic});assert.equal(s.castTimer,21);
+ for(let i=0;i<21;i++)e.updateCast(s);assert.equal(s.attackCooldown,39);
+ const action=e.normalizeSkillAction({type:'deal_damage',damageType:'fixed',coefficients:[{type:'fixed',value:1}]});const explicit=skill(e,action,2);
+ e.startCast(s,{type:'skill',target,skill:explicit});assert.equal(s.castTimer,84);
+ e.applyTimedEffectAction(s,s,e.normalizeSkillAction({type:'delete_buff',effect:{id:'cheer_passion',dispelMode:'id'}}));assert.equal(s.castTimer,84);e.interruptBattleCast(s,'test');
+ e.startCast(s,{type:'skill',target,skill:explicit});assert.equal(s.castTimer,120);e.interruptBattleCast(s,'test');
+ e.applySkill(s,s,e.cheer('passion'));s.weaponAttackStates=[{weapon:{attackType:'physical',attackRange:1,castSpeed:1,attackSpeed:2,attackSkillId:''},cooldown:0,castTimer:0}];
+ e.updateIndependentWeaponAttacks(s,[target]);assert.equal(s.weaponAttackStates[0].castTimer,42);assert.equal(s.weaponAttackStates[0].cooldown,92);
+});
+
+test('cheer freedom cleanses dispellable physical and magic states then blocks new states for five seconds',()=>{
+ const e=cheerEngine(),s=unit(e),ally=unit(e,'player',110),enemy=unit(e,'enemy',115);
+ const state=(id,category,dispellable=true)=>e.normalizeSkillAction({type:'add_state',duration:10,effect:{id,state:'silence',category,polarity:'harmful',dispellable}});
+ e.applyTimedEffectAction(enemy,ally,state('physical','physical'));e.applyTimedEffectAction(enemy,ally,state('magic','magic'));e.applyTimedEffectAction(enemy,ally,state('locked','general',false));
+ e.applySkill(s,ally,e.cheer('freedom'));assert.deepEqual(Array.from(ally.activeEffects.filter(x=>x.kind==='state'),x=>x.id),['locked']);
+ e.applyTimedEffectAction(enemy,ally,state('new','magic'));assert.equal(ally.activeEffects.some(x=>x.id==='new'),false);
+ e.applyTimedEffectAction(enemy,ally,e.normalizeSkillAction({type:'add_buff',duration:3,effect:{id:'ordinary_slow',stat:'speed',mode:'percent',value:-20,polarity:'harmful'}}));assert.equal(ally.activeEffects.some(x=>x.id==='ordinary_slow'),true);
+ for(let i=0;i<300;i++)e.updateBattleEffects();e.applyTimedEffectAction(enemy,ally,state('new','magic'));assert.equal(ally.activeEffects.some(x=>x.id==='new'),true);
+});
+
+test('cheer all cast time mode validates and round trips while legacy cast stat keeps explicit casts unchanged',()=>{
+ const e=cheerEngine(),s=unit(e),target=unit(e,'enemy',105);
+ const legacy=e.normalizeSkillAction({type:'add_buff',target:'self',duration:4,effect:{id:'old',stat:'castSpeed',mode:'percent',value:-30}});s.castSpeed=2;e.applyTimedEffectAction(s,s,legacy);
+ const explicit=skill(e,e.normalizeSkillAction({type:'deal_damage',coefficients:[{type:'fixed',value:1}]}),2);e.startCast(s,{type:'skill',target,skill:explicit});assert.equal(s.castTimer,120);e.interruptBattleCast(s,'test');
+ const modifier=e.normalizeSkillAction({type:'add_buff',target:'self',duration:4,effect:{id:'time',stat:'castSpeed',mode:'cast_time_percent',value:-30}});assert.equal(e.isSkillActionSupported(modifier),true);e.applyTimedEffectAction(s,s,modifier);assert.equal(s.effectCastTimeMultiplier,.7);
+ assert.equal(e.isSkillActionSupported({...modifier,effect:{...modifier.effect,stat:'atk'}}),false);assert.equal(e.isSkillActionSupported({...modifier,effect:{...modifier.effect,value:-101}}),false);
+ for(const id of ['encourage','passion','freedom'])assert.equal(e.isSkillExecutable(e.cheer(id)),true,id);
+ const chars=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','characters.json'),'utf8'));const ids=chars.find(c=>c.skillIds?.includes(e.cheer('passion').id)).skillIds;assert.equal(ids.includes('skill_class_cheer_medkit'),false);assert.equal(ids.length,3);assert.ok(e.cheer('medkit'));
+});
+
+function runeEngine() {
+ const e=engine();e.skillsJson=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8')));
+ e.runeDefinitions=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','runes.json'),'utf8'));
+ vm.runInContext('runesJson=runeDefinitions.map(normalizeRune);',e);e.runeSkill=id=>e.getSkillById('skill_class_rune_'+id);
+ e.installed=()=>vm.runInContext('battleRunes',e);return e;
+}
+
+test('runes choose exactly three distinct registry definitions and snapshot permanent independent installations',()=>{
+ const e=runeEngine(),s=unit(e),enemy=unit(e,'enemy',400);s.skillIds=[e.runeSkill('master').id];s.magic=100;
+ s.skillSelections={[e.runeSkill('master').id]:['rune_flame','rune_flame','missing','rune_moon']};
+ const ids=e.getRuneLoadout(s,e.runeSkill('master'));assert.equal(ids.length,3);assert.equal(new Set(ids).size,3);assert.equal(ids[0],'rune_flame');
+ e.publishBattleEvents([{type:'battle_entry',source:s,target:s}]);assert.equal(e.installed().length,3);
+ const flame=e.installed().find(r=>r.definition.id==='rune_flame');assert.equal(flame.x,400);assert.equal(flame.nextTick,600);
+ s.x=250;enemy.x=600;e.updateBattleRunes();assert.equal(flame.x,400);assert.equal(flame.y,100);
+ e.publishBattleEvents([{type:'battle_entry',source:s,target:s}]);assert.equal(e.installed().length,3);
+ e.runeDefinitions[0].radius=999;assert.equal(e.installed().find(r=>r.definition.id==='rune_moon').definition.radius,20);
+});
+
+test('moon crescent and bullet runes pulse only on their intervals and buffs last one second',()=>{
+ const e=runeEngine(),s=unit(e),ally=unit(e,'player',110),far=unit(e,'player',350);s.magic=100;s.skillIds=[e.runeSkill('master').id];
+ ally.hp=50;ally.mp=0;ally.speed=2;far.hp=50;far.mp=0;
+ e.applySkill(s,s,e.runeSkill('master'));
+ for(let i=0;i<479;i++)e.updateBattleRunes();assert.equal(ally.hp,50);assert.equal(ally.mp,0);
+ e.updateBattleRunes();assert.equal(ally.hp,52);assert.equal(far.hp,50);
+ for(let i=0;i<120;i++)e.updateBattleRunes();assert.equal(ally.mp,20);assert.equal(far.mp,0);assert.equal(ally.speed,4);
+ assert.equal(vm.runInContext("combatEventHistory.filter(event=>event.type==='rune_install').length",e),3);
+ assert.equal(vm.runInContext("combatEventHistory.filter(event=>event.type==='rune_tick').length",e),3);
+ for(let i=0;i<60;i++)e.updateBattleEffects();assert.equal(ally.speed,2);
+ assert.equal(e.installed().length,3);
+});
+
+test('flame rune remains fixed and continues after the owner dies until battle cleanup',()=>{
+ const e=runeEngine(),s=unit(e),enemy=unit(e,'enemy',200);s.magic=100;s.skillIds=[e.runeSkill('master').id];s.skillSelections={[s.skillIds[0]]:['rune_flame','rune_moon','rune_crescent']};enemy.hp=enemy.maxHp=1000;
+ e.applySkill(s,s,e.runeSkill('master'));s.hp=0;e.syncAliveState(s);for(let i=0;i<600;i++)e.updateBattleRunes();assert.equal(enemy.hp,970);
+ assert.equal(e.installed().length,3);e.clearBattleSummons();assert.equal(e.installed().length,0);
+});
+
+test('rune strike advances only its owners runes on actual hits without changing repeat periods',()=>{
+ const e=runeEngine(),s=unit(e),other=unit(e),enemy=unit(e,'enemy',105);s.magic=100;enemy.hp=enemy.maxHp=10000;
+ for(const owner of [s,other]){owner.skillIds=[e.runeSkill('master').id];e.applySkill(owner,owner,e.runeSkill('master'));}
+ const mine=e.installed().filter(r=>r.owner===s),theirs=e.installed().filter(r=>r.owner===other);
+ e.applySkill(s,enemy,e.runeSkill('strike'));assert.equal(enemy.hp,9870);assert.equal(mine[0].nextTick,420);assert.equal(theirs[0].nextTick,480);
+ mine[0].nextTick=30;e.applySkill(s,enemy,e.runeSkill('strike'));assert.equal(mine[0].nextTick,0);e.updateBattleRunes();assert.equal(mine[0].nextTick,480);
+ e.applyTimedEffectAction(enemy,enemy,e.normalizeSkillAction({type:'add_buff',effect:{id:'immune',mode:'damage_immunity'}}));const before=mine[0].nextTick;
+ e.applySkill(s,enemy,e.runeSkill('strike'));assert.equal(mine[0].nextTick,before);
+});
+
+test('new rune definitions join the registry without class code and pending enemy placement waits for entry',()=>{
+ const e=runeEngine(),s=unit(e);s.magic=100;s.skillIds=[e.runeSkill('master').id];
+ e.extraRune={id:'new_rune',name:'New',radius:3,interval:2,installationSide:'enemy',color:'#abcdef',effectSkillId:'skill_rune_effect_flame'};
+ vm.runInContext('runesJson.push(normalizeRune(extraRune));',e);s.skillSelections={[s.skillIds[0]]:['new_rune','rune_moon','rune_crescent']};
+ e.resetBattleRunes();e.applySkill(s,s,e.runeSkill('master'));const rune=e.installed().find(r=>r.definition.id==='new_rune');assert.equal(rune.x,null);
+ for(let i=0;i<120;i++)e.updateBattleRunes();assert.equal(rune.nextTick,120);
+ const enemy=unit(e,'enemy',300);enemy.hp=enemy.maxHp=1000;e.updateBattleRunes();assert.equal(rune.x,300);
+ for(let i=0;i<119;i++)e.updateBattleRunes();assert.equal(enemy.hp,970);
+});
+
+function puppetEngine() {
+ const e=engine();e.skillsJson=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8')));
+ e.dollEntity=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','entities','puppet_doll.json'),'utf8'));vm.runInContext('entitiesJson.push(dollEntity)',e);
+ e.puppet=id=>e.getSkillById('skill_class_puppet_'+id);return e;
+}
+
+test('puppet master summons one permanent half-stat melee doll and links actual death to its owner',()=>{
+ const e=puppetEngine(),owner=unit(e),enemy=unit(e,'enemy',110);owner.atk=100;owner.magic=80;owner.skillIds=[e.puppet('master').id];
+ e.publishBattleEvents([{type:'battle_entry',source:owner,target:owner}]);const doll=e.getLivingOwnedSummons(owner,'puppet_doll')[0];assert.ok(doll);
+ assert.equal(doll.atk,50);assert.equal(doll.magic,40);assert.equal(doll.maxHp,50);assert.equal(doll.attackType,'physical');assert.equal(doll.attackRange,1);assert.equal(doll.summonTicks,null);
+ e.publishBattleEvents([{type:'battle_entry',source:owner,target:owner}]);assert.equal(e.getLivingOwnedSummons(owner).length,1);
+ e.applyActionDamage(enemy,doll,e.normalizeSkillAction({type:'deal_damage',damageType:'fixed',coefficients:[{type:'fixed',value:100}]}));assert.equal(doll.hp,40);assert.equal(owner.alive,true);
+ e.applyActionDamage(enemy,doll,e.normalizeSkillAction({type:'deal_damage',damageType:'fixed',coefficients:[{type:'fixed',value:400}]}));assert.equal(doll.alive,false);assert.equal(owner.alive,false);assert.equal(owner.hp,0);
+});
+
+test('puppet healing curse tracks actual HP gains and absorbs only other casters healing with thirty second refresh',()=>{
+ const e=puppetEngine(),owner=unit(e),other=unit(e),target=unit(e);owner.skillIds=[e.puppet('master').id];target.hp=10;
+ const heal={healResource:'HP',coefficients:[{type:'fixed',value:30}]};e.applyActionHeal(owner,target,heal);let curse=target.activeEffects.find(x=>x.mode==='heal_absorb');assert.equal(curse.absorbRemaining,30);assert.equal(target.hp,40);
+ e.applyActionHeal(other,target,{...heal,coefficients:[{type:'fixed',value:20}]});assert.equal(target.hp,40);assert.equal(curse.absorbRemaining,10);
+ e.applyActionHeal(owner,target,heal);curse=target.activeEffects.find(x=>x.mode==='heal_absorb');assert.equal(target.hp,70);assert.equal(curse.absorbRemaining,40);assert.equal(curse.remainingTicks,1800);
+ e.applyActionHeal(other,target,{...heal,coefficients:[{type:'fixed',value:50}]});assert.equal(target.hp,80);assert.equal(target.activeEffects.length,0);
+ e.applyActionHeal(owner,target,heal);assert.equal(target.hp,100);assert.equal(target.activeEffects[0].absorbRemaining,20);
+ e.applyActionHeal(owner,target,heal);assert.equal(target.activeEffects[0].absorbRemaining,20);
+ for(let i=0;i<1800;i++)e.updateBattleEffects();assert.equal(target.activeEffects.length,0);
+});
+
+test('puppet command uses doll position and attack power, healing and cursing only allies within five metres',()=>{
+ const e=puppetEngine(),owner=unit(e),ally=unit(e,'player',305),far=unit(e,'player',360),enemy=unit(e,'enemy',310);owner.atk=100;owner.skillIds=[e.puppet('master').id];
+ e.applySkill(owner,owner,e.puppet('master'));const doll=e.getLivingOwnedSummons(owner)[0];doll.x=300;doll.y=100;ally.hp=10;far.hp=10;enemy.hp=enemy.maxHp=1000;
+ assert.equal(e.resolveSkillActionTarget(owner,e.puppet('attack').actions[0],enemy,e.puppet('attack')),enemy);
+ e.applySkill(owner,enemy,e.puppet('attack'));assert.equal(enemy.hp,950);assert.equal(ally.hp,60);assert.equal(far.hp,10);assert.equal(ally.activeEffects[0].absorbRemaining,50);
+ enemy.x=400;assert.equal(e.resolveSkillActionTarget(owner,e.puppet('attack').actions[0],enemy,e.puppet('attack')),null);
+});
+
+test('puppet cursed power heals with attack and selects the higher offensive stat for thirty percent buff',()=>{
+ const e=puppetEngine(),owner=unit(e),ally=unit(e,'player',110);owner.atk=40;owner.skillIds=[e.puppet('master').id];ally.hp=10;ally.atk=10;ally.magic=100;
+ e.applySkill(owner,ally,e.puppet('heal'));assert.equal(ally.hp,50);assert.equal(ally.atk,10);assert.equal(ally.magic,130);assert.equal(ally.activeEffects.find(x=>x.mode==='heal_absorb').absorbRemaining,40);
+ for(let i=0;i<600;i++)e.updateBattleEffects();assert.equal(ally.magic,100);
+});
+
+test('puppet cult echoes basic attacks exactly once and heals total actual damage with puppeteer curse',()=>{
+ const e=puppetEngine(),owner=unit(e),ally=unit(e,'player',110),enemy=unit(e,'enemy',115);owner.skillIds=[e.puppet('master').id];ally.hp=10;enemy.hp=enemy.maxHp=1000;
+ e.applySkill(owner,owner,e.puppet('cult'));const hit=e.normalizeSkillAction({type:'deal_damage',damageType:'fixed',coefficients:[{type:'fixed',value:20}]});
+ e.applyActionDamage(ally,enemy,hit,{id:'basic',slot:'basic'});assert.equal(enemy.hp,960);assert.equal(ally.hp,50);assert.equal(ally.activeEffects.find(x=>x.mode==='heal_absorb').absorbRemaining,40);
+ e.applyActionDamage(ally,enemy,hit,{id:'active',slot:'active'});assert.equal(enemy.hp,940);assert.equal(ally.hp,70);
+ for(let i=0;i<180;i++)e.updateBattleEffects();e.applyActionDamage(ally,enemy,hit,{id:'basic',slot:'basic'});assert.equal(enemy.hp,920);assert.equal(ally.hp,70);
+});
+
+test('puppet dance strikes both four metre circles with owners attack power and keeps new data executable',()=>{
+ const e=puppetEngine(),owner=unit(e),a=unit(e,'enemy',110),b=unit(e,'enemy',305);owner.atk=100;owner.skillIds=[e.puppet('master').id];
+ e.applySkill(owner,owner,e.puppet('master'));const doll=e.getLivingOwnedSummons(owner)[0];doll.x=300;doll.y=100;
+ for(const t of [a,b])t.hp=t.maxHp=1000;e.applySkill(owner,a,e.puppet('dance'));assert.equal(a.hp,920);assert.equal(b.hp,920);
+ doll.x=110;a.hp=1000;e.applySkill(owner,a,e.puppet('dance'));assert.equal(a.hp,840);
+ for(const id of ['master','attack','heal','cult','dance'])assert.equal(e.isSkillExecutable(e.puppet(id)),true,id);
+ const chars=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','characters.json'),'utf8'));assert.equal(chars.find(c=>c.skillIds?.includes(e.puppet('master').id)).skillIds.length,5);
+});
+
+test('puppet curse dispels independently and never absorbs MP or a full HP alternative barrier',()=>{
+ const e=puppetEngine(),owner=unit(e),other=unit(e),target=unit(e);owner.skillIds=[e.puppet('master').id];target.hp=10;
+ e.applyActionHeal(owner,target,{healResource:'HP',coefficients:[{type:'fixed',value:20}]});const curse=target.activeEffects[0];
+ target.mp=0;e.applyActionHeal(other,target,{healResource:'MP',coefficients:[{type:'fixed',value:10}]});assert.equal(target.mp,10);assert.equal(curse.absorbRemaining,20);
+ target.hp=target.maxHp;e.applyActionHeal(other,target,{healResource:'HP',fullResourceAlternative:'BP',coefficients:[{type:'fixed',value:10}]});assert.equal(target.bp,10);assert.equal(curse.absorbRemaining,20);
+ e.applyTimedEffectAction(other,target,e.normalizeSkillAction({type:'delete_buff',effect:{id:curse.id,dispelMode:'id'}}));assert.equal(target.activeEffects.length,0);
+ e.applySkill(owner,owner,e.puppet('master'));e.clearBattleSummons();assert.equal(owner.alive,true);
+});
+
+function fireEngine() {
+ const e=engine();e.skillsJson=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8')));
+ e.fire=id=>e.getSkillById('skill_class_fire_'+id);return e;
+}
+
+test('fire flame distributes ten percent over five seconds and bursts only the remaining budget on third stack',()=>{
+ const e=fireEngine(),s=unit(e),t=unit(e,'enemy',110);s.magic=100;s.skillIds=[e.fire('flame').id];t.hp=t.maxHp=10000;
+ e.applySkill(s,t,e.fire('ignite'));let pool=t.activeEffects.find(x=>x.mode==='damage_pool');assert.equal(pool.poolRemaining,12);assert.equal(pool.stacks,1);
+ for(let i=0;i<60;i++)e.updateBattleEffects();assert.ok(Math.abs(pool.poolRemaining-9.6)<1e-10);
+ e.applySkill(s,t,e.fire('ignite'));pool=t.activeEffects.find(x=>x.mode==='damage_pool');assert.equal(pool.stacks,2);assert.equal(pool.poolRemaining,21.6);
+ const before=t.hp;e.applySkill(s,t,e.fire('ignite'));assert.ok(Math.abs(before-t.hp-153.6)<1e-8);
+ assert.equal(t.activeEffects.filter(x=>x.mode==='damage_pool').length,0);
+ e.applySkill(s,t,e.fire('ignite'));const after=t.hp;for(let i=0;i<300;i++)e.updateBattleEffects();assert.ok(Math.abs(after-t.hp-12)<1e-8);
+ assert.equal(t.activeEffects.length,0);
+});
+
+test('fire lizard registers its eight second total once and snapshots the caster magic',()=>{
+ const e=fireEngine(),s=unit(e),t=unit(e,'enemy',110);s.magic=100;s.skillIds=[e.fire('flame').id];t.hp=t.maxHp=10000;
+ e.applySkill(s,t,e.fire('lizard'));const pool=t.activeEffects.find(x=>x.mode==='damage_pool');assert.equal(pool.poolRemaining,16);assert.equal(pool.stacks,1);
+ s.magic=1000;for(let i=0;i<480;i++)e.updateBattleEffects();assert.ok(Math.abs(10000-t.hp-176)<1e-7);assert.equal(t.activeEffects.length,0);
+});
+
+test('fire flame keeps caster and target pools separate and dispels without bursting',()=>{
+ const e=fireEngine(),a=unit(e),b=unit(e),t=unit(e,'enemy',110),other=unit(e,'enemy',120);
+ for(const u of [a,b]){u.magic=100;u.skillIds=[e.fire('flame').id];}for(const u of [t,other])u.hp=u.maxHp=10000;
+ e.applySkill(a,t,e.fire('ignite'));e.applySkill(b,t,e.fire('ignite'));e.applySkill(a,other,e.fire('ignite'));
+ assert.equal(t.activeEffects.length,2);assert.equal(other.activeEffects.length,1);
+ const hp=t.hp;e.applyTimedEffectAction(t,t,e.normalizeSkillAction({type:'delete_buff',effect:{id:'fire_flame',dispelMode:'id'}}));assert.equal(t.hp,hp);assert.equal(t.activeEffects.length,0);assert.equal(other.activeEffects.length,1);
+});
+
+test('fire flame excludes basic proc periodic reflected and zero damage and counts damage modifiers once',()=>{
+ const e=fireEngine(),s=unit(e),t=unit(e,'enemy',110);s.skillIds=[e.fire('flame').id];t.hp=t.maxHp=10000;
+ const action=e.normalizeSkillAction({type:'deal_damage',damageType:'fixed',coefficients:[{type:'fixed',value:100}]});
+ e.applyActionDamage(s,t,action,{id:'basic',slot:'basic'});
+ e.applyActionDamage(s,t,{...action,periodic:true},e.fire('ignite'));
+ e.applyActionDamage(s,t,{...action,reflected:true},e.fire('ignite'));
+ e.applyActionDamage(s,t,action,{...e.fire('ignite'),triggered:true});
+ e.applyActionDamage(s,t,{...action,coefficients:[{type:'fixed',value:0}]},e.fire('ignite'));assert.equal(t.activeEffects.length,0);
+ t.runtimeRuleOverrides=[{id:'vulnerable',receivedDamagePercent:200}];e.applyActionDamage(s,t,action,e.fire('ignite'));
+ assert.equal(t.activeEffects[0].poolRemaining,20);const hp=t.hp;for(let i=0;i<300;i++)e.updateBattleEffects();assert.ok(Math.abs(hp-t.hp-20)<1e-8);
+});
+
+test('fire meditation restores ten percent of current missing mana on each of three pulses and interrupts on damage',()=>{
+ const e=fireEngine(),s=unit(e),enemy=unit(e,'enemy',110);s.mp=0;
+ const meditation=e.fire('meditation');e.startBattleChannel(s,{type:'skill',target:s,skill:meditation},meditation);
+ for(let i=0;i<180;i++)e.updateBattleChannel(s);
+ assert.ok(Math.abs(s.mp-27.1)<1e-9);assert.equal(s.channelAction,null);assert.equal(s.skillCooldowns[meditation.id],1200);
+ s.mp=0;e.startBattleChannel(s,{type:'skill',target:s,skill:meditation},meditation);for(let i=0;i<60;i++)e.updateBattleChannel(s);assert.equal(s.mp,10);
+ e.applyActionDamage(enemy,s,e.normalizeSkillAction({type:'deal_damage',damageType:'fixed',coefficients:[{type:'fixed',value:1}]}));assert.equal(s.channelAction,null);assert.equal(s.mp,10);
+});
+
+test('fire revised data normalizes and equips all five skills with burst and zero cooldown attack ahead of fallback',()=>{
+ const e=fireEngine();for(const id of ['flame','ignite','lizard','meditation','drunken'])assert.equal(e.isSkillExecutable(e.fire(id)),true,id);
+ assert.deepEqual([e.fire('ignite').castTime,e.fire('ignite').cooldown,e.fire('ignite').actions[0].coefficients[0].value],[1.5,0,120]);
+ assert.deepEqual([e.fire('drunken').castTime,e.fire('drunken').cooldown,e.fire('drunken').actions[0].coefficients[0].value],[3,12,250]);
+ const chars=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','characters.json'),'utf8'));const ids=chars.find(c=>c.skillIds?.includes('skill_class_fire_ignite')).skillIds;assert.equal(ids.length,5);assert.equal(ids.at(-1),e.fire('ignite').id);
+ const source=unit(e),target=unit(e,'enemy',110);source.skillIds=ids;source.mp=source.maxMp;
+ assert.equal(e.tryUseReadySkill(source,[source],[target]),true);assert.equal(source.pendingAction.skill.id,e.fire('lizard').id);
+ e.interruptBattleCast(source,'test');source.mp=source.maxMp;source.skillCooldowns[e.fire('lizard').id]=180;
+ assert.equal(e.tryUseReadySkill(source,[source],[target]),true);assert.equal(source.pendingAction.skill.id,e.fire('drunken').id);
+ e.interruptBattleCast(source,'test');source.mp=source.maxMp;source.skillCooldowns[e.fire('drunken').id]=720;
+ assert.equal(e.tryUseReadySkill(source,[source],[target]),true);assert.equal(source.pendingAction.skill.id,e.fire('ignite').id);
+});
+
+function sniperEngine() {
+ const e=engine();e.skillsJson=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8')));
+ e.sniper=name=>e.getSkillById('skill_class_sniper_'+name);return e;
+}
+
+test('sniper solitude checks both sides at five metres including summons and ignores waiting or dead units',()=>{
+ const e=sniperEngine(),s=unit(e),other=unit(e,'enemy',151);s.atk=100;s.skillIds=[e.sniper('solitude').id];
+ e.updateBattleEffects();assert.equal(s.atk,120);
+ other.x=150;e.updateBattleEffects();assert.equal(s.atk,100);assert.equal(e.getUnitIncomingRulePercent(s,'receivedDamagePercent'),130);
+ assert.equal(s.runtimeRuleOverrides[0].remainingTicks,120);
+ other.side='player';other.isSummon=true;e.updateBattleEffects();assert.equal(s.atk,100);
+ other.isWaiting=true;e.updateBattleEffects();assert.equal(s.atk,120);
+ other.isWaiting=false;other.alive=false;e.updateBattleEffects();assert.equal(s.atk,120);
+ for(let i=0;i<120;i++)e.updateRuntimeRuleOverrides();assert.equal(e.getUnitIncomingRulePercent(s,'receivedDamagePercent'),100);
+ e.applyTimedEffectAction(other,s,e.normalizeSkillAction({type:'delete_buff',effect:{id:'sniper_solitude',dispelMode:'id'}}));
+ e.updateBattleEffects();assert.equal(e.getUnitIncomingRulePercent(s,'receivedDamagePercent'),130);assert.equal(s.atk,120);
+});
+
+test('sniper shadow triggers at thirty percent and ends concealment and speed when attacking',()=>{
+ const e=sniperEngine(),s=unit(e),enemy=unit(e,'enemy',110);s.speed=2;s.skillIds=[e.sniper('shadow').id];
+ s.hp=31;assert.equal(e.tryUseReadySkill(s,[s],[enemy]),false);
+ s.hp=30;assert.equal(e.tryUseReadySkill(s,[s],[enemy]),true);
+ assert.equal(e.canDirectlyTarget(enemy,s),false);assert.equal(s.speed,2.6);
+ assert.equal(s.skillCooldowns[e.sniper('shadow').id],1800);
+ e.breakAttackConcealment(s,e.sniper('mode'));assert.equal(e.canDirectlyTarget(enemy,s),false);
+ e.breakAttackConcealment(s,e.sniper('shot'));assert.equal(e.canDirectlyTarget(enemy,s),true);assert.equal(s.speed,2);
+});
+
+test('sniper camouflage expires after five seconds without changing portraits',()=>{
+ const e=sniperEngine(),s=unit(e),enemy=unit(e,'enemy',110);s.hp=30;s.portrait='original';s.speed=2;
+ e.applySkill(s,s,e.sniper('shadow'));assert.equal(s.portrait,'original');
+ for(let i=0;i<300;i++)e.updateBattleEffects();assert.equal(e.canDirectlyTarget(enemy,s),true);assert.equal(s.speed,2);
+});
+
+test('sniper focus exits on actual barrier or periodic damage and interrupts casting with two seconds stun',()=>{
+ for(const periodic of [false,true]) {
+  const e=sniperEngine(),s=unit(e),enemy=unit(e,'enemy',110);s.atk=100;s.bp=50;
+  e.applySkill(s,s,e.sniper('mode'));assert.equal(s.atk,130);assert.equal(s.attackRange,6.5);
+  s.castTimer=100;s.pendingAction={type:'skill',skill:e.sniper('shot'),target:enemy};
+  const hit=e.normalizeSkillAction({type:'deal_damage',damageType:'fixed',coefficients:[{type:'fixed',value:10}]});
+  e.applyActionDamage(enemy,s,{...hit,coefficients:[{type:'fixed',value:0}]});assert.equal(s.atk,130);
+  e.applyActionDamage(enemy,s,{...hit,periodic});assert.equal(s.bp,37);assert.equal(s.atk,100);assert.equal(s.attackRange,5);
+  assert.equal(e.hasBattleState(s,'stun'),true);assert.equal(s.castTimer,0);assert.equal(s.activeEffects.find(x=>x.state==='stun').remainingTicks,120);
+ }
+});
+
+test('sniper revised skills remain executable after normalization',()=>{
+ const e=sniperEngine();for(const name of ['solitude','shadow','shot','mode'])assert.equal(e.isSkillExecutable(e.sniper(name)),true,name);
+ assert.equal(e.sniper('shot').cooldown,5);assert.equal(e.sniper('mode').actions[0].transform.damageExitStun,2);
+ const shadow=e.sniper('shadow');assert.equal(shadow.actions[0].effect.breakOnAttack,true);
+});
+
+function asceticEngine() {
+  const e=engine();e.skillsJson=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8')));
+  e.ascetic=id=>e.getSkillById('skill_class_ascetic_'+id);
+  return e;
+}
+
+test('ascetic chain stacks attack power and exact attack rate, granting movement only at ten', () => {
+  const e=asceticEngine(),source=unit(e),target=unit(e,'enemy',105);
+  source.atk=100;source.attackSpeed=2;source.speed=1.2;source.skillIds=[e.ascetic('chain').id];target.hp=target.maxHp=10000;
+  const hit=e.normalizeSkillAction({type:'deal_damage',damageType:'fixed',coefficients:[{type:'fixed',value:1}]});
+  for(let i=1;i<=9;i++) {
+    e.applyActionDamage(source,target,hit);
+    assert.equal(source.activeEffects.length,1);assert.equal(source.activeEffects[0].stacks,i);
+    assert.equal(source.atk,100+i);assert.ok(Math.abs(source.attackSpeed-2/(1+i*.02))<1e-12);assert.equal(source.speed,1.2);
+  }
+  e.applyActionDamage(source,target,hit);
+  assert.equal(source.atk,110);assert.ok(Math.abs(source.attackSpeed-2/1.2)<1e-12);
+  assert.ok(Math.abs(source.speed-1.44)<1e-12);assert.equal(source.effectAttackRateMultiplier,1.2);
+  for(let i=0;i<5;i++)e.applyActionDamage(source,target,hit);
+  assert.equal(source.activeEffects[0].stacks,10);assert.equal(source.atk,110);
+});
+
+test('ascetic chain refreshes at the cap and restores every stat on five second timeout or dispel', () => {
+  const e=asceticEngine(),source=unit(e),target=unit(e,'enemy',105);
+  source.atk=100;source.speed=2;source.attackSpeed=2;source.skillIds=[e.ascetic('chain').id];target.hp=target.maxHp=10000;
+  const hit=e.normalizeSkillAction({type:'deal_damage',damageType:'fixed',coefficients:[{type:'fixed',value:1}]});
+  for(let i=0;i<10;i++)e.applyActionDamage(source,target,hit);
+  for(let i=0;i<299;i++)e.updateBattleEffects();assert.equal(source.activeEffects[0].remainingTicks,1);
+  e.applyActionDamage(source,target,hit);assert.equal(source.activeEffects[0].remainingTicks,300);
+  for(let i=0;i<299;i++)e.updateBattleEffects();assert.equal(source.activeEffects.length,1);
+  e.updateBattleEffects();assert.equal(source.activeEffects.length,0);assert.equal(source.atk,100);assert.equal(source.speed,2);assert.equal(source.attackSpeed,2);assert.equal(source.effectAttackRateMultiplier,1);
+  for(let i=0;i<10;i++)e.applyActionDamage(source,target,hit);
+  e.applyTimedEffectAction(target,source,e.normalizeSkillAction({type:'delete_buff',effect:{id:'ascetic_chain',dispelMode:'id'}}));
+  assert.equal(source.activeEffects.length,0);assert.equal(source.atk,100);assert.equal(source.speed,2);assert.equal(source.attackSpeed,2);
+  e.applyActionDamage(source,target,hit);assert.equal(source.activeEffects[0].stacks,1);assert.equal(source.speed,2);
+});
+
+test('ascetic chain excludes periodic reflected triggered and zero damage hits but accepts basic and active hits', () => {
+  const e=asceticEngine(),source=unit(e),target=unit(e,'enemy',105);
+  source.skillIds=[e.ascetic('chain').id];target.hp=target.maxHp=10000;
+  const hit=e.normalizeSkillAction({type:'deal_damage',damageType:'fixed',coefficients:[{type:'fixed',value:1}]});
+  e.applyActionDamage(source,target,{...hit,periodic:true});
+  e.applyActionDamage(source,target,{...hit,reflected:true},{id:'reflection',triggered:true});
+  e.applyActionDamage(source,target,hit,{id:'proc',slot:'passive',triggered:true});
+  e.applyActionDamage(source,target,{...hit,coefficients:[{type:'fixed',value:0}]});
+  assert.equal(source.activeEffects.length,0);
+  e.applyActionDamage(source,target,hit,{id:'basic',slot:'basic'});
+  e.applyActionDamage(source,target,hit,{id:'active',slot:'active'});
+  assert.equal(source.activeEffects[0].stacks,2);
+  source.hp=0;e.syncAliveState(source);e.updateBattleEffects();assert.equal(source.activeEffects.length,0);assert.equal(source.effectAttackRateMultiplier,1);
+});
+
+test('ascetic attack rate applies to independent weapons without double counting the unit interval', () => {
+  const e=asceticEngine(),source=unit(e),target=unit(e,'enemy',105);
+  source.attackSpeed=2;source.speed=1;target.hp=target.maxHp=10000;
+  const passive=e.ascetic('chain');for(let i=0;i<10;i++)e.applySkill(source,source,passive);
+  const weapon={attackType:'physical',attackRange:1,castSpeed:0,attackSkillId:''};
+  source.weaponAttackStates=[{weapon:{...weapon,attackSpeed:1.2},cooldown:0,castTimer:0},{weapon:{...weapon,attackSpeed:2.4},cooldown:0,castTimer:0}];
+  e.updateIndependentWeaponAttacks(source,[target]);
+  assert.equal(source.weaponAttackStates[0].cooldown,60);assert.equal(source.weaponAttackStates[1].cooldown,120);
+  assert.ok(Math.abs(source.attackSpeed-2/1.2)<1e-12);
+});
+
+test('ascetic exorcism executes physical magic physical with per-stage resources and chain growth', () => {
+  const e=asceticEngine(),source=unit(e),target=unit(e,'enemy',105);
+  source.atk=100;source.magic=80;source.attackSpeed=2;source.castSpeed=0;source.skillIds=[e.ascetic('chain').id,e.ascetic('exorcism').id];
+  target.hp=target.maxHp=5000;
+  const combo=e.ascetic('exorcism');
+  assert.ok(e.tryUseReadySkill(source,[source],[target]));assert.equal(target.hp,4880);
+  assert.equal(source.skillCooldowns[combo.id],30);assert.equal(source.skillComboStages[combo.id],1);
+  for(let i=0;i<30;i++)e.tickSkillCooldowns(source);
+  assert.ok(e.tryUseReadySkill(source,[source],[target]));assert.equal(target.hp,4760);assert.equal(source.skillComboStages[combo.id],2);
+  for(let i=0;i<30;i++)e.tickSkillCooldowns(source);
+  assert.ok(e.tryUseReadySkill(source,[source],[target]));assert.ok(Math.abs(target.hp-(4760-102*1.7))<1e-9);
+  assert.equal(source.skillCooldowns[combo.id],480);assert.equal(source.skillComboStages[combo.id],0);
+  assert.equal(source.st,70);assert.equal(source.mp,70);assert.equal(source.activeEffects[0].stacks,3);
+  assert.deepEqual(Array.from(e.getBattleEvents('hit'),event=>event.damageType),['physical','magic','physical']);
+  assert.equal(e.tryUseReadySkill(source,[source],[target]),false);
+  e.isMagicAttackUnit=()=>false;
+  e.isPhysicalAttackUnit=()=>true;
+  const hp=target.hp;e.takeAction(source,[source],[target]);
+  for(let i=0;i<120 && source.pendingAction;i++)e.updateCast(source);
+  e.updateProjectiles();
+  assert.ok(target.hp<hp);
+});
+
+test('ascetic resource failure preserves combo stage and malformed stack bonuses stay unsupported', () => {
+  const e=asceticEngine(),source=unit(e),target=unit(e,'enemy',105);source.skillIds=[e.ascetic('exorcism').id];source.st=9;
+  assert.equal(e.tryUseReadySkill(source,[source],[target]),false);assert.equal(source.mp,100);assert.equal(source.st,9);assert.equal(source.skillComboStages[e.ascetic('exorcism').id],undefined);
+  const original=e.ascetic('chain').actions[0];
+  for(const bonus of [{stat:'speed',mode:'attack_rate_percent',value:2,minStacks:1},{stat:'speed',mode:'percent',value:20,minStacks:0},{stat:'speed',mode:'percent',value:20,minStacks:2.5}]) {
+    const action={...original,effect:{...original.effect,stackBonuses:[bonus]}};
+    assert.equal(e.isSkillActionSupported(action),false);
+  }
+  const standalone=e.normalizeSkillAction({type:'add_buff',target:'self',effect:{id:'rate',name:'rate',stat:'attackSpeed',mode:'attack_rate_percent',value:20}});
+  source.attackSpeed=2;e.applyTimedEffectAction(source,source,standalone);assert.ok(Math.abs(source.attackSpeed-2/1.2)<1e-12);
+  const copy=e.normalizeSkillJson(JSON.parse(JSON.stringify([e.ascetic('chain'),e.ascetic('exorcism')])));
+  assert.equal(copy.find(s=>s.id===e.ascetic('chain').id).actions[0].effect.stackBonuses[1].minStacks,10);
+  const character=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','characters.json'),'utf8')).find(c=>c.name==='수도승');
+  assert.ok(character.skillIds.includes(e.ascetic('chain').id));assert.ok(character.skillIds.includes(e.ascetic('exorcism').id));
+});
+
 function starEngine() {
   const e=engine();e.skillsJson=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8')));
   e.starEntity=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','entities/star_companion.json'),'utf8'));
@@ -506,11 +913,15 @@ function engine() {
     getUnitTeamBattleRules: () => ({damagePercent:100,healingPercent:100,resourceCostPercent:100,cooldownPercent:100}),
     snapshotActiveBattleSideRules: () => ({player:{damagePercent:100,healingPercent:100,resourceCostPercent:100,cooldownPercent:100},enemy:{damagePercent:100,healingPercent:100,resourceCostPercent:100,cooldownPercent:100}}),
     normalizeBattleRules: rules => ({entryDelay:Math.max(0,Number(rules?.entryDelay)||0),reviveCount:Math.max(0,Math.min(10,Math.floor(Number(rules?.reviveCount)||0))),reviveDelay:Math.max(0,Number(rules?.reviveDelay)||0),reviveHpPercent:Math.max(1,Math.min(100,Number(rules?.reviveHpPercent)||50)),reviveMpPercent:Math.max(0,Math.min(100,Number(rules?.reviveMpPercent??100))),reviveStPercent:Math.max(0,Math.min(100,Number(rules?.reviveStPercent??100))),reviveInvulnerable:Math.max(0,Number(rules?.reviveInvulnerable)||0),revivePosition:rules?.revivePosition==='start'?'start':'death'}),
-    addBattleEventLog() {}, formatBattleEventValue: String,
+    formatBattleEventValue: String,
     log() {}, escapeHtml: String,
   };
   vm.createContext(context);
-  for (const file of ['js/battle-events.js', 'js/skill-channel.js', 'js/skill-passives.js', 'js/skill-effects.js', 'js/skill.js', 'js/entity.js', 'js/battle.js', 'js/record.js', 'js/monster.js']) {
+  // Records also use the shared portrait normalizer; load its real implementation without DOM bindings.
+  const uiSource=fs.readFileSync(path.join(__dirname,'..','js/ui.js'),'utf8');
+  const portraitStart=uiSource.indexOf('function normalizePortrait(value) {');
+  vm.runInContext(uiSource.slice(portraitStart,uiSource.indexOf('\n}',portraitStart)+2),context);
+  for (const file of ['js/battle-events.js', 'js/skill-channel.js', 'js/skill-passives.js', 'js/skill-effects.js', 'js/skill.js', 'js/rune.js', 'js/entity.js', 'js/battle.js', 'js/record.js', 'js/monster.js']) {
     vm.runInContext(fs.readFileSync(path.join(__dirname, '..', file), 'utf8'), context);
   }
   return context;
@@ -522,6 +933,34 @@ function unit(e, side = 'player', x = 100) {
   (side === 'player' ? e.playerSquad : e.enemySquad).push(u);
   return u;
 }
+test('zero cooldown blessings skip active recipients and return after expiry',()=>{
+ const e=engine(),caster=unit(e),ally=unit(e,'player',105);
+ const action=e.createDefaultAction('add_buff');action.effect.id='blessing';action.duration=30;
+ const buff=skill(e,action);buff.cooldown=0;e.skillsJson=[buff];caster.skillIds=[buff.id];
+ assert(e.tryUseReadySkill(caster,e.playerSquad,[]));
+ assert.equal(caster.activeEffects.length,1);
+ assert(e.tryUseReadySkill(caster,e.playerSquad,[]));
+ assert.equal(ally.activeEffects.length,1);
+ assert.equal(e.tryUseReadySkill(caster,e.playerSquad,[]),false);
+ caster.activeEffects[0].remainingTicks=null;
+ assert.equal(e.tryUseReadySkill(caster,e.playerSquad,[]),false);
+ caster.activeEffects=[];
+ assert(e.tryUseReadySkill(caster,e.playerSquad,[]));
+ buff.cooldown=2;caster.skillCooldowns[buff.id]=0;
+ assert(e.tryUseReadySkill(caster,e.playerSquad,[]));
+});
+
+test('spring energy keeps two stat effects but displays one icon',()=>{
+ const e=engine(),caster=unit(e);
+ const data=JSON.parse(fs.readFileSync(path.join(__dirname,'../data/skills.json'),'utf8'));
+ const spring=e.normalizeSkillJson(data).find(s=>s.id==='skill_class_monk_spring_energy');
+ e.applySkill(caster,caster,spring);
+ assert.equal(caster.activeEffects.length,2);
+ assert.equal(e.getBattleEffectIconEntries(caster).length,1);
+ caster.activeEffects[1].remainingTicks--;
+ assert.equal(e.getBattleEffectIconEntries(caster).length,2);
+});
+
 function skill(e, action, castTime = 0) {
   if (action.type === 'summon_entity') {
     const config = action.summon || {};
@@ -2739,9 +3178,9 @@ test('archer and sniper skill data match their class rules',()=>{
  const find=id=>skills.find(item=>item.id===id),multi=find('skill_class_archer_multishot'),power=find('skill_class_archer_power_shot'),shot=find('skill_class_sniper_shot'),mode=find('skill_class_sniper_mode');
  assert.deepEqual([multi.castTime,multi.cooldown,multi.actions[0].chainCount,multi.actions[0].chainRange,multi.actions[0].chainOrigin,multi.actions[0].maxTargets],[0,5,2,5,'primary',3]);
  assert.equal(multi.actions[0].coefficients[0].value,125);assert.equal(power.actions[0].coefficients[0].value,200);
- assert.deepEqual([shot.castTime,shot.castReceivedDamagePercent,shot.actions[0].rangeMultiplier,shot.actions[0].coefficients[0].value],[3,130,200,300]);
- assert.deepEqual([mode.actions[0].transform.receivedDamagePercent,mode.actions[0].transform.immobile,mode.actions[0].transform.exitHpBelow,mode.actions[0].transform.retreatHpBelow],[130,true,30,30]);
- assert.deepEqual(characters.find(c=>c.name==='궁사').skillIds,[multi.id,power.id]);assert.deepEqual(characters.find(c=>c.name==='저격수').skillIds,[shot.id,mode.id]);
+ assert.deepEqual([shot.castTime,shot.castReceivedDamagePercent,shot.actions[0].rangeMultiplier,shot.actions[0].coefficients[0].value],[4,130,200,300]);
+ assert.deepEqual([mode.actions[0].transform.receivedDamagePercent,mode.actions[0].transform.immobile,mode.actions[0].transform.exitHpBelow,mode.actions[0].transform.retreatHpBelow],[100,false,0,0]);
+ assert.deepEqual(characters.find(c=>c.name==='궁사').skillIds,[multi.id,power.id]);assert.deepEqual(characters.find(c=>c.name==='저격수').skillIds,['skill_class_sniper_solitude','skill_class_sniper_shadow',shot.id,mode.id]);
 });
 
 test('combo skills advance per unit, wrap after completion and reset for battle',()=>{

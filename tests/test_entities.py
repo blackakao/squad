@@ -19,6 +19,20 @@ def entity(entity_id="wolf"):
 
 
 class EntityTests(unittest.TestCase):
+    def test_linked_owner_death_and_received_damage_roundtrip(self):
+        original = entity()
+        self.assertNotIn('ownerDiesOnDeath', self.store.validate(original))
+        value = dict(original, ownerDiesOnDeath=True, receivedDamagePercent=10)
+        self.store.save(value, create=True)
+        self.assertEqual(self.store.get('wolf')['receivedDamagePercent'], 10)
+        self.assertIs(self.store.get('wolf')['ownerDiesOnDeath'], True)
+        for invalid in (None, 'true', 1):
+            with self.assertRaises(EntityError):
+                self.store.validate(dict(value, ownerDiesOnDeath=invalid))
+        for invalid in (True, -1, float('inf'), '10', None, 100001):
+            with self.assertRaises(EntityError):
+                self.store.validate(dict(value, receivedDamagePercent=invalid))
+
     def test_command_entity_flags_validation(self):
         legacy = self.store.validate(entity())
         for flag in ("commandOnly", "targetable", "collidable"):

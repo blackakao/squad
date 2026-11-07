@@ -15,6 +15,7 @@ async function initApp() {
     await loadItemJson();
     await loadEntityJson();
     await loadSkillJson();
+    await loadRuneJson();
     await loadCharacterJson();
     await loadTeamJson();
     await loadSynergyJson();

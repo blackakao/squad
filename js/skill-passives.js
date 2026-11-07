@@ -1,4 +1,4 @@
-const PASSIVE_TRIGGER_LABELS = {battle_entry:"전투 진입시",hit:"자신이 적중시",damaged:"자신이 피격시",cast_complete:"자신의 시전 완료시",heal:"자신이 회복시",dispel:"자신이 효과 해제시",kill:"자신이 적 처치시"};
+const PASSIVE_TRIGGER_LABELS = {alone:"주변에 다른 유닛이 없을 때",battle_entry:"전투 진입시",hit:"자신이 적중시",damaged:"자신이 피격시",cast_complete:"자신의 시전 완료시",heal:"자신이 회복시",dispel:"자신이 효과 해제시",kill:"자신이 적 처치시"};
 
 function normalizePassiveTrigger(trigger) {
   if (!trigger || typeof trigger !== "object") return null;
@@ -9,7 +9,7 @@ function normalizePassiveTrigger(trigger) {
   const requiredTargetEffectTags=[...new Set((Array.isArray(trigger.requiredTargetEffectTags) ? trigger.requiredTargetEffectTags : String(trigger.requiredTargetEffectTags ?? "").split(",")).map(tag=>String(tag).trim()).filter(Boolean))];
   const damageMultiplierPercent=Number(trigger.damageMultiplierPercent);
   const {allowMultiplePerTick:_allowMultiplePerTick,recentAttackerMitigation:_recentAttackerMitigation,damageType:_damageType,events:_events,requiredTargetEffectTags:_requiredTargetEffectTags,damageMultiplierPercent:_damageMultiplierPercent,...rest}=trigger;
-  return {...rest,event,chance:trigger.chance == null ? 100 : Number(trigger.chance),includePeriodic:trigger.includePeriodic === true,
+  return {...rest,event,...(event === "alone" ? {aloneRadius:Math.max(.1,Number(trigger.aloneRadius) || 5),aloneLossDuration:Math.max(.1,Number(trigger.aloneLossDuration) || 2),aloneLossDamagePercent:Math.max(0,Number(trigger.aloneLossDamagePercent ?? 130))} : {}),chance:trigger.chance == null ? 100 : Number(trigger.chance),includePeriodic:trigger.includePeriodic === true,
     ...(trigger.basicAttackOnly === true ? {basicAttackOnly:true} : {}),
     ...(events.length > 1 ? {events} : {}),
     ...(damageType ? {damageType} : {}),
@@ -53,6 +53,10 @@ function renderPassiveTriggerForm(skill = null) {
   document.getElementById("skillPassiveRecentAttackersInitial").value=mitigation?.initialReductionPercent ?? 10;
   document.getElementById("skillPassiveRecentAttackersAdditional").value=mitigation?.additionalReductionPercent ?? 3;
   document.getElementById("skillPassiveRecentAttackersMax").value=mitigation?.maxReductionPercent ?? 25;
+  for (const [key,fallback] of [["aloneRadius",5],["aloneLossDuration",2],["aloneLossDamagePercent",130]]) document.getElementById(`skillPassive_${key}`).value=trigger?.[key] ?? fallback;
+  document.getElementById("skillPassiveRuneCount").value=trigger?.runeCount ?? 0;
+  document.getElementById("skillPassiveDefaultRunes").value=(trigger?.defaultRuneIds ?? []).join(", ");
+  document.getElementById("skillPassiveHealingCurseDuration").value=trigger?.healingCurseDuration ?? 0;
   updateSkillTypeFields();
 }
 
@@ -77,6 +81,10 @@ function readPassiveTriggerForm() {
   const requiredTargetEffectTags=String(document.getElementById("skillPassiveRequiredTargetTags").value ?? "").split(",").map(tag=>tag.trim()).filter(Boolean);
   const conditionalDamage=document.getElementById("skillPassiveTargetState").checked || requiredTargetEffectTags.length>0;
   return normalizePassiveTrigger({event:events[0] ?? "",events,
+    ...Object.fromEntries(["aloneRadius","aloneLossDuration","aloneLossDamagePercent"].map(key=>[key,Number(document.getElementById(`skillPassive_${key}`).value)])),
+    runeCount:Math.max(0,Math.min(10,Math.floor(Number(document.getElementById("skillPassiveRuneCount").value) || 0))),
+    defaultRuneIds:String(document.getElementById("skillPassiveDefaultRunes").value).split(",").map(id=>id.trim()).filter(Boolean),
+    healingCurseDuration:Math.max(0,Number(document.getElementById("skillPassiveHealingCurseDuration").value) || 0),
     skillOnly:document.getElementById("skillPassiveSkillOnly").checked,
     requiredTargetState:document.getElementById("skillPassiveTargetState").checked,
     stateDurationExtension:Number(document.getElementById("skillPassiveStateExtension").value),
@@ -142,7 +150,7 @@ function handlePassiveBattleEvent(event, context) {
   for (const skill of skills) {
     if (!owner.alive) break;
     const trigger = skill.passiveTrigger;
-    if (trigger.damageMultiplierPercent != null) continue;
+    if (trigger.damageMultiplierPercent != null || skill.actions.some(action=>action.effect?.mode === "damage_pool")) continue;
     if (trigger.skillOnly && getSkillById(event.skillId)?.slot !== "active") continue;
     if (!(trigger.events ?? [trigger.event]).includes(triggerType) || (event.periodic && !trigger.includePeriodic)) continue;
     if (trigger.damageType && event.damageType !== trigger.damageType) continue;

@@ -1,5 +1,19 @@
 # 아키텍처
 
+- 독립 룬: `js/rune.js`가 정의 로드/관리·선택 UI·설치 객체·주기 실행/렌더링을 담당한다. `skill.js`는 설치/타이머 감소 액션, `battle.js`는 틱/정리 연결, `team.js`는 선택 전달, `rune_store.py`는 저장 검증을 맡는다. `simulation_jobs.py`와 헤드리스 엔진도 정의를 스냅샷에 포함한다. 효과 실행은 기존 스킬 액션을 재사용한다. [계약](SKILL_ENGINE.md#독립-룬-시스템룬술사-2026-11-07).
+
+
+- 인형술사의 소환수 사망 연동은 `battle.js` 사망 처리, 받는 피해/명령·치유 진입점은 `skill.js`, 치유 흡수·추가타·저주는 `skill-effects.js`를 사용한다. Entity 필드는 Python 저장 검증과 JS 편집/생성에 연결된다. [계약](SKILL_ENGINE.md#인형술사-2026-11-07).
+
+
+- 화염술사 누적 피해는 `skill.js` 실제 피해와 `skill-effects.js` 지속 피해 부착에서 수집하고 효과 갱신에서 잔여량을 분배한다. 일반 이벤트 패시브와 중복 발동하지 않는다. [계약](SKILL_ENGINE.md#화염술사-개편-2026-11-07).
+
+
+- 저격수 고립 패시브 평가는 `skill-effects.js`의 효과 갱신에서 수행한다. 같은 모듈이 은신과 피격 변신 해제를 처리하며, `battle.js`의 공격 실행 및 `skill.js`의 실제 피해 처리에 연결한다. [계약](SKILL_ENGINE.md#저격수-개편-2026-11-07).
+
+
+수도승 연환의 중첩과 만료는 기존 `skill-passives.js` → `skill-effects.js` 흐름을 사용한다. `skill-effects.js`는 한 효과의 `stackBonuses`를 능력치 계산에 펼치고 공격속도 증가율을 공격 간격으로 환산한다. `battle.js`의 독립 무기도 같은 증가율을 사용한다. 퇴마공은 기존 `skill.js`의 `combo` 실행기를 재사용한다. [계약](SKILL_ENGINE.md#수도승-연환퇴마공-2026-11-07).
+
 별 기준 액션은 `skill.js`의 `originEntityId` 실행 경로에서 기존 액션을 소유자의 능력치로 실행한다. `battle.js`가 명령 전용 소환수의 행동·충돌/지속 인원 제외·숨김 생명주기 및 원형/선형 추적 필드를 처리한다. Entity 설정·편집은 `entity.js`, 선택 불리언 검증은 `entity_store.py`, 명령·거리 감쇠·자원 흡수 UI는 `skill-editor-view.js`에 연결했다. [별소환사 계약](SKILL_ENGINE.md#별소환사-지원-확장-2026-11-06).
 
 몽마의 수면·현혹·위장은 `skill-effects.js`, 직접 공격의 상태 보정은 `skill-passives.js`, 피해·적중 대상 연결·등급 필터는 `skill.js`가 담당한다. `battle.js`는 현혹 접근과 위장 표시·타겟 선정을 처리한다. `entityGrade`는 `ui.js` 정규화 및 캐릭터·몬스터·Entity 편집/전투 생성에 연결하며 Entity API의 정수 검증은 `entity_store.py`에서 수행한다. [계약](SKILL_ENGINE.md#몽마-지원-확장-2026-11-05).

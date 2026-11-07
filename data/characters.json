@@ -844,9 +844,11 @@
     "attackRange": 4,
     "role": "ranged",
     "skillIds": [
-      "skill_class_fire_ignite",
+      "skill_class_fire_flame",
       "skill_class_fire_meditation",
-      "skill_class_fire_drunken"
+      "skill_class_fire_lizard",
+      "skill_class_fire_drunken",
+      "skill_class_fire_ignite"
     ],
     "portrait": "assets/images/portraits/슈련_화염술사.png",
     "attributes": {
@@ -980,6 +982,8 @@
     "attackRange": 6,
     "role": "melee",
     "skillIds": [
+      "skill_class_sniper_solitude",
+      "skill_class_sniper_shadow",
       "skill_class_sniper_shot",
       "skill_class_sniper_mode"
     ],
@@ -1047,7 +1051,7 @@
     "resistance": 0,
     "attackRange": 1,
     "role": "melee",
-    "skillIds": [],
+    "skillIds": ["skill_class_ascetic_chain", "skill_class_ascetic_exorcism"],
     "portrait": "assets/images/portraits/신성교단_수도승.png",
     "attributes": {
       "str": 0,
@@ -2062,7 +2066,9 @@
     "attackRange": 1,
     "role": "healer",
     "skillIds": [
-      "skill_class_cheer_medkit"
+      "skill_class_cheer_freedom",
+      "skill_class_cheer_passion",
+      "skill_class_cheer_encourage"
     ],
     "portrait": "assets/images/portraits/쀼랜드_응원가.png",
     "attributes": {
@@ -2401,7 +2407,10 @@
     "resistance": 0,
     "attackRange": 1,
     "role": "healer",
-    "skillIds": [],
+    "skillIds": [
+      "skill_class_rune_master",
+      "skill_class_rune_strike"
+    ],
     "portrait": "assets/images/portraits/image-20261018143242049865.png",
     "attributes": {
       "str": 0,
@@ -2532,7 +2541,11 @@
     "attackRange": 1,
     "role": "healer",
     "skillIds": [
-      "skill_class_puppet_heal"
+      "skill_class_puppet_master",
+      "skill_class_puppet_attack",
+      "skill_class_puppet_heal",
+      "skill_class_puppet_cult",
+      "skill_class_puppet_dance"
     ],
     "portrait": "assets/images/portraits/image-20261018142844386332.png",
     "attributes": {

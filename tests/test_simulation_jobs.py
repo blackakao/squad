@@ -75,6 +75,31 @@ class SimulationJobTests(unittest.TestCase):
         self.assertLess(done['completed'], 10000)
         self.assertEqual(self.jobs.result(job['simulationId'])['summary']['battles'], done['completed'])
 
+    def test_ten_vs_ten_preserves_members_and_combination_totals(self):
+        job = self.jobs.start({'count': 3, 'teamSize': 10, 'maxSeconds': 1, 'workers': 2})
+        done = self.finish(job['simulationId'])
+        self.assertEqual((done['status'], done['completed']), ('COMPLETED', 3))
+        raw = json.loads(self.jobs.file(job['simulationId'], 'json').read_text(encoding='utf-8'))
+        for battle in raw['results']:
+            self.assertEqual(len(battle['teamA']), 10)
+            self.assertEqual(len(battle['teamB']), 10)
+            self.assertEqual(len(set(battle['teamA'] + battle['teamB'])), 20)
+            self.assertEqual(len(battle['characters']), 20)
+        combinations = raw['summary']['combinations']
+        self.assertEqual(sum(row['battles'] for row in combinations), 6)
+        self.assertTrue(all(len(row['ids']) == 10 for row in combinations))
+        self.assertEqual(sum(row['battles'] for row in raw['summary']['characters']), 60)
+        self.assertEqual(raw['summary']['matchups']['battles'], 0)
+        self.assertEqual(self.manager().result(job['simulationId'])['summary'], raw['summary'])
+
+    def test_ten_vs_ten_requires_twenty_registered_characters(self):
+        snapshot = self.jobs._snapshot()
+        snapshot['characters'] = snapshot['characters'][:19]
+        with patch.object(self.jobs, '_snapshot', return_value=snapshot):
+            with self.assertRaises(SimulationError):
+                self.jobs.start({'teamSize': 10})
+        self.assertIsNone(self.jobs.process)
+
     def test_targets_single_source_validation_and_snapshot(self):
         targets = self.jobs.targets()['targets']
         targets['winRate'] = [45, 55]
@@ -91,7 +116,7 @@ class SimulationJobTests(unittest.TestCase):
                 self.jobs.targets(targets)
 
     def test_failures_invalid_input_missing_node_and_unknown_paths(self):
-        for value in ({'count': 0}, {'count': True}, {'teamSize': 4}, {'seed': -1}, []):
+        for value in ({'count': 0}, {'count': True}, {'teamSize': 11}, {'teamSize': 0}, {'seed': -1}, []):
             with self.assertRaises(SimulationError):
                 self.jobs.start(value)
         with patch('simulation_jobs.shutil.which', return_value=None):

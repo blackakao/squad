@@ -1,5 +1,48 @@
 # 데이터 구조
 
+## 모든 시전시간 보정 (2026-11-07)
+
+- `effect.mode: "cast_time_percent"`, `stat: "castSpeed"`, 유한 `value >= -100`. 음수는 단축, 양수는 증가다. `stackBonuses`에도 동일 모드/능력치 조합을 저장한다.
+- 합산값은 런타임 `effectCastTimeMultiplier`로 환산한다. 기본 castSpeed 능력치와 구분해 명시적 스킬·기본 행동·독립 무기에 한 번 적용하며 런타임 값은 스킬 정의에 저장하지 않는다. [동작·중첩·기존 호환](SKILL_ENGINE.md#응원가모든-시전시간-보정-2026-11-07).
+
+
+## 룬 정의와 전투 객체 (2026-11-07)
+
+- `data/runes.json`: 배열. 각 정의는 `id`(소문자 영숫자/_/- 1~80자, 유일), `name`, `radius`(양수 m, 최대 100000), `interval`(1/60~100000초), `installationSide`(ally/enemy), `color`(#RRGGBB), `effectSkillId`를 갖는다. 스킬의 효과 액션을 참조해 확장한다.
+- `passiveTrigger.runeCount`(1~10), `defaultRuneIds`(룬 ID 배열), `unit.skillSelections[passiveId]`(선택 룬 ID 배열)를 사용한다. 다른 선택 스킬의 문자열 값은 그대로 유지한다.
+- 액션 `install_runes`는 선택 정의를 설치한다. `advance_runes.runeAdvanceSeconds`(0 이상 초)는 직전 피해가 양수일 때 자기 룬들의 다음 발동을 앞당긴다.
+- 런타임 `battleRunes`는 소유자·고정 좌표·`nextTick`·정의/효과 스냅샷을 보관하며 사용자 데이터에는 저장하지 않는다. 자동 전투 `inputSnapshot.runes`에 정의를 포함한다. [세부 계약](SKILL_ENGINE.md#독립-룬-시스템룬술사-2026-11-07).
+
+
+## 인형술사 확장 (2026-11-07)
+
+- Entity `ownerDiesOnDeath`: 선택 불리언, 기본 false. `receivedDamagePercent`: 선택 유한 숫자 0~100000, 기본 100. 런타임은 `entityReceivedDamagePercent`로 보관한다.
+- `passiveTrigger.healingCurseDuration`: HP 실제 치유량 기반 저주의 유지 초, 0/생략은 비활성. 효과 `mode: heal_absorb`, `value`: 초기 흡수량, `absorbRemaining`은 런타임 전용이다.
+- 효과 `mode: basic_echo`, `value`: 기본 공격 실제 피해 대비 추가타 %, `echoHealPercent`: 버프 중 실제 피해 대비 자기 치유 %, 기본 100.
+- 명령 액션 `summonCommand: attack`, `originEntityId`, `commandHealRadius`(m), `commandHealPercent`(실제 피해 대비 %)를 사용한다. [세부 계약](SKILL_ENGINE.md#인형술사-2026-11-07).
+
+
+## 화염술사 누적 피해 확장 (2026-11-07)
+
+- 패시브 액션의 `effect.mode: "damage_pool"`, `value`(기준 피해의 양수 %), `maxStacks`(2 이상), `stackMode: "stack"`, 양수 `action.duration`을 사용한다. 대상/시전자별 `poolRemaining`, `poolPulseTicks`는 전투 중에만 생성한다.
+- 계수 `field: "missingMp"`는 현재 부족한 MP다. `settledDamage`는 이미 보정한 누적 피해 지급용 내부 플래그이며 편집·JSON 정의에는 노출하지 않는다. [계약](SKILL_ENGINE.md#화염술사-개편-2026-11-07).
+
+
+## 저격수 개편 확장 (2026-11-07)
+
+- `passiveTrigger.event: "alone"`: `aloneRadius`(양수 m, 기본 5), `aloneLossDuration`(양수 초, 기본 2), `aloneLossDamagePercent`(0 이상, 기본 130). 조건 유지 중 패시브 액션 버프 적용, 상실 후 받는 피해 규칙 적용.
+- 버프 `effect.mode: "stealth"`, `effect.breakOnAttack: boolean`(기본 false). 직접 타겟 제외와 공격 실행 시 해제.
+- `action.transform.damageExitStun`: 0 이상 초, 기본 0(기존 동작 유지). 실제 피해 시 형태 해제·기절. [상세 계약](SKILL_ENGINE.md#저격수-개편-2026-11-07).
+
+
+### 수도승 중첩 보정 필드 (2026-11-07)
+
+- 버프 `effect.mode: attack_rate_percent`, `stat: attackSpeed`, `value`는 음수 없는 공격속도 증가율이다. 기존 공격 간격 percent 보정과 구분한다.
+- 선택 배열 `effect.stackBonuses`(기본 빈 배열, 최대 20개): `{ stat, mode, value, minStacks, perStack }`. minStacks는 1~20 정수, perStack 기본 false다. 기준 중첩 이상에서 전체 중첩 수를 곱하거나 한 번 적용하며 별도 효과 인스턴스·타이머를 만들지 않는다.
+- 연환은 `skill_class_ascetic_chain`의 단일 `ascetic_chain` 버프다. 본체는 atk +1%/중첩, 보정은 공격속도 +2%/중첩과 10중첩 이동속도 +20%다. 최대 중첩 10·갱신 5초.
+- 퇴마공 `skill_class_ascetic_exorcism`은 기존 `combo` 스키마로 3단계를 저장한다. 수도승 캐릭터의 기존 데이터에 두 스킬 ID만 추가했으며 저장 API는 변경하지 않았다.
+- `effectAttackRateMultiplier`는 독립 무기 주기에도 적용하기 위한 전투 파생값이며 사용자 JSON에 저장하지 않는다.
+
 ### 별소환사 지원 필드 (2026-11-06)
 
 - Entity 선택 불리언 `commandOnly`(기본 false), `targetable`·`collidable`(기본 true). `star_companion`은 true/false/false다. 기존 Entity 파일은 일괄 변경하지 않는다. 서버는 해당 필드가 있으면 불리언만 허용한다.
@@ -138,13 +181,15 @@
 
 - `battleAt`: ISO 날짜 문자열
 - `result`: 승리, 패배, 무승부 등 결과 문자열
-- `playerMembers`: 아군 멤버 결과 배열
-- `monsterMembers`: 적 멤버 결과 배열
+- `playerMembers`: A팀 멤버 결과 배열 (기존 저장 키 유지)
+- `monsterMembers`: B팀 멤버 결과 배열 (기존 저장 키 유지)
 - `durationSeconds`: 새 기록은 진행한 전투 틱 / 60
 - `contributionVersion`: 새 소유자 집계는 1, 이전 기록은 0
 - `events`: 최근 최대 1,000개 상세 전투 이벤트
 
 멤버 결과는 `name`, `role`, `hp`, `maxHp`, `mp`, `maxMp`, `st`, `maxSt`와 소유자 합계 `damageDealt`, `healingDone`, `kills`, `dps`, `hps`, 전투별 `eventId`, `contribution`을 저장합니다. `contribution`의 `direct/summon/total/groups`는 본체·소환·합계·템플릿/종류별 기여도입니다. DPS/HPS는 합산 누적량/전투시간입니다. 이전 기록은 소유 관계를 추측하지 않고 보존하며 없는 `events`는 빈 배열입니다. [저장 규칙과 호환성](BATTLE_CONTRIBUTIONS.md).
+
+멤버의 선택 필드 `portrait`는 새 기록에서 전투 당시 초상화를 보존합니다. 이전 기록은 이름이 일치하는 현재 캐릭터 또는 몬스터의 초상화를 표시하고, 없으면 이름 첫 글자를 표시합니다. 목록은 계열 아이콘과 잔여 HP 비율 막대를 표시하며 막대 안의 숫자는 DPS와 HPS입니다. HP가 0이면 빈 막대에 `HP 소진`, 최대 HP가 없으면 `HP 정보 없음`을 표시합니다. HP 원본 수치와 기여도 데이터는 유지합니다.
 
 전투 이벤트 주요 필드:
 

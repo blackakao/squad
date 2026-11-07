@@ -6,7 +6,7 @@ const crypto = require('node:crypto');
 const ROOT = path.resolve(__dirname, '../..');
 const SOURCES = ['portrait/hair-colors', 'portrait/imported-catalog', 'portrait/catalog',
   'ui', 'category', 'battle-events', 'skill-channel', 'skill-passives', 'skill-effects',
-  'skill', 'entity', 'equipment', 'monster', 'faction', 'character', 'synergy', 'team', 'stats', 'battle'];
+  'skill', 'rune', 'entity', 'equipment', 'monster', 'faction', 'character', 'synergy', 'team', 'stats', 'battle'];
 
 function seededRandom(seed) {
   let state = seed >>> 0;
@@ -24,6 +24,7 @@ function loadData(root = ROOT) {
     data[name] = JSON.parse(fs.readFileSync(path.join(root, 'data', name + '.json'), 'utf8'));
     if (!Array.isArray(data[name])) throw new Error(`${name}: expected an array`);
   }
+  data.runes = fs.existsSync(path.join(root,'data/runes.json')) ? JSON.parse(fs.readFileSync(path.join(root,'data/runes.json'),'utf8')) : [];
   data.synergies = fs.existsSync(path.join(root, 'data/synergies.json')) ? JSON.parse(fs.readFileSync(path.join(root, 'data/synergies.json'), 'utf8')) : [];
   const entityDir = path.join(root, 'data/entities');
   data.entities = fs.readdirSync(entityDir).filter(name => name.endsWith('.json')).sort()
@@ -72,7 +73,6 @@ function createEngine(data = loadData(), {width = 400, height = 300} = {}) {
   vm.runInContext(`
     updateBattleButton = () => {};
     clearBattleEventLogs = () => {};
-    addBattleEventLog = () => {};
     showSkillBubble = () => {};
     showSkillAreaImpact = () => {};
     showSkillChainImpact = () => {};
@@ -81,6 +81,7 @@ function createEngine(data = loadData(), {width = 400, height = 300} = {}) {
     factionsJson = normalizeFactionJson(inputData.factions);
     entitiesJson = structuredClone(inputData.entities);
     skillsJson = normalizeSkillJson(inputData.skills);
+    runesJson = (inputData.runes ?? []).map(normalizeRune).filter(isRuneDefinitionValid);
     // This headless realm owns a fixed skill catalog for the entire run.
     // Preserve Array.find's first match and object identity; only index lookup changes.
     const simulationSkillIndex = new Map();
