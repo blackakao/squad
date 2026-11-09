@@ -61,9 +61,11 @@ class EntityStore:
         if not all(isinstance(entity.get(key, ""), str) for key in ("description", "icon")):
             raise EntityError("설명과 아이콘은 문자열이어야 합니다.")
         stats = entity.get("stats", {})
-        for flag in ("commandOnly", "targetable", "collidable", "ownerDiesOnDeath"):
+        for flag in ("commandOnly", "targetable", "collidable", "ownerDiesOnDeath", "basicAttackDisabled", "mainSummon"):
             if flag in entity and not isinstance(entity[flag], bool):
                 raise EntityError(f"{flag}는 불리언이어야 합니다.")
+        if not isinstance(entity.get("skillIds", []), list) or not all(isinstance(value, str) and value for value in entity.get("skillIds", [])):
+            raise EntityError("skillIds는 스킬 ID 배열이어야 합니다.")
         incoming = entity.get("receivedDamagePercent", 100)
         if isinstance(incoming, bool) or not isinstance(incoming, (int, float)) or not math.isfinite(incoming) or not 0 <= incoming <= 100000:
             raise EntityError("receivedDamagePercent는 0~100000 숫자여야 합니다.")
@@ -106,6 +108,9 @@ class EntityStore:
             entity.setdefault("attackType", "magic" if entity.get("ai") == "healer" else "physical")
             entity.setdefault("attackSkillId", "")
             self.validate(entity)
+            known_skills = {skill.get('id') for skill in self.read(self.data_dir / 'skills.json', [])}
+            if any(skill_id not in known_skills for skill_id in entity.get('skillIds', [])):
+                raise EntityError('Entity에 연결할 스킬을 먼저 저장하세요.')
             path = self.path(entity["entityId"])
             if create and path.exists():
                 raise EntityError("이미 사용 중인 Entity ID입니다.", 409)
@@ -125,6 +130,10 @@ class EntityStore:
     def save_skills(self, skills):
         with self.lock:
             validate_runes(self.read(self.data_dir / "runes.json", []), skills)
+            known_skills = {skill.get('id') for skill in skills}
+            for path in self.directory.glob('*.json'):
+                if any(skill_id not in known_skills for skill_id in self.read(path).get('skillIds', [])):
+                    raise EntityError('Entity가 사용하는 스킬은 삭제할 수 없습니다.')
             for skill in skills:
                 for action in skill.get("actions", []):
                     if action.get("type") == "summon_entity":

@@ -214,7 +214,7 @@ function renderChoiceSelect(skill, selectedOptionId, onchange) {
 function renderTeamSkillChoices(characterId, team) {
   const skills = getCharacterChoiceSkills(characterId, "choice_team");
   if (!skills.length) return "";
-  return `<div class="team-skill-choices">${skills.map(skill => renderChoiceSelect(skill, team?.skillSelections?.[characterId]?.[skill.id],
+  return `<div class="team-skill-choices">${skills.map(skill => renderChoiceSelect(skill, team?.skillSelections?.[characterId]?.[skill.id] ?? characterJson[characterId]?.skillSelections?.[skill.id],
     `setTeamSkillChoice(${characterId},'${escapeHtml(skill.id)}',this.value)`)).join("")}</div>`;
 }
 
@@ -420,7 +420,7 @@ function createSquadFromCharacterIds(ids, side = "player", activeMemberCount = n
   const evaluation = typeof evaluateSynergies === "function" ? evaluateSynergies(uniqueIds.map(id => characterJson[id])) : null;
   return uniqueIds.map((id, index) => {
     const unit = createCharacter(characterJson[id], id, side, evaluation?.modifiers[index]);
-    unit.skillSelections = {...(skillSelections[id] ?? {})};
+    unit.skillSelections = {...(characterJson[id].skillSelections ?? {}), ...(skillSelections[id] ?? {})};
     unit.synergySources = evaluation?.sources[index] || [];
     unit.startsInReserve = index >= activeLimit;
     unit.squadActiveLimit = activeLimit;
@@ -559,7 +559,7 @@ function renderPreBattleSkillChoices() {
   return `<section class="battle-selection-section"><div class="battle-selection-section-title">전투 직전 선택 스킬 <span>${rows.length}개</span></div>
     <div class="battle-skill-choice-list">${rows.map(({characterId,skill}) => {
       const choice = normalizeSkillChoice(skill.choice);
-      const selected = getChoiceSkillOption(skill, selectedPreBattleSkillChoices[characterId]?.[skill.id])?.id;
+      const selected = getChoiceSkillOption(skill, selectedPreBattleSkillChoices[characterId]?.[skill.id] ?? characterJson[characterId]?.skillSelections?.[skill.id])?.id;
       return `<label class="battle-skill-choice-row"><span>${escapeHtml(characterJson[characterId].name)} · ${escapeHtml(skill.name)}</span><select onchange="setPreBattleSkillChoice(${characterId},'${escapeHtml(skill.id)}',this.value)">${choice.options.map(option =>
         `<option value="${escapeHtml(option.id)}" ${option.id === selected ? "selected" : ""}>${escapeHtml(option.label)}</option>`).join("")}</select></label>`;
     }).join("")}${runeRows}</div></section>`;
@@ -721,7 +721,7 @@ function renderDuelSkillChoices() {
     const runeRows=typeof renderRuneChoices === 'function' ? renderRuneChoices(id,duelSkillChoices[side][id],side) : '';
     if (!skills.length && !runeRows) return '';
     return `<section class="battle-selection-section"><h5>${side==='player' ? '아군' : '상대'} 선택 스킬</h5>${skills.map(skill=>{
-      const selected=getChoiceSkillOption(skill,duelSkillChoices[side][id]?.[skill.id])?.id;
+      const selected=getChoiceSkillOption(skill,duelSkillChoices[side][id]?.[skill.id] ?? characterJson[id]?.skillSelections?.[skill.id])?.id;
       return `<label class="battle-skill-choice-row">${escapeHtml(characterJson[id].name)} · ${escapeHtml(skill.name)}<select onchange="setDuelSkillChoice('${side}',${id},'${escapeHtml(skill.id)}',this.value)">${normalizeSkillChoice(skill.choice).options.map(option=>`<option value="${escapeHtml(option.id)}" ${selected===option.id?'selected':''}>${escapeHtml(option.label)}</option>`).join('')}</select></label>`;
     }).join('')}${runeRows}</section>`;
   }).join('')).join('');

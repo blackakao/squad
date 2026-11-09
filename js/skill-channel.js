@@ -1,7 +1,7 @@
 function normalizeSkillChannel(channel) {
   if (!channel || typeof channel !== "object") return {duration:0,interval:1,interruptOnDamage:true,lockTarget:false,receivedDamagePercent:100};
   const receivedDamagePercent=Number(channel.receivedDamagePercent);
-  return {duration:normalizeSkillCooldown(channel.duration),interval:channel.interval == null ? 1 : Number(channel.interval),
+  return {...(Array.isArray(channel.pulseResourceCosts) && channel.pulseResourceCosts.length ? {pulseResourceCosts:channel.pulseResourceCosts.map(normalizeResourceCost)} : {}),duration:normalizeSkillCooldown(channel.duration),interval:channel.interval == null ? 1 : Number(channel.interval),
     interruptOnDamage:channel.interruptOnDamage !== false,lockTarget:channel.lockTarget === true,
     receivedDamagePercent:Number.isFinite(receivedDamagePercent) ? Math.max(0,receivedDamagePercent) : 100};
 }
@@ -13,6 +13,7 @@ function isSkillChannelConfigured(skill) {
 
 function renderSkillChannelForm(skill) {
   const channel = normalizeSkillChannel(skill?.channel);
+  document.getElementById("skillChannelPulseCosts").value=JSON.stringify(channel.pulseResourceCosts ?? []);
   document.getElementById("skillChannelDuration").value = channel.duration;
   document.getElementById("skillChannelInterval").value = channel.interval;
   document.getElementById("skillChannelDamage").checked = channel.interruptOnDamage;
@@ -21,7 +22,7 @@ function renderSkillChannelForm(skill) {
 }
 
 function readSkillChannelForm() {
-  return normalizeSkillChannel({duration:document.getElementById("skillChannelDuration").value,
+  return normalizeSkillChannel({pulseResourceCosts:JSON.parse(document.getElementById("skillChannelPulseCosts").value || "[]"),duration:document.getElementById("skillChannelDuration").value,
     interval:document.getElementById("skillChannelInterval").value,interruptOnDamage:document.getElementById("skillChannelDamage").checked,
     lockTarget:document.getElementById("skillChannelLockTarget").checked,
     receivedDamagePercent:document.getElementById("skillChannelReceivedDamagePercent").value});
@@ -68,7 +69,15 @@ function updateBattleChannel(unit) {
     unit.channelPulseTimer=Math.max(1,Math.ceil(normalizeSkillChannel(action.skill.channel).interval*BASE_ATTACK_COOLDOWN));
     publishBattleEvents([{type:"channel_tick",source:unit,target:action.target,skill:action.skill}]);
     if (unit.channelAction !== action || !unit.alive) return true;
-    dispatchSkillActions(unit,action.target,action.skill,true,false,action,action.resourceSpent);
+    const costs=normalizeSkillChannel(action.skill.channel).pulseResourceCosts ?? [];
+    const pulseSkill={resourceCosts:costs};
+    if (costs.length && !canPaySkillResourceCosts(unit,pulseSkill)) {finishBattleChannel(unit,"자원 부족");return true;}
+    const spent=costs.length ? spendSkillResourceCosts(unit,pulseSkill) : action.resourceSpent;
+    if (costs.length) {
+      syncAliveState(unit,{source:unit,skill:action.skill,reason:"채널링 자원 소모"});
+      if (!unit.alive) {finishBattleChannel(unit,"사망");return true;}
+    }
+    dispatchSkillActions(unit,action.target,action.skill,true,false,action,spent);
   }
   if (unit.channelAction === action && unit.channelTimer <= 0) finishBattleChannel(unit);
   return true;

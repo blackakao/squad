@@ -1,7 +1,7 @@
 // Browser page navigation and form option initialization. Loaded after ui.js.
 async function showPage(pageName) {
   document.getElementById("runePage")?.classList.toggle("hidden",pageName !== "rune");
-  if (pageName === "rune") {await loadSkillJson();await loadRuneJson();renderRunePage();editRune();}
+  if (pageName === "rune") {await loadSkillJson();await loadRuneJson();await loadEntityJson();renderRunePage();editRune();renderExternalResources();}
   document.getElementById("synergyPage")?.classList.toggle("hidden", pageName !== "synergy");
   document.getElementById("simulationPage")?.classList.toggle("hidden", pageName !== "simulation");
   document.getElementById("iconPage").classList.toggle("hidden", pageName !== "icon");

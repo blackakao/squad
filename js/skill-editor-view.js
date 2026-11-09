@@ -8,6 +8,10 @@ function renderSkillClassIdentity(skill) {
 }
 
 function formatSkillValueSummary(skill) {
+  if (skill?.slot === "optional") {
+    const targets=(skill.selectionModifier?.targetSkillIds ?? []).map(id=>getSkillById(id)).filter(Boolean).map(getSkillShortName);
+    return `<span class="skill-value-summary"><span><strong>선택 강화</strong> 캐릭터별 최대 3개</span><span><strong>대상</strong> ${escapeHtml(targets.join(", ") || "장착 스킬")}</span></span>`;
+  }
   if (isChoiceSkill(skill)) {
     const choice = normalizeSkillChoice(skill.choice);
     const selected = getChoiceSkillOption(skill);
@@ -38,7 +42,7 @@ function renderSkillPage() {
   const query = String(document.getElementById("skillSearch")?.value ?? "").trim().toLocaleLowerCase("ko");
   const slotFilter = document.getElementById("skillSlotFilter")?.value ?? "all";
   const rows = skillsJson.map((skill, index) => ({ skill, index })).filter(({skill}) =>
-    !skill.selectionModifier
+    (!skill.selectionModifier || skill.slot === "optional")
     && (selectedClass === "all" || inferSkillClassName(skill) === selectedClass)
     && (slotFilter === "all" || skill.slot === slotFilter)
     && (!query || `${skill.name} ${getSkillDescription(skill)}`.toLocaleLowerCase("ko").includes(query)));
@@ -91,11 +95,15 @@ function openSkillModal(index = "") {
   skillCastTimeEl.value = skill?.castTime ?? "";
   skillCastReceivedDamagePercentEl.value = skill?.castReceivedDamagePercent ?? 100;
   renderPassiveTriggerForm(skill);
+  document.getElementById("skillOptionalModifier").value=JSON.stringify(skill?.selectionModifier ?? {targetSkillIds:[]},null,2);
   renderSkillChoiceOptions(skill?.choice);
   renderSkillChannelForm(skill);
   const channelDisclosure = document.getElementById("skillChannelDisclosure");
   if (channelDisclosure) channelDisclosure.open = Number(skill?.channel?.duration ?? 0) > 0;
   renderSkillResourceCostsToForm(skill?.resourceCosts ?? normalizeSkillResourceCosts(skill));
+  document.getElementById("skillSummonCostCount").value=skill?.summonCost?.count ?? 0;
+  document.getElementById("skillSummonCostEntity").value=skill?.summonCost?.entityId ?? "";
+  document.getElementById("skillSummonCostChoice").value=skill?.summonCost?.choiceSkillId ?? "";
   renderSkillActionRows(skill?.actions ?? [createDefaultAction()]);
   skillDeleteButtonEl?.classList.toggle("hidden", !skill || isDefaultSkill(skill.id));
   skillModalEl.classList.remove("hidden");
@@ -181,7 +189,9 @@ function renderSkillActionRow(action, index) {
   }
   const targetOptions = getActionTargetsForType(action.type);
   return `
-    <div class="skill-action-row" data-action-index="${index}">
+    <div class="skill-action-row" data-action-index="${index}" data-reflected="${action.reflected === true}">
+      <label>무피해 유지 조건 (초)<input class="skill-action-undamaged" type="number" min="0" step="0.1" value="${action.noDamageSeconds ?? 0}"></label>
+      ${action.type === "create_field" ? `<label>대상 1체·매회 최대 HP 축적 (%)<input class="skill-action-store-hp" type="number" min="0" step="0.1" value="${action.fieldStoreHpPercent ?? 0}"></label><label><input class="skill-action-follow-source" type="checkbox" ${action.fieldFollowSource ? "checked" : ""}>시전자 추적 · 만료 시 축적량 회복</label>` : ""}
       <div class="skill-action-card-header">
         <div><span>ACTION ${index + 1}</span><strong>액션 설정</strong></div>
         <button type="button" onclick="removeSkillActionRow(this)">삭제</button>
@@ -360,7 +370,7 @@ function renderSkillActionRow(action, index) {
 // Coefficient, resource-cost and action-row editor controls.
 function renderSkillCoefficientRow(coefficient) {
   const normalized = normalizeCoefficient(coefficient);
-  const effectIdField = normalized.type === "calculated" && normalized.field === "targetEffectIdStacks"
+  const effectIdField = normalized.type === "calculated" && ["sourceEffectIdStacks","targetEffectIdStacks"].includes(normalized.field)
     ? `<label class="skill-coefficient-effect-id">효과 ID<input class="skill-coefficient-effect-id-input" value="${escapeHtml(normalized.effectId)}" placeholder="예: bleed"></label>` : "";
   const effectTagField = normalized.type === "calculated" && normalized.field === "targetEffectTagStacks"
     ? `<label class="skill-coefficient-effect-id">효과 태그<input class="skill-coefficient-effect-tag-input" value="${escapeHtml(normalized.effectTag)}" placeholder="예: disease"></label>
@@ -631,6 +641,10 @@ function readSkillActionsFromForm() {
     }
     const range = readSkillRangeFromRow(row);
     return normalizeSkillAction({
+      reflected:row.dataset.reflected === "true",
+      noDamageSeconds:Number(row.querySelector(".skill-action-undamaged")?.value || 0),
+      fieldStoreHpPercent:Number(row.querySelector(".skill-action-store-hp")?.value || 0),
+      fieldFollowSource:row.querySelector(".skill-action-follow-source")?.checked === true,
       type,
       target: row.querySelector(".skill-action-target")?.value,
       rangeMode: range.rangeMode,
@@ -642,6 +656,7 @@ function readSkillActionsFromForm() {
       targetHpBelow: Number(row.querySelector(".skill-action-target-hp")?.value ?? 100),
       runeAdvanceSeconds:Number(row.querySelector(".skill-rune-advance-seconds")?.value ?? 1),
       commandHealRadius:Number(row.querySelector(".skill-command-heal-radius")?.value ?? 0),commandHealPercent:Number(row.querySelector(".skill-command-heal-percent")?.value ?? 0),
+      entityChoiceSkillId:row.querySelector(".skill-action-entity-choice")?.value ?? "",limitScope:row.querySelector(".skill-action-limit-scope")?.value ?? "skill",
       originEntityId:row.querySelector(".skill-action-origin-entity")?.value ?? "",
       battlefieldArea:row.querySelector(".skill-action-battlefield-area")?.checked ?? false,
       distanceFalloff:{step:Number(row.querySelector(".skill-action-falloff-step")?.value ?? 0),percent:Number(row.querySelector(".skill-action-falloff-percent")?.value ?? 0),minimum:Number(row.querySelector(".skill-action-falloff-minimum")?.value ?? 10)},
@@ -659,7 +674,8 @@ function readSkillActionsFromForm() {
       targetSummonEntityId:row.querySelector(".skill-action-target-summon-entity")?.value ?? "",
       fullResourceAlternative:row.querySelector(".skill-action-full-resource-alternative")?.value ?? "",
       ...(TIMED_EFFECT_ACTIONS.includes(type) || (type === "create_field" && ["add_buff","add_state"].includes(row.querySelector('.skill-action-field-effect')?.value)) ? {effect:readSkillEffectFromRow(row)} : {}),
-      ...(type === "transform" ? {transform:{id:row.querySelector('.skill-transform-id')?.value,name:row.querySelector('.skill-transform-name')?.value,
+      ...(type === "transform" ? {transform:{
+        ...JSON.parse(row.querySelector(".skill-transform-form-options")?.value || "{}"),id:row.querySelector('.skill-transform-id')?.value,name:row.querySelector('.skill-transform-name')?.value,
         mode:row.querySelector('.skill-transform-mode')?.value,modifiers:Object.fromEntries([...row.querySelectorAll('.skill-transform-stat')].map(input=>[input.dataset.stat,Number(input.value)])),
         skillIds:[...row.querySelectorAll('.skill-transform-skills option:checked')].map(option=>option.value),
         attackSkillId:row.querySelector('.skill-transform-attack-skill')?.value ?? "",
@@ -794,6 +810,7 @@ function renderTransformActionArea(action) {
     <label>지속시간 (초, 0: 전투 종료까지)<input class="skill-transform-duration" type="number" min="0" step="0.1" value="${action.duration ?? 5}"></label>
     <label>형태 액티브 스킬<select class="skill-transform-skills" multiple size="5">${skillsJson.filter(skill=>skill.slot === "active" && isSkillExecutable(skill)).map(skill=>`<option value="${escapeHtml(skill.id)}" ${selectedSkills.has(skill.id) ? "selected" : ""}>${escapeHtml(skill.name)}</option>`).join("")}</select></label>
     <label>형태 기본 공격<select class="skill-transform-attack-skill">${getSkillOptionsHtml(transform.attackSkillId)}</select></label>
+    <label>형태 행동·복귀·스킬 치환 설정 (JSON)<textarea class="skill-transform-form-options" rows="5">${escapeHtml(JSON.stringify(Object.fromEntries(["untargetable","damageImmune","blockHealing","basicAttackDisabled","countsForDefeat","movementTarget","returnHpPercent","skillReplacements"].filter(key=>transform[key] != null).map(key=>[key,transform[key]])),null,2))}</textarea></label>
     <label>받는 피해 (%)<input class="skill-transform-received-damage" type="number" min="0" step="1" value="${transform.receivedDamagePercent}"></label>
     <label class="skill-check-field"><input class="skill-transform-immobile" type="checkbox" ${transform.immobile ? "checked" : ""}>형태 유지 중 이동 불가</label>
     <label>피해 시 해제 후 기절 (초, 0: 미사용)<input class="skill-transform-damage-exit-stun" type="number" min="0" step="0.1" value="${transform.damageExitStun}"></label>

@@ -23,7 +23,7 @@
   <button onclick="showPage('equipment')">장비 착용</button>
   <button onclick="showPage('item')">아이템 관리</button>
   <button onclick="showPage('skill')">스킬 관리</button>
-  <button onclick="showPage('rune')">룬 관리</button>
+  <button onclick="showPage('rune')">외부자원 관리</button>
   <button onclick="showPage('category')">장비 카테고리 관리</button>
   <button onclick="showPage('monster')">몬스터 관리</button>
   <button onclick="showPage('icon')">아이콘 관리</button>
@@ -230,7 +230,7 @@
     </div>
     <div class="table-responsive character-table-scroll" tabindex="0" role="region" aria-label="캐릭터 능력치 목록, 가로 스크롤 가능">
     <table class="data-table character-table">
-      <colgroup><col class="character-name-column"><col class="character-category-column" span="2"><col span="6"><col class="character-speed-column" span="3"><col span="2"><col class="character-speed-column"><col class="character-action-column"></colgroup>
+      <colgroup><col class="character-name-column"><col class="character-category-column" span="2"><col span="6"><col class="character-speed-column" span="3"><col span="2"><col class="character-speed-column"></colgroup>
       <thead>
         <tr id="characterTableHeader"></tr>
       </thead>
@@ -373,7 +373,7 @@
     <div class="skill-list-filters" aria-label="스킬 목록 필터">
       <label>검색<input id="skillSearch" type="search" placeholder="스킬 이름 또는 설명" oninput="renderSkillPage()"></label>
       <label>클래스<select id="skillClassFilter" onchange="renderSkillPage()"><option value="all">전체 클래스</option></select></label>
-      <label>타입<select id="skillSlotFilter" onchange="renderSkillPage()"><option value="all">전체 타입</option><option value="basic">베이직</option><option value="active">액티브</option><option value="passive">패시브</option><option value="choice_team">팀편성 선택</option><option value="choice_prebattle">전투 직전 선택</option></select></label>
+      <label>타입<select id="skillSlotFilter" onchange="renderSkillPage()"><option value="all">전체 타입</option><option value="basic">베이직</option><option value="active">액티브</option><option value="passive">패시브</option><option value="optional">선택 강화 (최대 3개)</option><option value="choice_team">팀편성 선택</option><option value="choice_prebattle">전투 직전 선택</option></select></label>
     </div>
     <div class="skill-list-shell">
       <table class="data-table skill-table">
@@ -658,16 +658,26 @@
   </div>
 </div>
 
-<div id="characterModal" class="modal hidden">
+<div id="characterModal" class="modal hidden" onclick="if(event.target === this) requestCloseCharacterModal()">
   <div class="modal-content">
     <h4 id="characterModalTitle">캐릭터 추가</h4>
     <form id="characterForm" onsubmit="saveCharacterFromForm(event)">
       <input type="hidden" id="characterEditIndex">
-      <div class="form-row">
-        <label for="characterName">이름</label>
-        <input id="characterName" required placeholder="tank1" oninput="refreshCharacterSkillPicker(true)">
+      <div class="character-business-card">
+        <div class="character-card-info">
+          <label><span id="characterCardFactionIcon"></span><span>진영</span><select id="characterFaction" required onchange="renderCharacterIdentity()"></select></label>
+          <label><span id="characterCardNameIcon"></span><span>이름</span><input id="characterName" required oninput="refreshCharacterSkillPicker(true);renderCharacterIdentity()"></label>
+          <label><span id="characterCardRoleIcon"></span><span>계열</span><select id="characterRole" required onchange="renderCharacterCurrentDetails();renderCharacterIdentity()"></select></label>
+        </div>
+        <button type="button" id="characterCardPortrait" class="character-card-portrait" aria-label="클래스 초상화 편집" onclick="requestCharacterPortraitEdit()"></button>
       </div>
-      <div class="form-row">
+      <div id="characterClosePrompt" class="character-close-prompt hidden" role="alertdialog" aria-label="변경사항 저장 확인">
+        <p>수정한 내용을 저장하시겠습니까?</p>
+        <button type="button" onclick="characterFormEl.requestSubmit()">저장 후 닫기</button>
+        <button type="button" onclick="closeCharacterModal()">저장하지 않고 닫기</button>
+        <button type="button" onclick="document.getElementById('characterClosePrompt').classList.add('hidden')">계속 편집</button>
+      </div>
+<div id="characterPortraitEditor" class="hidden">      <div class="form-row">
         <label for="characterPortrait">초상화</label>
         <input id="characterPortrait" type="file" accept="image/*" onchange="previewPortraitFile('character')">
         <div class="portrait-editor">
@@ -675,6 +685,7 @@
           <button type="button" onclick="clearPortrait('character')">초상화 제거</button>
         </div>
       </div>
+</div>
       <div class="form-row character-derived-field hidden">
         <label for="characterHp">HP</label>
         <input id="characterHp" type="number" min="1" disabled>
@@ -719,55 +730,15 @@
         <label for="characterAttackRange">사정거리</label>
         <input id="characterAttackRange" type="number" min="1" step="0.1" disabled>
       </div>
-      <div class="form-row">
-        <label for="characterRole">계열</label>
-        <select id="characterRole" required></select>
-        <label>개체 등급 (기본 2)<input id="characterEntityGrade" type="number" min="1" max="10" step="1" value="2"></label>
-      </div>
-      <div class="form-row">
-        <label for="characterFaction">진영</label>
-        <select id="characterFaction" required></select>
-      </div>
-      <div class="form-row">
-        <label for="characterSkills">사용 스킬</label>
-        <div id="characterSkills" class="character-skill-picker" role="group" aria-label="클래스 스킬"></div>
-        <small>캐릭터 이름과 같은 클래스의 스킬만 표시됩니다.</small>
-      </div>
-      <div class="form-row">
-        <label for="characterExtraWeaponSlots">추가 무기 슬롯</label>
-        <input id="characterExtraWeaponSlots" type="number" min="0" max="5" step="1" value="0">
-        <small>검의무희처럼 주무기·보조무기 외에 사용할 슬롯 수입니다.</small>
-      </div>
-      <div class="form-row">
-        <label><input id="characterTwoHandSingleSlot" type="checkbox"> 양손 무기를 슬롯 하나로 착용</label>
-        <small>활성화하면 양손 무기를 주무기·보조무기·추가 무기 슬롯에 각각 착용할 수 있습니다.</small>
-      </div>
-      <div class="form-row">
-        <label for="characterSameTargetWeaponPenalty">같은 대상 추가 무기당 피해 감산(%)</label>
-        <input id="characterSameTargetWeaponPenalty" type="number" min="0" max="100" step="1" value="0">
-        <small>여러 무기가 같은 대상을 추적할 때 각 무기 피해에서 합연산으로 차감합니다.</small>
-      </div>
-      <div class="form-row battle-rule-grid">
-        <label>전투 진입 지연(초)<input id="characterEntryDelay" type="number" min="0" step="0.1" value="0"></label>
-        <label>부활 횟수<input id="characterReviveCount" type="number" min="0" max="10" step="1" value="0"></label>
-        <label>부활 지연(초)<input id="characterReviveDelay" type="number" min="0" step="0.1" value="3"></label>
-        <label>부활 HP(%)<input id="characterReviveHpPercent" type="number" min="1" max="100" step="1" value="50"></label>
-        <label>부활 MP(%)<input id="characterReviveMpPercent" type="number" min="0" max="100" step="1" value="100"></label>
-        <label>부활 ST(%)<input id="characterReviveStPercent" type="number" min="0" max="100" step="1" value="100"></label>
-        <label>부활 후 무적(초)<input id="characterReviveInvulnerable" type="number" min="0" step="0.1" value="0"></label>
-        <label>부활 위치<select id="characterRevivePosition"><option value="death">사망 위치</option><option value="start">진영 시작 위치</option></select></label>
-        <small>진입 또는 부활 대기 중인 팀원이 있으면 아직 패배하지 않습니다.</small>
-      </div>
-      <div class="form-row">
-        <label>커스텀 자원</label>
-        <div id="characterCustomResources" class="custom-resource-list"></div>
-        <button type="button" onclick="addCustomResourceRow(characterCustomResourcesEl)">자원 추가</button>
-        <small>ID는 영문 소문자, 숫자, _, -만 사용합니다.</small>
-      </div>
+      <section class="character-detail-section"><h5>현재 능력치</h5><div id="characterCurrentStats" class="character-current-stats"></div></section>
+      <section class="character-detail-section"><h5>현재 착용장비</h5><div id="characterCurrentEquipment" class="character-current-equipment"></div></section>
+      <section class="character-detail-section"><h5>보유중인 스킬</h5><div id="characterSkills" class="character-skill-picker character-skill-boxes" role="group" aria-label="패시브·기본 스킬·궁극기"></div></section>
+      <section id="characterChoicePanel" class="character-detail-section" hidden></section>
+      <section class="character-detail-section"><h5>선택 스킬</h5><p id="characterOptionalCount" aria-live="polite"></p><div id="characterSelectedSkills" class="character-skill-picker character-skill-boxes" role="group" aria-label="선택 스킬 6개"></div></section>
       <div class="character-modal-actions">
         <button id="characterDeleteButton" class="hidden" type="button" onclick="deleteCharacterFromModal()">캐릭터 삭제</button>
         <div class="character-modal-save-actions">
-          <button type="button" onclick="closeCharacterModal()">취소</button>
+          <button type="button" onclick="requestCloseCharacterModal()">취소</button>
           <button type="submit">저장</button>
         </div>
       </div>
@@ -840,7 +811,7 @@
           <div class="skill-form-grid">
             <div class="form-row"><label for="skillName">이름</label><input id="skillName" required placeholder="스킬 이름"></div>
             <div class="form-row"><label for="skillClassName">클래스</label><select id="skillClassName" required></select></div>
-            <div class="form-row"><label for="skillSlot">타입</label><select id="skillSlot" required onchange="updateSkillTypeFields()"><option value="basic">베이직</option><option value="active">액티브</option><option value="passive">패시브</option><option value="choice_team">팀편성 선택</option><option value="choice_prebattle">전투 직전 선택</option></select></div>
+            <div class="form-row"><label for="skillSlot">타입</label><select id="skillSlot" required onchange="updateSkillTypeFields()"><option value="basic">베이직</option><option value="active">액티브</option><option value="passive">패시브</option><option value="optional">선택 강화 (최대 3개)</option><option value="choice_team">팀편성 선택</option><option value="choice_prebattle">전투 직전 선택</option></select></div>
             <div id="skillsImageEditor" class="skill-form-field-wide"></div>
             <div class="form-row skill-form-field-wide"><label for="skillDescription">설명</label><textarea id="skillDescription" rows="3" placeholder="스킬 효과와 특징을 입력하세요. 목록에는 요약해서 표시됩니다."></textarea></div>
           </div>
@@ -859,6 +830,8 @@
           </div>
           <div id="skillPassiveFields" class="skill-settings-card hidden">
             <label>고립 판정 반경 (m)<input id="skillPassive_aloneRadius" type="number" min="0.1" step="0.1" value="5"></label>
+<label>치명상 형태 전환 설정 (JSON, 비우면 미사용)<textarea id="skillPassiveLethalTransformation" rows="8" oninput="updateSkillTypeFields()"></textarea></label>
+<label>반복 발동 (초, 0: 사용 안 함)<input id="skillPassiveRepeatInterval" type="number" min="0" step="0.1" value="0"></label>
 <label>선택 룬 개수 (0: 미사용)<input id="skillPassiveRuneCount" type="number" min="0" max="10" value="0"></label><label>기본 룬 ID (쉼표 구분)<input id="skillPassiveDefaultRunes"></label>
 <label>HP 치유량만큼 저주 부여 (초, 0: 사용 안 함)<input id="skillPassiveHealingCurseDuration" type="number" min="0" step="1" value="0"></label>
 <label>고립 상실 불이익 (초)<input id="skillPassive_aloneLossDuration" type="number" min="0.1" step="0.1" value="2"></label>
@@ -872,6 +845,7 @@
               <label>공격 적중 시 상태이상 연장 (초)<input id="skillPassiveStateExtension" type="number" min="0" step="0.1" value="0"></label>
               <label class="skill-check-field skill-form-field-wide"><input id="skillPassivePreserveSleep" type="checkbox">자신의 공격은 수면을 깨우지 않음</label>
               <label class="skill-check-field skill-form-field-wide"><input id="skillPassiveSkillOnly" type="checkbox">액티브 스킬 시전에만 발동</label>
+              <label class="skill-check-field skill-form-field-wide"><input id="skillPassiveMeleeOnly" type="checkbox">근접 직접 피해에만 발동 (공격 사거리 1m 이하)</label>
               <label class="skill-check-field skill-form-field-wide"><input id="skillPassiveBasicAttackOnly" type="checkbox">기본 공격 적중에만 발동</label>
               <label class="skill-check-field skill-form-field-wide"><input id="skillPassivePeriodic" type="checkbox">주기 피해·회복도 발동 조건에 포함</label>
               <label class="skill-check-field skill-form-field-wide"><input id="skillPassiveMultiplePerTick" type="checkbox">같은 전투 틱의 모든 조건 이벤트에 각각 발동</label>
@@ -886,6 +860,7 @@
             </div>
             <small>조건 충족 시 즉시 실행합니다. 아래 자원 소모와 쿨타임을 적용하며, 동일 패시브는 한 전투 틱에 한 번만 발동합니다. 패시브 효과로 다른 패시브를 연쇄 발동하지 않습니다. 기절·침묵 중에도 발동하지만 사망한 유닛은 발동하지 않습니다.</small>
           </div>
+          <label id="skillOptionalFields" class="hidden">선택 강화 설정 (JSON)<textarea id="skillOptionalModifier" rows="8"></textarea></label>
           <div id="skillChoiceFields" class="skill-settings-card hidden">
             <div class="skill-settings-card-title">선택 스킬 설정</div>
             <p>기존 스킬을 선택지로 연결합니다. 선택하지 않으면 기본 선택지가 전투에 적용됩니다.</p>
@@ -897,6 +872,7 @@
             <fieldset id="skillChannelFields">
               <legend>채널링</legend>
               <div class="skill-form-grid">
+                <label>매회 자원 비용 (JSON)<input id="skillChannelPulseCosts" placeholder='[{"resource":"HP","mode":"maxPercent","value":5}]'></label>
                 <label>유지시간 (초, 0: 사용 안 함)<input id="skillChannelDuration" type="number" min="0" step="0.1" value="0"></label>
                 <label>적용 간격 (초)<input id="skillChannelInterval" type="number" min="0.01" step="0.01" value="1"></label>
                 <label>받는 피해 비율 (%)<input id="skillChannelReceivedDamagePercent" type="number" min="0" step="1" value="100"></label>
@@ -914,6 +890,7 @@
             <div><h5>비용</h5><p>스킬 사용 시 한 번 소모할 자원을 설정합니다.</p></div>
             <button type="button" onclick="addSkillResourceCostRow(this)">+ 자원 소모 추가</button>
           </div>
+          <label>완료 시 소모할 소환수 수 (0: 미사용)<input id="skillSummonCostCount" type="number" min="0" max="20" value="0"></label><label>소모 Entity ID<input id="skillSummonCostEntity"></label><label>소모 종류 선택 스킬 ID<input id="skillSummonCostChoice"></label>
           <div class="skill-resource-cost"><div id="skillResourceCosts" class="skill-resource-cost-list"></div></div>
         </section>
 
@@ -1024,7 +1001,12 @@
 </div>
 
 <section id="runePage" class="page hidden">
-  <h2>룬 관리</h2><p>룬은 고정된 위치에서 주기적으로 발동합니다. 효과는 스킬 관리에서 만든 피해·회복·버프 액션을 연결합니다. 발동 스킬의 시전시간·비용·재사용은 사용하지 않습니다.</p>
+  <div class="panel">
+  <h4>외부자원 관리</h4>
+  <p>소환수의 능력치·초상화·주소환수 표시와 룬의 발동 효과를 관리합니다. 소환 수·유지시간·소환자 능력치 계승은 연결된 스킬에서 설정합니다.</p>
+  <div class="data-toolbar"><label>종류 <select id="externalResourceGroup" onchange="renderExternalResources()"><option value="spirit">정령술사 · 정령</option><option value="beast">조련사 · 야수</option><option value="rune">룬술사 · 룬</option><option value="engineer">갑사 · 소환수</option><option value="puppet">인형술사 · 인형</option><option value="demon">악마 · 소환수</option></select></label></div>
+  <div id="externalEntityPanel"><button type="button" onclick="addExternalResource()">소환수 추가</button><div class="external-resource-list" id="externalResourceList"></div></div>
+  <div id="externalRunePanel" class="hidden"><h5>룬</h5><p>고정 위치에서 주기적으로 발동합니다. 연결 스킬의 시전시간·비용·재사용은 사용하지 않습니다.</p>
   <button type="button" onclick="editRune()">새 룬</button>
   <form id="runeForm" onsubmit="saveRune(event)">
     <input name="editIndex" type="hidden" value="-1">
@@ -1038,6 +1020,7 @@
     <button type="submit">룬 저장</button>
   </form>
   <table><thead><tr><th>이름</th><th>반경</th><th>주기</th><th>설치</th><th>발동효과</th><th>관리</th></tr></thead><tbody id="runeList"></tbody></table>
+  </div></div>
 </section>
 <script src="js/logger.js?v=20260818-save-click2"></script>
 <script src="js/portrait/hair-colors.js?v=20261007-parts1"></script>
@@ -1045,20 +1028,20 @@
 <script src="js/portrait/catalog.js?v=20261007-parts1"></script>
 <script src="js/ui.js?v=20261107-mixed-battle"></script>
 <script src="js/ui-portrait-editor.js?v=20261104-refactor1"></script>
-<script src="js/ui-battle-view.js?v=20261107-rune-mount-ui"></script>
+<script src="js/ui-battle-view.js?20261109-soul"></script>
 <script src="js/ui-page-navigation.js?v=20261104-refactor1"></script>
 <script src="js/portrait/bridge.js?v=20260929-bald1"></script>
 <script src="js/api.js?v=20260914-image-assets"></script>
 <script src="js/record-images.js?v=20261106-entity-portraits"></script>
 <script src="js/category.js?v=20261005-icons"></script>
-<script src="js/battle-events.js?v=20261106-combat-feedback"></script>
-<script src="js/skill-channel.js?v=20261107-channel-event-log"></script>
-<script src="js/skill-passives.js?v=20261031-passive-no-bubble"></script>
-<script src="js/skill-effects.js?v=20261020-summon-link"></script>
-  <script src="js/skill.js?v=20261106-buff-recast"></script>
+<script src="js/battle-events.js?20261109-keratin"></script>
+<script src="js/skill-channel.js?20261109-serum"></script>
+<script src="js/skill-passives.js?20261109-soul"></script>
+<script src="js/skill-effects.js?20261109-soul"></script>
+  <script src="js/skill.js?20261109-soul"></script>
 <script src="js/rune.js?v=20261107-rune-mount-ui"></script>
-<script src="js/skill-editor-view.js?v=20261104-refactor1"></script>
-<script src="js/entity.js?v=20261106-entity-portraits"></script>
+<script src="js/skill-editor-view.js?20261109-soul"></script>
+<script src="js/entity.js?v=20261109-spirits"></script>
 <script src="js/layout.js?v=20260817-layout"></script>
 <script src="js/combat-power.js?v=20261014-v1"></script>
 <script src="js/combat-power-ui.js?v=20261014-v1"></script>
@@ -1066,13 +1049,13 @@
 <script src="js/equipment-editor-view.js?v=20261104-refactor4"></script>
 <script src="js/monster.js?v=20261018-duel"></script>
 <script src="js/faction.js?v=20261005-icons"></script>
-<script src="js/character.js?v=20261107-mixed-battle"></script>
+<script src="js/character.js?20261109-serum"></script>
 <script src="js/synergy.js?v=20261011-v1"></script>
 <script src="js/synergy-ui.js?v=20261015-record-images"></script>
 <script src="js/team.js?v=20261107-rune-mount-ui"></script>
 <script src="js/stats.js?v=20261014-cp-v1"></script>
 <script src="js/record.js?v=20261012-contributions"></script>
-<script src="js/battle.js?v=20261107-rune-mount-ui"></script>
+<script src="js/battle.js?20261109-soul"></script>
 <script src="https://js.puter.com/v2/"></script>
 <script src="js/image-generator.js?v=20261005-image-actions"></script>
 <script src="js/icon-background.js?v=20261009"></script>

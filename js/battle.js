@@ -1,5 +1,7 @@
 function resetUnitForBattle(unit) {
   unit.proximityPassiveActive = {};
+  unit.passiveRepeatTimers = {};
+  unit.undamagedTicks=0;
   restorePassiveStatConversion(unit);
   restorePassiveResourceConversion(unit);
   clearBattleEffects(unit);
@@ -79,7 +81,7 @@ function getBattleCharacters(squad) {
 }
 
 function getActiveBattleEntities(squad) {
-  return squad.filter(unit => unit.alive && !unit.removed && unit.targetable !== false && !(unit.suspendedTicks>0));
+  return squad.filter(unit => unit.alive && !unit.removed && isUnitBattleTargetable(unit) && !(unit.suspendedTicks>0));
 }
 
 function getSummonOwner(source) {
@@ -178,7 +180,7 @@ function canSummonBattleUnit(source, action, skill) {
   if (config.summonType === "persistent"
       && (owner.summons ?? []).filter(unit => unit.summonType === "persistent" && unit.entityId === config.entityId).length >= Math.min(config.count, config.limit)) return false;
   const living = squad.filter(unit => unit.alive && unit.isSummon);
-  return living.length < MAX_ACTIVE_SUMMONS_PER_SIDE && living.filter(unit => unit.summoner === owner && unit.summonSkillId === skill?.id).length < config.limit;
+  return living.length < MAX_ACTIVE_SUMMONS_PER_SIDE && living.filter(unit => unit.summoner === owner && (config.limitScope === "entity" ? unit.entityId === config.entityId : unit.summonSkillId === skill?.id)).length < config.limit;
 }
 
 function summonBattleUnits(source, action, skill, target = source) {
@@ -234,7 +236,7 @@ function createSummonedBattleUnit(source, config) {
       attackRange: config.attackRange, attackType: config.attackType === "magic" || config.ai === "healer" ? "magic" : "physical",
       protectOwnerPercent:config.protectOwnerPercent,protectOwnerScope:config.protectOwnerScope,protectOwnerPriority:config.protectOwnerPriority,
       transferStateScope:config.transferStateScope,transferStatePriority:config.transferStatePriority,
-      attributes: {}, skillIds: [], attackSkillId: config.attackSkillId ?? "",
+      attributes: {}, skillIds:config.skillIds ?? [],basicAttackDisabled:config.basicAttackDisabled === true, attackSkillId: config.attackSkillId ?? "",
       x: center.x + Math.cos(angle) * COLLISION_DISTANCE,
       y: center.y + Math.sin(angle) * COLLISION_DISTANCE
     };
@@ -278,7 +280,7 @@ function updateResources() {
   lastResourceUpdateAt = now;
 
   [...playerSquad, ...enemySquad].forEach(unit => {
-    if (!unit.alive) {
+    if (!unit.alive || getUnitBattleForm(unit)?.blockHealing) {
       return;
     }
 
@@ -367,6 +369,7 @@ function clampPosition(unit) {
 function syncAliveState(unit, context = {}) {
   const events = [];
   if (unit.hp <= 0) {
+    if (tryEnterLethalTransformation(unit,context)) return events;
     const wasAlive = unit.alive;
     unit.hp = 0;
     unit.alive = false;
@@ -548,7 +551,7 @@ function updateRuntimeRuleOverrides() {
 }
 
 function canSquadContinueBattle(squad) {
-  return squad.some(unit => (unit.alive && unit.targetable !== false) || (!unit.isSummon && unit.isWaiting
+  return squad.some(unit => (unit.alive && isUnitBattleTargetable(unit) && getUnitBattleForm(unit)?.countsForDefeat !== false) || (!unit.isSummon && unit.isWaiting
     && (unit.isReserve || unit.entryTicks > 0 || unit.reviveTicks > 0)));
 }
 
@@ -804,6 +807,11 @@ function moveUnit(unit, targets) {
   if (charm) targets=[...playerSquad,...enemySquad].filter(candidate=>candidate.alive && candidate.effectCasterId === charm.casterId);
   else targets=targets.filter(target=>canDirectlyTarget(unit,target));
   if (hasBattleState(unit,"flee")) targets=getActiveBattleEntities(unit.side === "enemy" ? playerSquad : enemySquad).sort((a,b)=>distance(unit,a)-distance(unit,b));
+  const supportForm=transform?.movementTarget === "injured_ally";
+  if (!charm && !hasBattleState(unit,"flee") && supportForm) {
+    targets=(unit.side === "enemy" ? enemySquad : playerSquad).filter(candidate=>candidate !== unit && candidate.alive && candidate.hp>0 && candidate.hp<candidate.maxHp && !getUnitBattleForm(candidate)?.blockHealing)
+      .sort((a,b)=>a.hp/a.maxHp-b.hp/b.maxHp || distance(unit,a)-distance(unit,b));
+  }
   if (!charm && !hasBattleState(unit,"flee") && unit.isSummon && unit.ai === "healer") {
     targets = getSummonSquad(unit).filter(candidate => candidate !== unit && candidate.alive && candidate.hp < candidate.maxHp);
   }
@@ -828,7 +836,8 @@ function moveUnit(unit, targets) {
     && skill.actions.some(action=>action.target === "enemy"));
   const weaponRanges=(unit.weaponAttackStates ?? []).map(state=>Number(state.weapon.attackRange)*ATTACK_RANGE_UNIT).filter(range=>range>0);
   const basicRange=weaponRanges.length>1 ? Math.min(getUnitRange(unit),...weaponRanges) : getUnitRange(unit);
-  const desiredRange=charm ? COLLISION_DISTANCE : readySkill
+  const supportAction=supportForm ? getEquippedSkills(unit).flatMap(skill=>skill.actions).find(action=>action.type === "heal" && action.target === "ally") : null;
+  const desiredRange=charm ? COLLISION_DISTANCE : supportAction ? getActionRangePixels(unit,supportAction) : readySkill
     ? Math.min(getUnitRange(unit),...readySkill.actions.filter(action=>action.target === "enemy").map(action=>getActionRangePixels(unit,action)))
     : basicRange;
 
@@ -902,11 +911,15 @@ function updateCombat() {
     return;
   }
 
-  alivePlayers.forEach(unit => takeAction(unit, alivePlayers, aliveEnemies));
-  aliveEnemies.forEach(unit => takeAction(unit, aliveEnemies, alivePlayers));
+  // Untargetable forms may still act; target pools retain the existing exclusions.
+  const actors=squad=>squad.filter(unit=>unit.alive && !unit.removed && unit.targetable !== false && !(unit.suspendedTicks>0));
+  actors(playerSquad).forEach(unit => takeAction(unit, alivePlayers, aliveEnemies));
+  actors(enemySquad).forEach(unit => takeAction(unit, aliveEnemies, alivePlayers));
 }
 
 function getBasicBattleSkill(unit) {
+  if (!getLifeCycleForm(unit) && getLethalTransformationPassive(unit)?.passiveTrigger.lethalTransformation.bodyBasicAttack)
+    return getUnitSkill(unit,DEFAULT_ATTACK_SKILL_ID);
   // Equipped weapons choose the action; role AI is only the unarmed fallback.
   const unarmedHealer = !(unit.weaponAttacks?.length) && (unit.ai ?? unit.role) === "healer";
   return getUnitSkill(unit, unarmedHealer ? DEFAULT_HEAL_SKILL_ID : DEFAULT_ATTACK_SKILL_ID);
@@ -944,6 +957,7 @@ function takeAction(unit, allies, enemies) {
   }
   if (hasBattleState(unit,"disarm")) return;
 
+  if (unit.basicAttackDisabled || getUnitBattleForm(unit)?.basicAttackDisabled) return;
   if (hasIndependentWeapons) {
     updateIndependentWeaponAttacks(unit,enemies);
     return;
@@ -1021,6 +1035,7 @@ function resolveSkillTarget(unit, skill, allies, enemies) {
 }
 
 function startCast(unit, action) {
+  if (action.type === "attack" && getUnitBattleForm(unit)?.basicAttackDisabled) return;
   if (hasBattleState(unit,"flee") || (action.type === "attack" && hasBattleState(unit,"disarm"))) return;
   if (unit.channelAction) return;
   if (hasBattleState(unit,"stun") || (action.type === "skill" && hasBattleState(unit,"silence"))) return;
@@ -1080,8 +1095,12 @@ function resolveCastAction(unit, action) {
   if (hasBattleState(unit,"flee") || (action.type === "attack" && hasBattleState(unit,"disarm"))) return;
 
   const completedSkill = action.skill ?? getUnitSkill(unit,action.type === "heal" ? DEFAULT_HEAL_SKILL_ID : DEFAULT_ATTACK_SKILL_ID);
+  if (hasBattleState(unit,"stun") || (action.type === "skill" && hasBattleState(unit,"silence"))) return;
   if (completedSkill.slot !== "passive" && normalizeSkillChannel(completedSkill.channel).duration > 0) {
     startBattleChannel(unit,action,completedSkill);return;
+  }
+  if (action.type === "skill" && completedSkill.summonCost && !paySkillSummonCost(unit,completedSkill)) {
+    publishBattleEvents([{type:"cast_interrupt",source:unit,target:action.target,skill:completedSkill,reason:"소환 재료 부족"}]);return;
   }
   breakAttackConcealment(unit,completedSkill);
   publishBattleEvents([{type:"cast_complete",source:unit,target:action.target,skill:completedSkill,resourceSpent:action.resourceSpent}]);
@@ -1213,7 +1232,7 @@ function createBattleField(source,target,action,skill) {
   const snapshot=structuredClone(definition);snapshot._actionIndex=skill?.actions?.indexOf(action) ?? -1;
   const line=action.fieldShape === "line";
   const startX=source.x,startY=source.y,endX=center.x,endY=center.y;
-  const field={source,skill,action:snapshot,anchor:_origin ?? null,x:line ? (startX+endX)/2 : center.x,y:line ? (startY+endY)/2 : center.y,
+  const field={source,skill,action:snapshot,anchor:action.fieldFollowSource ? source : _origin ?? null,storedHp:0,x:line ? (startX+endX)/2 : center.x,y:line ? (startY+endY)/2 : center.y,
     ...(line ? {startX,startY,endX,endY} : {}),
     remainingTicks:action.duration > 0 ? Math.max(1,Math.ceil(action.duration*BASE_ATTACK_COOLDOWN)) : null,
     nextTick:Math.max(1,Math.ceil(action.fieldInterval*BASE_ATTACK_COOLDOWN))};
@@ -1308,11 +1327,13 @@ function updateBattleFields() {
       const applied={...action,type:action.fieldEffect,area:0,chainCount:0,periodic:true,originEntityId:"",_origin:field.anchor ?? undefined,
         ...(["add_buff","add_state"].includes(action.fieldEffect) ? {duration:action.fieldEffectDuration} : {}),
         ...(action.fieldEffect === "move" ? {moveType:action.fieldMoveType,distance:action.fieldDistance,_moveOrigin:{x:field.x,y:field.y}} : {})};
+      if (action.fieldStoreHpPercent>0) field.storedHp+=targets.filter(unit=>isUnitBattleTargetable(unit) && !(unit.suspendedTicks>0)).length*source.maxHp*action.fieldStoreHpPercent/100;
       if (action.fieldEffect !== "none") for(const target of targets) applySkillAction(source,target,applied,skill,createSkillExecutionContext());
       publishBattleEvents([{type:"field_tick",source,skill}]);
     }
     if (source.removed) return false;
     if (field.remainingTicks === null || --field.remainingTicks > 0) return true;
+    if (source.alive && field.storedHp>0) applySkillAction(source,source,normalizeSkillAction({type:"heal",target:"self",healResource:"HP",coefficients:[{type:"fixed",value:field.storedHp}]}),skill,createSkillExecutionContext());
     publishBattleEvents([{type:"field_expire",source,skill}]);
     return false;
   }).filter(field => !field.source.removed);
@@ -1661,7 +1682,7 @@ function drawUnit(unit, isEnemy) {
 
   ctx.fillStyle = "black";
   ctx.font = `${10 * scale}px Arial`;
-  ctx.fillText(unit.name, unit.x - 12 * scale, unit.y - statusOffset - 4 * scale);
+  ctx.fillText(`${unit.name}${getLifeCycleFormLabel(unit) ? ` · ${getLifeCycleFormLabel(unit)}` : ""}`, unit.x - 12 * scale, unit.y - statusOffset - 4 * scale);
 
   const effectHeight=drawBattleEffectIcons(unit,statusOffset);
   drawSkillBubble(unit, statusOffset+effectHeight);

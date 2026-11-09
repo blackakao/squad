@@ -139,5 +139,60 @@
     "type": "armor",
     "key": "cloth",
     "label": "천"
+  },
+  {
+    "type": "weapon",
+    "key": "glove",
+    "label": "글러브",
+    "handType": "oneHand",
+    "attackRange": 1,
+    "attackSpeed": 1,
+    "castSpeed": 0.5,
+    "attackType": "physical",
+    "slotType": "both"
+  },
+  {
+    "type": "weapon",
+    "key": "crossbow",
+    "label": "석궁",
+    "handType": "twoHand",
+    "attackRange": 5,
+    "attackSpeed": 3.5,
+    "castSpeed": 2,
+    "attackType": "physical",
+    "slotType": "mainOnly"
+  },
+  {
+    "type": "weapon",
+    "key": "whip",
+    "label": "채찍",
+    "handType": "oneHand",
+    "attackRange": 3,
+    "attackSpeed": 2.5,
+    "castSpeed": 1,
+    "attackType": "physical",
+    "slotType": "both"
+  },
+  {
+    "type": "weapon",
+    "key": "oneHandAxe",
+    "label": "한손도끼",
+    "handType": "oneHand",
+    "attackRange": 1,
+    "attackSpeed": 2.5,
+    "castSpeed": 1,
+    "attackType": "physical",
+    "slotType": "both"
+  },
+  {
+    "type": "weapon",
+    "key": "twoHandAxe",
+    "label": "양손도끼",
+    "handType": "twoHand",
+    "attackRange": 1,
+    "attackSpeed": 4,
+    "castSpeed": 1.5,
+    "attackType": "physical",
+    "slotType": "mainOnly"
   }
 ]

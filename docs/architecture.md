@@ -1,5 +1,14 @@
 # 아키텍처
 
+- 치명상 형태 전환은 battle.js의 사망 진입 전 검사와 대상/행동 분리, skill-effects.js의 기존 변신/만료·형태 조회, skill.js의 피해/회복 차단·슬롯 치환, ui-battle-view.js의 현재 스킬·복귀 타이머를 사용한다. [영혼수확자 계약](SKILL_ENGINE.md#영혼수확자치명상-형태-전환-2026-11-09).
+
+- 각질형은 skill-passives.js의 근접 피격 필터, skill-effects.js의 단계별 중첩/시간제 보호막과 반응 실행, skill.js의 피해 흡수·파괴 감지·자기 중첩 계수, ui-battle-view.js의 BP 합산 표시를 사용한다. [계약](SKILL_ENGINE.md#각질형단계별-스택파괴-반응-보호막-2026-11-09).
+
+- 선택 강화는 character.js의 선택/저장 제한과 skill.js의 공통 런타임 보정 경로를 사용한다. skill-passives.js는 보정된 반복 패시브를 실행하고 skill-channel.js는 회차 비용, battle.js는 결계 축적/만료, skill-effects.js와 피해 진입점은 무피해 시간을 처리한다. [계약](SKILL_ENGINE.md#혈청형-개편캐릭터-선택-강화-2026-11-09).
+
+- 정령 반복 생산은 `skill-passives.js`와 효과 틱, 재료 비용/현재 소환자 계수는 `skill.js`, 완료 시 소모/Entity 행동은 `battle.js`, 실제 능력치/제한 해제는 `skill-effects.js`에 연결된다. Entity 선택/장착은 기존 Entity·스킬 편집/저장 계약을 확장했다. [상세](SKILL_ENGINE.md#정령술사-개편-2026-11-09).
+
+
 - 독립 룬: `js/rune.js`가 정의 로드/관리·선택 UI·설치 객체·주기 실행/렌더링을 담당한다. `skill.js`는 설치/타이머 감소 액션, `battle.js`는 틱/정리 연결, `team.js`는 선택 전달, `rune_store.py`는 저장 검증을 맡는다. `simulation_jobs.py`와 헤드리스 엔진도 정의를 스냅샷에 포함한다. 효과 실행은 기존 스킬 액션을 재사용한다. [계약](SKILL_ENGINE.md#독립-룬-시스템룬술사-2026-11-07).
 
 

@@ -73,18 +73,6 @@ const characterAttackRangeEl = document.getElementById("characterAttackRange");
 const characterRoleEl = document.getElementById("characterRole");
 const characterFactionEl = document.getElementById("characterFaction");
 const characterSkillsEl = document.getElementById("characterSkills");
-const characterCustomResourcesEl = document.getElementById("characterCustomResources");
-const characterExtraWeaponSlotsEl = document.getElementById("characterExtraWeaponSlots");
-const characterTwoHandSingleSlotEl = document.getElementById("characterTwoHandSingleSlot");
-const characterSameTargetWeaponPenaltyEl = document.getElementById("characterSameTargetWeaponPenalty");
-const characterEntryDelayEl = document.getElementById("characterEntryDelay");
-const characterReviveCountEl = document.getElementById("characterReviveCount");
-const characterReviveDelayEl = document.getElementById("characterReviveDelay");
-const characterReviveHpPercentEl = document.getElementById("characterReviveHpPercent");
-const characterReviveMpPercentEl = document.getElementById("characterReviveMpPercent");
-const characterReviveStPercentEl = document.getElementById("characterReviveStPercent");
-const characterReviveInvulnerableEl = document.getElementById("characterReviveInvulnerable");
-const characterRevivePositionEl = document.getElementById("characterRevivePosition");
 const characterPortraitEl = document.getElementById("characterPortrait");
 const characterPortraitPreviewEl = document.getElementById("characterPortraitPreview");
 const statCharacterButtonsEl = document.getElementById("statCharacterButtons");
@@ -224,6 +212,11 @@ const BARE_HAND_CAST_SPEED = 0.5;
 const BARE_HAND_ATTACK_TYPE = "physical";
 const DEFAULT_CATEGORIES = {
   weapons: [
+    {"key": "glove", "label": "글러브", "handType": "oneHand", "attackRange": 1, "attackSpeed": 1, "castSpeed": 0.5, "attackType": "physical", "slotType": "both"},
+    {"key": "crossbow", "label": "석궁", "handType": "twoHand", "attackRange": 5, "attackSpeed": 3.5, "castSpeed": 2, "attackType": "physical", "slotType": "mainOnly"},
+    {"key": "whip", "label": "채찍", "handType": "oneHand", "attackRange": 3, "attackSpeed": 2.5, "castSpeed": 1, "attackType": "physical", "slotType": "both"},
+    {"key": "oneHandAxe", "label": "한손도끼", "handType": "oneHand", "attackRange": 1, "attackSpeed": 2.5, "castSpeed": 1, "attackType": "physical", "slotType": "both"},
+    {"key": "twoHandAxe", "label": "양손도끼", "handType": "twoHand", "attackRange": 1, "attackSpeed": 4, "castSpeed": 1.5, "attackType": "physical", "slotType": "mainOnly"},
     { key: "oneHandSword", label: "한손검", handType: "oneHand", attackRange: 1, attackSpeed: 1, castSpeed: 0.5, attackType: "physical", slotType: "both" },
     { key: "twoHandSword", label: "양손검", handType: "twoHand", attackRange: 1, attackSpeed: 1.2, castSpeed: 0.5, attackType: "physical", slotType: "mainOnly" },
     { key: "oneHandMace", label: "한손둔기", handType: "oneHand", attackRange: 1, attackSpeed: 1.1, castSpeed: 0.5, attackType: "physical", slotType: "both" },
@@ -699,6 +692,7 @@ function normalizeCombatJson(items, defaults, nameKey) {
         attackRange: normalizeCombatValue(item.attackRange, getDefaultAbility(role, "attackRange"), 1),
         role,
         skillIds: Array.isArray(item.skillIds) ? [...new Set(item.skillIds.map(String).filter(Boolean))] : [],
+        skillSelections: Object.fromEntries(Object.entries(item.skillSelections ?? {}).filter(([,value]) => typeof value === 'string')),
         portrait: normalizePortrait(item.portrait)
       };
 

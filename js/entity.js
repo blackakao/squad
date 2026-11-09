@@ -3,6 +3,46 @@ let battleEntitySnapshot = null;
 let entityEditorRow = null;
 let entityEditorOriginalId = "";
 let entityPreviewFrame = null;
+const EXTERNAL_RESOURCE_GROUPS = {
+  spirit: {label: '정령술사 · 정령', ids: ['spirit_destroy', 'spirit_enhance', 'spirit_heal']},
+  beast: {label: '조련사 · 야수', ids: ['legacy_4ac380c5973655c4']},
+  engineer: {label: '갑사 · 소환수', ids: ['engineer_ballista', 'engineer_recoilless_cannon', 'engineer_talisman_cannon', 'legacy_7485c24755d256a5']},
+  puppet: {label: '인형술사 · 인형', ids: ['puppet_doll']},
+  demon: {label: '악마 · 소환수', ids: ['demon_brute', 'demon_general', 'demon_minion']}
+};
+
+function renderExternalResources() {
+  const selector = document.getElementById('externalResourceGroup');
+  if (!selector) return;
+  const group = selector.value;
+  document.getElementById('externalEntityPanel').classList.toggle('hidden', group === 'rune');
+  document.getElementById('externalRunePanel').classList.toggle('hidden', group !== 'rune');
+  if (!EXTERNAL_RESOURCE_GROUPS[group]) return;
+  const entries = entitiesJson.filter(entity => EXTERNAL_RESOURCE_GROUPS[group].ids.includes(entity.entityId) || entity.tags?.includes(`external:${group}`));
+  document.getElementById('externalResourceList').innerHTML = entries.map(entity => {
+    const icon = safeEntityIcon(entity.icon);
+    const main = entity.mainSummon ?? MAIN_SUMMON_STATUS_ENTITY_IDS.has(entity.entityId);
+    return `<article class="external-resource-card"><div class="external-resource-heading">${icon ? `<img src="${escapeHtml(icon)}" alt="${escapeHtml(entity.name)} 초상화">` : '<span class="external-resource-placeholder">초상화 없음</span>'}<div><h5>${escapeHtml(entity.name)}</h5><small>${main ? '주소환수' : '일반 소환수'} · ${entity.summonType === 'persistent' ? '영구' : '임시'} · ${escapeHtml(ENTITY_ROLES[entity.role] || entity.role)}</small></div></div>
+      <p>${escapeHtml(entity.description || '')}</p><dl class="external-resource-stats">${Object.entries(ENTITY_STAT_FIELDS).map(([key,label]) => `<div><dt>${label}</dt><dd>${Number(entity.stats[key]) || 0}</dd></div>`).join('')}</dl>
+      <p class="empty-text">사용 스킬: ${entityUsages(entity.entityId).map(skill => escapeHtml(skill.name)).join(', ') || '연결 없음'}</p>
+      <button type="button" data-entity-id="${escapeHtml(entity.entityId)}" onclick="openExternalResource(this.dataset.entityId)">능력치 · 초상화 · 주소환수 설정</button></article>`;
+  }).join('') || '<p class="empty-text">등록된 소환수가 없습니다.</p>';
+}
+
+function openExternalResource(id) {
+  openEntityEditor(null, true, id);
+  const form = document.getElementById('entityEditorForm');
+  form.elements.saveMode.closest('label').classList.add('hidden');
+}
+
+function addExternalResource() {
+  const group = document.getElementById('externalResourceGroup').value;
+  if (!EXTERNAL_RESOURCE_GROUPS[group]) return;
+  openEntityEditor(null);
+  const form = document.getElementById('entityEditorForm');
+  form.elements.tags.value = `summon, external:${group}`;
+  form.elements.saveMode.closest('label').classList.add('hidden');
+}
 const ENTITY_STAT_FIELDS = {hp:"HP",mp:"MP",st:"ST",atk:"공격력",magic:"마력",defense:"방어력",resistance:"저항력",speed:"이동속도",attackSpeed:"공격 간격(초)",castTime:"시전시간(초)",attackRange:"사거리"};
 const ENTITY_ROLES = {melee:"근접",ranged:"원거리",healer:"치유 (힐)",tank:"방어",special:"특수"};
 const ENTITY_AI = {melee:"근접",ranged:"원거리",healer:"치유",stationary:"설치형"};
@@ -28,7 +68,8 @@ function getEntityById(id) {
 
 function getSummonConfiguration(source, action) {
   const definitions = typeof isBattleRunning !== "undefined" && isBattleRunning && battleEntitySnapshot ? battleEntitySnapshot : entitiesJson;
-  const entity = definitions.find(candidate => candidate.entityId === action.entityId);
+  const entityId=action.entityChoiceSkillId ? getChoiceSummonEntityId(source,action.entityChoiceSkillId,action.entityId) : action.entityId;
+  const entity = definitions.find(candidate => candidate.entityId === entityId);
   if (!entity) return null;
   const stats={...entity.stats};
   const sourceFields={hp:"maxHp",mp:"maxMp",st:"maxSt",atk:"atk",magic:"magic",defense:"defense",resistance:"resistance",speed:"speed"};
@@ -37,7 +78,8 @@ function getSummonConfiguration(source, action) {
   return {...stats, entityId:entity.entityId,name:entity.name,icon:entity.icon,role:entity.role,ai:entity.ai,attackType:entity.attackType === "magic" ? "magic" : "physical",attackSkillId:String(entity.attackSkillId ?? ""),
     summonType:entity.summonType === "persistent" ? "persistent" : "temporary",
     speed:entity.ai === "stationary" ? 0 : stats.speed,
-    count:action.count ?? 1,limit:action.limit ?? 3,lifetime:action.duration ?? 20,summonCenter:action.summonCenter ?? "self",
+    skillIds:[...(entity.skillIds ?? [])],basicAttackDisabled:entity.basicAttackDisabled === true,
+    limitScope:action.limitScope ?? "skill",count:action.count ?? 1,limit:action.limit ?? 3,lifetime:action.duration ?? 20,summonCenter:action.summonCenter ?? "self",
     copyAppearance:action.copyAppearance === true,
     entityGrade:Math.max(1,Math.min(10,Math.floor(Number(entity.entityGrade) || 2))),
     ownerDiesOnDeath:entity.ownerDiesOnDeath === true,receivedDamagePercent:Math.max(0,Number(entity.receivedDamagePercent ?? 100)),
@@ -75,6 +117,7 @@ function renderEntityActionArea(action) {
       <label>소환 위치<select class="skill-action-summon-center"><option value="self" ${action.summonCenter !== "target" ? "selected" : ""}>시전자 주변</option><option value="target" ${action.summonCenter === "target" ? "selected" : ""}>선택 대상 주변</option></select></label>
       <label><input type="checkbox" class="skill-action-copy-appearance" ${action.copyAppearance ? "checked" : ""}>시전자 외형 복제</label>
       <label><input type="checkbox" class="skill-action-retreat-summons" ${action.retreatBehindSummons ? "checked" : ""}>소환 후 소환수 뒤로 이동</label>
+      <label>소환 종류 선택 스킬 ID<input class="skill-action-entity-choice" value="${escapeHtml(action.entityChoiceSkillId ?? "")}"></label><label>상한 집계<select class="skill-action-limit-scope"><option value="skill">같은 소환 스킬</option><option value="entity" ${action.limitScope === "entity" ? "selected" : ""}>내 같은 Entity 전체</option></select></label>
       <label>계승 방식<select class="skill-action-inherit-mode"><option value="add">Entity 능력치에 가산</option><option value="replace" ${action.inheritMode === "replace" ? "selected" : ""}>계승 능력치로 대체</option></select></label>
       <div class="skill-subsection-header">소환자 능력치 계승 (%)</div>
       ${SUMMON_INHERIT_STATS.map(stat=>`<label>${ENTITY_STAT_FIELDS[stat] ?? stat}<input class="skill-action-inherit-stat" data-stat="${stat}" type="number" min="0" max="1000" step="1" value="${action.inheritStats?.[stat] ?? 0}"></label>`).join("")}
@@ -185,12 +228,14 @@ function ensureEntityEditor() {
     <h4>Entity 편집</h4><form id="entityEditorForm" onsubmit="saveEntityEditor(event)">
       <label>Entity ID (생성 시 빈칸: 자동)<input name="entityId" pattern="[a-z0-9](?:[a-z0-9]|_|-){0,79}"></label>
       <label>이름<input name="name" required></label><label>설명<textarea name="description"></textarea></label>
+      <label><input name="basicAttackDisabled" type="checkbox">기본 공격 대신 장착 스킬만 사용</label><label>장착 스킬<select name="skillIds" multiple>${skillsJson.filter(skill=>skill.slot === "active" || skill.slot === "passive").map(skill=>`<option value="${escapeHtml(skill.id)}">${escapeHtml(skill.name)}</option>`).join("")}</select></label>
       <label><input name="ownerDiesOnDeath" type="checkbox">사망 시 소환자도 사망</label><label>받는 피해 (%)<input name="receivedDamagePercent" type="number" min="0" max="100000" value="100"></label>
       <label><input name="commandOnly" type="checkbox">명령 전용 (자체 이동·기본 공격 없음)</label>
       <label><input name="targetable" type="checkbox" checked>적의 공격 대상·전투 지속 인원에 포함</label>
       <label><input name="collidable" type="checkbox" checked>개체 충돌 적용</label>
       <label>개체 등급 (기본 2)<input name="entityGrade" type="number" min="1" max="10" step="1" value="2"></label>
       <label>소환수 종류<select name="summonType"><option value="temporary">임시 · 사망/소멸 시 제거</option><option value="persistent">영구 · 사망 객체 보존</option></select></label>
+      <label><input name="mainSummon" type="checkbox">주소환수로 표시 (전투 상태창의 주인 아래 표시)</label>
       <label>아이콘 URL / assets 경로<input name="icon"></label>
       <div id="entitiesImageEditor"></div>
       <label>역할<select name="role">${options(ENTITY_ROLES)}</select></label>
@@ -206,20 +251,24 @@ function ensureEntityEditor() {
   </div></div>`);
 }
 
-function openEntityEditor(button, edit = false) {
+function openEntityEditor(button, edit = false, standaloneId = '') {
   ensureEntityEditor(); stopEntityPreview();
-  entityEditorRow = button.closest('.skill-action-row');
-  const entity = edit ? getEntityById(entityEditorRow.querySelector('.skill-action-entity-id').value) : createDefaultEntity();
+  entityEditorRow = button?.closest('.skill-action-row') ?? null;
+  const entity = edit ? getEntityById(standaloneId || entityEditorRow.querySelector('.skill-action-entity-id').value) : createDefaultEntity();
   entityEditorOriginalId = edit ? entity.entityId : '';
   const form = document.getElementById('entityEditorForm');
   for(const key of ['entityId','name','description','icon','role','ai']) form.elements[key].value = entity[key] || '';
+  form.elements.saveMode.closest('label').classList.remove('hidden');
   const selectPortrait = openRecordImageEditor('entities', entity.icon, {
     validate: safeEntityIcon,
     onSelect: path => { form.elements.icon.value = path; }
   });
   form.elements.icon.onchange = () => selectPortrait(form.elements.icon.value);
   form.elements.summonType.value = entity.summonType ?? 'temporary';
+  form.elements.mainSummon.checked = entity.mainSummon ?? MAIN_SUMMON_STATUS_ENTITY_IDS.has(entity.entityId);
   form.elements.entityGrade.value=entity.entityGrade ?? 2;
+  form.elements.basicAttackDisabled.checked=entity.basicAttackDisabled === true;
+  [...form.elements.skillIds.options].forEach(option=>option.selected=(entity.skillIds ?? []).includes(option.value));
   form.elements.ownerDiesOnDeath.checked=entity.ownerDiesOnDeath === true;
   form.elements.receivedDamagePercent.value=entity.receivedDamagePercent ?? 100;
   form.elements.commandOnly.checked=entity.commandOnly === true;
@@ -251,9 +300,10 @@ function readEntityEditor() {
   const form = document.getElementById('entityEditorForm');
   getRecordImageSelection('entities'); // Block saving/previewing while an upload is in progress.
   return {entityId:form.elements.entityId.value.trim(),name:form.elements.name.value.trim(),description:form.elements.description.value,
+    mainSummon:form.elements.mainSummon.checked,
     summonType:form.elements.summonType.value,
     entityGrade:Math.max(1,Math.min(10,Math.floor(Number(form.elements.entityGrade.value) || 2))),
-    ownerDiesOnDeath:form.elements.ownerDiesOnDeath.checked,receivedDamagePercent:Number(form.elements.receivedDamagePercent.value),
+    skillIds:[...form.elements.skillIds.selectedOptions].map(option=>option.value),basicAttackDisabled:form.elements.basicAttackDisabled.checked,ownerDiesOnDeath:form.elements.ownerDiesOnDeath.checked,receivedDamagePercent:Number(form.elements.receivedDamagePercent.value),
     commandOnly:form.elements.commandOnly.checked,targetable:form.elements.targetable.checked,collidable:form.elements.collidable.checked,
     icon:form.elements.icon.value.trim(),role:form.elements.role.value,ai:form.elements.ai.value,attackType:form.elements.attackType.value,attackSkillId:form.elements.attackSkillId.value,tags:form.elements.tags.value.split(',').map(s=>s.trim()).filter(Boolean),
     stats:Object.fromEntries(Object.keys(ENTITY_STAT_FIELDS).map(key=>[key,Number(form.elements[key].value)]))};
@@ -271,7 +321,8 @@ async function saveEntityEditor(event) {
     const update = form.elements.saveMode.value === 'update';
     const saved = await entityRequest(update ? encodeURIComponent(entityEditorOriginalId) : '',update?'PUT':'POST',entity);
     entitiesJson = [...entitiesJson.filter(e=>e.entityId!==saved.entityId),saved];
-    linkEntityToAction(entityEditorRow,saved.entityId);
+    if (entityEditorRow) linkEntityToAction(entityEditorRow,saved.entityId);
+    renderExternalResources();
     refreshAllEntityActions();
     closeEntityEditor();
     log('Entity를 저장했습니다.','entity');

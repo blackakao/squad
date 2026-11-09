@@ -2465,291 +2465,188 @@
     ]
   },
   {
-    "id": "skill_class_serum_drain",
-    "name": "혈청형 · 흡혈",
-    "className": "혈청형",
-    "icon": "assets/images/skills/혈청형_흡혈.png",
-    "description": "적에게 마력의 100% 마법 피해를 주고, 실제 피해량의 60%만큼 자신의 HP를 회복합니다.",
-    "slot": "active",
-    "cooldown": 5,
-    "castTime": 1.5,
-    "castReceivedDamagePercent": 100,
-    "channel": {
+  "id": "skill_class_serum_drain",
+  "name": "혈청형 · 흡혈",
+  "className": "혈청형",
+  "description": "주무기 사거리의 적에게 마력 100% 마법 피해를 주고 실제 피해량의 60%만큼 자신을 회복한다.",
+  "slot": "active",
+  "cooldown": 5,
+  "castTime": 1.5,
+  "resourceCosts": [
+    {
+      "resource": "MP",
+      "mode": "fixed",
+      "value": 10
+    }
+  ],
+  "actions": [
+    {
+      "type": "deal_damage",
+      "target": "enemy",
+      "rangeMode": "mainWeapon",
+      "rangeValue": 5,
+      "rangeMultiplier": 100,
+      "minRange": 0,
+      "allowSelfTarget": true,
+      "requiredTargetEffectId": "",
+      "requiredTargetEffectCaster": "any",
+      "targetHpBelow": 100,
+      "targetCooldown": 0,
+      "targetCooldownScope": "caster",
+      "targetCooldownEffectId": "",
+      "targetCooldownEffectName": "",
+      "ownedSummonCondition": "any",
+      "ownedSummonEntityId": "",
+      "targetSummonEntityId": "",
+      "chainCount": 0,
+      "chainRange": 3,
+      "chainOrigin": "previous",
+      "coefficients": [
+        {
+          "type": "calculated",
+          "field": "magic",
+          "calc": "percent",
+          "value": 100,
+          "effectId": ""
+        }
+      ],
+      "healResource": "HP",
+      "fullResourceAlternative": "",
+      "drainResource": "MP",
+      "damageType": "magic",
+      "area": 0,
+      "areaCenter": "target",
+      "maxTargets": 0,
+      "critical": 0,
+      "penetration": 0,
+      "moveType": "Dash",
+      "movePlacement": "target",
+      "moveSpeed": 1,
+      "distance": 0,
       "duration": 0,
-      "interval": 1,
-      "interruptOnDamage": true,
-      "lockTarget": false,
-      "receivedDamagePercent": 100
+      "fieldShape": "circle",
+      "fieldRadius": 0,
+      "fieldWidth": 2,
+      "fieldEffect": "deal_damage",
+      "fieldEffectDuration": 5,
+      "fieldMoveType": "Push",
+      "fieldDistance": 1,
+      "fieldCenter": "target",
+      "fieldInterval": 1,
+      "fieldMovementStCostCenter": 0,
+      "fieldMovementStCostFalloff": 0,
+      "fieldMovementStCostMinimum": 0,
+      "fieldAuras": []
     },
-    "resourceCosts": [
-      {
-        "resource": "MP",
-        "mode": "fixed",
-        "value": 10
-      }
-    ],
-    "actions": [
-      {
-        "type": "deal_damage",
-        "target": "enemy",
-        "rangeMode": "mainWeapon",
-        "rangeValue": 5,
-        "rangeMultiplier": 100,
-        "minRange": 0,
-        "allowSelfTarget": true,
-        "requiredTargetEffectId": "",
-        "requiredTargetEffectCaster": "any",
-        "targetHpBelow": 100,
-        "targetCooldown": 0,
-        "targetCooldownScope": "caster",
-        "targetCooldownEffectId": "",
-        "targetCooldownEffectName": "",
-        "ownedSummonCondition": "any",
-        "ownedSummonEntityId": "",
-        "targetSummonEntityId": "",
-        "chainCount": 0,
-        "chainRange": 3,
-        "chainOrigin": "previous",
-        "coefficients": [
-          {
-            "type": "calculated",
-            "field": "magic",
-            "calc": "percent",
-            "value": 100,
-            "effectId": ""
-          }
-        ],
-        "healResource": "HP",
-        "fullResourceAlternative": "",
-        "drainResource": "MP",
-        "damageType": "magic",
-        "area": 0,
-        "areaCenter": "target",
-        "maxTargets": 0,
-        "critical": 0,
-        "penetration": 0,
-        "moveType": "Dash",
-        "movePlacement": "target",
-        "moveSpeed": 1,
-        "distance": 0,
-        "duration": 0,
-        "fieldShape": "circle",
-        "fieldRadius": 0,
-        "fieldWidth": 2,
-        "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 5,
-        "fieldMoveType": "Push",
-        "fieldDistance": 1,
-        "fieldCenter": "target",
-        "fieldInterval": 1,
-        "fieldMovementStCostCenter": 0,
-        "fieldMovementStCostFalloff": 0,
-        "fieldMovementStCostMinimum": 0,
-        "fieldAuras": []
-      },
-      {
-        "type": "heal",
-        "target": "self",
-        "rangeMode": "mainWeapon",
-        "rangeValue": 5,
-        "rangeMultiplier": 100,
-        "minRange": 0,
-        "allowSelfTarget": true,
-        "requiredTargetEffectId": "",
-        "requiredTargetEffectCaster": "any",
-        "targetHpBelow": 100,
-        "targetCooldown": 0,
-        "targetCooldownScope": "caster",
-        "targetCooldownEffectId": "",
-        "targetCooldownEffectName": "",
-        "ownedSummonCondition": "any",
-        "ownedSummonEntityId": "",
-        "targetSummonEntityId": "",
-        "chainCount": 0,
-        "chainRange": 3,
-        "chainOrigin": "previous",
-        "coefficients": [
-          {
-            "type": "calculated",
-            "field": "previousActualDamage",
-            "calc": "percent",
-            "value": 60,
-            "effectId": ""
-          }
-        ],
-        "healResource": "HP",
-        "fullResourceAlternative": "",
-        "drainResource": "MP",
-        "damageType": "physical",
-        "area": 0,
-        "areaCenter": "target",
-        "maxTargets": 0,
-        "critical": 0,
-        "penetration": 0,
-        "moveType": "Dash",
-        "movePlacement": "target",
-        "moveSpeed": 1,
-        "distance": 0,
-        "duration": 0,
-        "fieldShape": "circle",
-        "fieldRadius": 0,
-        "fieldWidth": 2,
-        "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 5,
-        "fieldMoveType": "Push",
-        "fieldDistance": 1,
-        "fieldCenter": "target",
-        "fieldInterval": 1,
-        "fieldMovementStCostCenter": 0,
-        "fieldMovementStCostFalloff": 0,
-        "fieldMovementStCostMinimum": 0,
-        "fieldAuras": []
-      }
-    ]
-  },
+    {
+      "type": "heal",
+      "target": "self",
+      "rangeMode": "mainWeapon",
+      "rangeValue": 5,
+      "rangeMultiplier": 100,
+      "minRange": 0,
+      "allowSelfTarget": true,
+      "requiredTargetEffectId": "",
+      "requiredTargetEffectCaster": "any",
+      "targetHpBelow": 100,
+      "targetCooldown": 0,
+      "targetCooldownScope": "caster",
+      "targetCooldownEffectId": "",
+      "targetCooldownEffectName": "",
+      "ownedSummonCondition": "any",
+      "ownedSummonEntityId": "",
+      "targetSummonEntityId": "",
+      "chainCount": 0,
+      "chainRange": 3,
+      "chainOrigin": "previous",
+      "coefficients": [
+        {
+          "type": "calculated",
+          "field": "previousActualDamage",
+          "calc": "percent",
+          "value": 60,
+          "effectId": ""
+        }
+      ],
+      "healResource": "HP",
+      "fullResourceAlternative": "",
+      "drainResource": "MP",
+      "damageType": "physical",
+      "area": 0,
+      "areaCenter": "target",
+      "maxTargets": 0,
+      "critical": 0,
+      "penetration": 0,
+      "moveType": "Dash",
+      "movePlacement": "target",
+      "moveSpeed": 1,
+      "distance": 0,
+      "duration": 0,
+      "fieldShape": "circle",
+      "fieldRadius": 0,
+      "fieldWidth": 2,
+      "fieldEffect": "deal_damage",
+      "fieldEffectDuration": 5,
+      "fieldMoveType": "Push",
+      "fieldDistance": 1,
+      "fieldCenter": "target",
+      "fieldInterval": 1,
+      "fieldMovementStCostCenter": 0,
+      "fieldMovementStCostFalloff": 0,
+      "fieldMovementStCostMinimum": 0,
+      "fieldAuras": []
+    }
+  ],
+  "icon": "assets/images/skills/혈청형_흡혈.png"
+},
   {
-    "id": "skill_class_serum_transfusion",
-    "name": "혈청형 · 헌혈",
-    "className": "혈청형",
-    "icon": "assets/images/skills/혈청형_헌혈.png",
-    "description": "5초 동안 1초마다 아군의 HP를 마력의 50%만큼 회복하고, 실제 회복량의 30%만큼 자신의 HP를 소모합니다.",
-    "slot": "active",
-    "cooldown": 8,
-    "castTime": 0.5,
-    "castReceivedDamagePercent": 100,
-    "channel": {
-      "duration": 5,
-      "interval": 1,
-      "interruptOnDamage": true,
-      "lockTarget": true,
-      "receivedDamagePercent": 100
-    },
-    "resourceCosts": [
+  "id": "skill_class_serum_transfusion",
+  "name": "혈청형 · 헌혈",
+  "className": "혈청형",
+  "description": "3초간 매초 최대 HP 5%를 소모하고 그 실제 소모량의 50%를 아군에게 회복한다.",
+  "slot": "active",
+  "cooldown": 7,
+  "castTime": 0,
+  "resourceCosts": [
+    {
+      "resource": "MP",
+      "mode": "fixed",
+      "value": 10
+    }
+  ],
+  "actions": [
+    {
+      "type": "heal",
+      "target": "ally",
+      "rangeMode": "mainWeapon",
+      "rangeValue": 5,
+      "coefficients": [
+        {
+          "type": "calculated",
+          "field": "hpResourceSpent",
+          "calc": "percent",
+          "value": 50
+        }
+      ],
+      "healResource": "HP",
+      "allowSelfTarget": false
+    }
+  ],
+  "icon": "assets/images/skills/혈청형_헌혈.png",
+  "channel": {
+    "duration": 3,
+    "interval": 1,
+    "interruptOnDamage": true,
+    "lockTarget": true,
+    "pulseResourceCosts": [
       {
-        "resource": "MP",
-        "mode": "fixed",
-        "value": 10
-      }
-    ],
-    "actions": [
-      {
-        "type": "heal",
-        "target": "ally",
-        "rangeMode": "mainWeapon",
-        "rangeValue": 5,
-        "rangeMultiplier": 100,
-        "minRange": 0,
-        "allowSelfTarget": false,
-        "requiredTargetEffectId": "",
-        "requiredTargetEffectCaster": "any",
-        "targetHpBelow": 100,
-        "targetCooldown": 0,
-        "targetCooldownScope": "caster",
-        "targetCooldownEffectId": "",
-        "targetCooldownEffectName": "",
-        "ownedSummonCondition": "any",
-        "ownedSummonEntityId": "",
-        "targetSummonEntityId": "",
-        "chainCount": 0,
-        "chainRange": 3,
-        "chainOrigin": "previous",
-        "coefficients": [
-          {
-            "type": "calculated",
-            "field": "magic",
-            "calc": "percent",
-            "value": 50,
-            "effectId": ""
-          }
-        ],
-        "healResource": "HP",
-        "fullResourceAlternative": "",
-        "drainResource": "MP",
-        "damageType": "physical",
-        "area": 0,
-        "areaCenter": "target",
-        "maxTargets": 0,
-        "critical": 0,
-        "penetration": 0,
-        "moveType": "Walk",
-        "movePlacement": "target",
-        "moveSpeed": 1,
-        "distance": 0,
-        "duration": 0,
-        "fieldShape": "circle",
-        "fieldRadius": 0,
-        "fieldWidth": 2,
-        "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 5,
-        "fieldMoveType": "Push",
-        "fieldDistance": 1,
-        "fieldCenter": "target",
-        "fieldInterval": 1,
-        "fieldMovementStCostCenter": 0,
-        "fieldMovementStCostFalloff": 0,
-        "fieldMovementStCostMinimum": 0,
-        "fieldAuras": []
-      },
-      {
-        "type": "drain_resource",
-        "target": "self",
-        "rangeMode": "mainWeapon",
-        "rangeValue": 5,
-        "rangeMultiplier": 100,
-        "minRange": 0,
-        "allowSelfTarget": true,
-        "requiredTargetEffectId": "",
-        "requiredTargetEffectCaster": "any",
-        "targetHpBelow": 100,
-        "targetCooldown": 0,
-        "targetCooldownScope": "caster",
-        "targetCooldownEffectId": "",
-        "targetCooldownEffectName": "",
-        "ownedSummonCondition": "any",
-        "ownedSummonEntityId": "",
-        "targetSummonEntityId": "",
-        "chainCount": 0,
-        "chainRange": 3,
-        "chainOrigin": "previous",
-        "coefficients": [
-          {
-            "type": "calculated",
-            "field": "previousActualHealing",
-            "calc": "percent",
-            "value": 30,
-            "effectId": ""
-          }
-        ],
-        "healResource": "HP",
-        "fullResourceAlternative": "",
-        "drainResource": "HP",
-        "damageType": "physical",
-        "area": 0,
-        "areaCenter": "target",
-        "maxTargets": 0,
-        "critical": 0,
-        "penetration": 0,
-        "moveType": "Walk",
-        "movePlacement": "target",
-        "moveSpeed": 1,
-        "distance": 0,
-        "duration": 0,
-        "fieldShape": "circle",
-        "fieldRadius": 0,
-        "fieldWidth": 2,
-        "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 5,
-        "fieldMoveType": "Push",
-        "fieldDistance": 1,
-        "fieldCenter": "target",
-        "fieldInterval": 1,
-        "fieldMovementStCostCenter": 0,
-        "fieldMovementStCostFalloff": 0,
-        "fieldMovementStCostMinimum": 0,
-        "fieldAuras": []
+        "resource": "HP",
+        "mode": "maxPercent",
+        "value": 5
       }
     ]
-  },
+  }
+},
   {
     "id": "skill_class_warlock_bite",
     "name": "흑마법사 · 암흑물기",
@@ -12054,6 +11951,7 @@
     ]
   },
   {
+    "icon": "assets/images/skills/룬술사_룬.png",
     "id": "skill_class_rune_master",
     "name": "룬술사 · 룬",
     "className": "룬술사",
@@ -12079,6 +11977,7 @@
     ]
   },
   {
+    "icon": "assets/images/skills/룬술사_룬일격.png",
     "id": "skill_class_rune_strike",
     "name": "룬술사 · 룬일격",
     "className": "룬술사",
@@ -12117,6 +12016,7 @@
     ]
   },
   {
+    "icon": "assets/images/skills/룬술사_달룬.png",
     "id": "skill_rune_effect_moon",
     "name": "룬 효과 · 달룬",
     "className": "룬",
@@ -12141,6 +12041,7 @@
     ]
   },
   {
+    "icon": "assets/images/skills/룬술사_초승달룬.png",
     "id": "skill_rune_effect_crescent",
     "name": "룬 효과 · 초승달룬",
     "className": "룬",
@@ -12163,6 +12064,7 @@
     ]
   },
   {
+    "icon": "assets/images/skills/룬술사_총알룬.png",
     "id": "skill_rune_effect_bullet",
     "name": "룬 효과 · 총알룬",
     "className": "룬",
@@ -12186,6 +12088,7 @@
     ]
   },
   {
+    "icon": "assets/images/skills/룬술사_불꽃룬.png",
     "id": "skill_rune_effect_flame",
     "name": "룬 효과 · 불꽃룬",
     "className": "룬",
@@ -12210,6 +12113,7 @@
     ]
   },
   {
+    "icon": "assets/images/skills/응원가_모두 힘내.png",
     "id": "skill_class_cheer_encourage",
     "name": "응원가 · 모두 힘내",
     "className": "응원가",
@@ -12261,6 +12165,7 @@
     ]
   },
   {
+    "icon": "assets/images/skills/응원가_응원-정열.png",
     "id": "skill_class_cheer_passion",
     "name": "응원가 · 응원-정열",
     "className": "응원가",
@@ -12311,6 +12216,7 @@
     ]
   },
   {
+    "icon": "assets/images/skills/응원가_자 날뛰어봐.png",
     "id": "skill_class_cheer_freedom",
     "name": "응원가 · 자 날뛰어봐",
     "className": "응원가",
@@ -12356,5 +12262,1068 @@
         }
       }
     ]
+  },
+  {
+    "icon": "assets/images/skills/정령술사_강화정령.png",
+    "id": "skill_class_spirit_passive_enhance",
+    "name": "정령술사 · 정령 · 강화정령",
+    "className": "정령술사",
+    "slot": "passive",
+    "cooldown": 0,
+    "castTime": 0,
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "summon_entity",
+        "target": "self",
+        "entityId": "spirit_enhance",
+        "count": 1,
+        "limit": 5,
+        "limitScope": "entity",
+        "duration": 0
+      }
+    ],
+    "passiveTrigger": {
+      "event": "battle_entry",
+      "chance": 100,
+      "repeatInterval": 7
+    }
+  },
+  {
+    "icon": "assets/images/skills/정령술사_강화정령.png",
+    "id": "skill_class_spirit_entity_enhance",
+    "name": "정령술사 · 강화정령 행동",
+    "className": "정령술사",
+    "slot": "active",
+    "cooldown": 5,
+    "castTime": 0,
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "add_buff",
+        "target": "ally",
+        "rangeMode": "custom",
+        "rangeValue": 5,
+        "maxTargets": 1,
+        "duration": 5,
+        "effect": {
+          "id": "spirit_basic_enhance",
+          "name": "기본적인 강화",
+          "stat": "str",
+          "mode": "attribute",
+          "value": 1,
+          "stackBonuses": [
+            {
+              "stat": "int",
+              "mode": "attribute",
+              "value": 1,
+              "minStacks": 1,
+              "perStack": false
+            }
+          ]
+        },
+        "allowSelfTarget": false
+      }
+    ]
+  },
+  {
+    "icon": "assets/images/skills/정령술사_회복정령.png",
+    "id": "skill_class_spirit_passive_heal",
+    "name": "정령술사 · 정령 · 회복정령",
+    "className": "정령술사",
+    "slot": "passive",
+    "cooldown": 0,
+    "castTime": 0,
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "summon_entity",
+        "target": "self",
+        "entityId": "spirit_heal",
+        "count": 1,
+        "limit": 5,
+        "limitScope": "entity",
+        "duration": 0
+      }
+    ],
+    "passiveTrigger": {
+      "event": "battle_entry",
+      "chance": 100,
+      "repeatInterval": 7
+    }
+  },
+  {
+    "icon": "assets/images/skills/정령술사_회복정령.png",
+    "id": "skill_class_spirit_entity_heal",
+    "name": "정령술사 · 회복정령 행동",
+    "className": "정령술사",
+    "slot": "active",
+    "cooldown": 3,
+    "castTime": 0,
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "heal",
+        "target": "ally",
+        "rangeMode": "custom",
+        "rangeValue": 5,
+        "maxTargets": 1,
+        "healResource": "HP",
+        "damageType": "magic",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "ownerMagic",
+            "calc": "percent",
+            "value": 1
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "icon": "assets/images/skills/정령술사_파괴정령.png",
+    "id": "skill_class_spirit_passive_destroy",
+    "name": "정령술사 · 정령 · 파괴정령",
+    "className": "정령술사",
+    "slot": "passive",
+    "cooldown": 0,
+    "castTime": 0,
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "summon_entity",
+        "target": "self",
+        "entityId": "spirit_destroy",
+        "count": 1,
+        "limit": 5,
+        "limitScope": "entity",
+        "duration": 0
+      }
+    ],
+    "passiveTrigger": {
+      "event": "battle_entry",
+      "chance": 100,
+      "repeatInterval": 7
+    }
+  },
+  {
+    "icon": "assets/images/skills/정령술사_파괴정령.png",
+    "id": "skill_class_spirit_entity_destroy",
+    "name": "정령술사 · 파괴정령 행동",
+    "className": "정령술사",
+    "slot": "active",
+    "cooldown": 3,
+    "castTime": 0,
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "deal_damage",
+        "target": "enemy",
+        "rangeMode": "custom",
+        "rangeValue": 5,
+        "maxTargets": 1,
+        "healResource": "HP",
+        "damageType": "magic",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "ownerMagic",
+            "calc": "percent",
+            "value": 2
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "icon": "assets/images/skills/정령술사_정령술사.png",
+    "id": "skill_class_spirit_choice",
+    "name": "정령술사 · 정령 선택",
+    "className": "정령술사",
+    "slot": "choice_prebattle",
+    "cooldown": 0,
+    "castTime": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "choice": {
+      "defaultOptionId": "heal",
+      "options": [
+        {
+          "id": "enhance",
+          "label": "강화정령",
+          "skillId": "skill_class_spirit_passive_enhance"
+        },
+        {
+          "id": "heal",
+          "label": "회복정령",
+          "skillId": "skill_class_spirit_passive_heal"
+        },
+        {
+          "id": "destroy",
+          "label": "파괴정령",
+          "skillId": "skill_class_spirit_passive_destroy"
+        }
+      ]
+    }
+  },
+  {
+    "icon": "assets/images/skills/정령술사_정령의 탄생.png",
+    "id": "skill_class_spirit_birth",
+    "name": "정령술사 · 정령의 탄생",
+    "className": "정령술사",
+    "slot": "active",
+    "cooldown": 7,
+    "castTime": 2.5,
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 10
+      }
+    ],
+    "actions": [
+      {
+        "type": "deal_damage",
+        "target": "enemy",
+        "rangeMode": "custom",
+        "rangeValue": 5,
+        "maxTargets": 1,
+        "damageType": "magic",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "magic",
+            "calc": "percent",
+            "value": 120
+          }
+        ]
+      },
+      {
+        "type": "summon_entity",
+        "target": "self",
+        "entityId": "spirit_heal",
+        "entityChoiceSkillId": "skill_class_spirit_choice",
+        "limitScope": "entity",
+        "count": 1,
+        "limit": 5,
+        "duration": 0
+      }
+    ]
+  },
+  {
+    "icon": "assets/images/skills/정령술사_정령희생.png",
+    "id": "skill_class_spirit_sacrifice",
+    "name": "정령술사 · 정령희생",
+    "className": "정령술사",
+    "slot": "active",
+    "cooldown": 15,
+    "castTime": 2,
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 10
+      }
+    ],
+    "actions": [
+      {
+        "type": "heal",
+        "target": "ally",
+        "area": 6,
+        "areaCenter": "self",
+        "rangeMode": "custom",
+        "rangeValue": 6,
+        "maxTargets": 0,
+        "healResource": "HP",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "magic",
+            "calc": "percent",
+            "value": 150
+          }
+        ]
+      }
+    ],
+    "summonCost": {
+      "choiceSkillId": "skill_class_spirit_choice",
+      "count": 1
+    }
+  },
+  {
+    "icon": "assets/images/skills/정령술사_정령폭발.png",
+    "id": "skill_class_spirit_burst",
+    "name": "정령술사 · 정령폭발",
+    "className": "정령술사",
+    "slot": "active",
+    "cooldown": 15,
+    "castTime": 2.5,
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 10
+      }
+    ],
+    "actions": [
+      {
+        "type": "deal_damage",
+        "target": "enemy",
+        "area": 4,
+        "areaCenter": "target",
+        "rangeMode": "custom",
+        "rangeValue": 5,
+        "maxTargets": 0,
+        "damageType": "magic",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "magic",
+            "calc": "percent",
+            "value": 150
+          }
+        ]
+      }
+    ],
+    "summonCost": {
+      "choiceSkillId": "skill_class_spirit_choice",
+      "count": 1
+    }
+  },
+  {
+    "icon": "assets/images/skills/정령술사_정령정화.png",
+    "id": "skill_class_spirit_purify",
+    "name": "정령술사 · 정령정화",
+    "className": "정령술사",
+    "slot": "active",
+    "cooldown": 20,
+    "castTime": 3,
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 10
+      }
+    ],
+    "actions": [
+      {
+        "type": "delete_buff",
+        "target": "ally",
+        "area": 8,
+        "areaCenter": "self",
+        "rangeMode": "custom",
+        "rangeValue": 8,
+        "maxTargets": 0,
+        "effect": {
+          "id": "spirit_cleanse",
+          "dispelMode": "all",
+          "dispelPolarity": "harmful",
+          "dispelKinds": [
+            "buff",
+            "state"
+          ],
+          "dispelLimit": 1
+        }
+      },
+      {
+        "type": "delete_buff",
+        "target": "enemy",
+        "area": 8,
+        "areaCenter": "self",
+        "rangeMode": "custom",
+        "rangeValue": 8,
+        "maxTargets": 0,
+        "effect": {
+          "id": "spirit_strip",
+          "dispelMode": "all",
+          "dispelPolarity": "beneficial",
+          "dispelKinds": [
+            "buff",
+            "state"
+          ],
+          "dispelLimit": 1
+        }
+      }
+    ],
+    "summonCost": {
+      "choiceSkillId": "skill_class_spirit_choice",
+      "count": 1
+    }
+  },
+{
+  "id": "skill_class_serum_regeneration",
+  "icon": "assets/images/skills/혈청형_재생성.png",
+  "name": "혈청형 · 재생성",
+  "className": "혈청형",
+  "description": "매초 최대 HP 2% 회복. 실제 피해 없이 10초 유지 시 3% 회복.",
+  "slot": "passive",
+  "cooldown": 0,
+  "castTime": 0,
+  "resourceCosts": [
+    {
+      "resource": "MP",
+      "mode": "fixed",
+      "value": 0
+    }
+  ],
+  "actions": [
+    {
+      "type": "heal",
+      "target": "self",
+      "rangeMode": "custom",
+      "rangeValue": 5,
+      "coefficients": [
+        {
+          "type": "calculated",
+          "field": "maxHp",
+          "calc": "percent",
+          "value": 2
+        }
+      ],
+      "healResource": "HP"
+    },
+    {
+      "type": "heal",
+      "target": "self",
+      "rangeMode": "custom",
+      "rangeValue": 5,
+      "coefficients": [
+        {
+          "type": "calculated",
+          "field": "maxHp",
+          "calc": "percent",
+          "value": 1
+        }
+      ],
+      "healResource": "HP",
+      "noDamageSeconds": 10
+    }
+  ],
+  "passiveTrigger": {
+    "event": "battle_entry",
+    "repeatInterval": 1
   }
+},
+{
+  "id": "skill_class_serum_barrier",
+  "icon": "assets/images/skills/혈청형_피의 결계.png",
+  "name": "혈청형 · 피의 결계",
+  "className": "혈청형",
+  "description": "자신을 따라다니는 5m 결계에서 4초간 매초 적 하나당 최대 HP 1%를 축적하고 만료 시 회복한다. 피해는 주지 않는다.",
+  "slot": "active",
+  "cooldown": 12,
+  "castTime": 1.5,
+  "resourceCosts": [
+    {
+      "resource": "MP",
+      "mode": "fixed",
+      "value": 0
+    }
+  ],
+  "actions": [
+    {
+      "type": "create_field",
+      "target": "enemy",
+      "rangeMode": "custom",
+      "rangeValue": 5,
+      "coefficients": [],
+      "duration": 4,
+      "fieldRadius": 5,
+      "fieldCenter": "self",
+      "fieldFollowSource": true,
+      "fieldInterval": 1,
+      "fieldEffect": "none",
+      "fieldStoreHpPercent": 1
+    }
+  ]
+},
+{
+    "icon": "assets/images/skills/혈청형_혈액전환.png",
+  "id": "skill_class_serum_conversion",
+  "name": "혈청형 · 혈액전환",
+  "className": "혈청형",
+  "description": "최대 HP 10%를 소모하고 최대 HP 2%만큼 MP를 회복한다. 혈액 효율성 선택 시 HP 소모만 5%로 감소.",
+  "slot": "active",
+  "cooldown": 15,
+  "castTime": 0,
+  "resourceCosts": [
+    {
+      "resource": "HP",
+      "mode": "maxPercent",
+      "value": 10
+    }
+  ],
+  "actions": [
+    {
+      "type": "heal",
+      "target": "self",
+      "rangeMode": "custom",
+      "rangeValue": 5,
+      "coefficients": [
+        {
+          "type": "calculated",
+          "field": "maxHp",
+          "calc": "percent",
+          "value": 2
+        }
+      ],
+      "healResource": "MP"
+    }
+  ]
+},
+{
+    "icon": "assets/images/skills/혈청형_성분혈.png",
+  "id": "skill_class_serum_component",
+  "name": "혈청형 · 성분혈",
+  "className": "혈청형",
+  "description": "헌혈 회복 비율 50% → 100%.",
+  "slot": "optional",
+  "cooldown": 0,
+  "castTime": 0,
+  "resourceCosts": [
+    {
+      "resource": "MP",
+      "mode": "fixed",
+      "value": 0
+    }
+  ],
+  "actions": [],
+  "selectionModifier": {
+    "targetSkillIds": [
+      "skill_class_serum_transfusion"
+    ],
+    "coefficientPercent": 200
+  }
+},
+{
+    "icon": "assets/images/skills/혈청형_끝없는 피의 결계.png",
+  "id": "skill_class_serum_endless_barrier",
+  "name": "혈청형 · 끝없는 피의 결계",
+  "className": "혈청형",
+  "description": "피의 결계 범위 +3m.",
+  "slot": "optional",
+  "cooldown": 0,
+  "castTime": 0,
+  "resourceCosts": [
+    {
+      "resource": "MP",
+      "mode": "fixed",
+      "value": 0
+    }
+  ],
+  "actions": [],
+  "selectionModifier": {
+    "targetSkillIds": [
+      "skill_class_serum_barrier"
+    ],
+    "fieldRadiusAdd": 3
+  }
+},
+{
+    "icon": "assets/images/skills/혈청형_혈액 효율성.png",
+  "id": "skill_class_serum_efficiency",
+  "name": "혈청형 · 혈액 효율성",
+  "className": "혈청형",
+  "description": "혈액전환 HP 소모 10% → 5%. MP 회복량 유지.",
+  "slot": "optional",
+  "cooldown": 0,
+  "castTime": 0,
+  "resourceCosts": [
+    {
+      "resource": "MP",
+      "mode": "fixed",
+      "value": 0
+    }
+  ],
+  "actions": [],
+  "selectionModifier": {
+    "targetSkillIds": [
+      "skill_class_serum_conversion"
+    ],
+    "resourceTypes": [
+      "HP"
+    ],
+    "resourceCostPercent": 50
+  }
+},
+{
+    "icon": "assets/images/skills/혈청형_광속흡혈.png",
+  "id": "skill_class_serum_fast_drain",
+  "name": "혈청형 · 광속흡혈",
+  "className": "혈청형",
+  "description": "흡혈 시전시간 -0.7초.",
+  "slot": "optional",
+  "cooldown": 0,
+  "castTime": 0,
+  "resourceCosts": [
+    {
+      "resource": "MP",
+      "mode": "fixed",
+      "value": 0
+    }
+  ],
+  "actions": [],
+  "selectionModifier": {
+    "targetSkillIds": [
+      "skill_class_serum_drain"
+    ],
+    "castTimeAdd": -0.7
+  }
+},
+{
+    "icon": "assets/images/skills/혈청형_흡혈광.png",
+  "id": "skill_class_serum_drain_mania",
+  "name": "혈청형 · 흡혈광",
+  "className": "혈청형",
+  "description": "흡혈 재사용 대기시간 -2초.",
+  "slot": "optional",
+  "cooldown": 0,
+  "castTime": 0,
+  "resourceCosts": [
+    {
+      "resource": "MP",
+      "mode": "fixed",
+      "value": 0
+    }
+  ],
+  "actions": [],
+  "selectionModifier": {
+    "targetSkillIds": [
+      "skill_class_serum_drain"
+    ],
+    "cooldownAdd": -2
+  }
+},
+{
+    "icon": "assets/images/skills/혈청형_정신회복.png",
+  "id": "skill_class_serum_mental_recovery",
+  "name": "혈청형 · 정신회복",
+  "className": "혈청형",
+  "description": "재생성 시 MP 5 회복. 무피해 10초 이상이면 MP 6 회복.",
+  "slot": "optional",
+  "cooldown": 0,
+  "castTime": 0,
+  "resourceCosts": [
+    {
+      "resource": "MP",
+      "mode": "fixed",
+      "value": 0
+    }
+  ],
+  "actions": [],
+  "selectionModifier": {
+    "targetSkillIds": [
+      "skill_class_serum_regeneration"
+    ],
+    "additionalActions": [
+      {
+        "type": "heal",
+        "target": "self",
+        "rangeMode": "custom",
+        "rangeValue": 5,
+        "coefficients": [
+          {
+            "type": "fixed",
+            "value": 5
+          }
+        ],
+        "healResource": "MP"
+      },
+      {
+        "type": "heal",
+        "target": "self",
+        "rangeMode": "custom",
+        "rangeValue": 5,
+        "coefficients": [
+          {
+            "type": "fixed",
+            "value": 1
+          }
+        ],
+        "healResource": "MP",
+        "noDamageSeconds": 10
+      }
+    ]
+  }
+},
+{
+  "id": "skill_class_keratin_shell",
+  "name": "각질형 · 돌연변이 껍질",
+  "className": "각질형",
+  "slot": "passive",
+  "castTime": 0,
+  "cooldown": 0,
+  "resourceCosts": [
+    {
+      "resource": "MP",
+      "mode": "fixed",
+      "value": 0
+    }
+  ],
+  "actions": [
+    {
+      "type": "add_buff",
+      "target": "self",
+      "rangeMode": "mainWeapon",
+      "coefficients": [],
+      "duration": 0,
+      "effect": {
+        "id": "keratin_stacks",
+        "name": "각질",
+        "stat": "defense",
+        "mode": "flat",
+        "value": 0,
+        "maxStacks": 100,
+        "stackMode": "stack",
+        "stackBonuses": [
+          {
+            "stat": "defense",
+            "mode": "flat",
+            "value": 1,
+            "minStacks": 10,
+            "perNStacks": 10
+          },
+          {
+            "stat": "attackSpeed",
+            "mode": "attack_rate_percent",
+            "value": -3,
+            "minStacks": 10,
+            "perNStacks": 10
+          }
+        ]
+      }
+    },
+    {
+      "type": "deal_damage",
+      "target": "enemy",
+      "rangeMode": "mainWeapon",
+      "coefficients": [
+        {
+          "type": "calculated",
+          "field": "sourceEffectIdStacks",
+          "calc": "percent",
+          "value": 100,
+          "effectId": "keratin_stacks"
+        }
+      ],
+      "damageType": "fixed",
+      "reflected": true
+    }
+  ],
+  "description": "근접 직접 피해를 받을 때 각질 1스택(최대 100)을 쌓고 현재 스택만큼 고정 반사 피해. 10스택마다 방어력 +1, 공격속도 -3%. 전투 종료까지 유지.",
+  "passiveTrigger": {
+    "event": "damaged",
+    "meleeOnly": true,
+    "allowMultiplePerTick": true
+  },
+  "icon": "assets/images/skills/각질형_돌연변이 껍질.png"
+},
+{
+  "id": "skill_class_keratin_molt",
+  "name": "각질형 · 탈피",
+  "className": "각질형",
+  "slot": "active",
+  "castTime": 0,
+  "cooldown": 5,
+  "resourceCosts": [
+    {
+      "resource": "MP",
+      "mode": "fixed",
+      "value": 0
+    }
+  ],
+  "actions": [
+    {
+      "type": "deal_damage",
+      "target": "enemy",
+      "rangeMode": "mainWeapon",
+      "coefficients": [
+        {
+          "type": "calculated",
+          "field": "atk",
+          "calc": "percent",
+          "value": 80
+        }
+      ],
+      "area": 3,
+      "areaCenter": "self",
+      "damageType": "physical"
+    },
+    {
+      "type": "add_buff",
+      "target": "self",
+      "rangeMode": "mainWeapon",
+      "coefficients": [],
+      "duration": 3,
+      "effect": {
+        "id": "keratin_hardened_shell",
+        "name": "단단해진 껍질",
+        "stat": "defense",
+        "mode": "flat",
+        "value": 5,
+        "stackBonuses": [
+          {
+            "stat": "resistance",
+            "mode": "flat",
+            "value": 5,
+            "minStacks": 1
+          }
+        ]
+      }
+    }
+  ],
+  "description": "자신 주변 반경 3m에 공격력 80% 물리 피해를 주고 3초간 방어력·저항력 +5. 각질 스택을 소모하지 않는다."
+},
+{
+  "id": "skill_class_keratin_repulsive_shield",
+  "name": "각질형 · 역겨운 보호막",
+  "className": "각질형",
+  "slot": "active",
+  "castTime": 0,
+  "cooldown": 10,
+  "resourceCosts": [
+    {
+      "resource": "MP",
+      "mode": "fixed",
+      "value": 0
+    }
+  ],
+  "actions": [
+    {
+      "type": "add_buff",
+      "target": "self",
+      "rangeMode": "mainWeapon",
+      "coefficients": [],
+      "duration": 3,
+      "effect": {
+        "id": "keratin_repulsive_shield",
+        "name": "역겨운 보호막",
+        "stat": "defense",
+        "mode": "barrier",
+        "value": 10,
+        "barrierMode": "maxPercent",
+        "breakSkillId": "skill_class_keratin_shield_burst"
+      }
+    }
+  ],
+  "description": "최대 HP 10% 보호막을 3초간 부여한다. 적의 공격으로 소진되면 반경 4m 적에게 최대 HP 5% 물리 피해와 끈적이는 껍질조각을 3초간 부여한다. 만료·해제 시 폭발하지 않는다."
+},
+{
+  "id": "skill_class_keratin_shield_burst",
+  "name": "각질형 · 역겨운 보호막 파열",
+  "className": "각질형",
+  "slot": "basic",
+  "castTime": 0,
+  "cooldown": 0,
+  "resourceCosts": [
+    {
+      "resource": "MP",
+      "mode": "fixed",
+      "value": 0
+    }
+  ],
+  "actions": [
+    {
+      "type": "deal_damage",
+      "target": "enemy",
+      "rangeMode": "mainWeapon",
+      "coefficients": [
+        {
+          "type": "calculated",
+          "field": "maxHp",
+          "calc": "percent",
+          "value": 5
+        }
+      ],
+      "area": 4,
+      "areaCenter": "self",
+      "damageType": "physical"
+    },
+    {
+      "type": "add_buff",
+      "target": "enemy",
+      "rangeMode": "mainWeapon",
+      "coefficients": [],
+      "area": 4,
+      "areaCenter": "self",
+      "duration": 3,
+      "effect": {
+        "id": "keratin_sticky_fragments",
+        "name": "끈적이는 껍질조각",
+        "stat": "attackSpeed",
+        "mode": "attack_rate_percent",
+        "value": -30,
+        "polarity": "harmful",
+        "stackBonuses": [
+          {
+            "stat": "speed",
+            "mode": "percent",
+            "value": -20,
+            "minStacks": 1
+          }
+        ]
+      }
+    }
+  ],
+  "internal": true,
+  "description": "역겨운 보호막이 적의 공격으로 소진될 때만 실행하는 내부 반응."
+},
+{
+  "id": "skill_class_keratin_pity",
+  "name": "각질형 · 동정의 시선",
+  "className": "각질형",
+  "slot": "active",
+  "castTime": 1,
+  "cooldown": 15,
+  "resourceCosts": [
+    {
+      "resource": "MP",
+      "mode": "fixed",
+      "value": 0
+    }
+  ],
+  "actions": [
+    {
+      "type": "add_buff",
+      "target": "enemy",
+      "rangeMode": "custom",
+      "coefficients": [],
+      "rangeValue": 5,
+      "duration": 5,
+      "effect": {
+        "id": "keratin_reluctance",
+        "name": "왠지 때리기 싫음",
+        "stat": "adaptiveOffense",
+        "mode": "flat",
+        "value": -100,
+        "polarity": "harmful"
+      }
+    }
+  ],
+  "description": "5m 적 하나에게 왠지 때리기 싫음을 5초 부여한다. 적용 시 공격력·마력 중 높은 능력치 하나가 100 감소한다."
+},
+{
+  "id": "skill_class_soul_reaper_soul_and_body",
+  "name": "영혼수확자 · 영혼과 육신",
+  "className": "영혼수확자",
+  "slot": "passive",
+  "castTime": 0,
+  "cooldown": 0,
+  "resourceCosts": [
+    {
+      "resource": "MP",
+      "mode": "fixed",
+      "value": 0
+    }
+  ],
+  "actions": [],
+  "description": "육신상태에서는 받는 피해 +100%. HP 0 시 사망 대신 영혼상태로 전환한다. 영혼은 공격 대상이 아니며 기본 공격·모든 회복 수신을 금지한다. 10초 뒤 HP 100%로 육신 복귀. 영혼만 남으면 패배.",
+  "passiveTrigger": {
+    "event": "battle_entry",
+    "lethalTransformation": {
+      "duration": 10,
+      "bodyName": "육신상태",
+      "bodyReceivedDamagePercent": 200,
+      "bodyBasicAttack": true,
+      "transform": {
+        "id": "soul_reaper_soul",
+        "name": "영혼상태",
+        "untargetable": true,
+        "damageImmune": true,
+        "blockHealing": true,
+        "basicAttackDisabled": true,
+        "countsForDefeat": false,
+        "movementTarget": "injured_ally",
+        "returnHpPercent": 100,
+        "skillReplacements": [
+          {
+            "skillId": "skill_class_soul_reaper_black_assault",
+            "replacementSkillId": "skill_class_soul_reaper_soul_breath"
+          }
+        ]
+      }
+    }
+  }
+},
+{
+  "id": "skill_class_soul_reaper_black_assault",
+  "name": "영혼수확자 · 검은습격",
+  "className": "영혼수확자",
+  "slot": "active",
+  "castTime": 0.5,
+  "cooldown": 5,
+  "resourceCosts": [
+    {
+      "resource": "MP",
+      "mode": "fixed",
+      "value": 0
+    }
+  ],
+  "actions": [
+    {
+      "type": "deal_damage",
+      "target": "enemy",
+      "rangeMode": "mainWeapon",
+      "coefficients": [
+        {
+          "type": "calculated",
+          "field": "atk",
+          "calc": "percent",
+          "value": 130
+        }
+      ],
+      "damageType": "physical"
+    },
+    {
+      "type": "add_state",
+      "target": "enemy",
+      "rangeMode": "mainWeapon",
+      "coefficients": [],
+      "duration": 3,
+      "effect": {
+        "id": "soul_reaper_assault_stun",
+        "name": "검은습격",
+        "state": "stun",
+        "category": "physical",
+        "polarity": "harmful"
+      }
+    }
+  ],
+  "description": "육신상태의 1스킬. 주무기 사거리 적에게 공격력 130% 물리 피해와 3초 기절. 영혼상태에서는 같은 쿨다운 슬롯의 영혼입김으로 바뀐다."
+},
+{
+  "id": "skill_class_soul_reaper_soul_breath",
+  "name": "영혼수확자 · 영혼입김",
+  "className": "영혼수확자",
+  "slot": "active",
+  "castTime": 1,
+  "cooldown": 3,
+  "resourceCosts": [
+    {
+      "resource": "MP",
+      "mode": "fixed",
+      "value": 0
+    }
+  ],
+  "actions": [
+    {
+      "type": "heal",
+      "target": "ally",
+      "rangeMode": "mainWeapon",
+      "coefficients": [
+        {
+          "type": "calculated",
+          "field": "atk",
+          "calc": "percent",
+          "value": 100
+        }
+      ],
+      "allowSelfTarget": false,
+      "healResource": "HP"
+    }
+  ],
+  "internal": true,
+  "description": "영혼상태의 1스킬. 주무기 사거리 아군 HP를 공격력 100% 회복한다. 검은습격과 남은 쿨다운을 공유하며 복귀 시 검은습격으로 돌아간다."
+}
 ]

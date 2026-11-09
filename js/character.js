@@ -47,7 +47,7 @@ function sortCharacterTable(key) {
 function renderCharacterTable() {
   const header = document.getElementById('characterTableHeader');
   if (!header.children.length) {
-    header.innerHTML = CHARACTER_TABLE_COLUMNS.map(([key, label]) => `<th scope="col" data-sort-key="${key}" onclick="sortCharacterTable('${key}')"><button type="button" class="character-sort-button" title="${label}: 클릭하여 정렬">${label}<span class="character-sort-direction" aria-hidden="true"></span></button></th>`).join('') + '<th scope="col">수정</th>';
+    header.innerHTML = CHARACTER_TABLE_COLUMNS.map(([key, label]) => `<th scope="col" data-sort-key="${key}" onclick="sortCharacterTable('${key}')"><button type="button" class="character-sort-button" title="${label}: 클릭하여 정렬">${label}<span class="character-sort-direction" aria-hidden="true"></span></button></th>`).join('');
   }
   header.querySelectorAll('[data-sort-key]').forEach(th => {
     const active = th.dataset.sortKey === characterTableSort.key;
@@ -69,7 +69,7 @@ function renderCharacterTable() {
   }
 
   characterTableBodyEl.innerHTML = visibleCharacters.map(({ character, index }) => `
-    <tr data-character-index="${index}">
+    <tr data-character-index="${index}" tabindex="0" aria-label="${escapeHtml(character.name)} 상세 열기" onclick="openCharacterModal(${index})" onkeydown="if(event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openCharacterModal(${index}); }">
       <td><div class="character-identity"><span class="character-portrait">${renderPortraitCell(character.portrait, character.name)}</span><span class="character-name">${escapeHtml(character.name)}</span></div></td>
       <td>${renderCategoryIcon("role", normalizeRole(character.role), getRoleLabel(character.role))}</td>
       <td>${renderCategoryIcon("faction", character.faction ?? getDefaultFactionName(), character.faction ?? getDefaultFactionName())}</td>
@@ -85,9 +85,8 @@ function renderCharacterTable() {
       <td>${character.defense}</td>
       <td>${character.resistance}</td>
       <td>${character.attackRange}</td>
-      <td><button onclick="openCharacterModal(${index})">수정</button></td>
     </tr>
-  `).join("") || '<tr><td colspan="16" class="character-empty">조건에 맞는 캐릭터가 없습니다.</td></tr>';
+  `).join("") || '<tr><td colspan="15" class="character-empty">조건에 맞는 캐릭터가 없습니다.</td></tr>';
 }
 
 function changeCharacterRoleFilter(role) {
@@ -99,36 +98,62 @@ function openCharacterModal(index = "") {
   if (characterDeletePending) return;
   const character = characterJson[index];
 
-  characterModalTitleEl.innerText = character ? "캐릭터 수정" : "캐릭터 추가";
+  characterModalTitleEl.innerText = character ? "캐릭터 상세" : "캐릭터 추가";
   characterEditIndexEl.value = character ? index : "";
   document.getElementById('characterDeleteButton').classList.toggle('hidden', !character);
   characterNameEl.value = character?.name ?? "";
   resetPortraitDraft("character", character?.portrait ?? "");
   resetPortraitAppearance(character?.appearance);
   characterRoleEl.value = character?.role ?? "melee";
-  document.getElementById("characterEntityGrade").value=character?.entityGrade ?? 2;
   renderCharacterFactionOptions();
   characterFactionEl.value = character?.faction ?? getDefaultFactionName();
+  characterChoiceSelections = structuredClone(character?.skillSelections ?? {});
   renderCharacterSkillPicker(character?.skillIds ?? []);
-  const equipmentRules = normalizeEquipmentRules(character?.equipmentRules);
-  characterExtraWeaponSlotsEl.value = equipmentRules.extraWeaponSlots;
-  characterTwoHandSingleSlotEl.checked = equipmentRules.twoHandSingleSlot;
-  characterSameTargetWeaponPenaltyEl.value = equipmentRules.sameTargetWeaponPenaltyPercent;
-  const battleRules = normalizeBattleRules(character?.battleRules);
-  characterEntryDelayEl.value = battleRules.entryDelay;
-  characterReviveCountEl.value = battleRules.reviveCount;
-  characterReviveDelayEl.value = battleRules.reviveDelay;
-  characterReviveHpPercentEl.value = battleRules.reviveHpPercent;
-  characterReviveMpPercentEl.value = battleRules.reviveMpPercent;
-  characterReviveStPercentEl.value = battleRules.reviveStPercent;
-  characterReviveInvulnerableEl.value = battleRules.reviveInvulnerable;
-  characterRevivePositionEl.value = battleRules.revivePosition;
-  renderCustomResourceEditor(characterCustomResourcesEl, character?.customResources);
+  renderCharacterCurrentDetails();
+  renderCharacterIdentity();
+  document.getElementById('characterPortraitEditor').classList.add('hidden');
+  document.getElementById('characterClosePrompt').classList.add('hidden');
+  characterModalBaseline = characterModalSnapshot();
   characterModalEl.classList.remove("hidden");
 }
 
+let characterModalBaseline = '';
+let characterSavePending = false;
+
+function characterModalSnapshot() {
+  return JSON.stringify({name:characterNameEl.value,role:characterRoleEl.value,faction:characterFactionEl.value,
+    skills:getCharacterSelectedSkillIds().sort(),choices:Object.entries(characterChoiceSelections).sort(),
+    portrait:portraitDrafts.character,appearance:portraitAppearanceDraft,
+    file:characterPortraitEl.files?.[0]?.name || ''});
+}
+
+function requestCloseCharacterModal() {
+  if (characterDeletePending || characterSavePending) return;
+  if (characterModalSnapshot() === characterModalBaseline) return closeCharacterModal();
+  const prompt = document.getElementById('characterClosePrompt');
+  prompt.classList.remove('hidden');
+  prompt.scrollIntoView({block:'nearest'});
+  prompt.querySelector('button').focus();
+}
+
+function requestCharacterPortraitEdit() {
+  if (!confirm('클래스 초상화를 편집하시겠습니까?')) return;
+  const editor = document.getElementById('characterPortraitEditor');
+  editor.classList.remove('hidden');
+  editor.scrollIntoView({block:'nearest'});
+}
+
+function renderCharacterIdentity() {
+  const portrait = portraitDrafts.character?.dataUrl;
+  const icon = portrait ? renderPortraitCell(portrait, characterNameEl.value) : '<span>초상화 없음</span>';
+  document.getElementById('characterCardPortrait').innerHTML = icon;
+  document.getElementById('characterCardNameIcon').innerHTML = portrait ? renderPortraitCell(portrait, characterNameEl.value) : '<span aria-hidden="true">♙</span>';
+  document.getElementById('characterCardRoleIcon').innerHTML = renderCategoryIcon('role',characterRoleEl.value,getRoleLabel(characterRoleEl.value));
+  document.getElementById('characterCardFactionIcon').innerHTML = renderCategoryIcon('faction',characterFactionEl.value,characterFactionEl.value);
+}
+
 function closeCharacterModal() {
-  if (characterDeletePending) return;
+  if (characterDeletePending || characterSavePending) return;
   if (typeof hideCharacterSkillValueTooltip === "function") hideCharacterSkillValueTooltip();
   characterModalEl.classList.add("hidden");
   characterFormEl.reset();
@@ -138,33 +163,27 @@ function closeCharacterModal() {
 
 async function saveCharacterFromForm(event) {
   event.preventDefault();
-  if (characterDeletePending) return;
+  if (characterDeletePending || characterSavePending) return;
+  if (!characterFormEl.reportValidity()) return;
+  characterSavePending = true;
 
   const editIndex = characterEditIndexEl.value;
   const previousCharacter = editIndex !== "" ? characterJson[Number(editIndex)] : null;
   const previousAttributes = previousCharacter?.attributes ?? {};
+  const previousCharacters = [...characterJson];
+  let saved = false;
+  try {
   const character = applyCharacterStatAbilities({
+    ...structuredClone(previousCharacter ?? {}),
     name: characterNameEl.value.trim(),
     role: characterRoleEl.value,
-    entityGrade:Math.max(1,Math.min(10,Math.floor(Number(document.getElementById("characterEntityGrade").value) || 2))),
+    entityGrade: 2,
     faction: characterFactionEl.value,
-    skillIds: [...characterSkillsEl.querySelectorAll('input[type="checkbox"]:checked')].map(input => input.value),
-    equipmentRules: normalizeEquipmentRules({
-      extraWeaponSlots: characterExtraWeaponSlotsEl.value,
-      twoHandSingleSlot: characterTwoHandSingleSlotEl.checked,
-      sameTargetWeaponPenaltyPercent: characterSameTargetWeaponPenaltyEl.value
-    }),
-    battleRules: normalizeBattleRules({
-      entryDelay: characterEntryDelayEl.value,
-      reviveCount: characterReviveCountEl.value,
-      reviveDelay: characterReviveDelayEl.value,
-      reviveHpPercent: characterReviveHpPercentEl.value,
-      reviveMpPercent: characterReviveMpPercentEl.value,
-      reviveStPercent: characterReviveStPercentEl.value,
-      reviveInvulnerable: characterReviveInvulnerableEl.value,
-      revivePosition: characterRevivePositionEl.value
-    }),
-    customResources: readCustomResourcesFromEditor(characterCustomResourcesEl),
+    skillIds: limitOptionalSkillIds(getCharacterSelectedSkillIds()),
+    skillSelections: structuredClone(characterChoiceSelections),
+    equipmentRules: structuredClone(previousCharacter?.equipmentRules ?? normalizeEquipmentRules()),
+    battleRules: structuredClone(previousCharacter?.battleRules ?? normalizeBattleRules()),
+    customResources: structuredClone(previousCharacter?.customResources ?? []),
     attributes: createCharacterAttributes(previousAttributes),
     equipment: previousCharacter?.equipment,
     equipmentSets: previousCharacter?.equipmentSets,
@@ -185,31 +204,122 @@ async function saveCharacterFromForm(event) {
   }
 
   playerSquad = [];
-  try {
     await saveCharacterJson();
+    saved = true;
     refreshCharacterUI();
+    characterSavePending = false;
     closeCharacterModal();
   } catch (error) {
+    if (!saved) characterJson = previousCharacters;
     logError("character", "캐릭터 저장 처리 중 실패했습니다.", error);
     alert("캐릭터 데이터를 저장하지 못했습니다.");
+  } finally {
+    characterSavePending = false;
   }
+}
+
+let characterSkillSelection = new Set();
+let characterChoiceSelections = {};
+
+function getCharacterSelectedSkillIds() {
+  return [...characterSkillSelection];
+}
+
+function renderCharacterSkillBox(skill, label) {
+  if (!skill) return `<div class="character-skill-box character-skill-vacant"><small>${label}</small><span class="character-skill-placeholder">－</span><span>미등록</span></div>`;
+  if (skill.slot !== 'optional') {
+    const choice = isChoiceSkill(skill);
+    const tag = choice ? 'button' : 'div';
+    return `<${tag} class="character-skill-box character-skill-fixed" data-skill-id="${escapeHtml(skill.id)}" ${choice ? 'type="button" aria-expanded="false" aria-controls="characterChoicePanel" onclick="openCharacterSkillChoice(this)"' : 'tabindex="0"'} onmouseenter="updateCharacterSkillDpsTooltip(this)" onmouseleave="hideCharacterSkillValueTooltip()" onfocus="updateCharacterSkillDpsTooltip(this)" onblur="hideCharacterSkillValueTooltip()"><small>${label}${choice ? ' · 선택형' : ''}</small>${recordImagePath(skill.icon) ? `<img src="${escapeHtml(skill.icon)}" alt="">` : `<span class="character-skill-placeholder">${escapeHtml(getSkillShortName(skill).slice(0,1))}</span>`}<strong>${escapeHtml(getSkillShortName(skill))}</strong>${choice ? `<small data-choice-label>${escapeHtml(getChoiceSkillOption(skill, characterChoiceSelections[skill.id])?.label || '선택지 없음')}</small>` : ''}</${tag}>`;
+  }
+  return `<button type="button" class="character-skill-box" data-skill-id="${escapeHtml(skill.id)}" aria-pressed="${characterSkillSelection.has(skill.id)}" onclick="toggleCharacterSkill(this)" onmouseenter="updateCharacterSkillDpsTooltip(this)" onmouseleave="hideCharacterSkillValueTooltip()" onfocus="updateCharacterSkillDpsTooltip(this)" onblur="hideCharacterSkillValueTooltip()"><small>${label}</small>${recordImagePath(skill.icon) ? `<img src="${escapeHtml(skill.icon)}" alt="" onerror="this.hidden=true">` : `<span class="character-skill-placeholder">${escapeHtml(getSkillShortName(skill).slice(0,1))}</span>`}<strong>${escapeHtml(getSkillShortName(skill))}</strong></button>`;
 }
 
 function renderCharacterSkillPicker(selectedSkillIds = null) {
   if (!characterSkillsEl) return;
-  const classSkills = typeof getSkillsForClass === "function" ? getSkillsForClass(characterNameEl.value.trim()) : [];
-  const selected = new Set(selectedSkillIds ?? [...characterSkillsEl.querySelectorAll('input[type="checkbox"]:checked')].map(input => input.value));
-  characterSkillsEl.innerHTML = classSkills.map(skill => `
-    <label class="character-skill-option" data-skill-id="${escapeHtml(skill.id)}" onmouseenter="updateCharacterSkillDpsTooltip(this)" onmouseleave="hideCharacterSkillValueTooltip()" onfocusin="updateCharacterSkillDpsTooltip(this)" onfocusout="hideCharacterSkillValueTooltip()">
-      <input type="checkbox" value="${escapeHtml(skill.id)}" ${selected.has(skill.id) ? "checked" : ""}>
-      ${recordImagePath(skill.icon) ? `<img src="${escapeHtml(skill.icon)}" alt="" onerror="this.hidden=true">` : `<span class="character-skill-placeholder">${escapeHtml(getSkillShortName(skill).slice(0, 1) || "S")}</span>`}
-      <span><strong>${escapeHtml(getSkillShortName(skill))}</strong><small>${escapeHtml(getSkillSlotLabel(skill.slot))}</small></span>
-    </label>`).join("") || '<div class="empty-text">이 클래스에 등록된 스킬이 없습니다.</div>';
+  characterSkillSelection = new Set(limitOptionalSkillIds(selectedSkillIds ?? getCharacterSelectedSkillIds()));
+  const skills = getSkillsForClass(characterNameEl.value.trim());
+  skills.filter(skill => skill.slot !== 'optional').forEach(skill => characterSkillSelection.add(skill.id));
+  document.getElementById('characterChoicePanel').hidden = true;
+  const passive = skills.filter(skill => skill.slot === 'passive' || isChoiceSkill(skill));
+  const active = skills.filter(skill => skill.slot === 'active' || skill.slot === 'basic');
+  const ultimate = active.find(skill => /궁극|ultimate/i.test(skill.name + ' ' + skill.id));
+  const basics = active.filter(skill => skill !== ultimate);
+  characterSkillsEl.innerHTML = `<div class="character-passive-slot">${passive.length ? passive.map(skill => renderCharacterSkillBox(skill, '패시브')).join('') : renderCharacterSkillBox(null,'패시브')}</div>`
+    + Array.from({length:4}, (_,i) => renderCharacterSkillBox(basics[i], `기본 ${i+1}`)).join('')
+    + renderCharacterSkillBox(ultimate, '궁극기');
+  const optional = skills.filter(skill => skill.slot === 'optional');
+  document.getElementById('characterSelectedSkills').innerHTML = Array.from({length:6}, (_,i) => renderCharacterSkillBox(optional[i], `선택 ${i+1}`)).join('');
+  renderCharacterSelectedSkills();
+}
+
+function toggleCharacterSkill(button) {
+  const id = button.dataset.skillId;
+  if (getSkillById(id)?.slot !== 'optional') return;
+  if (characterSkillSelection.has(id)) characterSkillSelection.delete(id);
+  else {
+    if (getSkillById(id)?.slot === 'optional' && getCharacterSelectedSkillIds().filter(value => getSkillById(value)?.slot === 'optional').length >= 3) {
+      alert('선택 강화는 최대 3개까지 선택할 수 있습니다.');
+      return;
+    }
+    characterSkillSelection.add(id);
+  }
+  renderCharacterSelectedSkills();
+  renderCharacterCurrentDetails();
+  updateCharacterSkillDpsTooltip(button);
+}
+
+function renderCharacterSelectedSkills() {
+  document.querySelectorAll('#characterSelectedSkills button[data-skill-id]').forEach(button => {
+    button.setAttribute('aria-pressed', String(characterSkillSelection.has(button.dataset.skillId)));
+  });
+  document.getElementById('characterOptionalCount').textContent = `선택 강화 ${getCharacterSelectedSkillIds().filter(id => getSkillById(id)?.slot === 'optional').length}/3`;
+}
+
+function openCharacterSkillChoice(button) {
+  const panel = document.getElementById('characterChoicePanel');
+  const close = !panel.hidden && panel.dataset.skillId === button.dataset.skillId;
+  characterSkillsEl.querySelectorAll('[aria-expanded]').forEach(el => el.setAttribute('aria-expanded', 'false'));
+  panel.hidden = close;
+  if (close) return;
+  const skill = getSkillById(button.dataset.skillId);
+  if (!isChoiceSkill(skill)) return;
+  panel.dataset.skillId = skill.id;
+  button.setAttribute('aria-expanded', 'true');
+  const selected = getChoiceSkillOption(skill, characterChoiceSelections[skill.id]);
+  panel.innerHTML = `<h5>${escapeHtml(getSkillShortName(skill))} · 유형 선택</h5><div class="character-choice-options">${normalizeSkillChoice(skill.choice).options.map(option => {
+    const target = getSkillById(option.skillId);
+    return `<button type="button" class="character-skill-box" data-option-id="${escapeHtml(option.id)}" aria-pressed="${selected?.id === option.id}" onclick="selectCharacterSkillChoice(this)">${recordImagePath(target?.icon) ? `<img src="${escapeHtml(target.icon)}" alt="">` : ''}<strong>${escapeHtml(option.label)}</strong><small>${escapeHtml(target?.description || '')}</small></button>`;
+  }).join('') || '<p>등록된 선택지가 없습니다.</p>'}</div>`;
+  panel.scrollIntoView({block:'nearest'});
+}
+
+function selectCharacterSkillChoice(button) {
+  const panel = document.getElementById('characterChoicePanel');
+  characterChoiceSelections[panel.dataset.skillId] = button.dataset.optionId;
+  panel.querySelectorAll('[data-option-id]').forEach(el => el.setAttribute('aria-pressed', String(el === button)));
+  const source = [...characterSkillsEl.querySelectorAll('[data-skill-id]')].find(el => el.dataset.skillId === panel.dataset.skillId);
+  source.querySelector('[data-choice-label]').textContent = getChoiceSkillOption(getSkillById(panel.dataset.skillId), button.dataset.optionId).label;
+  renderCharacterCurrentDetails();
+}
+
+function renderCharacterCurrentDetails() {
+  const saved = characterEditIndexEl.value !== '' ? characterJson[Number(characterEditIndexEl.value)] : {};
+  const character = applyCharacterStatAbilities({...structuredClone(saved), name: characterNameEl.value.trim(), role: characterRoleEl.value,
+    skillIds: getCharacterSelectedSkillIds(), skillSelections: structuredClone(characterChoiceSelections)});
+  const stats = [['hp','HP'],['mp','MP'],['st','ST'],['atk','공격력'],['magic','마력'],['defense','방어력'],['resistance','저항력'],['attackSpeed','공격속도'],['speed','이동속도']];
+  document.getElementById('characterCurrentStats').innerHTML = stats.map(([key,label]) => `<div><span>${label}</span><strong>${Number(Number(character[key] || 0).toFixed(2))}</strong></div>`).join('');
+  document.getElementById('characterCurrentEquipment').innerHTML = getCharacterEquipmentSlots(character).map(slot => {
+    const item = getItemById(character.equipment?.[slot.key]);
+    return `<div><span>${escapeHtml(slot.label)}</span><strong class="character-equipped-item">${item ? equipmentItemIcon(item,slot.key) : ''}${escapeHtml(item?.name || '미착용')}</strong></div>`;
+  }).join('');
 }
 
 function refreshCharacterSkillPicker(selectAll = false) {
+  if (selectAll) characterChoiceSelections = {};
   const classSkills = typeof getSkillsForClass === "function" ? getSkillsForClass(characterNameEl.value.trim()) : [];
-  renderCharacterSkillPicker(selectAll ? classSkills.map(skill => skill.id) : null);
+  renderCharacterSkillPicker(selectAll ? classSkills.filter(skill=>skill.slot !== "optional").map(skill => skill.id) : null);
+  renderCharacterCurrentDetails();
 }
 
 async function deleteCharacterFromModal() {
@@ -324,6 +434,7 @@ function createCharacter(characterData, index, side = "player", synergyModifiers
     equipmentLoadouts,
     activeEquipmentSet: derivedCharacter.activeEquipmentSet ?? 0,
     skillIds: Array.isArray(derivedCharacter.skillIds) ? derivedCharacter.skillIds : [],
+    skillSelections: structuredClone(derivedCharacter.skillSelections ?? {}),
     skillCooldowns: {},
     defense: derivedCharacter.defense,
     resistance: derivedCharacter.resistance,

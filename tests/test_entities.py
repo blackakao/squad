@@ -19,6 +19,18 @@ def entity(entity_id="wolf"):
 
 
 class EntityTests(unittest.TestCase):
+    def test_entity_skill_loadout_roundtrip_and_references(self):
+        self.store.save_skills([{'id': 'spirit_action', 'name': 'Spirit', 'actions': []}])
+        value = dict(entity(), skillIds=['spirit_action'], basicAttackDisabled=True)
+        self.store.save(value, create=True)
+        self.assertEqual(self.store.get('wolf')['skillIds'], ['spirit_action'])
+        with self.assertRaises(EntityError):
+            self.store.save_skills([])
+        with self.assertRaises(EntityError):
+            self.store.save(dict(value, skillIds=['missing']))
+        for invalid in ('skill', [None], [1]):
+            with self.assertRaises(EntityError):
+                self.store.validate(dict(value, skillIds=invalid))
     def test_linked_owner_death_and_received_damage_roundtrip(self):
         original = entity()
         self.assertNotIn('ownerDiesOnDeath', self.store.validate(original))

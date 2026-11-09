@@ -1,4 +1,4 @@
-const BATTLE_EVENT_LABELS = {cast_start:"시전 시작",cast_complete:"시전 완료",cast_interrupt:"시전 중단",hit:"적중",damaged:"피격",heal:"치유",resource_drain:"자원 감소",dispel:"효과 해제",death:"사망",revive:"부활",battle_entry:"전투 진입",skill_copy:"스킬 복제",reserve_swap:"예비대 교대",rule_override:"규칙 변경",channel_start:"채널링 시작",channel_tick:"채널링 적용",channel_complete:"채널링 완료",channel_interrupt:"채널링 중단",field_create:"필드 생성",field_tick:"필드 적용",field_expire:"필드 만료",forced_move:"강제 이동",damage_redirect:"피해 대리",transform_start:"변신 시작",transform_end:"변신 종료",summon_command:"소환수 명령"};
+const BATTLE_EVENT_LABELS = {cast_start:"시전 시작",cast_complete:"시전 완료",cast_interrupt:"시전 중단",hit:"적중",damaged:"피격",heal:"치유",resource_drain:"자원 감소",dispel:"효과 해제",death:"사망",revive:"부활",battle_entry:"전투 진입",skill_copy:"스킬 복제",reserve_swap:"예비대 교대",rule_override:"규칙 변경",channel_start:"채널링 시작",channel_tick:"채널링 적용",channel_complete:"채널링 완료",channel_interrupt:"채널링 중단",field_create:"필드 생성",field_tick:"필드 적용",field_expire:"필드 만료",forced_move:"강제 이동",barrier_break:"보호막 파괴",damage_redirect:"피해 대리",transform_start:"변신 시작",transform_end:"변신 종료",summon_command:"소환수 명령"};
 Object.assign(BATTLE_EVENT_LABELS,{rune_install:"룬 설치",rune_tick:"룬 발동"});
 const battleEventSubscribers = new Map();
 let combatEventHistory = [];
@@ -92,6 +92,7 @@ function publishBattleEvents(events) {
       amount:Number(event.amount) || 0,hpDamage:Number(event.hpDamage) || 0,barrierDamage:Number(event.barrierDamage) || 0,
       damageType:event.damageType ?? null,resource:event.resource ?? null,moveType:event.moveType ?? null,
       resourceSpent:Object.freeze({...event.resourceSpent}),
+      melee:event.melee === true,
       periodic:Boolean(event.periodic),triggered:Boolean(event.triggered || event.skill?.triggered),reason:event.reason ?? null,depth:combatEventDepth});
     combatEventQueue.push({snapshot,source:event.source,target:event.target,depth:combatEventDepth});
   }

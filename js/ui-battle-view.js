@@ -4,7 +4,7 @@ function renderBattleSkillRow(unit) {
   const transform = (unit?.activeEffects ?? []).find(effect => effect.kind === "transform");
   const ids = transform?.skillIds?.length ? transform.skillIds : unit?.skillIds;
   const skills = [
-    ...(Array.isArray(ids) ? ids.map(getSkillById).filter(Boolean) : []),
+    ...(Array.isArray(ids) ? ids.map(getSkillById).filter(Boolean).map(skill=>getFormSkill(unit,skill)) : []),
     ...(Array.isArray(unit?.runtimeCopiedSkills) ? unit.runtimeCopiedSkills : [])
   ].filter(skill => !isDefaultSkill(skill.id));
   if (!skills.length) return "";
@@ -77,13 +77,13 @@ document.addEventListener("focusout", event => {
 const MAIN_SUMMON_STATUS_ENTITY_IDS = new Set([
   'knight_magic_horse',
   'star_companion', 'legacy_4ac380c5973655c4', 'puppet_doll',
-  'legacy_bbbcdbbdb4595aa3', 'demon_brute'
+  'demon_brute'
 ]);
 
 function renderStatus(units, colorResolver, summonRows = false) {
   return units.filter(unit => summonRows ? unit.isSummon : !unit.isSummon).map(unit => {
     const companions = summonRows ? [] : units.filter(summon => summon.isSummon && !summon.removed
-      && (summon.owner ?? summon.summoner) === unit && MAIN_SUMMON_STATUS_ENTITY_IDS.has(summon.entityId));
+      && (summon.owner ?? summon.summoner) === unit && ((battleEntitySnapshot ?? entitiesJson).find(entity => entity.entityId === summon.entityId)?.mainSummon ?? MAIN_SUMMON_STATUS_ENTITY_IDS.has(summon.entityId)));
     const hpRatio = Math.max(0, (unit.hp / unit.maxHp) * 100);
     const hpText = `${Math.floor(unit.hp)} / ${unit.maxHp}`;
     const maxMp = Math.max(0, Number(unit.maxMp ?? DEFAULT_RESOURCE_VALUE));
@@ -94,8 +94,8 @@ function renderStatus(units, colorResolver, summonRows = false) {
     const st = Math.max(0, Number(unit.st ?? maxSt));
     const stRatio = maxSt > 0 ? Math.max(0, Math.min(100, (st / maxSt) * 100)) : 0;
     const stText = `${Math.floor(st)} / ${maxSt}`;
-    const bp = Math.max(0, Number(unit.bp) || 0);
-    const maxBp = Math.max(bp, Number(unit.maxBp) || 0);
+    const bp = getUnitBarrierValue(unit);
+    const maxBp = Math.max(bp, getUnitBarrierMax(unit));
     const bpRatio = maxBp > 0 ? Math.max(0, Math.min(100, (bp / maxBp) * 100)) : 0;
     const bpText = maxBp > 0 ? `${Math.floor(bp)} / ${maxBp}` : `${Math.floor(bp)}`;
     const isChanneling = Boolean(unit.channelAction);
@@ -108,12 +108,13 @@ function renderStatus(units, colorResolver, summonRows = false) {
     const waitingLabel = unit.isReserve ? "예비대 대기" : unit.entryTicks > 0 ? "진입 대기" : unit.reviveTicks > 0 ? "부활 대기" : "";
     const castText = unit.isReserve ? waitingLabel : waitingLabel ? `${waitingLabel} ${(waitingTicks / BASE_ATTACK_COOLDOWN).toFixed(1)}초` : isCasting ? `${isChanneling ? "채널링 중" : "시전 중"} ${castRemainingText}` : "시전 대기";
     const exhaustedText = unit.exhausted ? " · 지침" : "";
+    const formText=getLifeCycleFormLabel(unit);
     const dpsText = `DPS ${getUnitDps(unit).toFixed(1)}`;
     const reviveProtectionText = unit.reviveInvulnerableTicks > 0 ? ` · 부활 무적 ${(unit.reviveInvulnerableTicks / BASE_ATTACK_COOLDOWN).toFixed(1)}초` : "";
 
     return `
       <div class="unit-status${summonRows ? ' main-summon-status' : ''}">
-        <div>${summonRows ? `<span class="main-summon-label">↳ 주소환수 · ${escapeHtml((unit.owner ?? unit.summoner)?.name ?? '')}</span> ` : ''}${escapeHtml(unit.name)} (${getRoleLabel(unit.role)})${!unit.alive ? ' · 전투 불능' : unit.suspendedTicks>0 ? ' · 일시 비활성' : ''}${reviveProtectionText}</div>
+        <div>${summonRows ? `<span class="main-summon-label">↳ 주소환수 · ${escapeHtml((unit.owner ?? unit.summoner)?.name ?? '')}</span> ` : ''}${escapeHtml(unit.name)} (${getRoleLabel(unit.role)})${!unit.alive ? ' · 전투 불능' : unit.suspendedTicks>0 ? ' · 일시 비활성' : ''}${reviveProtectionText}${formText ? ` · ${escapeHtml(formText)}` : ""}</div>
         <div class="hp-track">
           <div class="hp-fill" style="width:${hpRatio}%; background:${colorResolver(unit)};"></div>
           <div class="hp-label">HP ${hpText} · ${dpsText}</div>

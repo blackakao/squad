@@ -6,7 +6,7 @@ function createDpsPreviewUnit(character) {
   const unit={...build, side:'preview', alive:true, exhausted:false,
     attributes:getCharacterEffectiveAttributes(build), itemSkillModifiers:getCharacterItemSkillModifiers(build),
     maxHp:build.hp, maxMp:build.mp, maxSt:build.st, maxBp:build.bp,
-    customResources:createBattleCustomResources(build.customResources), skillSelections:{},
+    customResources:createBattleCustomResources(build.customResources), skillSelections:structuredClone(build.skillSelections ?? {}),
     activeEffects:[], runtimeRuleOverrides:[]};
   applyPassiveStatConversion(unit);
   return unit;
@@ -18,7 +18,7 @@ function resolvePreviewSkill(unit, originalSkill) {
   while (isChoiceSkill(base)) {
     if (visited.has(base.id)) return null;
     visited.add(base.id);
-    base=getSkillById(getChoiceSkillOption(base)?.skillId);
+    base=getSkillById(getChoiceSkillOption(base,unit.skillSelections?.[base.id])?.skillId);
     if (!base) return null;
   }
   return getRuntimeSelectionSkill(unit,getRuntimeItemSkill(unit,base));
@@ -100,19 +100,31 @@ function getCurrentSkillValueRows(character,originalSkill) {
 
 function formatCurrentSkillValueTooltip(character,skill) {
   const preview=getCurrentSkillValueRows(character,skill);
-  if (!preview?.skill) return '';
-  const lines=[preview.skill.name,`현재 장비 반영 · 공격력 ${formatCurrentSkillAmount(preview.unit.atk)} · 마력 ${formatCurrentSkillAmount(preview.unit.magic)}`];
-  if (!preview.rows.length) lines.push('피해·회복 계수 없음');
-  for (const row of preview.rows) {
-    lines.push(`${row.label} · 계수: ${row.coefficient}`);
-    const typeLabel=row.type==='damage' ? '예상 피해' : '예상 회복';
-    const interval=row.interval>0 ? ` · 주기 ${row.interval}초` : '';
-    lines.push(`${typeLabel}${interval}: ${row.value == null ? '상황 의존' : `${formatCurrentSkillAmount(row.value)} (대상 보정 전)`}`);
-  }
-  const dps=formatExpectedDps(estimateSkillDps(character,skill));
-  if (dps) lines.push(dps);
-  lines.push(EXPECTED_DPS_BASIS,'현재 스탯·장비 / 선택 스킬은 기본 선택지 기준');
-  return lines.join('\n');
+  if (!preview?.skill) return `${String(skill?.description ?? '').trim() || '스킬 설명 없음'}\n수치 정보 없음`;
+  const resolved = preview.skill, unit = preview.unit, actions = resolved.actions ?? [];
+  const number = formatCurrentSkillAmount;
+  const amounts = type => preview.rows.filter(row => row.type === type).map(row =>
+    `${row.value == null ? '상황 의존' : number(row.value)}${row.interval > 0 ? `/${number(row.interval)}초` : ''}`).join(' / ');
+  const costs = getSkillResourceCosts(resolved).filter(cost => Number(cost.value) > 0).map(cost =>
+    `${cost.resource} ${number(getResourceCostAmount(unit,cost))}${cost.mode === 'currentPercent' ? '(현재량 기준)' : ''}`);
+  if (resolved.summonCost) costs.push(`소환수 ${normalizeSummonCost(resolved.summonCost).count}체`);
+  const values = key => [...new Set(actions.map(action => Number(action[key]) || 0).filter(value => value > 0))];
+  const duration = [...new Set([...values('duration'), Number(resolved.channel?.duration) || 0].filter(value => value > 0))];
+  const areas = [...new Set(actions.map(action => action.type === 'create_field'
+    ? action.fieldShape === 'line' ? `폭 ${number(action.fieldWidth)}m` : `반경 ${number(action.fieldRadius)}m`
+    : Number(action.area) > 0 ? `반경 ${number(action.area)}m` : '').filter(Boolean))];
+  const passive = resolved.slot === 'passive' || resolved.slot === 'optional';
+  const range = passive ? '-' : actions.length && actions.every(action => action.target === 'self') ? '자신'
+    : `${number(getSkillRangePixels(unit,resolved) / ATTACK_RANGE_UNIT)}m`;
+  const cast = passive ? '-' : `${number(resolved.castTime == null ? getCastDuration(unit)/BASE_ATTACK_COOLDOWN : resolved.castTime)}초`;
+  const fields = [`예상 데미지 ${amounts('damage') || '-'}`];
+  if (amounts('heal')) fields.push(`예상 회복 ${amounts('heal')}`);
+  fields.push(`소모 ${costs.join(' + ') || '없음'}`, `사정거리 ${range}`,
+    `재사용 ${passive ? '-' : number(getResolvedSkillCooldownTicks(resolved,unit)/BASE_ATTACK_COOLDOWN)+'초'}`,
+    `시전 ${cast}`, `범위 ${areas.join('/') || '-'}`, `지속 ${duration.length ? duration.map(value => number(value)+'초').join('/') : '-'}`);
+  const dps = estimateSkillDps(character,skill);
+  if (dps) fields.push(`DPS ${dps.dps == null ? '상황 의존' : number(dps.dps)}`);
+  return `${String(resolved.description ?? '').trim() || '스킬 설명 없음'}\n${fields.join(' · ')}\n※ 피해·회복은 대상 보정 전 비교값`;
 }
 
 function getWeaponDpsPreviews(character,item) {
@@ -141,8 +153,9 @@ function renderWeaponDpsPreview(character,item) {
 function updateCharacterSkillDpsTooltip(label) {
   const saved=characterEditIndexEl.value!=='' ? characterJson[Number(characterEditIndexEl.value)] : null;
   const draft={...structuredClone(saved || {}),name:characterNameEl.value.trim(),role:characterRoleEl.value,
-    skillIds:[...characterSkillsEl.querySelectorAll('input:checked')].map(input=>input.value),
-    equipmentRules:normalizeEquipmentRules({extraWeaponSlots:characterExtraWeaponSlotsEl.value,twoHandSingleSlot:characterTwoHandSingleSlotEl.checked,sameTargetWeaponPenaltyPercent:characterSameTargetWeaponPenaltyEl.value})};
+    skillIds:getCharacterSelectedSkillIds(),
+    skillSelections:structuredClone(characterChoiceSelections),
+    equipmentRules:normalizeEquipmentRules(saved?.equipmentRules)};
   const skill=getSkillById(label.dataset.skillId);
   const text=formatCurrentSkillValueTooltip(draft,skill);
   label.dataset.tooltip=text;

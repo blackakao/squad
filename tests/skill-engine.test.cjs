@@ -4,6 +4,63 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const path = require('node:path');
 
+function spiritEngine(kind='heal') {
+ const e=engine();e.skillsJson=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8')));
+ e.spiritEntities=['enhance','heal','destroy'].map(kind=>JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','entities',`spirit_${kind}.json`),'utf8')));
+ vm.runInContext('entitiesJson.push(...spiritEntities)',e);
+ e.spirit=id=>e.getSkillById('skill_class_spirit_'+id);e.owner=unit(e);e.owner.magic=100;
+ e.owner.skillIds=[e.spirit('choice').id,...['purify','sacrifice','burst','birth'].map(id=>e.spirit(id).id)];
+ e.owner.skillSelections={[e.spirit('choice').id]:kind};return e;
+}
+
+test('spirits choose one type, enter with one and generate every seven seconds up to a shared cap of five',()=>{
+ const e=spiritEngine('destroy'),s=e.owner;e.publishBattleEvents([{type:'battle_entry',source:s,target:s}]);
+ assert.equal(s.summons.length,1);assert.equal(s.summons[0].entityId,'spirit_destroy');assert.equal(s.summons[0].hp,100);assert.equal(s.summons[0].summonTicks,null);
+ for(let i=0;i<419;i++)e.updateBattleEffects();assert.equal(e.getLivingOwnedSummons(s).length,1);e.updateBattleEffects();assert.equal(e.getLivingOwnedSummons(s).length,2);
+ const enemy=unit(e,'enemy',110);enemy.hp=enemy.maxHp=10000;
+ for(let i=0;i<10;i++)e.applySkill(s,enemy,e.spirit('birth'));assert.equal(e.getLivingOwnedSummons(s).length,5);
+ for(let i=0;i<840;i++)e.updateBattleEffects();assert.equal(e.getLivingOwnedSummons(s).length,5);
+ e.removeSummonedBattleUnit(e.getLivingOwnedSummons(s)[0]);for(let i=0;i<420;i++)e.updateBattleEffects();assert.equal(e.getLivingOwnedSummons(s).length,5);
+ s.hp=0;e.syncAliveState(s);const total=s.summons.length;for(let i=0;i<420;i++)e.updateBattleEffects();assert.equal(s.summons.length,total);
+});
+
+test('spirit sacrifice requires a living selected spirit and consumes exactly one only after a successful cast',()=>{
+ const e=spiritEngine(),s=e.owner,ally=unit(e,'player',110);ally.hp=10;
+ const heal=e.spirit('sacrifice');assert.equal(e.canPaySkillResourceCosts(s,heal),false);
+ e.applySkill(s,s,e.spirit('passive_heal'));e.applySkill(s,s,e.spirit('passive_heal'));assert.equal(e.getLivingOwnedSummons(s).length,2);
+ e.startCast(s,{type:'skill',target:ally,skill:heal});e.interruptBattleCast(s,'test');assert.equal(e.getLivingOwnedSummons(s).length,2);
+ e.startCast(s,{type:'skill',target:ally,skill:heal});for(let i=0;i<120;i++)e.updateCast(s);
+ assert.equal(e.getLivingOwnedSummons(s).length,1);assert.equal(ally.hp,100);
+ e.startCast(s,{type:'skill',target:ally,skill:heal});e.removeSummonedBattleUnit(e.getLivingOwnedSummons(s)[0]);ally.hp=10;for(let i=0;i<120;i++)e.updateCast(s);assert.equal(ally.hp,10);
+});
+
+test('spirit explosion and purification consume one and affect only the configured circles',()=>{
+ const e=spiritEngine(),s=e.owner,ally=unit(e,'player',110),enemy=unit(e,'enemy',120),far=unit(e,'enemy',181),near=unit(e,'enemy',150);for(const t of [enemy,far,near])t.hp=t.maxHp=1000;
+ e.applySkill(s,s,e.spirit('passive_heal'));e.startCast(s,{type:'skill',target:enemy,skill:e.spirit('burst')});for(let i=0;i<150;i++)e.updateCast(s);e.updateProjectiles();assert.equal(enemy.hp,850);assert.equal(near.hp,850);assert.equal(far.hp,1000);assert.equal(e.getLivingOwnedSummons(s).length,0);
+ const buff=(id,polarity)=>e.normalizeSkillAction({type:'add_buff',duration:20,effect:{id,stat:'atk',mode:'flat',value:1,polarity}});
+ for(const id of ['a','b']){e.applyTimedEffectAction(enemy,ally,buff(id,'harmful'));e.applyTimedEffectAction(enemy,enemy,buff(id,'beneficial'));}
+ e.applySkill(s,s,e.spirit('passive_heal'));e.startCast(s,{type:'skill',target:ally,skill:e.spirit('purify')});for(let i=0;i<180;i++)e.updateCast(s);
+ assert.equal(ally.activeEffects.length,1);assert.equal(enemy.activeEffects.length,1);assert.equal(e.getLivingOwnedSummons(s).length,0);
+});
+
+test('spirit actions reference the current owner magic and use no basic attacks or mana costs',()=>{
+ for(const kind of ['heal','destroy']){
+  const e=spiritEngine(kind),s=e.owner,ally=unit(e,'player',110),enemy=unit(e,'enemy',115);ally.hp=10;enemy.hp=enemy.maxHp=1000;
+  e.applySkill(s,s,e.spirit('passive_'+kind));const spirit=e.getLivingOwnedSummons(s)[0];assert.equal(spirit.basicAttackDisabled,true);assert.deepEqual(Array.from(spirit.skillIds),[e.spirit('entity_'+kind).id]);
+  s.magic=200;e.applySkill(spirit,kind==='heal'?ally:enemy,e.spirit('entity_'+kind));assert.equal(kind==='heal'?ally.hp:enemy.hp,kind==='heal'?12:996);
+  const mp=spirit.mp;e.spendSkillResourceCosts(spirit,e.spirit('entity_'+kind));assert.equal(spirit.mp,mp);
+ }
+});
+
+test('enhancement spirit buffs real strength and intelligence without drift and restores derived stats on dispel',()=>{
+ const e=spiritEngine('enhance'),s=e.owner,ally=unit(e,'player',110);ally.attributes={str:9,int:9};ally.atk=20;ally.magic=30;
+ e.applySkill(s,s,e.spirit('passive_enhance'));const spirit=e.getLivingOwnedSummons(s)[0];e.applySkill(spirit,ally,e.spirit('entity_enhance'));
+ assert.equal(e.resolveSkillActionTarget(spirit,e.spirit('entity_enhance').actions[0],spirit,e.spirit('entity_enhance'))===spirit,false);
+ assert.equal(ally.attributes.str,10);assert.equal(ally.attributes.int,10);assert.equal(ally.atk,21);assert.equal(ally.magic,31);assert.equal(ally.defense,1);assert.equal(ally.resistance,1);
+ ally.mp=ally.maxMp;const fullMp=ally.mp;for(let i=0;i<5;i++)e.recalculateBattleBuffs(ally);assert.equal(ally.atk,21);assert.equal(ally.magic,31);assert.equal(ally.mp,fullMp);
+ e.applyTimedEffectAction(s,ally,e.normalizeSkillAction({type:'delete_buff',effect:{id:'spirit_basic_enhance',dispelMode:'id'}}));assert.equal(ally.attributes.str,9);assert.equal(ally.atk,20);assert.equal(ally.magic,30);assert.equal(ally.defense,0);
+});
+
 test('knight mount is invisible and untargetable but still shares damage and appears under its owner',()=>{
  const e=engine();e.skillsJson=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8')));
  e.horseDefinition=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','entities','knight_magic_horse.json'),'utf8'));vm.runInContext('entitiesJson.push(horseDefinition)',e);
@@ -897,6 +954,225 @@ test('unsupported weapon assignment falls back to an executable unit attack', ()
   assert.equal(fallback.actions[0].damageType,'magic');
 });
 
+// The reaper's normal checks always start in a two-versus-two formation.
+function soulEngine() {
+ const e=engine();e.skillsJson=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8')));
+ e.soul=id=>e.getSkillById('skill_class_soul_reaper_'+id);e.owner=unit(e);e.ally=unit(e,'player',105);e.enemy=unit(e,'enemy',110);e.enemyAlly=unit(e,'enemy',115);
+ for(const u of [e.owner,e.ally,e.enemy,e.enemyAlly]){u.hp=u.maxHp=1000;u.attackRange=1;u.atk=100;}
+ e.owner.skillIds=[e.soul('soul_and_body').id,e.soul('black_assault').id];
+ e.hit=(value,target=e.owner)=>e.applyActionDamage(e.enemy,target,e.normalizeSkillAction({type:'deal_damage',target:'enemy',rangeMode:'custom',rangeValue:1,damageType:'physical',coefficients:[{type:'fixed',value}]}),{id:'soul_test_hit',slot:'active'});
+ e.enter=()=>e.hit(1000);return e;
+}
+
+test('soul reaper takes double body damage and lethal damage changes form without death or revive use',()=>{
+ const e=soulEngine(),s=e.owner;s.revivesRemaining=2;e.hit(10);assert.equal(s.hp,980);
+ e.enter();assert.equal(s.hp,0);assert.equal(s.alive,true);assert.equal(s.revivesRemaining,2);assert.equal(e.getBattleEvents('death').length,0);
+ assert.equal(e.getLifeCycleForm(s).remainingTicks,600);assert.equal(e.getActiveBattleEntities(e.playerSquad).includes(s),false);
+ assert.equal(e.canDirectlyTarget(e.enemy,s),false);assert.equal(e.canSquadContinueBattle(e.playerSquad),true);
+ assert.equal(e.getEquippedSkills(s)[0].name,'영혼수확자 · 영혼입김');
+ assert.ok(e.getLifeCycleFormLabel(s).includes('10.0초'));
+});
+
+test('soul reaper form blocks all incoming recovery damage and basic casts including periodic and proxy portions',()=>{
+ const e=soulEngine(),s=e.owner;e.enter();s.mp=s.st=s.bp=0;
+ for(const resource of ['HP','MP','ST','BP'])assert.equal(e.applyResourceGain(s,resource,100).gained,0);
+ const heal=e.normalizeSkillAction({type:'heal',target:'ally',healResource:'HP',coefficients:[{type:'fixed',value:100}]});
+ assert.equal(e.applyActionHeal(e.ally,s,heal),0);e.ally.hp=500;assert.equal(e.resolveSkillActionTarget(e.ally,heal,s),e.ally);
+ e.hit(50);assert.equal(s.hp,0);assert.equal(s.alive,true);
+ const periodic={damageType:'fixed',periodic:true,coefficients:[{type:'fixed',value:50}]};assert.equal(e.applyActionDamage(e.enemy,s,periodic),0);
+ assert.equal(e.applyDamagePortion(e.enemy,s,periodic,null,100).actual,0);
+ e.startCast(s,{type:'attack',target:e.enemy,skill:e.getUnitSkill(s)});assert.equal(s.pendingAction,null);
+ assert.equal(e.applyActionResourceDrain(e.enemy,s,{drainResource:'HP',coefficients:[{type:'fixed',value:50}]}),0);
+});
+
+test('soul reaper returns after exactly ten seconds with full HP and body damage rules reset, then cycles again',()=>{
+ const e=soulEngine(),s=e.owner;e.enter();
+ for(let i=0;i<599;i++)e.updateBattleEffects();assert.equal(s.hp,0);assert.equal(e.getLifeCycleForm(s).remainingTicks,1);
+ e.updateBattleEffects();assert.equal(s.hp,1000);assert.equal(e.getLifeCycleForm(s),undefined);assert.equal(e.isUnitBattleTargetable(s),true);
+ assert.equal(e.getEquippedSkills(s)[0].name,'영혼수확자 · 검은습격');e.hit(10);assert.equal(s.hp,980);
+ e.enter();assert.equal(e.getLifeCycleForm(s).remainingTicks,600);assert.equal(e.getBattleEvents('death').length,0);
+ e.resetUnitForBattle(s);assert.equal(e.getLifeCycleForm(s),undefined);assert.equal(s.hp,1000);
+});
+
+test('soul reaper uses attack and stun in body and heals through the real combat actor loop in soul',()=>{
+ const e=soulEngine(),s=e.owner,base=e.getEquippedSkills(s)[0];
+ e.startCast(s,{type:'skill',target:e.enemy,skill:base});for(let i=0;i<30;i++)e.updateCast(s);
+ assert.equal(e.enemy.hp,870);assert.equal(e.enemy.activeEffects.find(f=>f.state==='stun').remainingTicks,180);
+ assert.equal(s.skillCooldowns[base.id],300);e.enter();assert.equal(s.skillCooldowns[base.id],300);
+ const soulSkill=e.getEquippedSkills(s)[0];assert.equal(soulSkill.id,base.id);assert.equal(soulSkill.castTime,1);assert.equal(soulSkill.cooldown,3);
+ e.ally.hp=100;s.skillCooldowns[base.id]=0;for(const u of [e.ally,e.enemy,e.enemyAlly])u.commandOnly=true;
+ e.updateCombat();assert.equal(s.castTimer,60);for(let i=0;i<60;i++)e.updateCombat();
+ assert.equal(e.ally.hp,200);assert.equal(s.hp,0);assert.equal(s.skillCooldowns[base.id],180);assert.equal(e.enemy.hp,870);
+});
+
+test('soul reaper remaining cooldown survives both form transitions and interrupted casts never leak prior form effects',()=>{
+ const e=soulEngine(),s=e.owner,base=e.getEquippedSkills(s)[0];e.startCast(s,{type:'skill',target:e.enemy,skill:base});
+ e.enter();assert.equal(s.pendingAction,null);assert.equal(e.enemy.hp,1000);
+ const cd=s.skillCooldowns[base.id];assert.equal(cd,300);
+ for(let i=0;i<600;i++)e.updateBattleEffects();assert.equal(s.skillCooldowns[base.id],cd);
+ e.enter();s.skillCooldowns[base.id]=0;e.ally.hp=100;e.startCast(s,{type:'skill',target:e.ally,skill:e.getEquippedSkills(s)[0]});
+ e.getLifeCycleForm(s).remainingTicks=1;e.updateBattleEffects();assert.equal(s.pendingAction,null);assert.equal(e.ally.hp,100);assert.equal(s.hp,1000);
+});
+
+test('soul reaper allies keep combat alive but only soul forms cannot continue battle',()=>{
+ const e=soulEngine();e.enter();assert.equal(e.canSquadContinueBattle(e.playerSquad),true);
+ e.ally.hp=0;e.syncAliveState(e.ally);assert.equal(e.canSquadContinueBattle(e.playerSquad),false);
+ // Two soul forms also cannot win or stall a battle without a combat-capable ally.
+ e.ally.alive=true;e.ally.hp=1000;e.ally.skillIds=[e.soul('soul_and_body').id,e.soul('black_assault').id];e.hit(1000,e.ally);
+ assert.equal(e.getLifeCycleForm(e.ally).remainingTicks,600);assert.equal(e.canSquadContinueBattle(e.playerSquad),false);
+});
+
+test('soul reaper definitions and state-specific skill UI preserve shared slot and countdown',()=>{
+ const e=soulEngine(),s=e.owner;const before=JSON.stringify(e.skillsJson);assert.equal(JSON.stringify(e.normalizeSkillJson(e.skillsJson)),before);
+ s.role='healer';s.attackType='physical';assert.equal(e.getBasicBattleSkill(s).id,'skill_basic_weapon_attack');
+ assert.equal(e.getSkillsForClass('영혼수확자').length,2);assert.equal(e.soul('black_assault').actions[0].rangeMode,'mainWeapon');assert.equal(e.soul('soul_breath').actions[0].rangeMode,'mainWeapon');
+ e.document={addEventListener(){}};e.recordImagePath=()=>'';e.getRoleLabel=String;e.getUnitDps=()=>0;
+ vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','ui-battle-view.js'),'utf8'),e);
+ assert.ok(e.renderBattleSkillRow(s).includes('검은습격'));e.renderBattleEngineEvents=()=>{};e.enter();s.skillCooldowns[e.soul('black_assault').id]=120;s.skillCooldownTotals[e.soul('black_assault').id]=300;
+ assert.ok(e.renderBattleSkillRow(s).includes('영혼입김'));assert.ok(!e.renderBattleSkillRow(s).includes('검은습격'));
+ const html=e.renderStatus(e.playerSquad,()=> 'blue');assert.ok(html.includes('육신 복귀 10.0초'));assert.ok(html.includes('2초'));
+});
+
+function keratinEngine() {
+ const e=engine();e.skillsJson=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8')));
+ e.keratin=id=>e.getSkillById('skill_class_keratin_'+id);e.owner=unit(e);e.owner.hp=e.owner.maxHp=1000;e.owner.attackRange=1;
+ e.owner.skillIds=['shell','molt','repulsive_shield','pity'].map(id=>e.keratin(id).id);
+ e.attack=(source,target,value=1,extra={})=>{
+  const hit=e.normalizeSkillAction({type:'deal_damage',target:'enemy',rangeMode:'custom',rangeValue:1,damageType:'physical',coefficients:[{type:'fixed',value}],...extra});
+  return e.applyActionDamage(source,target,{...hit,...extra},{id:'keratin_test_hit',slot:'active',actions:[hit]});
+ };return e;
+}
+
+test('keratin passive adds each melee hit before reflecting, steps every ten, caps at one hundred and resets',()=>{
+ const e=keratinEngine(),s=e.owner,enemy=unit(e,'enemy',105);enemy.hp=enemy.maxHp=100000;
+ for(let i=0;i<9;i++)e.attack(enemy,s);assert.equal(s.activeEffects[0].stacks,9);assert.equal(s.defense,0);assert.equal(enemy.hp,100000-45);
+ e.attack(enemy,s);assert.equal(s.defense,1);assert.ok(Math.abs(s.effectAttackRateMultiplier-.97)<1e-10);
+ assert.equal(enemy.hp,100000-55);
+ for(let i=10;i<101;i++)e.attack(enemy,s);
+ assert.equal(s.activeEffects.find(f=>f.id==='keratin_stacks').stacks,100);assert.equal(s.defense,10);assert.ok(Math.abs(s.effectAttackRateMultiplier-.7)<1e-10);
+ e.resetUnitForBattle(s);assert.equal(s.activeEffects.length,0);assert.equal(s.defense,undefined);
+});
+
+test('keratin passive ignores ranged periodic ally zero and reflected damage and cannot chain between owners',()=>{
+ const e=keratinEngine(),s=e.owner,enemy=unit(e,'enemy',105),ally=unit(e,'player',105);enemy.hp=enemy.maxHp=1000;
+ e.attack(enemy,s,1,{rangeValue:5});e.attack(enemy,s,1,{periodic:true});e.attack(ally,s);e.attack(enemy,s,0);e.attack(enemy,s,1,{reflected:true});
+ assert.equal(s.activeEffects.length,0);
+ enemy.skillIds=[e.keratin('shell').id];e.attack(enemy,s,1);assert.equal(s.activeEffects[0].stacks,1);assert.equal(enemy.activeEffects.length,0);
+});
+
+test('repulsive shield bursts once only when its own remaining amount is exhausted by enemy damage',()=>{
+ const e=keratinEngine(),s=e.owner,enemy=unit(e,'enemy',110),near=unit(e,'enemy',140),far=unit(e,'enemy',141),ally=unit(e,'player',120);
+ for(const u of [enemy,near,far]){u.hp=u.maxHp=1000;u.attackSpeed=1;u.speed=10;}
+ s.skillIds=[e.keratin('repulsive_shield').id];s.bp=s.maxBp=30;e.applySkill(s,s,e.keratin('repulsive_shield'));assert.equal(e.getUnitBarrierValue(s),130);
+ assert.equal(e.attack(enemy,s,60),60);assert.equal(e.getUnitBarrierValue(s),70);assert.equal(enemy.hp,1000);
+ assert.equal(e.attack(enemy,s,40),40);assert.equal(s.hp,1000);assert.equal(s.bp,30);assert.equal(enemy.hp,950);assert.equal(near.hp,950);assert.equal(far.hp,1000);assert.equal(ally.hp,100);
+ assert.equal(enemy.speed,8);assert.ok(Math.abs(enemy.effectAttackRateMultiplier-.7)<1e-10);
+ e.attack(enemy,s,30);assert.equal(enemy.hp,950);assert.equal(e.getUnitBarrierValue(s),0);
+ assert.equal(e.getBattleEvents('barrier_break').length,1);
+});
+
+test('repulsive shield expiry dispel refresh and friendly damage never explode',()=>{
+ for(const reason of ['expiry','dispel','refresh','friendly']){
+  const e=keratinEngine(),s=e.owner,enemy=unit(e,'enemy',110),ally=unit(e,'player',105);s.skillIds=[e.keratin('repulsive_shield').id];s.bp=s.maxBp=20;
+  e.applySkill(s,s,e.keratin('repulsive_shield'));
+  if(reason==='expiry')for(let i=0;i<180;i++)e.updateBattleEffects();
+  if(reason==='dispel')e.applyTimedEffectAction(enemy,s,e.normalizeSkillAction({type:'delete_buff',effect:{id:'keratin_repulsive_shield',dispelMode:'id'}}));
+  if(reason==='refresh'){e.attack(enemy,s,50);e.applySkill(s,s,e.keratin('repulsive_shield'));assert.equal(e.getUnitBarrierValue(s),120);}
+  if(reason==='friendly')e.attack(ally,s,100);
+  assert.equal(enemy.hp,100);assert.equal(e.getBattleEvents('barrier_break').length,0);assert.equal(s.bp,20);
+ }
+});
+
+test('keratin molt uses three meter self area and independent defenses; pity chooses the higher offensive stat',()=>{
+ const e=keratinEngine(),s=e.owner,near=unit(e,'enemy',130),far=unit(e,'enemy',131);s.atk=100;
+ e.applySkill(s,near,e.keratin('molt'));assert.equal(near.hp,20);assert.equal(far.hp,100);assert.equal(s.defense,5);assert.equal(s.resistance,5);
+ near.atk=150;near.magic=200;e.applySkill(s,near,e.keratin('pity'));assert.equal(near.atk,150);assert.equal(near.magic,100);
+ far.atk=200;far.magic=150;e.applySkill(s,far,e.keratin('pity'));assert.equal(far.atk,100);assert.equal(far.magic,150);
+ for(let i=0;i<300;i++)e.updateBattleEffects();assert.equal(s.defense,undefined);assert.equal(near.magic,200);assert.equal(far.atk,200);
+});
+
+test('keratin skill metadata preserves main weapon range, explicit exception, internal reaction and repeated normalization',()=>{
+ const e=keratinEngine();assert.equal(e.getSkillsForClass('각질형').length,4);assert.equal(e.getEquippedSkills(e.owner).length,3);
+ for(const id of ['shell','molt','repulsive_shield'])assert.ok(e.keratin(id).actions.every(a=>a.rangeMode==='mainWeapon'));
+ assert.equal(e.keratin('pity').actions[0].rangeMode,'custom');assert.equal(e.keratin('pity').actions[0].rangeValue,5);
+ const before=JSON.stringify(e.skillsJson);assert.equal(JSON.stringify(e.normalizeSkillJson(e.skillsJson)),before);
+ assert.equal(e.isSkillExecutable(e.keratin('shell')),true);assert.equal(e.keratin('shell').actions[0].effect.maxStacks,100);
+});
+
+function serumEngine(options=[]) {
+ const e=engine();e.skillsJson=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8')));
+ e.serum=id=>e.getSkillById('skill_class_serum_'+id);e.owner=unit(e);e.owner.magic=100;
+ e.owner.skillIds=['regeneration','drain','transfusion','barrier','conversion',...options].map(id=>e.serum(id).id);
+ e.runtime=id=>e.getRuntimeSelectionSkill(e.owner,e.serum(id));return e;
+}
+
+test('serum optional enhancements are limited to three, conditional, and never cast as actions',()=>{
+ const e=serumEngine(['component','endless_barrier','efficiency','fast_drain','drain_mania','mental_recovery']);
+ assert.equal(e.limitOptionalSkillIds(e.owner.skillIds).length,8);
+ assert.equal(e.runtime('transfusion').actions[0].coefficients[0].value,100);
+ assert.equal(e.runtime('barrier').actions[0].fieldRadius,8);
+ assert.equal(e.runtime('conversion').resourceCosts[0].value,5);
+ assert.equal(e.runtime('drain').castTime,1.5);assert.equal(e.runtime('drain').cooldown,5);
+ assert.equal(e.getEquippedSkills(e.owner).length,4);
+ e.owner.skillIds=e.owner.skillIds.slice(0,5);assert.equal(e.runtime('transfusion').actions[0].coefficients[0].value,50);
+ e.owner.skillIds.push(e.serum('fast_drain').id,e.serum('drain_mania').id);
+ assert.equal(e.runtime('drain').castTime,.8);assert.equal(e.runtime('drain').cooldown,3);
+ assert.equal(e.serum('drain').castTime,1.5);assert.equal(e.serum('drain').cooldown,5);
+});
+
+test('serum regeneration switches at ten seconds and damage resets it; optional mana only when selected',()=>{
+ const e=serumEngine(),s=e.owner;s.hp=10;s.mp=0;
+ for(let i=0;i<60;i++)e.updateBattleEffects();assert.equal(s.hp,12);assert.equal(s.mp,0);
+ s.undamagedTicks=599;s.passiveRepeatTimers[e.serum('regeneration').id]=1;e.updateBattleEffects();assert.equal(s.hp,15);
+ const enemy=unit(e,'enemy',110),hit=e.normalizeSkillAction({type:'deal_damage',target:'enemy',damageType:'fixed',coefficients:[{type:'fixed',value:1}]});
+ e.applySkill(enemy,s,skill(e,hit));assert.equal(s.undamagedTicks,0);
+ s.skillIds.push(e.serum('mental_recovery').id);s.passiveRepeatTimers[e.serum('regeneration').id]=1;e.updateBattleEffects();assert.equal(s.mp,5);
+ s.undamagedTicks=599;s.passiveRepeatTimers[e.serum('regeneration').id]=1;e.updateBattleEffects();assert.equal(s.mp,11);
+});
+
+test('serum transfusion spends five percent per pulse and heals actual HP spent at selected rate',()=>{
+ for(const selected of [false,true]){
+  const e=serumEngine(selected?['component']:[]),s=e.owner,ally=unit(e,'player',105);ally.hp=10;
+  const sk=e.runtime('transfusion');e.startCast(s,{type:'skill',target:ally,skill:sk});
+  for(let i=0;i<180;i++){e.updateBattleChannel(s);e.updateProjectiles();}
+  assert.equal(s.hp,85);assert.equal(ally.hp,selected?25:17.5);assert.equal(s.channelAction,null);
+  assert.equal(s.skillCooldowns[sk.id],420);
+ }
+});
+
+test('serum blood field counts enemies without damage and heals only at natural expiry',()=>{
+ const e=serumEngine(),s=e.owner,a=unit(e,'enemy',120),b=unit(e,'enemy',150),far=unit(e,'enemy',190);s.hp=10;
+ e.applySkill(s,s,e.runtime('barrier'));for(let i=0;i<239;i++)e.updateBattleFields();assert.equal(s.hp,10);
+ e.updateBattleFields();assert.equal(s.hp,18);assert.equal(a.hp,100);assert.equal(b.hp,100);assert.equal(far.hp,100);
+ s.skillIds.push(e.serum('endless_barrier').id);e.applySkill(s,s,e.runtime('barrier'));s.x=110;
+ for(let i=0;i<240;i++)e.updateBattleFields();assert.equal(s.hp,30);
+});
+
+test('serum efficiency reduces only blood conversion payment and keeps mana recovery',()=>{
+ for(const selected of [false,true]){
+  const e=serumEngine(selected?['efficiency']:[]),s=e.owner;s.mp=0;const sk=e.runtime('conversion');
+  const spent=e.spendSkillResourceCosts(s,sk);e.applySkill(s,s,sk,e.createSkillExecutionContext(spent));
+  assert.equal(s.hp,selected?95:90);assert.equal(s.mp,2);
+ }
+});
+
+test('serum channel stops on insufficient HP and interruption; dead field owner never receives stored healing',()=>{
+ const e=serumEngine(),s=e.owner,ally=unit(e,'player',105);ally.hp=10;s.hp=4;
+ e.startCast(s,{type:'skill',target:ally,skill:e.runtime('transfusion')});for(let i=0;i<60;i++)e.updateBattleChannel(s);
+ assert.equal(s.channelAction,null);assert.equal(s.hp,4);assert.equal(ally.hp,10);
+ s.hp=100;e.startCast(s,{type:'skill',target:ally,skill:e.runtime('transfusion')});e.finishBattleChannel(s,'test');
+ for(let i=0;i<180;i++)e.updateBattleChannel(s);assert.equal(s.hp,100);assert.equal(ally.hp,10);
+ unit(e,'enemy',110);s.hp=10;e.applySkill(s,s,e.runtime('barrier'));for(let i=0;i<60;i++)e.updateBattleFields();
+ s.hp=0;s.alive=false;for(let i=0;i<240;i++)e.updateBattleFields();assert.equal(s.hp,0);
+});
+
+test('serum definitions normalize repeatedly without losing optional, pulse, and field settings',()=>{
+ const e=serumEngine(),once=JSON.stringify(e.skillsJson);e.skillsJson=e.normalizeSkillJson(e.skillsJson);assert.equal(JSON.stringify(e.skillsJson),once);
+ assert.equal(e.getSkillsForClass('혈청형').length,11);
+ assert.equal(e.runtime('transfusion').channel.pulseResourceCosts[0].value,5);
+ assert.equal(e.runtime('barrier').actions[0].fieldFollowSource,true);
+});
+
 function engine() {
   const context = {
     window: {}, performance, structuredClone, playerSquad: [], enemySquad: [], projectiles: [],
@@ -921,6 +1197,8 @@ function engine() {
   const uiSource=fs.readFileSync(path.join(__dirname,'..','js/ui.js'),'utf8');
   const portraitStart=uiSource.indexOf('function normalizePortrait(value) {');
   vm.runInContext(uiSource.slice(portraitStart,uiSource.indexOf('\n}',portraitStart)+2),context);
+  const abilityStart=uiSource.indexOf('function getStatAbilityBonus(');
+  vm.runInContext(uiSource.slice(abilityStart,uiSource.indexOf('\n}',abilityStart)+2),context);
   for (const file of ['js/battle-events.js', 'js/skill-channel.js', 'js/skill-passives.js', 'js/skill-effects.js', 'js/skill.js', 'js/rune.js', 'js/entity.js', 'js/battle.js', 'js/record.js', 'js/monster.js']) {
     vm.runInContext(fs.readFileSync(path.join(__dirname, '..', file), 'utf8'), context);
   }
@@ -3011,8 +3289,9 @@ test('medic and serum skill data use the approved channel and result-linked rule
  assert.deepEqual(firstAid.channel,{duration:3,interval:1,interruptOnDamage:false,lockTarget:true,receivedDamagePercent:70});
  assert.equal(firstAid.actions[0].coefficients[0].field,'targetMaxHp');assert.equal(firstAid.actions[0].target,'ally');
  assert.equal(drain.name,'혈청형 · 흡혈');assert.equal(drain.actions[1].coefficients[0].field,'previousActualDamage');assert.equal(drain.actions[1].coefficients[0].value,60);
- assert.equal(donation.name,'혈청형 · 헌혈');assert.equal(donation.channel.duration,5);assert.equal(donation.channel.lockTarget,true);
- assert.equal(donation.actions[1].drainResource,'HP');assert.equal(donation.actions[1].coefficients[0].field,'previousActualHealing');assert.equal(donation.actions[1].coefficients[0].value,30);
+ assert.equal(donation.name,'혈청형 · 헌혈');assert.equal(donation.channel.duration,3);assert.equal(donation.channel.lockTarget,true);
+ assert.deepEqual(donation.channel.pulseResourceCosts,[{resource:'HP',mode:'maxPercent',value:5}]);
+ assert.equal(donation.actions[0].coefficients[0].field,'hpResourceSpent');assert.equal(donation.actions[0].coefficients[0].value,50);
 });
 
 test('actions can exclude their caster from allied target selection',()=>{

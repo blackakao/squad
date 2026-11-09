@@ -16,6 +16,7 @@ function setPortraitPreview(type, dataUrl) {
   const portrait = normalizePortrait(dataUrl);
   preview.src = portrait;
   preview.classList.toggle("hidden", !portrait);
+  if (type === 'character' && typeof renderCharacterIdentity === 'function') renderCharacterIdentity();
 }
 
 function resetPortraitDraft(type, dataUrl = "") {

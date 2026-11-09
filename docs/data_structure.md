@@ -1,5 +1,41 @@
 # 데이터 구조
 
+## 영혼수확자·치명상 전환/형태별 스킬 (2026-11-09)
+
+- 패시브 `passiveTrigger.lethalTransformation`: `{duration,bodyName,bodyReceivedDamagePercent,bodyBasicAttack?,transform}`. duration은 초(최소 1, 기본 10), bodyReceivedDamagePercent 기본 100이다. 액션 없는 상시 패시브로 처리하고 일반 발동 액션과 분리한다.
+- 기존 transform에 선택 `untargetable`, `damageImmune`, `blockHealing`, `basicAttackDisabled`, `countsForDefeat:false`, `movementTarget:injured_ally`, `returnHpPercent`(0~100), `skillReplacements:[{skillId,replacementSkillId}]`를 추가했다. 생략하면 기존 변신 동작이다.
+- 런타임 변신 `lifeCycle:true`는 HP 0 생존과 치명상 중복 진입 방지에 쓰며 해제할 수 없다. 변신 만료 시 returnHpPercent로 HP를 복원한다. 캐릭터에 별도 형태/HP/타이머 필드를 저장하지 않는다.
+- 치환 실행본의 id는 장착한 원래 스킬 ID, formVariantId는 실제 변형 정의 ID다. 쿨다운은 원본 ID 하나를 공유하고 데이터 원본은 변경하지 않는다. 영혼입김 정의는 internal true다. [실제 수치·판정](SKILL_ENGINE.md#영혼수확자치명상-형태-전환-2026-11-09).
+
+## 각질형·시간제 보호막 (2026-11-09)
+
+- `effect.maxStacks`, `stackBonuses.minStacks` 범위를 1~100으로 확장했다. 보정의 선택 필드 `perNStacks`(1~100)는 현재 스택을 N으로 나눈 정수 몫을 곱한다. 생략 시 기존 perStack 동작이다. attack_rate_percent는 -100 이상을 허용하고 최종 배율 0.1 하한을 적용한다.
+- `passiveTrigger.meleeOnly`는 실제 피격 이벤트의 melee 분류를 검사한다. 이벤트 melee는 공격 사거리 1m 이하 적의 직접 피해이며 주기/반사/반격을 제외한다. `sourceEffectIdStacks` 계수는 effectId와 연결한 시전자 중첩을 참조한다. 반사 액션의 reflected 플래그는 정규화·편집에서 보존한다.
+- `effect.mode: barrier`, `value`, `barrierMode: maxPercent|fixed`, `breakSkillId`를 추가했다. 적용 시 대상 최대 HP 비율 또는 고정량을 shieldInitial/shieldRemaining에 저장하고 시간제 효과로 관리한다. 일반 bp/maxBp 필드는 그대로이며 화면/피해 집계는 시간제 잔량을 합산한다. 런타임 잔량은 캐릭터 데이터에 저장하지 않는다.
+- `skill.internal: true`는 반응 전용 스킬을 일반 캐릭터 장착/시전 후보에서 제외한다. 스킬 관리에서 편집 가능하며 보호막이 참조하는 반응 스킬은 UI 삭제를 막는다. `barrier_break` 이벤트는 파괴 반응 실행을 기록한다. [현행 동작](SKILL_ENGINE.md#각질형단계별-스택파괴-반응-보호막-2026-11-09).
+
+캐릭터의 `skillSelections`는 선택형 스킬 ID → 옵션 ID 문자열의 기본 선택 맵입니다. 캐릭터 상세 창에서 저장하며 런타임 생성 시 팀/전투별 선택으로 덮어씁니다. 생략 시 기존 스킬의 기본 옵션을 사용합니다.
+
+## 외부자원 관리 표시 (2026-11-09)
+
+Entity의 선택 불리언 `mainSummon`은 전투 상태창의 주인 아래 표시 여부다. 생략하면 기존 ID별 표시 정책을 유지한다. 신규 관리 분류는 기존 `tags`의 `external:spirit`, `external:beast`, `external:engineer`, `external:puppet`, `external:demon`으로 보존한다. 룬 저장 형식은 변경하지 않는다. [관리 규칙](ENTITIES.md#외부자원-관리-2026-11-09).
+
+## 캐릭터 선택 강화·혈청형 (2026-11-09)
+
+- 스킬 `slot: optional`은 직접 시전하지 않는 선택 강화다. 캐릭터 `skillIds`에 선택한 최대 3개 ID만 기존 기본 스킬 ID와 함께 저장한다. 미선택 항목은 저장하지 않는다. 구형/외부 데이터에 4개 이상 있으면 전투에서 앞의 3개까지만 인정한다.
+- `selectionModifier`의 기존 targetSkillIds·비율 보정에 `castTimeAdd`, `cooldownAdd`(초), `fieldRadiusAdd`(m), `additionalActions`(일반 액션 배열)를 추가했다. 기본 가산 0/배열 빈 값이며 원본을 변경하지 않는다.
+- `channel.pulseResourceCosts`: 일반 `{resource,mode,value}` 배열, 매회 지불 후 그 회차 실행 컨텍스트의 resourceSpent에 전달한다. 생략/빈 배열은 이전 채널 동작이다.
+- 액션 `noDamageSeconds`(기본 0), `fieldFollowSource`(기본 false), `fieldStoreHpPercent`(기본 0). 필드별 런타임 storedHp와 유닛 undamagedTicks는 전투 상태이며 캐릭터 저장 필드가 아니다. 계수 `maxHp`를 추가했다. [동작과 수치](SKILL_ENGINE.md#혈청형-개편캐릭터-선택-강화-2026-11-09).
+
+## 정령 생산·소환 비용 확장 (2026-11-09)
+
+- `passiveTrigger.repeatInterval`: 생존·참전 중 반복 액션 발동 주기(초), 0/생략은 비활성. 전투 진입 이벤트와 별도로 실행한다.
+- `skill.summonCost`: `{entityId, choiceSkillId, count}`. 선택 스킬이 있으면 선택된 패시브의 summon_entity Entity를 재료로 해석한다. 시전 가능 검사와 완료 시 원자적 소모에 사용한다.
+- 소환 액션 `entityChoiceSkillId`는 종류 선택을 연결하며 `entityId`는 기본값이다. `limitScope: entity`는 자신이 생성한 동일 Entity를 모든 소환 스킬에 걸쳐 합산한다. 기본 skill은 이전처럼 소환 스킬별 집계다.
+- Entity `skillIds`(선택 스킬 ID 배열), `basicAttackDisabled`(선택 boolean, 기본 false). 스킬 삭제/Entity 저장 시 참조를 검증한다. `ownerMagic` 계수는 현재 소환자 마력이다.
+- `effect.mode: attribute`/`stat: str|int`는 기본 능력치 가산이며 stackBonuses에도 사용한다. `effect.dispelKinds: [buff,state]`는 통합 검사, `dispelLimit`(0/생략 전체)은 대상별 해제 수 제한이다. [동작 계약](SKILL_ENGINE.md#정령술사-개편-2026-11-09).
+
+
 ## 모든 시전시간 보정 (2026-11-07)
 
 - `effect.mode: "cast_time_percent"`, `stat: "castSpeed"`, 유한 `value >= -100`. 음수는 단축, 양수는 증가다. `stackBonuses`에도 동일 모드/능력치 조합을 저장한다.
@@ -37,8 +73,8 @@
 
 ### 수도승 중첩 보정 필드 (2026-11-07)
 
-- 버프 `effect.mode: attack_rate_percent`, `stat: attackSpeed`, `value`는 음수 없는 공격속도 증가율이다. 기존 공격 간격 percent 보정과 구분한다.
-- 선택 배열 `effect.stackBonuses`(기본 빈 배열, 최대 20개): `{ stat, mode, value, minStacks, perStack }`. minStacks는 1~20 정수, perStack 기본 false다. 기준 중첩 이상에서 전체 중첩 수를 곱하거나 한 번 적용하며 별도 효과 인스턴스·타이머를 만들지 않는다.
+- 버프 `effect.mode: attack_rate_percent`, `stat: attackSpeed`, `value`는 공격속도 증감률이다. 2026-11-09부터 음수(-100 이상)도 지원한다. 기존 공격 간격 percent 보정과 구분한다.
+- 선택 배열 `effect.stackBonuses`(기본 빈 배열, 최대 20개): `{ stat, mode, value, minStacks, perStack }`. minStacks는 1~100 정수, perStack 기본 false다. 기준 중첩 이상에서 전체 중첩 수를 곱하거나 한 번 적용하며 별도 효과 인스턴스·타이머를 만들지 않는다.
 - 연환은 `skill_class_ascetic_chain`의 단일 `ascetic_chain` 버프다. 본체는 atk +1%/중첩, 보정은 공격속도 +2%/중첩과 10중첩 이동속도 +20%다. 최대 중첩 10·갱신 5초.
 - 퇴마공 `skill_class_ascetic_exorcism`은 기존 `combo` 스키마로 3단계를 저장한다. 수도승 캐릭터의 기존 데이터에 두 스킬 ID만 추가했으며 저장 API는 변경하지 않았다.
 - `effectAttackRateMultiplier`는 독립 무기 주기에도 적용하기 위한 전투 파생값이며 사용자 JSON에 저장하지 않는다.

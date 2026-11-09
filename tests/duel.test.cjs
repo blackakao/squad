@@ -5,6 +5,13 @@ const fs = require('node:fs');
 const path = require('node:path');
 const {SOURCES, ROOT, loadData} = require('../balance/simulator/engine.cjs');
 
+test('spirit affinity exposes three alternatives and resolves one independent passive per side',()=>{
+ const run=fixture();run(`globalThis.spiritId=characterJson.findIndex(c=>c.skillIds.includes('skill_class_spirit_choice'));duelCharacterIds={player:[spiritId],enemy:[spiritId]};duelSkillChoices.player[spiritId]={'skill_class_spirit_choice':'destroy'};`);
+ const html=run('renderDuelSkillChoices()');assert.equal((html.match(/<select/g)||[]).length,2);assert.equal((html.match(/<option/g)||[]).length,6);
+ assert.equal(run(`resolveSelectedSkillIds(characterJson[spiritId].skillIds,duelSkillChoices.player[spiritId]).includes('skill_class_spirit_passive_destroy')`),true);
+ assert.equal(run(`resolveSelectedSkillIds(characterJson[spiritId].skillIds,duelSkillChoices.enemy[spiritId]).includes('skill_class_spirit_passive_heal')`),true);
+});
+
 test('rune choices appear in formation summaries for both sides and preserve independent selections',()=>{
  const run=fixture();run(`runesJson=data.runes.map(normalizeRune);globalThis.runeId=characterJson.findIndex(c=>c.skillIds.includes('skill_class_rune_master'));duelCharacterIds={player:[runeId],enemy:[runeId]};`);
  const html=run('renderDuelSkillChoices()');assert.equal((html.match(/rune-choice-panel/g)||[]).length,2);assert.equal((html.match(/<select/g)||[]).length,6);
