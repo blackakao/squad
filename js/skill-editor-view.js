@@ -94,6 +94,7 @@ function openSkillModal(index = "") {
   skillComboCooldownFieldEl.classList.toggle("hidden",!combo);
   skillCastTimeEl.value = skill?.castTime ?? "";
   skillCastReceivedDamagePercentEl.value = skill?.castReceivedDamagePercent ?? 100;
+  document.getElementById("skillExecutionRules").value=JSON.stringify(normalizeSkillExecutionRules(skill),null,2);
   renderPassiveTriggerForm(skill);
   document.getElementById("skillOptionalModifier").value=JSON.stringify(skill?.selectionModifier ?? {targetSkillIds:[]},null,2);
   renderSkillChoiceOptions(skill?.choice);
@@ -120,10 +121,11 @@ function renderSkillChoiceOptions(choice = {}) {
   const normalized = normalizeSkillChoice(choice);
   const rows = normalized.options.length ? normalized.options : [{id:"option_1",label:"선택지 1",skillId:""}];
   document.getElementById("skillChoiceOptions").innerHTML = rows.map((option, index) => `
-    <div class="skill-choice-option-row">
+    <div class="skill-choice-option-row" data-required-skill-id="${escapeHtml(option.requiredSkillId ?? '')}">
       <label><input type="radio" name="skillChoiceDefault" value="${escapeHtml(option.id)}" ${option.id === normalized.defaultOptionId || (!normalized.defaultOptionId && index === 0) ? "checked" : ""}> 기본</label>
       <input class="skill-choice-label" value="${escapeHtml(option.label)}" placeholder="선택지 이름">
       <select class="skill-choice-skill"><option value="">적용 스킬 선택</option>${getChoiceTargetSkillOptions(option.skillId)}</select>
+      <label>해금에 필요한 선택 강화<select class="skill-choice-required-skill"><option value="">조건 없음</option>${skillsJson.filter(skill=>skill.slot === "optional").map(skill=>`<option value="${escapeHtml(skill.id)}" ${option.requiredSkillId === skill.id ? "selected" : ""}>${escapeHtml(skill.name)}</option>`).join("")}</select></label>
       <button type="button" onclick="this.closest('.skill-choice-option-row').remove()">삭제</button>
       <input class="skill-choice-id" type="hidden" value="${escapeHtml(option.id)}">
     </div>`).join("");
@@ -139,6 +141,7 @@ function addSkillChoiceOptionRow() {
 function readSkillChoiceForm(strict = true) {
   const rows = [...document.querySelectorAll("#skillChoiceOptions .skill-choice-option-row")];
   const options = rows.map((row, index) => ({
+    requiredSkillId:row.querySelector('.skill-choice-required-skill')?.value ?? row.dataset.requiredSkillId ?? "",
     id: row.querySelector(".skill-choice-id").value || `option_${index + 1}`,
     label: row.querySelector(".skill-choice-label").value.trim(),
     skillId: row.querySelector(".skill-choice-skill").value
@@ -189,7 +192,7 @@ function renderSkillActionRow(action, index) {
   }
   const targetOptions = getActionTargetsForType(action.type);
   return `
-    <div class="skill-action-row" data-action-index="${index}" data-reflected="${action.reflected === true}">
+    <div class="skill-action-row" data-action-index="${index}" data-reflected="${action.reflected === true}" data-distance-source="${action.distanceSource ?? ''}" data-distance-add="${action.distanceAdd ?? 0}" data-trigger-event="${escapeHtml(action.triggerEvent ?? '')}" data-target-previous-damage="${action.targetPreviousDamage === true}">
       <label>무피해 유지 조건 (초)<input class="skill-action-undamaged" type="number" min="0" step="0.1" value="${action.noDamageSeconds ?? 0}"></label>
       ${action.type === "create_field" ? `<label>대상 1체·매회 최대 HP 축적 (%)<input class="skill-action-store-hp" type="number" min="0" step="0.1" value="${action.fieldStoreHpPercent ?? 0}"></label><label><input class="skill-action-follow-source" type="checkbox" ${action.fieldFollowSource ? "checked" : ""}>시전자 추적 · 만료 시 축적량 회복</label>` : ""}
       <div class="skill-action-card-header">
@@ -642,6 +645,10 @@ function readSkillActionsFromForm() {
     const range = readSkillRangeFromRow(row);
     return normalizeSkillAction({
       reflected:row.dataset.reflected === "true",
+      distanceSource:row.dataset.distanceSource ?? "",
+      distanceAdd:Number(row.dataset.distanceAdd) || 0,
+      triggerEvent:row.dataset.triggerEvent ?? "",
+      targetPreviousDamage:row.dataset.targetPreviousDamage === "true",
       noDamageSeconds:Number(row.querySelector(".skill-action-undamaged")?.value || 0),
       fieldStoreHpPercent:Number(row.querySelector(".skill-action-store-hp")?.value || 0),
       fieldFollowSource:row.querySelector(".skill-action-follow-source")?.checked === true,

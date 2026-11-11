@@ -6,7 +6,7 @@
     "handType": "oneHand",
     "attackRange": 1,
     "attackSpeed": 2,
-    "castSpeed": 0.5,
+    "castSpeed": 0.1,
     "attackType": "physical",
     "slotType": "both"
   },
@@ -27,8 +27,8 @@
     "label": "한손둔기",
     "handType": "oneHand",
     "attackRange": 1,
-    "attackSpeed": 2.5,
-    "castSpeed": 1.5,
+    "attackSpeed": 2,
+    "castSpeed": 0.7,
     "attackType": "physical",
     "slotType": "both"
   },
@@ -39,7 +39,7 @@
     "handType": "twoHand",
     "attackRange": 1,
     "attackSpeed": 4,
-    "castSpeed": 1.5,
+    "castSpeed": 1.2,
     "attackType": "physical",
     "slotType": "mainOnly"
   },
@@ -100,17 +100,6 @@
   },
   {
     "type": "weapon",
-    "key": "주먹구",
-    "label": "주먹구",
-    "handType": "oneHand",
-    "attackRange": 1,
-    "attackSpeed": 1,
-    "castSpeed": 0.5,
-    "attackType": "physical",
-    "slotType": "both"
-  },
-  {
-    "type": "weapon",
     "key": "단검",
     "label": "단검",
     "handType": "oneHand",
@@ -119,26 +108,6 @@
     "castSpeed": 0.2,
     "attackType": "physical",
     "slotType": "both"
-  },
-  {
-    "type": "armor",
-    "key": "plate",
-    "label": "판금"
-  },
-  {
-    "type": "armor",
-    "key": "chain",
-    "label": "사슬"
-  },
-  {
-    "type": "armor",
-    "key": "leather",
-    "label": "가죽"
-  },
-  {
-    "type": "armor",
-    "key": "cloth",
-    "label": "천"
   },
   {
     "type": "weapon",
@@ -194,5 +163,25 @@
     "castSpeed": 1.5,
     "attackType": "physical",
     "slotType": "mainOnly"
+  },
+  {
+    "type": "armor",
+    "key": "plate",
+    "label": "판금"
+  },
+  {
+    "type": "armor",
+    "key": "chain",
+    "label": "사슬"
+  },
+  {
+    "type": "armor",
+    "key": "leather",
+    "label": "가죽"
+  },
+  {
+    "type": "armor",
+    "key": "cloth",
+    "label": "천"
   }
 ]

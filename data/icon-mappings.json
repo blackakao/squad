@@ -185,7 +185,7 @@
   },
   {
     "group": "weapon",
-    "key": "주먹구",
+    "key": "glove",
     "label": "",
     "icon": "assets/images/icons/weapon-20261010222714083576.png",
     "removeBackground": true,
@@ -195,8 +195,80 @@
     "group": "weapon",
     "key": "twoHandSword",
     "label": "",
-    "icon": "assets/images/icons/weapon-twohandsword-20261010223010680228.png",
-    "removeBackground": true,
+    "icon": "assets/images/icons/weapon-twohandsword-20261112.png",
+    "removeBackground": false,
+    "backgroundTolerance": 48
+  },
+  {
+    "group": "weapon",
+    "key": "단검",
+    "label": "",
+    "icon": "assets/images/icons/weapon-dagger-20261112.png",
+    "removeBackground": false,
+    "backgroundTolerance": 48
+  },
+  {
+    "group": "weapon",
+    "key": "crossbow",
+    "label": "",
+    "icon": "assets/images/icons/weapon-crossbow-20261112.png",
+    "removeBackground": false,
+    "backgroundTolerance": 48
+  },
+  {
+    "group": "weapon",
+    "key": "whip",
+    "label": "",
+    "icon": "assets/images/icons/weapon-whip-20261112.png",
+    "removeBackground": false,
+    "backgroundTolerance": 48
+  },
+  {
+    "group": "weapon",
+    "key": "oneHandAxe",
+    "label": "",
+    "icon": "assets/images/icons/weapon-onehandaxe-20261112.png",
+    "removeBackground": false,
+    "backgroundTolerance": 48
+  },
+  {
+    "group": "weapon",
+    "key": "twoHandAxe",
+    "label": "",
+    "icon": "assets/images/icons/weapon-twohandaxe-20261112.png",
+    "removeBackground": false,
+    "backgroundTolerance": 48
+  },
+  {
+    "group": "armorBottom",
+    "key": "plate",
+    "label": "",
+    "icon": "assets/images/icons/armor-plate-bottom-20261112.png",
+    "removeBackground": false,
+    "backgroundTolerance": 48
+  },
+  {
+    "group": "armorBottom",
+    "key": "chain",
+    "label": "",
+    "icon": "assets/images/icons/armor-chain-bottom-20261112.png",
+    "removeBackground": false,
+    "backgroundTolerance": 48
+  },
+  {
+    "group": "armorBottom",
+    "key": "leather",
+    "label": "",
+    "icon": "assets/images/icons/armor-leather-bottom-20261112.png",
+    "removeBackground": false,
+    "backgroundTolerance": 48
+  },
+  {
+    "group": "armorBottom",
+    "key": "cloth",
+    "label": "",
+    "icon": "assets/images/icons/armor-cloth-bottom-20261112.png",
+    "removeBackground": false,
     "backgroundTolerance": 48
   }
 ]

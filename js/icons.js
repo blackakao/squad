@@ -1,5 +1,5 @@
 // Display mappings are independent of gameplay identifiers and source names.
-const ICON_GROUPS = { role: "잡 클래스", slot: "장비 슬롯", weapon: "무기 카테고리", armor: "방어구 카테고리", skill: "스킬 유형", faction: "진영" };
+const ICON_GROUPS = { role: "잡 클래스", slot: "장비 슬롯", weapon: "무기 카테고리", armor: "방어구 상의", armorBottom: "방어구 하의", skill: "스킬 유형", faction: "진영" };
 let iconMappings = [];
 let iconMappingsReady = false;
 let iconSaving = false;
@@ -14,7 +14,7 @@ function iconTargets(group) {
   if (group === "role") return ROLES.map(key => ({ key, label: getRoleLabel(key) }));
   if (group === "slot") return EQUIPMENT_SLOTS;
   if (group === "weapon") return getWeaponCategories();
-  if (group === "armor") return getArmorCategories();
+  if (group === "armor" || group === "armorBottom") return getArmorCategories();
   if (group === "skill") return SKILL_SLOT_OPTIONS;
   if (group === "faction") return factionsJson.map(key => ({ key, label: key }));
   return [];

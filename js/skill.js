@@ -15,7 +15,7 @@ const MOVE_ACTION_TYPES = ["Dash", "Teleport", "Knockback", "Pull", "Push"];
 const MOVE_PLACEMENTS = ["target", "behind"];
 const RANGE_MODES = ["mainWeapon", "custom"];
 const COEFFICIENT_TYPES = ["fixed", "calculated"];
-const COEFFICIENT_FIELDS = ["sourceEffectIdStacks", "maxHp", "ownerMagic", "missingMp", "str", "vit", "agi", "focus", "int", "wis", "hp", "targetMaxHp", "mp", "st", "bp", "atk", "magic", "defense", "resistance", "actualDamageTotal", "moveDistanceTotal", "targetEffectStacks", "targetEffectIdStacks", "targetEffectTagStacks", "ownedSummonCount", "triggerActualDamage", "triggerActualAmount", "triggerMpSpent", "magicPerMovedMeter", "customResourceCurrent", "previousActualDamage", "executionActualDamage", "previousActualHealing", "executionActualHealing", "previousResourceDrained", "executionResourceDrained", "resourceSpentTotal", "hpResourceSpent", "mpResourceSpent", "stResourceSpent", "bpResourceSpent"];
+const COEFFICIENT_FIELDS = ["sourceEffectIdStacks", "maxHp", "ownerMagic", "missingMp", "str", "vit", "agi", "focus", "int", "wis", "hp", "targetMaxHp", "mp", "st", "bp", "atk", "magic", "defense", "resistance", "actualDamageTotal", "moveDistanceTotal", "targetEffectStacks", "targetEffectIdStacks", "targetEffectTagStacks", "ownedSummonCount", "triggerActualDamage", "triggerActualAmount", "triggerMpSpent", "previousBarrierCreated", "previousMoveDistance", "magicPerMovedMeter", "customResourceCurrent", "previousActualDamage", "executionActualDamage", "previousActualHealing", "executionActualHealing", "previousResourceDrained", "executionResourceDrained", "resourceSpentTotal", "hpResourceSpent", "mpResourceSpent", "stResourceSpent", "bpResourceSpent"];
 const COEFFICIENT_CALCS = ["flat", "percent"];
 const RESOURCE_COST_MODES = ["fixed", "maxPercent", "currentPercent"];
 const TRANSFORM_STATS = ["atk","magic","defense","resistance","speed","attackRange","attackSpeed","castSpeed"];
@@ -92,6 +92,8 @@ const COEFFICIENT_FIELD_LABELS = {
   triggerMpSpent: "발동 시전의 실제 MP 소모량",
   missingMp: "현재 부족한 MP",
   ownerMagic:"소환자 현재 마력",
+  previousBarrierCreated:"직전 액션에서 생성한 보호막 수치",
+  previousMoveDistance:"직전 이동 액션의 실제 이동 거리(m)",
   magicPerMovedMeter: "마력 × 직전 이동 액션의 실제 이동 거리(m)",
   customResourceCurrent: "지정 커스텀 자원의 현재값",
   previousActualDamage: "직전 액션의 실제 피해량",
@@ -272,17 +274,48 @@ function isChoiceSkill(skillOrSlot) {
   return slot === "choice_team" || slot === "choice_prebattle";
 }
 
+function normalizeSkillExecutionRules(skill={}) {
+  return {...(skill.summonVariant ? {summonVariant:{entityId:String(skill.summonVariant.entityId),absentSkillId:String(skill.summonVariant.absentSkillId)}} : {}),...(skill.activation ? {activation:{selfHpAtMost:Math.max(0,Math.min(100,Number(skill.activation.selfHpAtMost ?? 100))),nearbyEnemyRadius:Math.max(0,Number(skill.activation.nearbyEnemyRadius) || 0)}} : {}),
+    ...(skill.summonRequirement ? {summonRequirement:{ownedSummonEntityId:String(skill.summonRequirement.ownedSummonEntityId),ownedSummonCondition:skill.summonRequirement.ownedSummonCondition === "alive" ? "alive" : "absent"}} : {}),
+    ...(skill.selfDestruct === true ? {selfDestruct:true} : {}),...(skill.revivalOnly === true ? {revivalOnly:true} : {}),
+    ...(Array.isArray(skill.cooldownReductions) && skill.cooldownReductions.length ? {cooldownReductions:skill.cooldownReductions.filter(row=>row?.skillId).map(row=>({skillId:String(row.skillId),seconds:Math.max(0,Number(row.seconds) || 0)}))} : {})};
+}
+
+function normalizeRevival(config={}) {
+  return {delay:Math.max(0,Number(config.delay ?? 10)),position:config.position === "death" ? "death" : "start",countsWhileWaiting:config.countsWhileWaiting !== false,
+    hpPercent:Math.max(1,Math.min(100,Number(config.hpPercent ?? 100))),mpPercent:Math.max(0,Math.min(100,Number(config.mpPercent ?? 100))),stPercent:Math.max(0,Math.min(100,Number(config.stPercent ?? 100))),restoreBaseBp:config.restoreBaseBp === true};
+}
+
+function canActivateSkill(unit,skill) {
+  if (skill?.revivalOnly) return false;
+  if (skill?.summonRequirement && !meetsOwnedSummonCondition(unit,skill.summonRequirement)) return false;
+  const condition=skill?.activation;
+  if (!condition) return true;
+  if (!unit.alive || !(unit.maxHp>0) || unit.hp/unit.maxHp*100>condition.selfHpAtMost) return false;
+  return !(condition.nearbyEnemyRadius>0) || (unit.side === "enemy" ? playerSquad : enemySquad).some(target=>target.alive && !target.removed && isUnitBattleTargetable(target) && !(target.suspendedTicks>0) && distance(unit,target)<=condition.nearbyEnemyRadius*ATTACK_RANGE_UNIT);
+}
+
 function normalizeSelectionModifier(modifier = {}) {
   const percent = (key, fallback = 100) => {
     const value = Number(modifier?.[key]);
     return Number.isFinite(value) ? Math.max(0, value) : fallback;
   };
   return {
+    requiredChoiceSkillId:String(modifier.requiredChoiceSkillId ?? ""),
+    requiredChoiceOptionId:String(modifier.requiredChoiceOptionId ?? ""),
+    skillModifiers:(Array.isArray(modifier.skillModifiers) ? modifier.skillModifiers : []).map(normalizeSelectionModifier),
     targetSkillIds:[...new Set((Array.isArray(modifier?.targetSkillIds) ? modifier.targetSkillIds : []).map(String).filter(Boolean))],
     resourceTypes:[...new Set((Array.isArray(modifier?.resourceTypes) ? modifier.resourceTypes : []).map(value=>normalizeResourceReference(value)).filter(Boolean))],
+    resourceCostAdd:Number(modifier.resourceCostAdd) || 0,
+    revivalDelayAdd:Number(modifier.revivalDelayAdd) || 0,
+    revivalPosition:["start","death"].includes(modifier.revivalPosition) ? modifier.revivalPosition : "",
+    selfHpAtMost:modifier.selfHpAtMost == null ? null : Math.max(0,Math.min(100,Number(modifier.selfHpAtMost))),
+    cooldownReductions:normalizeSkillExecutionRules(modifier).cooldownReductions ?? [],
     castTimeAdd:Number(modifier.castTimeAdd) || 0,
     cooldownAdd:Number(modifier.cooldownAdd) || 0,
     fieldRadiusAdd:Number(modifier.fieldRadiusAdd) || 0,
+    areaAdd:Number(modifier.areaAdd) || 0,
+    knockbackDistanceAdd:Number(modifier.knockbackDistanceAdd) || 0,
     additionalActions:(Array.isArray(modifier.additionalActions) ? modifier.additionalActions : []).map(normalizeSkillAction),
     castTimePercent:percent("castTimePercent"),
     resourceCostPercent:percent("resourceCostPercent"),
@@ -297,14 +330,21 @@ function normalizeSkillChoice(choice = {}) {
   const options = (Array.isArray(choice.options) ? choice.options : []).map((option, index) => ({
     id: String(option?.id ?? `option_${index + 1}`),
     label: String(option?.label ?? "").trim(),
+    requiredSkillId:String(option?.requiredSkillId ?? "").trim(),
     skillId: String(option?.skillId ?? "").trim()
   })).filter(option => option.label && option.skillId);
   const requested = String(choice.defaultOptionId ?? "");
   return { defaultOptionId: options.some(option => option.id === requested) ? requested : (options[0]?.id ?? ""), options };
 }
 
-function getChoiceSkillOption(skill, optionId = "") {
-  const choice = normalizeSkillChoice(skill?.choice);
+function getAvailableSkillChoice(skill, skillIds = []) {
+  const choice=normalizeSkillChoice(skill?.choice);
+  const selected=new Set(limitOptionalSkillIds(skillIds));
+  return {...choice,options:choice.options.filter(option=>!option.requiredSkillId || selected.has(option.requiredSkillId))};
+}
+
+function getChoiceSkillOption(skill, optionId = "", skillIds = []) {
+  const choice = getAvailableSkillChoice(skill,skillIds);
   return choice.options.find(option => option.id === optionId)
     ?? choice.options.find(option => option.id === choice.defaultOptionId)
     ?? choice.options[0] ?? null;
@@ -324,7 +364,7 @@ function resolveSelectedSkillIds(skillIds, selections = {}) {
     if (!skill) return;
     if (!isChoiceSkill(skill)) { resolved.push(skillId); return; }
     const nextSeen = new Set(seen); nextSeen.add(skillId);
-    const option = getChoiceSkillOption(skill, selections?.[skillId]);
+    const option = getChoiceSkillOption(skill, selections?.[skillId],skillIds);
     if (option) visit(option.skillId, nextSeen);
   };
   limitOptionalSkillIds(skillIds).forEach(id => visit(String(id)));
@@ -365,6 +405,9 @@ function getUnsupportedActionNames(skill) {
 }
 
 function isSkillExecutable(skill) {
+  if (skill?.revivalOnly) return true;
+  if (skill?.slot === "passive" && skill.selectionModifier && !skill.actions?.length) return true;
+  if (skill?.slot === "passive" && skill.passiveTrigger?.revival) return isPassiveTriggerConfigured(skill);
   if (skill?.slot === "optional") return Boolean(skill.selectionModifier);
   if (isChoiceSkill(skill)) return Boolean(getChoiceSkillOption(skill));
   if (skill?.slot === "passive" && skill.passiveTrigger?.lethalTransformation) return isPassiveTriggerConfigured(skill) && isTransformationConfigured(skill.passiveTrigger.lethalTransformation.transform);
@@ -607,7 +650,9 @@ function normalizeSkillAction(action = {}) {
     transferDrainedResource:action.transferDrainedResource === true,
     pathWidth:Math.max(.1,Number(action.pathWidth) || 1),
     suspensionEffectId:String(action.suspensionEffectId ?? "").trim(),
+    triggerEvent:String(action.triggerEvent ?? ""),
     requirePreviousDamage:action.requirePreviousDamage === true,
+    targetPreviousDamage:action.targetPreviousDamage === true,
     targetCooldown: normalizeSkillCooldown(action.targetCooldown),
     targetCooldownScope: action.targetCooldownScope === "global" ? "global" : "caster",
     targetCooldownEffectId: String(action.targetCooldownEffectId ?? "").trim(),
@@ -681,6 +726,8 @@ function normalizeSkillAction(action = {}) {
     moveType: type === "move"
       ? MOVE_ACTION_TYPES.includes(moveTypeValue) ? moveTypeValue : "Dash"
       : ACTION_MOVE_TYPES.includes(moveTypeValue) ? moveTypeValue : "Walk",
+    distanceSource:action.distanceSource === "previousMoveDistance" ? "previousMoveDistance" : "",
+    distanceAdd:Number(action.distanceAdd) || 0,
     movePlacement: MOVE_PLACEMENTS.includes(action.movePlacement ?? action.move_placement) ? (action.movePlacement ?? action.move_placement) : "target",
     moveSpeed: Number.isFinite(moveSpeedValue) ? Math.max(0, moveSpeedValue) : 1,
     distance: type === "move"
@@ -751,6 +798,7 @@ function normalizeSkillJson(skills) {
       ...(typeof skill?.icon === 'string' && skill.icon ? {icon: skill.icon} : {}),
       description: String(skill?.description ?? ""),
       ...(skill?.internal === true ? {internal:true} : {}),
+      ...normalizeSkillExecutionRules(skill),
       slot: normalizeSkillSlot(String(skill?.slot ?? "active").trim()),
       cooldown: normalizeSkillCooldown(skill?.cooldown ?? skill?.reuseCooldown ?? skill?.reuse_cooldown),
       castTime: normalizeSkillCastTime(skill?.castTime),
@@ -763,7 +811,7 @@ function normalizeSkillJson(skills) {
       ...(normalizePassiveConversions(skill?.passiveConversions) ? {passiveConversions:normalizePassiveConversions(skill.passiveConversions)} : {}),
       ...(normalizeSkillCombo(skill?.combo) ? {combo:normalizeSkillCombo(skill.combo)} : {}),
       resourceCosts: normalizeSkillResourceCosts(skill),
-      actions: isChoiceSkill(skill?.slot) || skill?.selectionModifier || (skill?.slot === "passive" && (normalizePassiveTrigger(skill?.passiveTrigger)?.damageMultiplierPercent != null || skill?.passiveTrigger?.lethalTransformation))
+      actions: skill?.revivalOnly || skill?.passiveTrigger?.revival || isChoiceSkill(skill?.slot) || (skill?.selectionModifier && !skill?.actions?.length) || (skill?.slot === "passive" && (normalizePassiveTrigger(skill?.passiveTrigger)?.damageMultiplierPercent != null || skill?.passiveTrigger?.lethalTransformation))
         ? [] : (Array.isArray(skill?.actions) && skill.actions.length ? skill.actions.map(normalizeSkillAction) : [createDefaultAction()])
     }))
     .filter(skill => skill.id && skill.name);
@@ -846,7 +894,7 @@ function getItemSkillTargets(skill) {
     const prefix = `${i+1}. ${ACTION_TYPE_LABELS[action.type] ?? action.type}`;
     const signature = JSON.stringify(action);
     const valueTypes = ["deal_damage","heal","drain_resource"];
-    if (valueTypes.includes(action.type) || (action.type === "create_field" && valueTypes.includes(action.fieldEffect))) {
+    if (valueTypes.includes(action.type) || (action.type === "add_buff" && action.effect?.mode === "barrier" && action.effect.barrierMode === "coefficient") || (action.type === "create_field" && valueTypes.includes(action.fieldEffect))) {
       (action.coefficients ?? []).forEach((coefficient,j) => add(["actions",i,"coefficients",j,"value"],
         `${prefix} · 계수 ${j+1} (${formatCoefficientSummary(coefficient)})`, signature, -Infinity));
     }
@@ -884,9 +932,11 @@ function getSelectedSkillModifiers(unit, skill) {
   if (!targetId) return [];
   const selected=limitOptionalSkillIds(unit?.skillIds).map(getSkillById);
   return [...selected.filter(skill=>skill?.slot === "optional").map(skill=>skill.selectionModifier),...selected.filter(isChoiceSkill).map(choiceSkill=>{
-    const option=getChoiceSkillOption(choiceSkill,unit?.skillSelections?.[choiceSkill.id]);
+    const option=getChoiceSkillOption(choiceSkill,unit?.skillSelections?.[choiceSkill.id],unit?.skillIds);
     return option ? getSkillById(option.skillId)?.selectionModifier : null;
-  })].filter(modifier=>modifier && (!modifier.targetSkillIds.length || modifier.targetSkillIds.includes(targetId)));
+  })].filter(Boolean).flatMap(modifier=>[modifier,...(modifier.skillModifiers ?? [])]).filter(modifier=>
+    (!modifier.targetSkillIds.length || modifier.targetSkillIds.includes(targetId)) && (!modifier.requiredChoiceSkillId ||
+      (selected.some(skill=>skill?.id === modifier.requiredChoiceSkillId) && getChoiceSkillOption(getSkillById(modifier.requiredChoiceSkillId),unit?.skillSelections?.[modifier.requiredChoiceSkillId],unit?.skillIds)?.id === modifier.requiredChoiceOptionId)));
 }
 
 function getRuntimeSelectionSkill(unit, skill) {
@@ -901,13 +951,14 @@ function getRuntimeSelectionSkill(unit, skill) {
   result.resourceCosts=(result.resourceCosts ?? []).map(cost=>{
     const percent=modifiers.reduce((value,modifier)=>modifier.resourceTypes.length && !modifier.resourceTypes.includes(cost.resource)
       ? value : value*modifier.resourceCostPercent/100,100);
-    return {...cost,value:Math.max(0,cost.value*percent/100)};
+    return {...cost,value:Math.max(0,cost.value*percent/100+modifiers.reduce((sum,m)=>sum+(!m.resourceTypes.length || m.resourceTypes.includes(cost.resource) ? m.resourceCostAdd : 0),0))};
   });
   result.actions=(result.actions ?? []).map(action=>{
     const next=structuredClone(action);
     const coefficientPercent=multiply("coefficientPercent");
     next.coefficients=(next.coefficients ?? []).map(coefficient=>({...coefficient,value:coefficient.value*coefficientPercent/100}));
-    if (next.area > 0) next.area*=multiply("areaPercent")/100;
+    if (next.area > 0) next.area=next.area*multiply("areaPercent")/100+modifiers.reduce((sum,m)=>sum+m.areaAdd,0);
+    if (next.type === "move" && next.moveType === "Knockback") next.distanceAdd=(next.distanceAdd || 0)+modifiers.reduce((sum,m)=>sum+m.knockbackDistanceAdd,0);
     if (next.type === "create_field") {
       const radiusAdd=modifiers.reduce((sum,m)=>sum+m.fieldRadiusAdd,0);
       next.fieldRadius=Math.max(0,next.fieldRadius+radiusAdd);
@@ -918,6 +969,14 @@ function getRuntimeSelectionSkill(unit, skill) {
     if (splashPercent > 0 && splashRadius > 0) { next.splashPercent=splashPercent;next.splashRadius=splashRadius; }
     return next;
   });
+  if (result.combo) result.combo.stages=result.combo.stages.map(stage=>({...stage,actions:getRuntimeSelectionSkill(unit,{...skill,combo:null,actions:stage.actions}).actions}));
+  if (result.passiveTrigger?.revival) {
+    result.passiveTrigger.revival.delay=Math.max(0,result.passiveTrigger.revival.delay+modifiers.reduce((sum,m)=>sum+m.revivalDelayAdd,0));
+    for (const m of modifiers) if(m.revivalPosition) result.passiveTrigger.revival.position=m.revivalPosition;
+  }
+  if (result.activation) for(const m of modifiers) if(m.selfHpAtMost != null) result.activation.selfHpAtMost=m.selfHpAtMost;
+  const reductions=modifiers.flatMap(m=>m.cooldownReductions);
+  if (reductions.length) result.cooldownReductions=[...(result.cooldownReductions ?? []),...reductions];
   result.actions.push(...modifiers.flatMap(modifier=>modifier.additionalActions).map(action=>structuredClone(action)));
   return result;
 }
@@ -971,7 +1030,7 @@ function getEquippedSkills(unit) {
   const equippedIds=transform?.skillIds?.length ? transform.skillIds : unit?.skillIds;
   const equipped = resolveSelectedSkillIds(equippedIds, unit?.skillSelections)
     .map(getSkillById)
-    .filter(skill => skill && !isDefaultSkill(skill.id) && skill.slot !== "passive" && skill.slot !== "optional" && !skill.internal && isSkillExecutable(skill) && !isUnitSkillDisabled(unit,skill));
+    .filter(skill => skill && !isDefaultSkill(skill.id) && skill.slot !== "passive" && skill.slot !== "optional" && !skill.internal && !skill.revivalOnly && isSkillExecutable(skill) && !isUnitSkillDisabled(unit,skill));
   const copied = (Array.isArray(unit?.runtimeCopiedSkills) ? unit.runtimeCopiedSkills : [])
     .filter(skill => skill && isSkillExecutable(skill) && !isUnitSkillDisabled(unit,skill));
   return [...equipped, ...copied].map(skill => getRuntimeSelectionSkill(unit,getRuntimeItemSkill(unit,getFormSkill(unit,skill))));
@@ -1149,7 +1208,7 @@ function normalizeSummonCost(cost={}) {
 
 function getChoiceSummonEntityId(unit,choiceSkillId,fallback="") {
   const choice=getSkillById(choiceSkillId);
-  const option=choice && getChoiceSkillOption(choice,unit.skillSelections?.[choiceSkillId]);
+  const option=choice && getChoiceSkillOption(choice,unit.skillSelections?.[choiceSkillId],unit.skillIds);
   return getSkillById(option?.skillId)?.actions?.find(action=>action.type === "summon_entity")?.entityId || fallback;
 }
 
@@ -1168,6 +1227,7 @@ function paySkillSummonCost(unit,skill) {
 }
 
 function canPaySkillResourceCosts(unit, skill, modifierPercent = 100) {
+  if (!canActivateSkill(unit,skill)) return false;
   if (skill.summonCost && getSkillCostSummons(unit,skill).length<normalizeSummonCost(skill.summonCost).count) return false;
   const totals = {};
   getSkillResourceCosts(skill).forEach(cost => {
@@ -1254,7 +1314,8 @@ function formatActionSummary(action) {
   if (!isSkillActionSupported(action)) return `${getUnsupportedActionNames({actions:[action]}).join(", ")} · 미지원`;
   if (TIMED_EFFECT_ACTIONS.includes(action.type)) {
     const effect = action.effect;
-    if (action.type === "add_buff" && effect.mode === "barrier") return `보호막 ${effect.barrierMode === "fixed" ? effect.value : `최대 HP ${effect.value}%`} / ${action.duration || "무제한"}초${effect.breakSkillId ? ` / 공격 소진 시 ${getSkillById(effect.breakSkillId)?.name ?? effect.breakSkillId}` : ""}`;
+    if (action.type === "add_buff" && effect.mode === "damage_link") return `시전자가 받은 실제 피해 ${effect.value}% 전달 / ${action.duration}초`;
+    if (action.type === "add_buff" && effect.mode === "barrier") return `보호막 ${effect.barrierMode === "coefficient" ? action.coefficients.map(formatCoefficientSummary).join(" + ") : effect.barrierMode === "fixed" ? effect.value : `최대 HP ${effect.value}%`} / ${action.duration || "무제한"}초${effect.breakSkillId ? ` / 공격 소진 시 ${getSkillById(effect.breakSkillId)?.name ?? effect.breakSkillId}` : ""}`;
     if (action.type === "add_buff" && effect.mode === "cast_time_percent") return `모든 시전시간 ${effect.value}% / ${action.duration || "무제한"}초`;
     if (action.type === "add_buff" && effect.mode === "heal_absorb") return `다른 시전자 HP 치유 ${effect.value} 흡수 / ${action.duration}초`;
     if (action.type === "add_buff" && effect.mode === "basic_echo") return `기본 공격 추가타 ${effect.value}% / 입힌 피해 ${effect.echoHealPercent}% 자기 치유 / ${action.duration}초`;
@@ -1361,8 +1422,9 @@ async function saveSkillFromForm(event) {
   try {
     editIndex = skillEditIndexEl.value;
     const previous = editIndex !== "" ? skillsJson[Number(editIndex)] : null;
+    const executionRules=normalizeSkillExecutionRules(JSON.parse(document.getElementById("skillExecutionRules").value || "{}"));
     const choiceType = isChoiceSkill(skillSlotEl.value);
-    const actions = choiceType || skillSlotEl.value === "optional" || (skillSlotEl.value === "passive" && document.getElementById("skillPassiveLethalTransformation").value.trim()) ? [] : readSkillActionsFromForm();
+    const actions = choiceType || executionRules.revivalOnly || skillSlotEl.value === "optional" || (skillSlotEl.value === "passive" && (document.getElementById("skillPassiveLethalTransformation").value.trim() || document.getElementById("skillPassiveRevival").value.trim())) ? [] : readSkillActionsFromForm();
     const resourceCosts = readSkillResourceCostsFromForm();
     skill = {
       id: previous?.id ?? `skill_${Date.now()}`,
@@ -1371,6 +1433,7 @@ async function saveSkillFromForm(event) {
       icon: getRecordImageSelection('skills'),
       description: skillDescriptionEl.value.trim(),
       slot: normalizeSkillSlot(skillSlotEl.value),
+      ...executionRules,
       cooldown: normalizeSkillCooldown(skillCooldownEl.value),
       castTime: normalizeSkillCastTime(skillCastTimeEl.value),
       castReceivedDamagePercent:Math.max(0,Number(skillCastReceivedDamagePercentEl.value) || 0),
@@ -1401,8 +1464,8 @@ async function saveSkillFromForm(event) {
     return;
   }
 
-  const conditionalPassive=skill.slot === "passive" && (normalizePassiveTrigger(skill.passiveTrigger)?.damageMultiplierPercent != null || Boolean(skill.passiveTrigger?.lethalTransformation));
-  if (!skill.name || (!isChoiceSkill(skill) && !conditionalPassive && skill.slot !== "optional" && !skill.actions.length)) {
+  const conditionalPassive=skill.slot === "passive" && (normalizePassiveTrigger(skill.passiveTrigger)?.damageMultiplierPercent != null || Boolean(skill.passiveTrigger?.lethalTransformation) || Boolean(skill.passiveTrigger?.revival));
+  if (!skill.name || (!isChoiceSkill(skill) && !conditionalPassive && !skill.revivalOnly && skill.slot !== "optional" && !skill.actions.length)) {
     logError("skill", "스킬 저장 검증에 실패했습니다.", JSON.stringify({
       hasName: Boolean(skill.name),
       actionCount: skill.actions.length
@@ -1623,10 +1686,12 @@ function resolveSkillActionTarget(source, action, preferredTarget = null, skill 
 }
 
 function getCoefficientBaseValue(coefficient, source, target = null, execution = null) {
+  if (coefficient.field === "previousBarrierCreated") return execution?.previousBarrierCreated ?? 0;
   if (coefficient.field === "maxHp") return Number(source.maxHp) || 0;
   if (coefficient.field === "ownerMagic") return Number((source.summoner ?? source.owner)?.magic) || 0;
   if (coefficient.field === "missingMp") return Math.max(0,(Number(source.maxMp) || 0)-(Number(source.mp) || 0));
   if (coefficient.field === "triggerMpSpent") return execution?.triggerMpSpent ?? 0;
+  if (coefficient.field === "previousMoveDistance") return execution?.previousMoveDistance ?? 0;
   if (coefficient.field === "magicPerMovedMeter") return (Number(source.magic) || 0)*(execution?.previousMoveDistance ?? 0);
   if (coefficient.field === "actualDamageTotal") return source.actualDamageTotal ?? 0;
   if (coefficient.field === "moveDistanceTotal") return source.moveDistanceTotal ?? 0;
@@ -1763,20 +1828,21 @@ function swapBattleEquipmentSet(source,target,action,skill=null) {
 }
 
 function createSkillExecutionContext(resourceSpent = null, triggerEvent = null) {
-  return {previousActualDamage:0,actualDamage:0,previousActualHealing:0,actualHealing:0,previousResourceDrained:0,resourceDrained:0,
+  return {previousBarrierCreated:0,previousActualDamage:0,actualDamage:0,previousActualHealing:0,actualHealing:0,previousResourceDrained:0,resourceDrained:0,
     triggerActualDamage:Math.max(0,Number(triggerEvent?.amount) || 0),triggerActualAmount:Math.max(0,Number(triggerEvent?.amount) || 0),
     triggerMpSpent:Math.max(0,Number(triggerEvent?.resourceSpent?.MP) || 0),previousMoveDistance:0,
     resourceSpent:resourceSpent ?? {total:0,HP:0,MP:0,ST:0,BP:0}};
 }
 
 function skillUsesExecutionResults(skill) {
-  if (skill.actions.some(action=>action.type === "advance_runes" || action.requirePreviousDamage)) return true;
-  return skill.actions.some(action => action.coefficients?.some(coefficient => ["magicPerMovedMeter","previousActualDamage","executionActualDamage","previousActualHealing","executionActualHealing","previousResourceDrained","executionResourceDrained","resourceSpentTotal","hpResourceSpent","mpResourceSpent","stResourceSpent","bpResourceSpent"].includes(coefficient.field)));
+  if (skill.actions.some(action=>action.type === "advance_runes" || action.requirePreviousDamage || action.distanceSource === "previousMoveDistance")) return true;
+  return skill.actions.some(action => action.coefficients?.some(coefficient => ["previousBarrierCreated", "previousMoveDistance", "magicPerMovedMeter","previousActualDamage","executionActualDamage","previousActualHealing","executionActualHealing","previousResourceDrained","executionResourceDrained","resourceSpentTotal","hpResourceSpent","mpResourceSpent","stResourceSpent","bpResourceSpent"].includes(coefficient.field)));
 }
 
 function skillActionUsesExecutionResults(action) {
+  if (action.distanceSource === "previousMoveDistance") return true;
   if (action.requirePreviousDamage) return true;
-  return action.coefficients?.some(coefficient => ["magicPerMovedMeter","previousActualDamage","executionActualDamage","previousActualHealing","executionActualHealing","previousResourceDrained","executionResourceDrained","resourceSpentTotal","hpResourceSpent","mpResourceSpent","stResourceSpent","bpResourceSpent"].includes(coefficient.field)) ?? false;
+  return action.coefficients?.some(coefficient => ["previousBarrierCreated", "previousMoveDistance", "magicPerMovedMeter","previousActualDamage","executionActualDamage","previousActualHealing","executionActualHealing","previousResourceDrained","executionResourceDrained","resourceSpentTotal","hpResourceSpent","mpResourceSpent","stResourceSpent","bpResourceSpent"].includes(coefficient.field)) ?? false;
 }
 
 function applySkill(source, target, skill, execution = createSkillExecutionContext()) {
@@ -1804,7 +1870,7 @@ function applySkillAction(source, target, action, skill = null, execution = crea
     return;
   }
   if (action.type === "create_field" && action._origin) {createBattleField(source,target,action,skill);return;}
-  if (action.requirePreviousDamage && (!(execution.previousActualDamage>0) || !execution.previousDamagedTargets?.has(target))) return;
+  if (action.requirePreviousDamage && (!(execution.previousActualDamage>0) || (!action.targetPreviousDamage && !execution.previousDamagedTargets?.has(target)))) return;
   if (action.type === "install_runes") {installRuneLoadout(source,skill);return;}
   if (action.type === "advance_runes") {if (execution.previousActualDamage>0) advanceOwnedRunes(source,action.runeAdvanceSeconds);return;}
   if (action.type === "summon_entity") {
@@ -1854,12 +1920,12 @@ function applySkillAction(source, target, action, skill = null, execution = crea
     execution.previousResourceDrained = 0;
     return;
   }
-  const targets = getSkillActionTargets(source, target, action, skill);
+  const targets = action.targetPreviousDamage ? [...(execution.previousDamagedTargets ?? [])] : getSkillActionTargets(source, target, action, skill);
   if (isChainAction(action)) {
     showSkillChainImpact(source, targets, action);
   } else if (action.area > 0 && supportsActionArea(action.type)) {
     showSkillAreaImpact(source, target, action, skill);
-  } else if (action.splashPercent > 0 && action.splashRadius > 0 && ["deal_damage","heal","drain_resource"].includes(action.type)) {
+  } else if (action.splashPercent > 0 && action.splashRadius > 0 && (["deal_damage","heal","drain_resource"].includes(action.type) || (action.type === "add_buff" && action.effect?.mode === "barrier"))) {
     showSkillAreaImpact(source,target,{...action,area:action.splashRadius,areaCenter:"target"},skill);
   }
   let actualDamage = 0;
@@ -1878,25 +1944,32 @@ function applySkillAction(source, target, action, skill = null, execution = crea
     } else if (action.type === "drain_resource") {
       resourceDrained += applyActionResourceDrain(source,resolvedTarget,action,skill,execution);
     } else if (action.type === "move") {
-      execution.previousMoveDistance=applyActionMove(source, resolvedTarget, action)/ATTACK_RANGE_UNIT;
+      const moved=applyActionMove(source,resolvedTarget,action.distanceSource === "previousMoveDistance" ? {...action,_resolvedDistance:Math.max(0,execution.previousMoveDistance+(action.distanceAdd || 0))} : action)/ATTACK_RANGE_UNIT;
+      if (action.distanceSource !== "previousMoveDistance") execution.previousMoveDistance=moved;
     } else if (action.type === "command_summon") {
       applySummonCommand(source,resolvedTarget,action,skill);
     } else if (TIMED_EFFECT_ACTIONS.includes(action.type)) {
-      applyTimedEffectAction(source, resolvedTarget, action, skill);
+      const applied=applyTimedEffectAction(source,resolvedTarget,action,skill,execution);
+      if (action.type === "add_buff" && action.effect?.mode === "barrier") execution.previousBarrierCreated=applied?.shieldInitial ?? 0;
     } else if (action.type === "transform") {
       applyTransformation(source,resolvedTarget,action,skill);
     } else if (action.type === "create_field") {
       applyCreateField(source, resolvedTarget, action, skill);
     }
   });
-  if (action.splashPercent > 0 && action.splashRadius > 0 && ["deal_damage","heal","drain_resource"].includes(action.type)) {
-    const splashAction={...action,area:action.splashRadius,areaCenter:"target",chainCount:0,maxTargets:0,splashPercent:0,splashRadius:0,
+  if (action.splashPercent > 0 && action.splashRadius > 0 && (["deal_damage","heal","drain_resource"].includes(action.type) || (action.type === "add_buff" && action.effect?.mode === "barrier"))) {
+    const splashAction={...action,target:action.target === "self" ? "ally" : action.target,area:action.splashRadius,areaCenter:"target",chainCount:0,maxTargets:0,splashPercent:0,splashRadius:0,
       coefficients:(action.coefficients ?? []).map(coefficient=>({...coefficient,value:coefficient.value*action.splashPercent/100}))};
     getSkillActionTargets(source,target,splashAction,skill).filter(candidate=>!targets.includes(candidate)).forEach(resolvedTarget=>{
       if (!resolvedTarget.alive || !isActionTargetEligible(source,resolvedTarget,splashAction,skill)) return;
-      if (action.type === "deal_damage") actualDamage+=applyActionDamage(source,resolvedTarget,splashAction,skill,execution);
+      if (action.type === "deal_damage") {
+        const dealt=applyActionDamage(source,resolvedTarget,splashAction,skill,execution);
+        actualDamage+=dealt;
+        if (dealt>0) damagedTargets.add(resolvedTarget);
+      }
       else if (action.type === "heal") actualHealing+=applyActionHeal(source,resolvedTarget,splashAction,skill,execution);
-      else resourceDrained+=applyActionResourceDrain(source,resolvedTarget,splashAction,skill,execution);
+      else if (action.type === "drain_resource") resourceDrained+=applyActionResourceDrain(source,resolvedTarget,splashAction,skill,execution);
+      else applyTimedEffectAction(source,resolvedTarget,splashAction,skill,execution);
     });
   }
   execution.previousActualDamage = action.type === "deal_damage" ? actualDamage : 0;
@@ -1999,6 +2072,7 @@ function applyActionDamage(source, target, action, skill = null, execution = nul
   for(const [index,portion] of portions.entries()) {
     if(results[index].actual>0) triggerEffect(portion.recipient,"damage");
   }
+  portions.forEach((portion,index)=>applyIncomingDamageLinks(portion.recipient,results[index].actual,action));
   portions.forEach((portion,index)=>applyBarrierBreakReaction(portion.recipient,source,action,results[index].brokenShields ?? []));
   portions.forEach((portion,index)=>applyDamageReflection(portion.recipient,source,action,skill,results[index].actual,reflections[index]));
   if (targetResult.actual>0) applyBasicEcho(source,target,action,skill,targetResult.actual);
@@ -2201,7 +2275,7 @@ function applyActionMove(source, target, action) {
   let desiredX, desiredY;
   if (forced) {
     const direction = moveType === "Pull" ? -1 : 1;
-    const amount = Math.max(1,Math.min(10,Number(action.distance) || 10)) * ATTACK_RANGE_UNIT;
+    const amount = (action._resolvedDistance ?? Math.max(1,Math.min(10,Number(action.distance) || 10))) * ATTACK_RANGE_UNIT;
     desiredX = target.x + dx / length * amount * direction;
     desiredY = target.y + dy / length * amount * direction;
   } else {

@@ -2,6 +2,8 @@ function resetUnitForBattle(unit) {
   unit.proximityPassiveActive = {};
   unit.passiveRepeatTimers = {};
   unit.undamagedTicks=0;
+  unit.revivalState=null;
+  unit.battleDeathX=unit.battleDeathY=null;
   restorePassiveStatConversion(unit);
   restorePassiveResourceConversion(unit);
   clearBattleEffects(unit);
@@ -366,19 +368,51 @@ function clampPosition(unit) {
   unit.y = Math.max(margin, Math.min(bounds.height - margin, unit.y));
 }
 
+function getRepeatingRevivalPassive(unit) {
+  const base=resolveSelectedSkillIds(unit?.skillIds,unit?.skillSelections).map(getSkillById)
+    .find(skill=>skill?.slot === "passive" && skill.passiveTrigger?.revival && !isUnitSkillDisabled(unit,skill));
+  return base ? getRuntimeSelectionSkill(unit,getRuntimeItemSkill(unit,base)) : null;
+}
+
+function isBattleDefeatState(unit) {
+  return getUnitBattleForm(unit)?.countsForDefeat === false || (!unit.alive && unit.isWaiting && unit.revivalState?.countsWhileWaiting === false);
+}
+
+function queueRepeatingRevival(unit) {
+  const passive=getRepeatingRevivalPassive(unit);
+  if (!passive || unit.isSummon) return false;
+  unit.revivalState={...passive.passiveTrigger.revival};
+  unit.isWaiting=true;
+  unit.reviveTicks=Math.max(1,Math.ceil(unit.revivalState.delay*BASE_ATTACK_COOLDOWN));
+  const squad=unit.side === "enemy" ? enemySquad : playerSquad;
+  if (canSquadContinueBattle(squad)) {
+    const rapid=resolveSelectedSkillIds(unit.skillIds,unit.skillSelections).map(getSkillById)
+      .filter(skill=>skill?.revivalOnly && isSkillExecutable(skill) && !isUnitSkillDisabled(unit,skill))
+      .map(skill=>getRuntimeSelectionSkill(unit,getRuntimeItemSkill(unit,skill)))
+      .find(skill=>(unit.skillCooldowns?.[skill.id] ?? 0)<=0);
+    if (rapid) {
+      unit.skillCooldowns ??= {};unit.skillCooldownTotals ??= {};
+      unit.skillCooldowns[rapid.id]=getSkillCooldownTicks(rapid,unit);unit.skillCooldownTotals[rapid.id]=unit.skillCooldowns[rapid.id];
+      unit.reviveTicks=1;unit.revivalState.instantSkillId=rapid.id;
+    }
+  }
+  return true;
+}
+
 function syncAliveState(unit, context = {}) {
   const events = [];
   if (unit.hp <= 0) {
-    if (tryEnterLethalTransformation(unit,context)) return events;
+    if (!context.forceDeath && tryEnterLethalTransformation(unit,context)) return events;
     const wasAlive = unit.alive;
     unit.hp = 0;
     unit.alive = false;
     if (wasAlive) {
+      unit.battleDeathX=unit.x;unit.battleDeathY=unit.y;
       if (unit.pendingAction) events.push({type:"cast_interrupt",source:unit,target:unit.pendingAction.target,skill:unit.pendingAction.skill,reason:"사망"});
       if (unit.channelAction) events.push(...finishBattleChannel(unit,"사망",{deferEvents:true}));
       unit.pendingAction=null;unit.castTimer=0;unit.castDuration=0;
       unit.isWaiting = false;
-      if (!unit.isSummon && unit.revivesRemaining > 0) {
+      if (!queueRepeatingRevival(unit) && !unit.isSummon && unit.revivesRemaining > 0) {
         unit.revivesRemaining--;
         unit.reviveTicks = Math.max(1, Math.ceil(normalizeBattleRules(unit.battleRules).reviveDelay * BASE_ATTACK_COOLDOWN));
         unit.isWaiting = true;
@@ -396,7 +430,9 @@ function syncAliveState(unit, context = {}) {
 }
 
 function activateWaitingUnit(unit, type) {
-  const rules = normalizeBattleRules(unit.battleRules);
+  const revival=type === "revive" ? unit.revivalState : null;
+  if (revival) clearBattleEffects(unit);
+  const rules = {...normalizeBattleRules(unit.battleRules),...(revival ? {reviveHpPercent:revival.hpPercent,reviveMpPercent:revival.mpPercent,reviveStPercent:revival.stPercent,revivePosition:revival.position} : {})};
   const preserveState = type === "reserve" || type === "swap";
   unit.alive = true;
   unit.isWaiting = false;
@@ -413,15 +449,20 @@ function activateWaitingUnit(unit, type) {
       unit.x = unit.battleStartX;
       unit.y = unit.battleStartY;
       clampPosition(unit);
+    } else if (revival && rules.revivePosition === "death" && Number.isFinite(unit.battleDeathX) && Number.isFinite(unit.battleDeathY)) {
+      unit.x=unit.battleDeathX;unit.y=unit.battleDeathY;clampPosition(unit);
     }
   }
-  unit.bp = type === "revive" ? 0 : preserveState ? unit.bp : unit.baseBp;
+  unit.revivalState=null;
+  unit.bp = type === "revive" ? (revival?.restoreBaseBp ? unit.baseBp : 0) : preserveState ? unit.bp : unit.baseBp;
+  if (revival) unit.maxBp=unit.baseBp;
   unit.vx = 0;
   unit.vy = 0;
   if (!preserveState) unit.attackCooldown = 0;
   unit.pendingAction = null;
   unit.skillBubbleText = "";
   unit.skillBubbleIcon = "";
+  if (revival?.instantSkillId) publishBattleEvents([{type:"cast_complete",source:unit,target:unit,skill:getSkillById(revival.instantSkillId)}]);
   publishBattleEvents([{type:type === "revive" ? "revive" : "battle_entry",source:unit,target:unit}]);
 }
 
@@ -528,6 +569,11 @@ function updateBattleReentries() {
   });
   [...playerSquad, ...enemySquad].forEach(unit => {
     if (unit.alive || !unit.isWaiting) return;
+    if (unit.revivalState) {
+      tickSkillCooldowns(unit);
+      // A queued revival must not rescue a side consisting only of defeat states.
+      if (!canSquadContinueBattle(unit.side === "enemy" ? enemySquad : playerSquad)) return;
+    }
     if (unit.entryTicks > 0 && --unit.entryTicks <= 0) activateWaitingUnit(unit, "entry");
     else if (unit.reviveTicks > 0 && --unit.reviveTicks <= 0) activateWaitingUnit(unit, "revive");
   });
@@ -551,8 +597,8 @@ function updateRuntimeRuleOverrides() {
 }
 
 function canSquadContinueBattle(squad) {
-  return squad.some(unit => (unit.alive && isUnitBattleTargetable(unit) && getUnitBattleForm(unit)?.countsForDefeat !== false) || (!unit.isSummon && unit.isWaiting
-    && (unit.isReserve || unit.entryTicks > 0 || unit.reviveTicks > 0)));
+  return squad.some(unit => !isBattleDefeatState(unit) && ((unit.alive && isUnitBattleTargetable(unit)) || (!unit.isSummon && unit.isWaiting
+    && (unit.isReserve || unit.entryTicks > 0 || unit.reviveTicks > 0))));
 }
 
 function triggerEffect(unit, effectType) {
@@ -900,16 +946,20 @@ function resolveCollision() {
   }
 }
 
-function updateCombat() {
-  const alivePlayers = getActiveBattleEntities(playerSquad);
-  const aliveEnemies = getActiveBattleEntities(enemySquad);
-
+function resolveBattleDefeat() {
   const playersContinue = canSquadContinueBattle(playerSquad);
   const enemiesContinue = canSquadContinueBattle(enemySquad);
   if (!playersContinue || !enemiesContinue) {
     finishBattle(playersContinue === enemiesContinue ? "무승부" : playersContinue ? "승리" : "패배");
-    return;
+    return true;
   }
+  return false;
+}
+
+function updateCombat() {
+  if (resolveBattleDefeat()) return;
+  const alivePlayers = getActiveBattleEntities(playerSquad);
+  const aliveEnemies = getActiveBattleEntities(enemySquad);
 
   // Untargetable forms may still act; target pools retain the existing exclusions.
   const actors=squad=>squad.filter(unit=>unit.alive && !unit.removed && unit.targetable !== false && !(unit.suspendedTicks>0));
@@ -1024,7 +1074,7 @@ function showSkillBubble(unit, text, icon = "") {
 }
 
 function resolveSkillTarget(unit, skill, allies, enemies) {
-  if (!isSkillExecutable(skill)) return null;
+  if (!isSkillExecutable(skill) || !canActivateSkill(unit,skill)) return null;
   const independentActions=skill.actions.filter(action=>!skillActionUsesExecutionResults(action));
   const targetActions=independentActions.length ? independentActions : skill.actions;
   for (const action of targetActions) {
@@ -1041,6 +1091,7 @@ function startCast(unit, action) {
   if (hasBattleState(unit,"stun") || (action.type === "skill" && hasBattleState(unit,"silence"))) return;
   const skill = action.skill ?? getUnitSkill(unit, action.type === "heal" ? DEFAULT_HEAL_SKILL_ID : DEFAULT_ATTACK_SKILL_ID);
   if (!isSkillExecutable(skill)) return;
+  if (action.type === "skill" && !canActivateSkill(unit,skill)) return;
   const castTime = normalizeSkillCastTime(unit.isSummon && action.type !== "skill" ? unit.castSpeed : skill?.castTime);
   const castDuration = Math.round((castTime == null ? getCastDuration(unit) : castTime * BASE_ATTACK_COOLDOWN) * (action.skillModifier?.castTimePercent ?? 100) / 100 * (unit.effectCastTimeMultiplier ?? 1));
 
@@ -1096,6 +1147,7 @@ function resolveCastAction(unit, action) {
 
   const completedSkill = action.skill ?? getUnitSkill(unit,action.type === "heal" ? DEFAULT_HEAL_SKILL_ID : DEFAULT_ATTACK_SKILL_ID);
   if (hasBattleState(unit,"stun") || (action.type === "skill" && hasBattleState(unit,"silence"))) return;
+  if (action.type === "skill" && !canActivateSkill(unit,completedSkill)) {publishBattleEvents([{type:"cast_interrupt",source:unit,target:action.target,skill:completedSkill,reason:"사용 조건 미충족"}]);return;}
   if (completedSkill.slot !== "passive" && normalizeSkillChannel(completedSkill.channel).duration > 0) {
     startBattleChannel(unit,action,completedSkill);return;
   }
@@ -1125,8 +1177,10 @@ function resolveSkillCast(unit, action) {
 
   unit.skillCooldowns[skill.id] = getResolvedSkillCooldownTicks(skill,unit,action.skillModifier);
   unit.skillCooldownTotals[skill.id] = unit.skillCooldowns[skill.id];
-  dispatchSkillActions(unit, action.target, skill, true, false, null, action.resourceSpent);
+  dispatchSkillActions(unit, action.target, skill, !skill.selfDestruct && unit.hp>0, false, null, action.resourceSpent);
+  for(const reduction of skill.cooldownReductions ?? []) unit.skillCooldowns[reduction.skillId]=Math.max(0,(unit.skillCooldowns[reduction.skillId] ?? 0)-Math.round(reduction.seconds*BASE_ATTACK_COOLDOWN));
   advanceSkillCombo(unit,skill);
+  if (skill.selfDestruct || unit.hp<=0) {unit.hp=0;syncAliveState(unit,{source:unit,skill,forceDeath:skill.selfDestruct === true,reason:skill.selfDestruct ? "자폭" : "HP 자원 소진"});}
 }
 
 function getIndependentWeaponSkill(unit,weapon,target) {
@@ -1876,6 +1930,7 @@ function runBattleTick() {
       }
 
       combatEventTick++;
+      if (resolveBattleDefeat()) break;
       updateBattleEffects();
       updateRuntimeRuleOverrides();
       updateBattleReentries();

@@ -138,9 +138,9 @@ let selectedInventoryItemId = "";
 let equipmentDragState = null;
 
 function equipmentItemIcon(item, slotKey = "") {
-  const group = item?.weaponCategory ? "weapon" : item?.armorCategory ? "armor" : "slot";
+  const group = item?.weaponCategory ? "weapon" : item?.armorCategory ? (item.slot === "bottom" ? "armorBottom" : "armor") : "slot";
   const key = item?.weaponCategory || item?.armorCategory || item?.slot || slotKey;
-  const label = group === "weapon" ? getWeaponCategoryLabel(key) : group === "armor" ? getArmorCategoryLabel(key) : getSlotLabel(key);
+  const label = group === "weapon" ? getWeaponCategoryLabel(key) : item?.armorCategory ? `${getArmorCategoryLabel(key)} ${getSlotLabel(item.slot)}` : getSlotLabel(key);
   return `<span class="equipment-icon">${renderCategoryIcon(group, key, label)}</span>`;
 }
 

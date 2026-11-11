@@ -20,6 +20,19 @@ test('rune choices appear in formation summaries for both sides and preserve ind
  assert.equal(run(`getRuneLoadout({skillSelections:duelSkillChoices.enemy[runeId]},getSkillById('skill_class_rune_master'))[0]`),'rune_moon');
 });
 
+test('mage ice unlock filters character prebattle and both duel sides using equipped optional skills',()=>{
+ const run=fixture();run(`globalThis.mageId=characterJson.findIndex(c=>c.name==='마법사');duelCharacterIds={player:[mageId],enemy:[mageId]};duelSkillChoices.player[mageId]={'skill_class_mage_element_choice':'ice'};`);
+ assert.equal((run('renderDuelSkillChoices()').match(/<option/g)||[]).length,6);
+ assert.equal(run(`getChoiceSkillOption(getSkillById('skill_class_mage_element_choice'),'ice',characterJson[mageId].skillIds).id`),'lightning');
+ run(`characterJson[mageId].skillIds.push('skill_class_mage_forbidden_ice')`);
+ assert.equal((run('renderDuelSkillChoices()').match(/<option/g)||[]).length,8);
+ assert.equal(run(`resolveSelectedSkillIds(characterJson[mageId].skillIds,duelSkillChoices.player[mageId]).includes('skill_class_mage_element_ice')`),true);
+ assert.equal(run(`resolveSelectedSkillIds(characterJson[mageId].skillIds,duelSkillChoices.enemy[mageId]).includes('skill_class_mage_element_lightning')`),true);
+ run(`characterJson[mageId].skillIds=characterJson[mageId].skillIds.filter(id=>id!=='skill_class_mage_forbidden_ice')`);
+ assert.equal((run('renderDuelSkillChoices()').match(/<option/g)||[]).length,6);
+ assert.equal(run(`resolveSelectedSkillIds(characterJson[mageId].skillIds,duelSkillChoices.player[mageId]).includes('skill_class_mage_element_ice')`),false);
+});
+
 function fixture() {
   const context = vm.createContext({structuredClone,Math,Date,performance,addEventListener(){},removeEventListener(){},document:{addEventListener(){},removeEventListener(){},getElementById:id=>id==='battleCanvas'?{width:400,height:300,getContext:()=>null}:null},log(){},logWarn(){},logError(){},alert(){}});
   context.window=context;

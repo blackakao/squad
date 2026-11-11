@@ -156,17 +156,159 @@ function renderCategoryOptions() {
   }
 }
 
+function renderCategoryName(group, category) {
+  return `<span class="category-name">${renderCategoryIcon(group, category.key, category.label)}<span>${escapeHtml(category.label)}</span></span>`;
+}
+
 function renderCategoryPage() {
   renderCategoryOptions();
   renderWeaponCategoryTable();
   renderArmorCategoryTable();
+  renderWeaponDpsTable();
+}
+
+let weaponDpsSaving = false;
+
+function showCategoryTab(tab) {
+  const dps = tab === "dps";
+  document.getElementById("categorySettingsPanel").classList.toggle("hidden", dps);
+  document.getElementById("weaponDpsPanel").classList.toggle("hidden", !dps);
+  document.getElementById("categorySettingsTab").setAttribute("aria-selected", String(!dps));
+  document.getElementById("weaponDpsTab").setAttribute("aria-selected", String(dps));
+}
+
+function calculateWeaponDps(power, castSpeed, attackSpeed) {
+  const cycle = Number(castSpeed) + Number(attackSpeed);
+  return Number.isFinite(cycle) && cycle > 0 && Number.isFinite(Number(power))
+    ? Number(power) / cycle : 0;
+}
+
+function renderWeaponDpsTable() {
+  if (weaponDpsSaving) return;
+  const body = document.getElementById("weaponDpsTableBody");
+  if (!body) return;
+  body.innerHTML = itemsJson.filter(isWeaponItem).map(item => {
+    const category = getWeaponCategory(item.weaponCategory);
+    const stat = category.attackType === "magic" ? "magic" : "atk";
+    const numeric = (field, value, min, label) => `<input type="number" data-field="${field}" value="${value}" min="${min}" step="any" required aria-label="${escapeHtml(item.name)} ${label}">`;
+    return `<tr data-item-id="${escapeHtml(item.id)}">
+      <td><div class="weapon-dps-name">${equipmentItemIcon(item)}<input data-field="name" value="${escapeHtml(item.name)}" required aria-label="장비명"></div></td>
+      <td><label class="weapon-dps-power">${stat === "magic" ? "마력" : "공격력"}${numeric("power", item[stat], 0, stat === "magic" ? "마력" : "공격력")}</label></td>
+      <td>${numeric("castSpeed", category.castSpeed, 0, "시전속도")}</td>
+      <td>${numeric("attackSpeed", category.attackSpeed, 0, "공격속도")}</td>
+      <td><output data-dps>${calculateWeaponDps(item[stat], category.castSpeed, category.attackSpeed).toFixed(2)}</output></td>
+      <td>${numeric("attackRange", category.attackRange, 1, "사정거리")}</td>
+      <td><select data-field="attackSkillId" aria-label="${escapeHtml(item.name)} 적용스킬">${getSkillOptionsHtml(item.attackSkillId)}</select></td>
+    </tr>`;
+  }).join("") || '<tr><td colspan="7">등록된 무기가 없습니다.</td></tr>';
+  resetWeaponDpsChanges();
+  document.getElementById("weaponDpsStatus").textContent = "";
+}
+
+function resetWeaponDpsChanges() {
+  const body = document.getElementById('weaponDpsTableBody');
+  body.querySelectorAll('[data-field]').forEach(input => { input.dataset.originalValue = input.value; });
+  body.querySelectorAll('[data-dps]').forEach(output => { output.dataset.originalValue = output.textContent; });
+  body.querySelectorAll('.weapon-dps-changed').forEach(cell => cell.classList.remove('weapon-dps-changed'));
+}
+
+function updateWeaponDpsPreview(event) {
+  const row = event.target.closest("tr[data-item-id]");
+  if (!row) return;
+  const value = field => row.querySelector(`[data-field="${field}"]`).value;
+  row.querySelector("[data-dps]").textContent = calculateWeaponDps(value("power"), value("castSpeed"), value("attackSpeed")).toFixed(2);
+  row.querySelectorAll('[data-field]').forEach(input => {
+    const unchanged = input.type === 'number' && input.value !== '' && input.dataset.originalValue !== ''
+      ? Number(input.value) === Number(input.dataset.originalValue) : input.value === input.dataset.originalValue;
+    input.closest('td').classList.toggle('weapon-dps-changed', !unchanged);
+  });
+  const output = row.querySelector('[data-dps]');
+  output.closest('td').classList.toggle('weapon-dps-changed', output.textContent !== output.dataset.originalValue);
+  document.getElementById("weaponDpsStatus").textContent = document.querySelector('#weaponDpsTableBody .weapon-dps-changed') ? "미저장 변경사항이 있습니다." : "";
+}
+
+async function saveWeaponDpsSettings(event) {
+  event.preventDefault();
+  if (weaponDpsSaving) return;
+  const form = document.getElementById("weaponDpsForm");
+  if (!form.reportValidity()) return;
+  const status = document.getElementById("weaponDpsStatus");
+  const previousCategories = flattenCategoryJson();
+  const nextCategories = previousCategories.map(category => ({ ...category }));
+  const nextItems = itemsJson.map(item => ({ ...item }));
+  const configuredCategories = new Map();
+  for (const row of form.querySelectorAll("tr[data-item-id]")) {
+    const item = nextItems.find(candidate => candidate.id === row.dataset.itemId);
+    const category = nextCategories.find(candidate => candidate.type === "weapon" && candidate.key === item?.weaponCategory);
+    if (!item || !category) { status.textContent = "장비 목록이 변경되었습니다. 페이지를 다시 열어주세요."; return; }
+    const value = field => row.querySelector(`[data-field="${field}"]`).value;
+    const name = value("name").trim();
+    const power = Number(value("power"));
+    const settings = Object.fromEntries(["castSpeed", "attackSpeed", "attackRange"].map(field => [field, Number(value(field))]));
+    const skillId = value("attackSkillId");
+    if (!name || !Number.isFinite(power) || power < 0
+      || Object.values(settings).some(number => !Number.isFinite(number))
+      || settings.castSpeed < 0 || settings.attackSpeed <= 0 || settings.attackRange < 1
+      || (skillId && !skillsJson.some(skill => skill.id === skillId && skill.slot !== "optional" && skill.slot !== "passive" && !skill.internal && isSkillExecutable(skill)))) {
+      status.textContent = "장비명·능력치·주기·사정거리·적용스킬을 확인해주세요.";
+      return;
+    }
+    const signature = JSON.stringify(settings);
+    if (configuredCategories.has(category.key) && configuredCategories.get(category.key) !== signature) {
+      status.textContent = "같은 무기 카테고리의 주기와 사정거리는 동일하게 설정해주세요.";
+      return;
+    }
+    configuredCategories.set(category.key, signature);
+    Object.assign(category, settings);
+    Object.assign(item, settings, { name, attackSkillId: skillId, [category.attackType === "magic" ? "magic" : "atk"]: power });
+  }
+  weaponDpsSaving = true;
+  const controls = [...categoryPageEl.querySelectorAll("input, select, button")];
+  controls.forEach(control => { control.disabled = true; });
+  status.textContent = "저장 중…";
+  let categoriesSaved = false;
+  let itemsSaved = false;
+  try {
+    await saveJsonFile("categories", nextCategories);
+    categoriesSaved = true;
+    await saveJsonFile("items", nextItems);
+    itemsSaved = true;
+    resetWeaponDpsChanges();
+    categoriesJson = normalizeCategoryJson(nextCategories);
+    itemsJson = normalizeItemJson(nextItems);
+    try { localStorage.setItem(ITEM_STORAGE_KEY, JSON.stringify(nextItems)); }
+    catch (error) { logWarn("item", "서버 저장 완료. 브라우저 캐시를 갱신하지 못했습니다.", error); }
+    playerSquad = [];
+    refreshCharacterUI();
+    renderItemPage();
+    renderWeaponCategoryTable();
+    if (!equipmentPageEl.classList.contains("hidden")) renderEquipmentPage();
+    status.textContent = "저장했습니다.";
+    log("무기 DPS 설정을 저장했습니다.", "category");
+  } catch (error) {
+    logError("category", "무기 DPS 설정 저장 실패", error);
+    if (itemsSaved) {
+      status.textContent = "설정은 저장됐지만 화면 갱신에 실패했습니다. 새로고침해주세요.";
+      return;
+    }
+    let restored = !categoriesSaved;
+    if (categoriesSaved) {
+      try { await saveJsonFile("categories", previousCategories); restored = true; }
+      catch (rollbackError) { logError("category", "무기 카테고리 복원 실패", rollbackError); }
+    }
+    status.textContent = restored ? "저장하지 못했습니다. 입력값을 유지했으니 다시 시도해주세요."
+      : "저장과 복원에 실패했습니다. 서버의 카테고리와 장비 설정을 다시 확인해주세요.";
+  } finally {
+    weaponDpsSaving = false;
+    controls.forEach(control => { control.disabled = false; });
+  }
 }
 
 function renderWeaponCategoryTable() {
   weaponCategoryTableBodyEl.innerHTML = getWeaponCategories().map((category, index) => `
     <tr>
       <td><input type="checkbox" class="weapon-category-check" value="${index}"></td>
-      <td>${renderCategoryIcon("weapon", category.key, category.label)}</td>
+      <td>${renderCategoryName("weapon", category)}</td>
       <td>${getHandTypeLabel(category.handType)}</td>
       <td>${category.attackRange}</td>
       <td>${category.attackSpeed}</td>
@@ -182,7 +324,9 @@ function renderArmorCategoryTable() {
   armorCategoryTableBodyEl.innerHTML = getArmorCategories().map((category, index) => `
     <tr>
       <td><input type="checkbox" class="armor-category-check" value="${index}"></td>
-      <td>${renderCategoryIcon("armor", category.key, category.label)}</td>
+      <td>${escapeHtml(category.label)}</td>
+      <td>${renderCategoryIcon("armor", category.key, `${category.label} 상의`)}</td>
+      <td>${renderCategoryIcon("armorBottom", category.key, `${category.label} 하의`)}</td>
       <td><button type="button" onclick="openArmorCategoryModal(${index})">수정</button></td>
     </tr>
   `).join("");

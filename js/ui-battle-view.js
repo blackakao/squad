@@ -108,13 +108,14 @@ function renderStatus(units, colorResolver, summonRows = false) {
     const waitingLabel = unit.isReserve ? "예비대 대기" : unit.entryTicks > 0 ? "진입 대기" : unit.reviveTicks > 0 ? "부활 대기" : "";
     const castText = unit.isReserve ? waitingLabel : waitingLabel ? `${waitingLabel} ${(waitingTicks / BASE_ATTACK_COOLDOWN).toFixed(1)}초` : isCasting ? `${isChanneling ? "채널링 중" : "시전 중"} ${castRemainingText}` : "시전 대기";
     const exhaustedText = unit.exhausted ? " · 지침" : "";
+    const defeatStateText=isBattleDefeatState(unit) ? " · 패배 판정을 받는 상태" : "";
     const formText=getLifeCycleFormLabel(unit);
     const dpsText = `DPS ${getUnitDps(unit).toFixed(1)}`;
     const reviveProtectionText = unit.reviveInvulnerableTicks > 0 ? ` · 부활 무적 ${(unit.reviveInvulnerableTicks / BASE_ATTACK_COOLDOWN).toFixed(1)}초` : "";
 
     return `
       <div class="unit-status${summonRows ? ' main-summon-status' : ''}">
-        <div>${summonRows ? `<span class="main-summon-label">↳ 주소환수 · ${escapeHtml((unit.owner ?? unit.summoner)?.name ?? '')}</span> ` : ''}${escapeHtml(unit.name)} (${getRoleLabel(unit.role)})${!unit.alive ? ' · 전투 불능' : unit.suspendedTicks>0 ? ' · 일시 비활성' : ''}${reviveProtectionText}${formText ? ` · ${escapeHtml(formText)}` : ""}</div>
+        <div>${summonRows ? `<span class="main-summon-label">↳ 주소환수 · ${escapeHtml((unit.owner ?? unit.summoner)?.name ?? '')}</span> ` : ''}${escapeHtml(unit.name)} (${getRoleLabel(unit.role)})${!unit.alive ? ' · 전투 불능' : unit.suspendedTicks>0 ? ' · 일시 비활성' : ''}${reviveProtectionText}${defeatStateText}${formText ? ` · ${escapeHtml(formText)}` : ""}</div>
         <div class="hp-track">
           <div class="hp-fill" style="width:${hpRatio}%; background:${colorResolver(unit)};"></div>
           <div class="hp-label">HP ${hpText} · ${dpsText}</div>

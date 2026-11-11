@@ -2,17 +2,17 @@
   {
     "name": "검의무희",
     "entityGrade": 2,
-    "hp": 4918,
-    "mp": 115,
-    "st": 105,
+    "hp": 4500,
+    "mp": 100,
+    "st": 100,
     "bp": 0,
-    "atk": 270,
+    "atk": 1110,
     "magic": 10,
     "speed": 1.2,
     "attackSpeed": 2,
-    "castSpeed": 0.5,
-    "defense": 26.4,
-    "resistance": 10.7,
+    "castSpeed": 0.1,
+    "defense": 27,
+    "resistance": 11,
     "attackRange": 8,
     "role": "tank",
     "skillIds": [
@@ -45,33 +45,33 @@
       "revivePosition": "death"
     },
     "equipment": {
-      "mainWeapon": "item_1781164504281",
-      "subWeapon": "item_1781164504281",
-      "top": "item_gen_20261010_12_01",
-      "bottom": "item_gen_20261010_12_08",
+      "mainWeapon": "item_basic_oneHandSword_mainWeapon",
+      "subWeapon": "item_basic_oneHandSword_mainWeapon",
+      "top": "item_basic_chain_top",
+      "bottom": "item_basic_chain_bottom",
       "accessory": "",
       "special": "",
-      "extraWeapon1": "item_1781164504281",
-      "extraWeapon2": "item_1781164504281",
-      "extraWeapon3": "item_1781164504281",
-      "extraWeapon4": "item_1781164504281",
-      "extraWeapon5": "item_1781164504281"
+      "extraWeapon1": "item_basic_oneHandSword_mainWeapon",
+      "extraWeapon2": "item_basic_oneHandSword_mainWeapon",
+      "extraWeapon3": "item_basic_oneHandSword_mainWeapon",
+      "extraWeapon4": "item_basic_oneHandSword_mainWeapon",
+      "extraWeapon5": "item_basic_oneHandSword_mainWeapon"
     },
     "equipmentSets": [
       {
         "name": "세트 2",
         "equipment": {
-          "mainWeapon": "item_1781164504281",
-          "subWeapon": "item_1781164504281",
-          "top": "item_gen_20261010_12_01",
-          "bottom": "item_gen_20261010_12_08",
+          "mainWeapon": "item_basic_oneHandSword_mainWeapon",
+          "subWeapon": "item_basic_oneHandSword_mainWeapon",
+          "top": "item_basic_chain_top",
+          "bottom": "item_basic_chain_bottom",
           "accessory": "",
           "special": "",
-          "extraWeapon1": "item_1781164504281",
-          "extraWeapon2": "item_1781164504281",
-          "extraWeapon3": "item_1781164504281",
-          "extraWeapon4": "item_1781164504281",
-          "extraWeapon5": "item_1781164504281"
+          "extraWeapon1": "item_basic_oneHandSword_mainWeapon",
+          "extraWeapon2": "item_basic_oneHandSword_mainWeapon",
+          "extraWeapon3": "item_basic_oneHandSword_mainWeapon",
+          "extraWeapon4": "item_basic_oneHandSword_mainWeapon",
+          "extraWeapon5": "item_basic_oneHandSword_mainWeapon"
         }
       }
     ],
@@ -81,23 +81,28 @@
   },
   {
     "name": "기사",
-    "hp": 4970,
+    "hp": 4500,
     "mp": 150,
-    "st": 110,
+    "st": 100,
     "bp": 0,
-    "atk": 410,
+    "atk": 460,
     "magic": 60,
-    "speed": 1.3,
+    "speed": 1.2,
     "attackSpeed": 3.5,
     "castSpeed": 1,
-    "defense": 30,
-    "resistance": 13.8,
+    "defense": 31,
+    "resistance": 14,
     "attackRange": 2,
     "role": "tank",
     "skillIds": [
       "skill_class_knight_charge",
       "skill_class_knight_magic_horse",
-      "skill_class_knight_haste_horse"
+      "skill_class_knight_haste_horse",
+      "skill_class_knight_pierce",
+      "skill_class_knight_spinning_slash",
+      "skill_class_knight_stable",
+      "skill_class_knight_march",
+      "skill_class_knight_prey"
     ],
     "skillSelections": {},
     "portrait": "assets/images/portraits/character-002.png",
@@ -125,10 +130,10 @@
       "revivePosition": "death"
     },
     "equipment": {
-      "mainWeapon": "item_gen_20261010_02_01",
-      "subWeapon": "item_gen_20261010_02_01",
-      "top": "item_gen_20261010_11_01",
-      "bottom": "item_gen_20261010_11_06",
+      "mainWeapon": "item_basic_twoHandSword_mainWeapon",
+      "subWeapon": "item_basic_twoHandSword_mainWeapon",
+      "top": "item_basic_plate_top",
+      "bottom": "item_basic_plate_bottom",
       "accessory": "",
       "special": ""
     },
@@ -136,10 +141,10 @@
       {
         "name": "세트 1",
         "equipment": {
-          "mainWeapon": "item_gen_20261010_02_01",
-          "subWeapon": "item_gen_20261010_02_01",
-          "top": "item_gen_20261010_11_01",
-          "bottom": "item_gen_20261010_11_06",
+          "mainWeapon": "item_basic_twoHandSword_mainWeapon",
+          "subWeapon": "item_basic_twoHandSword_mainWeapon",
+          "top": "item_basic_plate_top",
+          "bottom": "item_basic_plate_bottom",
           "accessory": "",
           "special": ""
         }
@@ -147,21 +152,23 @@
     ],
     "activeEquipmentSet": 0,
     "faction": "프라가",
-    "attackType": "physical"
+    "attackType": "physical",
+    "entityGrade": 2,
+    "customResources": []
   },
   {
     "name": "승려",
-    "hp": 2342,
+    "hp": 2000,
     "mp": 100,
-    "st": 170,
+    "st": 150,
     "bp": 0,
     "atk": 170,
     "magic": 10,
     "speed": 2,
     "attackSpeed": 0.5,
     "castSpeed": 0,
-    "defense": 12.6,
-    "resistance": 3.8,
+    "defense": 13,
+    "resistance": 4,
     "attackRange": 3,
     "role": "healer",
     "skillIds": [
@@ -196,10 +203,10 @@
       "revivePosition": "death"
     },
     "equipment": {
-      "mainWeapon": "item_1790432044932",
-      "subWeapon": "item_1790432044932",
-      "top": "item_gen_20261010_13_01",
-      "bottom": "item_gen_20261010_13_07",
+      "mainWeapon": "item_basic_glove_mainWeapon",
+      "subWeapon": "item_basic_glove_mainWeapon",
+      "top": "item_basic_leather_top",
+      "bottom": "item_basic_leather_bottom",
       "accessory": "",
       "special": ""
     },
@@ -207,10 +214,10 @@
       {
         "name": "세트 1",
         "equipment": {
-          "mainWeapon": "item_1790432044932",
-          "subWeapon": "item_1790432044932",
-          "top": "item_gen_20261010_13_01",
-          "bottom": "item_gen_20261010_13_07",
+          "mainWeapon": "item_basic_glove_mainWeapon",
+          "subWeapon": "item_basic_glove_mainWeapon",
+          "top": "item_basic_leather_top",
+          "bottom": "item_basic_leather_bottom",
           "accessory": "",
           "special": ""
         }
@@ -222,17 +229,17 @@
   },
   {
     "name": "성직자",
-    "hp": 2282,
+    "hp": 2000,
     "mp": 200,
-    "st": 105,
+    "st": 100,
     "bp": 0,
     "atk": 20,
     "magic": 560,
-    "speed": 1.1,
+    "speed": 1,
     "attackSpeed": 1,
     "castSpeed": 2.5,
-    "defense": 1.9,
-    "resistance": 26.3,
+    "defense": 2,
+    "resistance": 27,
     "attackRange": 4,
     "role": "healer",
     "skillIds": [
@@ -267,10 +274,10 @@
       "revivePosition": "death"
     },
     "equipment": {
-      "mainWeapon": "item_1781186124129",
-      "subWeapon": "item_1781186124129",
-      "top": "item_gen_20261010_14_01",
-      "bottom": "item_gen_20261010_14_06",
+      "mainWeapon": "item_basic_staff_mainWeapon",
+      "subWeapon": "item_basic_staff_mainWeapon",
+      "top": "item_basic_cloth_top",
+      "bottom": "item_basic_cloth_bottom",
       "accessory": "",
       "special": ""
     },
@@ -278,10 +285,10 @@
       {
         "name": "세트 1",
         "equipment": {
-          "mainWeapon": "item_1781186124129",
-          "subWeapon": "item_1781186124129",
-          "top": "item_gen_20261010_14_01",
-          "bottom": "item_gen_20261010_14_06",
+          "mainWeapon": "item_basic_staff_mainWeapon",
+          "subWeapon": "item_basic_staff_mainWeapon",
+          "top": "item_basic_cloth_top",
+          "bottom": "item_basic_cloth_bottom",
           "accessory": "",
           "special": ""
         }
@@ -293,27 +300,35 @@
   },
   {
     "name": "마법사",
-    "hp": 2282,
+    "hp": 2000,
     "mp": 200,
-    "st": 105,
+    "st": 100,
     "bp": 0,
     "atk": 22,
     "magic": 560,
-    "speed": 1.1,
+    "speed": 1,
     "attackSpeed": 1,
     "castSpeed": 2.5,
-    "defense": 1.9,
-    "resistance": 26.3,
+    "defense": 2,
+    "resistance": 27,
     "attackRange": 4,
     "role": "ranged",
     "skillIds": [
       "skill_class_mage_element_choice",
-      "skill_class_mage_arrow",
       "skill_class_mage_barrier",
+      "skill_class_mage_area",
       "skill_class_mage_quick",
-      "skill_class_mage_area"
+      "skill_class_mage_arrow",
+      "skill_class_mage_element_lightning",
+      "skill_class_mage_element_wind",
+      "skill_class_mage_element_earth",
+      "skill_class_mage_explosive",
+      "skill_class_mage_forbidden_ice",
+      "skill_class_mage_efficient_arrow"
     ],
-    "skillSelections": {},
+    "skillSelections": {
+      "skill_class_mage_element_choice": "lightning"
+    },
     "portrait": "assets/images/portraits/character-005.png",
     "attributes": {
       "str": 0,
@@ -339,10 +354,10 @@
       "revivePosition": "death"
     },
     "equipment": {
-      "mainWeapon": "item_1781186124129",
-      "subWeapon": "item_1781186124129",
-      "top": "item_gen_20261010_14_01",
-      "bottom": "item_gen_20261010_14_06",
+      "mainWeapon": "item_basic_staff_mainWeapon",
+      "subWeapon": "item_basic_staff_mainWeapon",
+      "top": "item_basic_cloth_top",
+      "bottom": "item_basic_cloth_bottom",
       "accessory": "",
       "special": ""
     },
@@ -350,10 +365,10 @@
       {
         "name": "세트 1",
         "equipment": {
-          "mainWeapon": "item_1781186124129",
-          "subWeapon": "item_1781186124129",
-          "top": "item_gen_20261010_14_01",
-          "bottom": "item_gen_20261010_14_06",
+          "mainWeapon": "item_basic_staff_mainWeapon",
+          "subWeapon": "item_basic_staff_mainWeapon",
+          "top": "item_basic_cloth_top",
+          "bottom": "item_basic_cloth_bottom",
           "accessory": "",
           "special": ""
         }
@@ -361,21 +376,23 @@
     ],
     "activeEquipmentSet": 0,
     "faction": "프라가",
-    "attackType": "magic"
+    "attackType": "magic",
+    "entityGrade": 2,
+    "customResources": []
   },
   {
     "name": "궁사",
-    "hp": 2342,
+    "hp": 2000,
     "mp": 100,
-    "st": 170,
+    "st": 150,
     "bp": 0,
     "atk": 270,
     "magic": 10,
     "speed": 2.2,
     "attackSpeed": 2.5,
     "castSpeed": 1.5,
-    "defense": 12.6,
-    "resistance": 3.8,
+    "defense": 13,
+    "resistance": 4,
     "attackRange": 6,
     "role": "melee",
     "skillIds": [
@@ -408,10 +425,10 @@
       "revivePosition": "death"
     },
     "equipment": {
-      "mainWeapon": "item_1781162923001",
-      "subWeapon": "item_1781162923001",
-      "top": "item_gen_20261010_13_01",
-      "bottom": "item_gen_20261010_13_07",
+      "mainWeapon": "item_basic_bow_mainWeapon",
+      "subWeapon": "item_basic_bow_mainWeapon",
+      "top": "item_basic_leather_top",
+      "bottom": "item_basic_leather_bottom",
       "accessory": "",
       "special": ""
     },
@@ -419,10 +436,10 @@
       {
         "name": "세트 1",
         "equipment": {
-          "mainWeapon": "item_1781162923001",
-          "subWeapon": "item_1781162923001",
-          "top": "item_gen_20261010_13_01",
-          "bottom": "item_gen_20261010_13_07",
+          "mainWeapon": "item_basic_bow_mainWeapon",
+          "subWeapon": "item_basic_bow_mainWeapon",
+          "top": "item_basic_leather_top",
+          "bottom": "item_basic_leather_bottom",
           "accessory": "",
           "special": ""
         }
@@ -434,17 +451,17 @@
   },
   {
     "name": "갑사",
-    "hp": 2342,
+    "hp": 2000,
     "mp": 100,
-    "st": 170,
+    "st": 150,
     "bp": 0,
     "atk": 270,
     "magic": 10,
     "speed": 2.2,
     "attackSpeed": 2.5,
     "castSpeed": 1.5,
-    "defense": 12.6,
-    "resistance": 3.8,
+    "defense": 13,
+    "resistance": 4,
     "attackRange": 6,
     "role": "melee",
     "skillIds": [
@@ -478,10 +495,10 @@
       "revivePosition": "death"
     },
     "equipment": {
-      "mainWeapon": "item_1781162923001",
-      "subWeapon": "item_1781162923001",
-      "top": "item_gen_20261010_13_01",
-      "bottom": "item_gen_20261010_13_07",
+      "mainWeapon": "item_basic_bow_mainWeapon",
+      "subWeapon": "item_basic_bow_mainWeapon",
+      "top": "item_basic_leather_top",
+      "bottom": "item_basic_leather_bottom",
       "accessory": "",
       "special": ""
     },
@@ -489,10 +506,10 @@
       {
         "name": "세트 1",
         "equipment": {
-          "mainWeapon": "item_1781162923001",
-          "subWeapon": "item_1781162923001",
-          "top": "item_gen_20261010_13_01",
-          "bottom": "item_gen_20261010_13_07",
+          "mainWeapon": "item_basic_bow_mainWeapon",
+          "subWeapon": "item_basic_bow_mainWeapon",
+          "top": "item_basic_leather_top",
+          "bottom": "item_basic_leather_bottom",
           "accessory": "",
           "special": ""
         }
@@ -504,17 +521,17 @@
   },
   {
     "name": "드루이드",
-    "hp": 2285,
+    "hp": 2000,
     "mp": 200,
-    "st": 170,
+    "st": 150,
     "bp": 0,
     "atk": 10,
-    "magic": 160,
+    "magic": 360,
     "speed": 2,
     "attackSpeed": 1.5,
     "castSpeed": 0.5,
-    "defense": 1.9,
-    "resistance": 26.4,
+    "defense": 2,
+    "resistance": 27,
     "attackRange": 6,
     "role": "healer",
     "skillIds": [
@@ -548,10 +565,10 @@
       "revivePosition": "death"
     },
     "equipment": {
-      "mainWeapon": "item_1786972173219",
+      "mainWeapon": "item_basic_치유서_mainWeapon",
       "subWeapon": "",
-      "top": "item_gen_20261010_14_01",
-      "bottom": "item_gen_20261010_14_07",
+      "top": "item_basic_cloth_top",
+      "bottom": "item_basic_cloth_bottom",
       "accessory": "",
       "special": ""
     },
@@ -559,10 +576,10 @@
       {
         "name": "세트 1",
         "equipment": {
-          "mainWeapon": "item_1786972173219",
+          "mainWeapon": "item_basic_치유서_mainWeapon",
           "subWeapon": "",
-          "top": "item_gen_20261010_14_01",
-          "bottom": "item_gen_20261010_14_07",
+          "top": "item_basic_cloth_top",
+          "bottom": "item_basic_cloth_bottom",
           "accessory": "",
           "special": ""
         }
@@ -574,17 +591,17 @@
   },
   {
     "name": "흑마법사",
-    "hp": 4785,
+    "hp": 4500,
     "mp": 200,
-    "st": 120,
+    "st": 100,
     "bp": 0,
     "atk": 12,
     "magic": 560,
     "speed": 1,
     "attackSpeed": 1,
     "castSpeed": 3,
-    "defense": 11.9,
-    "resistance": 31.4,
+    "defense": 12,
+    "resistance": 32,
     "attackRange": 4,
     "role": "ranged",
     "skillIds": [
@@ -617,10 +634,10 @@
       "revivePosition": "death"
     },
     "equipment": {
-      "mainWeapon": "item_1781186124129",
-      "subWeapon": "item_1781186124129",
-      "top": "item_gen_20261010_14_01",
-      "bottom": "item_gen_20261010_14_07",
+      "mainWeapon": "item_basic_staff_mainWeapon",
+      "subWeapon": "item_basic_staff_mainWeapon",
+      "top": "item_basic_cloth_top",
+      "bottom": "item_basic_cloth_bottom",
       "accessory": "",
       "special": ""
     },
@@ -628,10 +645,10 @@
       {
         "name": "세트 1",
         "equipment": {
-          "mainWeapon": "item_1781186124129",
-          "subWeapon": "item_1781186124129",
-          "top": "item_gen_20261010_14_01",
-          "bottom": "item_gen_20261010_14_07",
+          "mainWeapon": "item_basic_staff_mainWeapon",
+          "subWeapon": "item_basic_staff_mainWeapon",
+          "top": "item_basic_cloth_top",
+          "bottom": "item_basic_cloth_bottom",
           "accessory": "",
           "special": ""
         }
@@ -643,17 +660,17 @@
   },
   {
     "name": "해병",
-    "hp": 4990,
+    "hp": 4500,
     "mp": 100,
-    "st": 123,
+    "st": 100,
     "bp": 0,
     "atk": 115,
     "magic": 10,
     "speed": 1.2,
     "attackSpeed": 1.5,
     "castSpeed": 0,
-    "defense": 39.7,
-    "resistance": 8.7,
+    "defense": 41,
+    "resistance": 9,
     "attackRange": 7,
     "role": "tank",
     "skillIds": [
@@ -687,10 +704,10 @@
       "revivePosition": "death"
     },
     "equipment": {
-      "mainWeapon": "item_gen_20261010_07_01",
-      "subWeapon": "item_gen_20261010_08_01",
-      "top": "item_gen_20261010_11_01",
-      "bottom": "item_gen_20261010_11_09",
+      "mainWeapon": "item_basic_gun_mainWeapon",
+      "subWeapon": "item_basic_방패_subWeapon",
+      "top": "item_basic_plate_top",
+      "bottom": "item_basic_plate_bottom",
       "accessory": "",
       "special": ""
     },
@@ -698,10 +715,10 @@
       {
         "name": "세트 1",
         "equipment": {
-          "mainWeapon": "item_gen_20261010_07_01",
-          "subWeapon": "item_gen_20261010_08_01",
-          "top": "item_gen_20261010_11_01",
-          "bottom": "item_gen_20261010_11_09",
+          "mainWeapon": "item_basic_gun_mainWeapon",
+          "subWeapon": "item_basic_방패_subWeapon",
+          "top": "item_basic_plate_top",
+          "bottom": "item_basic_plate_bottom",
           "accessory": "",
           "special": ""
         }
@@ -713,17 +730,17 @@
   },
   {
     "name": "의무병",
-    "hp": 4970,
-    "mp": 105,
-    "st": 160,
+    "hp": 4500,
+    "mp": 100,
+    "st": 150,
     "bp": 0,
     "atk": 65,
     "magic": 10,
-    "speed": 2.1,
+    "speed": 2,
     "attackSpeed": 1,
     "castSpeed": 0,
-    "defense": 33,
-    "resistance": 8.8,
+    "defense": 36,
+    "resistance": 9,
     "attackRange": 7,
     "role": "healer",
     "skillIds": [
@@ -757,10 +774,10 @@
       "revivePosition": "death"
     },
     "equipment": {
-      "mainWeapon": "item_gen_20261010_07_01",
-      "subWeapon": "item_gen_20261010_08_10",
-      "top": "item_gen_20261010_11_01",
-      "bottom": "item_gen_20261010_11_06",
+      "mainWeapon": "item_basic_gun_mainWeapon",
+      "subWeapon": "item_basic_방패_subWeapon",
+      "top": "item_basic_plate_top",
+      "bottom": "item_basic_plate_bottom",
       "accessory": "",
       "special": ""
     },
@@ -768,10 +785,10 @@
       {
         "name": "세트 1",
         "equipment": {
-          "mainWeapon": "item_gen_20261010_07_01",
-          "subWeapon": "item_gen_20261010_08_10",
-          "top": "item_gen_20261010_11_01",
-          "bottom": "item_gen_20261010_11_06",
+          "mainWeapon": "item_basic_gun_mainWeapon",
+          "subWeapon": "item_basic_방패_subWeapon",
+          "top": "item_basic_plate_top",
+          "bottom": "item_basic_plate_bottom",
           "accessory": "",
           "special": ""
         }
@@ -783,17 +800,17 @@
   },
   {
     "name": "제독",
-    "hp": 2282,
+    "hp": 2000,
     "mp": 200,
-    "st": 105,
+    "st": 100,
     "bp": 0,
     "atk": 22,
     "magic": 560,
-    "speed": 1.1,
+    "speed": 1,
     "attackSpeed": 1,
     "castSpeed": 2.5,
-    "defense": 1.9,
-    "resistance": 26.3,
+    "defense": 2,
+    "resistance": 27,
     "attackRange": 4,
     "role": "ranged",
     "skillIds": [
@@ -827,10 +844,10 @@
       "revivePosition": "death"
     },
     "equipment": {
-      "mainWeapon": "item_1781186124129",
-      "subWeapon": "item_1781186124129",
-      "top": "item_gen_20261010_14_01",
-      "bottom": "item_gen_20261010_14_06",
+      "mainWeapon": "item_basic_staff_mainWeapon",
+      "subWeapon": "item_basic_staff_mainWeapon",
+      "top": "item_basic_cloth_top",
+      "bottom": "item_basic_cloth_bottom",
       "accessory": "",
       "special": ""
     },
@@ -838,10 +855,10 @@
       {
         "name": "세트 1",
         "equipment": {
-          "mainWeapon": "item_1781186124129",
-          "subWeapon": "item_1781186124129",
-          "top": "item_gen_20261010_14_01",
-          "bottom": "item_gen_20261010_14_06",
+          "mainWeapon": "item_basic_staff_mainWeapon",
+          "subWeapon": "item_basic_staff_mainWeapon",
+          "top": "item_basic_cloth_top",
+          "bottom": "item_basic_cloth_bottom",
           "accessory": "",
           "special": ""
         }
@@ -853,17 +870,17 @@
   },
   {
     "name": "화염술사",
-    "hp": 2306,
-    "mp": 205,
-    "st": 113,
+    "hp": 2000,
+    "mp": 200,
+    "st": 100,
     "bp": 0,
     "atk": 22,
-    "magic": 470,
-    "speed": 1.1,
+    "magic": 560,
+    "speed": 1,
     "attackSpeed": 1,
     "castSpeed": 2.5,
-    "defense": 1.8,
-    "resistance": 26,
+    "defense": 2,
+    "resistance": 27,
     "attackRange": 4,
     "role": "ranged",
     "skillIds": [
@@ -899,10 +916,10 @@
       "revivePosition": "death"
     },
     "equipment": {
-      "mainWeapon": "item_gen_20261010_05_10",
-      "subWeapon": "item_gen_20261010_05_10",
-      "top": "item_gen_20261010_14_01",
-      "bottom": "item_gen_20261010_14_09",
+      "mainWeapon": "item_basic_staff_mainWeapon",
+      "subWeapon": "item_basic_staff_mainWeapon",
+      "top": "item_basic_cloth_top",
+      "bottom": "item_basic_cloth_bottom",
       "accessory": "",
       "special": ""
     },
@@ -910,10 +927,10 @@
       {
         "name": "세트 1",
         "equipment": {
-          "mainWeapon": "item_gen_20261010_05_10",
-          "subWeapon": "item_gen_20261010_05_10",
-          "top": "item_gen_20261010_14_01",
-          "bottom": "item_gen_20261010_14_09",
+          "mainWeapon": "item_basic_staff_mainWeapon",
+          "subWeapon": "item_basic_staff_mainWeapon",
+          "top": "item_basic_cloth_top",
+          "bottom": "item_basic_cloth_bottom",
           "accessory": "",
           "special": ""
         }
@@ -925,17 +942,17 @@
   },
   {
     "name": "광전사",
-    "hp": 2470,
+    "hp": 2000,
     "mp": 100,
-    "st": 155,
+    "st": 150,
     "bp": 0,
-    "atk": 130,
+    "atk": 370,
     "magic": 10,
-    "speed": 2.3,
+    "speed": 2.2,
     "attackSpeed": 1.5,
     "castSpeed": 0,
-    "defense": 20,
-    "resistance": 3.8,
+    "defense": 21,
+    "resistance": 4,
     "attackRange": 3,
     "role": "tank",
     "skillIds": [
@@ -967,10 +984,10 @@
       "revivePosition": "death"
     },
     "equipment": {
-      "mainWeapon": "item_gen_20261010_01_02",
-      "subWeapon": "item_gen_20261010_01_02",
-      "top": "item_gen_20261010_11_01",
-      "bottom": "item_gen_20261010_11_06",
+      "mainWeapon": "item_basic_oneHandSword_mainWeapon",
+      "subWeapon": "item_basic_oneHandSword_mainWeapon",
+      "top": "item_basic_plate_top",
+      "bottom": "item_basic_plate_bottom",
       "accessory": "",
       "special": ""
     },
@@ -978,10 +995,10 @@
       {
         "name": "세트 1",
         "equipment": {
-          "mainWeapon": "item_gen_20261010_01_02",
-          "subWeapon": "item_gen_20261010_01_02",
-          "top": "item_gen_20261010_11_01",
-          "bottom": "item_gen_20261010_11_06",
+          "mainWeapon": "item_basic_oneHandSword_mainWeapon",
+          "subWeapon": "item_basic_oneHandSword_mainWeapon",
+          "top": "item_basic_plate_top",
+          "bottom": "item_basic_plate_bottom",
           "accessory": "",
           "special": ""
         }
@@ -993,17 +1010,17 @@
   },
   {
     "name": "저격수",
-    "hp": 4838,
+    "hp": 4500,
     "mp": 150,
-    "st": 105,
+    "st": 100,
     "bp": 0,
     "atk": 220,
     "magic": 10,
-    "speed": 1.3,
+    "speed": 1.2,
     "attackSpeed": 3,
     "castSpeed": 1.5,
-    "defense": 17.5,
-    "resistance": 18.8,
+    "defense": 18,
+    "resistance": 19,
     "attackRange": 6,
     "role": "melee",
     "skillIds": [
@@ -1038,10 +1055,10 @@
       "revivePosition": "death"
     },
     "equipment": {
-      "mainWeapon": "item_1781162923001",
-      "subWeapon": "item_1781162923001",
-      "top": "item_gen_20261010_13_01",
-      "bottom": "item_gen_20261010_13_06",
+      "mainWeapon": "item_basic_bow_mainWeapon",
+      "subWeapon": "item_basic_bow_mainWeapon",
+      "top": "item_basic_leather_top",
+      "bottom": "item_basic_leather_bottom",
       "accessory": "",
       "special": ""
     },
@@ -1049,10 +1066,10 @@
       {
         "name": "세트 1",
         "equipment": {
-          "mainWeapon": "item_1781162923001",
-          "subWeapon": "item_1781162923001",
-          "top": "item_gen_20261010_13_01",
-          "bottom": "item_gen_20261010_13_06",
+          "mainWeapon": "item_basic_bow_mainWeapon",
+          "subWeapon": "item_basic_bow_mainWeapon",
+          "top": "item_basic_leather_top",
+          "bottom": "item_basic_leather_bottom",
           "accessory": "",
           "special": ""
         }
@@ -1066,14 +1083,14 @@
     "name": "수도승",
     "hp": 2000,
     "mp": 100,
-    "st": 100,
+    "st": 150,
     "bp": 0,
-    "atk": 10,
+    "atk": 70,
     "magic": 10,
-    "speed": 1.2,
-    "attackSpeed": 2,
-    "castSpeed": 0.5,
-    "defense": 0,
+    "speed": 2.2,
+    "attackSpeed": 1.5,
+    "castSpeed": 0,
+    "defense": 5,
     "resistance": 0,
     "attackRange": 1,
     "role": "melee",
@@ -1084,10 +1101,10 @@
     "skillSelections": {},
     "portrait": "assets/images/portraits/신성교단_수도승.png",
     "attributes": {
-      "str": 0,
+      "str": 50,
       "vit": 0,
-      "agi": 0,
-      "focus": 0,
+      "agi": 50,
+      "focus": 50,
       "int": 0,
       "wis": 0
     },
@@ -1141,7 +1158,7 @@
     "magic": 60,
     "speed": 1.2,
     "attackSpeed": 2,
-    "castSpeed": 0.5,
+    "castSpeed": 0.1,
     "defense": 15,
     "resistance": 10,
     "attackRange": 1,
@@ -1199,17 +1216,17 @@
   },
   {
     "name": "수호자",
-    "hp": 4970,
+    "hp": 4500,
     "mp": 100,
-    "st": 105,
+    "st": 100,
     "bp": 0,
-    "atk": 100,
+    "atk": 220,
     "magic": 10,
-    "speed": 1.3,
+    "speed": 1.2,
     "attackSpeed": 2,
     "castSpeed": 0,
-    "defense": 40,
-    "resistance": 8.8,
+    "defense": 41,
+    "resistance": 9,
     "attackRange": 3,
     "role": "tank",
     "skillIds": [
@@ -1243,10 +1260,10 @@
       "revivePosition": "death"
     },
     "equipment": {
-      "mainWeapon": "item_1781164504281",
-      "subWeapon": "item_1781164461051",
-      "top": "item_gen_20261010_11_01",
-      "bottom": "item_gen_20261010_11_06",
+      "mainWeapon": "item_basic_oneHandSword_mainWeapon",
+      "subWeapon": "item_basic_방패_subWeapon",
+      "top": "item_basic_plate_top",
+      "bottom": "item_basic_plate_bottom",
       "accessory": "",
       "special": ""
     },
@@ -1254,10 +1271,10 @@
       {
         "name": "세트 1",
         "equipment": {
-          "mainWeapon": "item_1781164504281",
-          "subWeapon": "item_1781164461051",
-          "top": "item_gen_20261010_11_01",
-          "bottom": "item_gen_20261010_11_06",
+          "mainWeapon": "item_basic_oneHandSword_mainWeapon",
+          "subWeapon": "item_basic_방패_subWeapon",
+          "top": "item_basic_plate_top",
+          "bottom": "item_basic_plate_bottom",
           "accessory": "",
           "special": ""
         }
@@ -1269,17 +1286,17 @@
   },
   {
     "name": "몽마",
-    "hp": 2342,
+    "hp": 2000,
     "mp": 100,
-    "st": 170,
+    "st": 150,
     "bp": 0,
     "atk": 310,
     "magic": 10,
     "speed": 2.2,
     "attackSpeed": 0.5,
     "castSpeed": 0,
-    "defense": 12.6,
-    "resistance": 3.8,
+    "defense": 13,
+    "resistance": 4,
     "attackRange": 3,
     "role": "melee",
     "skillIds": [
@@ -1314,10 +1331,10 @@
       "revivePosition": "death"
     },
     "equipment": {
-      "mainWeapon": "item_1793195869879",
-      "subWeapon": "item_1793195869879",
-      "top": "item_gen_20261010_13_01",
-      "bottom": "item_gen_20261010_13_07",
+      "mainWeapon": "item_basic_단검_mainWeapon",
+      "subWeapon": "item_basic_단검_mainWeapon",
+      "top": "item_basic_leather_top",
+      "bottom": "item_basic_leather_bottom",
       "accessory": "",
       "special": ""
     },
@@ -1325,10 +1342,10 @@
       {
         "name": "세트 1",
         "equipment": {
-          "mainWeapon": "item_1793195869879",
-          "subWeapon": "item_1793195869879",
-          "top": "item_gen_20261010_13_01",
-          "bottom": "item_gen_20261010_13_07",
+          "mainWeapon": "item_basic_단검_mainWeapon",
+          "subWeapon": "item_basic_단검_mainWeapon",
+          "top": "item_basic_leather_top",
+          "bottom": "item_basic_leather_bottom",
           "accessory": "",
           "special": ""
         }
@@ -1340,17 +1357,17 @@
   },
   {
     "name": "집행가",
-    "hp": 4955,
-    "mp": 105,
-    "st": 110,
+    "hp": 4500,
+    "mp": 100,
+    "st": 100,
     "bp": 0,
-    "atk": 420,
+    "atk": 470,
     "magic": 10,
-    "speed": 1.3,
+    "speed": 1.2,
     "attackSpeed": 3.5,
     "castSpeed": 0.5,
-    "defense": 29.6,
-    "resistance": 8.6,
+    "defense": 31,
+    "resistance": 9,
     "attackRange": 2,
     "role": "tank",
     "skillIds": [
@@ -1384,10 +1401,10 @@
       "revivePosition": "death"
     },
     "equipment": {
-      "mainWeapon": "item_gen_20261010_02_01",
-      "subWeapon": "item_gen_20261010_02_01",
-      "top": "item_gen_20261010_11_01",
-      "bottom": "item_gen_20261010_11_10",
+      "mainWeapon": "item_basic_twoHandSword_mainWeapon",
+      "subWeapon": "item_basic_twoHandSword_mainWeapon",
+      "top": "item_basic_plate_top",
+      "bottom": "item_basic_plate_bottom",
       "accessory": "",
       "special": ""
     },
@@ -1395,10 +1412,10 @@
       {
         "name": "세트 1",
         "equipment": {
-          "mainWeapon": "item_gen_20261010_02_01",
-          "subWeapon": "item_gen_20261010_02_01",
-          "top": "item_gen_20261010_11_01",
-          "bottom": "item_gen_20261010_11_10",
+          "mainWeapon": "item_basic_twoHandSword_mainWeapon",
+          "subWeapon": "item_basic_twoHandSword_mainWeapon",
+          "top": "item_basic_plate_top",
+          "bottom": "item_basic_plate_bottom",
           "accessory": "",
           "special": ""
         }
@@ -1410,17 +1427,17 @@
   },
   {
     "name": "바이킹",
-    "hp": 4970,
+    "hp": 4500,
     "mp": 100,
-    "st": 160,
+    "st": 150,
     "bp": 0,
-    "atk": 410,
+    "atk": 460,
     "magic": 10,
-    "speed": 2.3,
+    "speed": 2.2,
     "attackSpeed": 3,
     "castSpeed": 1,
-    "defense": 30,
-    "resistance": 8.8,
+    "defense": 31,
+    "resistance": 9,
     "attackRange": 2,
     "role": "tank",
     "skillIds": [
@@ -1452,10 +1469,10 @@
       "revivePosition": "death"
     },
     "equipment": {
-      "mainWeapon": "item_gen_20261010_02_01",
-      "subWeapon": "item_gen_20261010_02_01",
-      "top": "item_gen_20261010_11_01",
-      "bottom": "item_gen_20261010_11_06",
+      "mainWeapon": "item_basic_twoHandSword_mainWeapon",
+      "subWeapon": "item_basic_twoHandSword_mainWeapon",
+      "top": "item_basic_plate_top",
+      "bottom": "item_basic_plate_bottom",
       "accessory": "",
       "special": ""
     },
@@ -1463,10 +1480,10 @@
       {
         "name": "세트 1",
         "equipment": {
-          "mainWeapon": "item_gen_20261010_02_01",
-          "subWeapon": "item_gen_20261010_02_01",
-          "top": "item_gen_20261010_11_01",
-          "bottom": "item_gen_20261010_11_06",
+          "mainWeapon": "item_basic_twoHandSword_mainWeapon",
+          "subWeapon": "item_basic_twoHandSword_mainWeapon",
+          "top": "item_basic_plate_top",
+          "bottom": "item_basic_plate_bottom",
           "accessory": "",
           "special": ""
         }
@@ -1478,17 +1495,17 @@
   },
   {
     "name": "악마",
-    "hp": 4782,
+    "hp": 4500,
     "mp": 200,
-    "st": 105,
+    "st": 100,
     "bp": 0,
     "atk": 10,
     "magic": 560,
-    "speed": 1.3,
+    "speed": 1.2,
     "attackSpeed": 1,
     "castSpeed": 3,
-    "defense": 11.9,
-    "resistance": 31.3,
+    "defense": 12,
+    "resistance": 32,
     "attackRange": 4,
     "role": "tank",
     "skillIds": [
@@ -1522,10 +1539,10 @@
       "revivePosition": "death"
     },
     "equipment": {
-      "mainWeapon": "item_1781186124129",
-      "subWeapon": "item_1781186124129",
-      "top": "item_gen_20261010_14_01",
-      "bottom": "item_gen_20261010_14_06",
+      "mainWeapon": "item_basic_staff_mainWeapon",
+      "subWeapon": "item_basic_staff_mainWeapon",
+      "top": "item_basic_cloth_top",
+      "bottom": "item_basic_cloth_bottom",
       "accessory": "",
       "special": ""
     },
@@ -1533,10 +1550,10 @@
       {
         "name": "세트 1",
         "equipment": {
-          "mainWeapon": "item_1781186124129",
-          "subWeapon": "item_1781186124129",
-          "top": "item_gen_20261010_14_01",
-          "bottom": "item_gen_20261010_14_06",
+          "mainWeapon": "item_basic_staff_mainWeapon",
+          "subWeapon": "item_basic_staff_mainWeapon",
+          "top": "item_basic_cloth_top",
+          "bottom": "item_basic_cloth_bottom",
           "accessory": "",
           "special": ""
         }
@@ -1548,17 +1565,17 @@
   },
   {
     "name": "요정 사냥꾼",
-    "hp": 2361,
+    "hp": 2000,
     "mp": 100,
-    "st": 163,
+    "st": 150,
     "bp": 0,
     "atk": 270,
     "magic": 10,
     "speed": 2.2,
     "attackSpeed": 2.5,
     "castSpeed": 1.5,
-    "defense": 12.4,
-    "resistance": 3.7,
+    "defense": 13,
+    "resistance": 4,
     "attackRange": 6,
     "role": "melee",
     "skillIds": [
@@ -1592,10 +1609,10 @@
       "revivePosition": "death"
     },
     "equipment": {
-      "mainWeapon": "item_1781162923001",
-      "subWeapon": "item_1781162923001",
-      "top": "item_gen_20261010_13_01",
-      "bottom": "item_gen_20261010_13_09",
+      "mainWeapon": "item_basic_bow_mainWeapon",
+      "subWeapon": "item_basic_bow_mainWeapon",
+      "top": "item_basic_leather_top",
+      "bottom": "item_basic_leather_bottom",
       "accessory": "",
       "special": ""
     },
@@ -1603,10 +1620,10 @@
       {
         "name": "세트 1",
         "equipment": {
-          "mainWeapon": "item_1781162923001",
-          "subWeapon": "item_1781162923001",
-          "top": "item_gen_20261010_13_01",
-          "bottom": "item_gen_20261010_13_09",
+          "mainWeapon": "item_basic_bow_mainWeapon",
+          "subWeapon": "item_basic_bow_mainWeapon",
+          "top": "item_basic_leather_top",
+          "bottom": "item_basic_leather_bottom",
           "accessory": "",
           "special": ""
         }
@@ -1617,87 +1634,87 @@
     "attackType": "physical"
   },
   {
-  "name": "영혼수확자",
-  "hp": 2000,
-  "mp": 100,
-  "st": 150,
-  "bp": 0,
-  "atk": 70,
-  "magic": 10,
-  "speed": 2,
-  "attackSpeed": 1.5,
-  "castSpeed": 0,
-  "defense": 5,
-  "resistance": 0,
-  "attackRange": 1,
-  "role": "healer",
-  "skillIds": [
-    "skill_class_soul_reaper_soul_and_body",
-    "skill_class_soul_reaper_black_assault"
-  ],
-  "skillSelections": {},
-  "portrait": "assets/images/portraits/철엘프_영혼수확자.png",
-  "attributes": {
-    "str": 50,
-    "vit": 0,
-    "agi": 50,
-    "focus": 50,
-    "int": 0,
-    "wis": 0
-  },
-  "equipmentRules": {
-    "extraWeaponSlots": 0,
-    "twoHandSingleSlot": false,
-    "sameTargetWeaponPenaltyPercent": 0
-  },
-  "battleRules": {
-    "entryDelay": 0,
-    "reviveCount": 0,
-    "reviveDelay": 0,
-    "reviveHpPercent": 50,
-    "reviveMpPercent": 100,
-    "reviveStPercent": 100,
-    "reviveInvulnerable": 0,
-    "revivePosition": "death"
-  },
-  "equipment": {
-    "mainWeapon": "",
-    "subWeapon": "",
-    "top": "",
-    "bottom": "",
-    "accessory": "",
-    "special": ""
-  },
-  "equipmentSets": [
-    {
-      "name": "세트 1",
-      "equipment": {
-        "mainWeapon": "",
-        "subWeapon": "",
-        "top": "",
-        "bottom": "",
-        "accessory": "",
-        "special": ""
+    "name": "영혼수확자",
+    "hp": 2000,
+    "mp": 100,
+    "st": 150,
+    "bp": 0,
+    "atk": 70,
+    "magic": 10,
+    "speed": 2,
+    "attackSpeed": 1.5,
+    "castSpeed": 0,
+    "defense": 5,
+    "resistance": 0,
+    "attackRange": 1,
+    "role": "healer",
+    "skillIds": [
+      "skill_class_soul_reaper_soul_and_body",
+      "skill_class_soul_reaper_black_assault"
+    ],
+    "skillSelections": {},
+    "portrait": "assets/images/portraits/철엘프_영혼수확자.png",
+    "attributes": {
+      "str": 50,
+      "vit": 0,
+      "agi": 50,
+      "focus": 50,
+      "int": 0,
+      "wis": 0
+    },
+    "equipmentRules": {
+      "extraWeaponSlots": 0,
+      "twoHandSingleSlot": false,
+      "sameTargetWeaponPenaltyPercent": 0
+    },
+    "battleRules": {
+      "entryDelay": 0,
+      "reviveCount": 0,
+      "reviveDelay": 0,
+      "reviveHpPercent": 50,
+      "reviveMpPercent": 100,
+      "reviveStPercent": 100,
+      "reviveInvulnerable": 0,
+      "revivePosition": "death"
+    },
+    "equipment": {
+      "mainWeapon": "",
+      "subWeapon": "",
+      "top": "",
+      "bottom": "",
+      "accessory": "",
+      "special": ""
+    },
+    "equipmentSets": [
+      {
+        "name": "세트 1",
+        "equipment": {
+          "mainWeapon": "",
+          "subWeapon": "",
+          "top": "",
+          "bottom": "",
+          "accessory": "",
+          "special": ""
+        }
       }
-    }
-  ],
-  "activeEquipmentSet": 0,
-  "faction": "철엘프",
-  "attackType": "physical"
-},
+    ],
+    "activeEquipmentSet": 0,
+    "faction": "철엘프",
+    "attackType": "physical"
+  },
   {
     "name": "학자",
-    "hp": 2282,
+    "hp": 2000,
     "mp": 150,
-    "st": 160,
+    "st": 150,
     "bp": 0,
     "atk": 62,
     "magic": 560,
-    "speed": 2.1,
+    "speed": 2,
     "attackSpeed": 0.5,
     "castSpeed": 3,
-    "defense": 6.9,
-    "resistance": 16.3,
+    "defense": 7,
+    "resistance": 17,
     "attackRange": 4,
     "role": "ranged",
     "skillIds": [
@@ -1733,10 +1750,10 @@
       "revivePosition": "death"
     },
     "equipment": {
-      "mainWeapon": "item_gen_20261010_05_01",
-      "subWeapon": "item_gen_20261010_05_01",
-      "top": "item_gen_20261010_14_01",
-      "bottom": "item_gen_20261010_14_06",
+      "mainWeapon": "item_basic_staff_mainWeapon",
+      "subWeapon": "item_basic_staff_mainWeapon",
+      "top": "item_basic_cloth_top",
+      "bottom": "item_basic_cloth_bottom",
       "accessory": "",
       "special": ""
     },
@@ -1744,10 +1761,10 @@
       {
         "name": "세트 1",
         "equipment": {
-          "mainWeapon": "item_gen_20261010_05_01",
-          "subWeapon": "item_gen_20261010_05_01",
-          "top": "item_gen_20261010_14_01",
-          "bottom": "item_gen_20261010_14_06",
+          "mainWeapon": "item_basic_staff_mainWeapon",
+          "subWeapon": "item_basic_staff_mainWeapon",
+          "top": "item_basic_cloth_top",
+          "bottom": "item_basic_cloth_bottom",
           "accessory": "",
           "special": ""
         }
@@ -1759,17 +1776,17 @@
   },
   {
     "name": "정령술사",
-    "hp": 2282,
+    "hp": 2000,
     "mp": 200,
-    "st": 105,
+    "st": 100,
     "bp": 0,
     "atk": 20,
     "magic": 560,
-    "speed": 1.1,
+    "speed": 1,
     "attackSpeed": 1,
     "castSpeed": 2.5,
-    "defense": 1.9,
-    "resistance": 26.3,
+    "defense": 2,
+    "resistance": 27,
     "attackRange": 4,
     "role": "healer",
     "skillIds": [
@@ -1805,10 +1822,10 @@
       "revivePosition": "death"
     },
     "equipment": {
-      "mainWeapon": "item_1781186124129",
-      "subWeapon": "item_1781186124129",
-      "top": "item_gen_20261010_14_01",
-      "bottom": "item_gen_20261010_14_06",
+      "mainWeapon": "item_basic_staff_mainWeapon",
+      "subWeapon": "item_basic_staff_mainWeapon",
+      "top": "item_basic_cloth_top",
+      "bottom": "item_basic_cloth_bottom",
       "accessory": "",
       "special": ""
     },
@@ -1816,10 +1833,10 @@
       {
         "name": "세트 1",
         "equipment": {
-          "mainWeapon": "item_1781186124129",
-          "subWeapon": "item_1781186124129",
-          "top": "item_gen_20261010_14_01",
-          "bottom": "item_gen_20261010_14_06",
+          "mainWeapon": "item_basic_staff_mainWeapon",
+          "subWeapon": "item_basic_staff_mainWeapon",
+          "top": "item_basic_cloth_top",
+          "bottom": "item_basic_cloth_bottom",
           "accessory": "",
           "special": ""
         }
@@ -1898,17 +1915,17 @@
   {
     "name": "혈청형",
     "entityGrade": 2,
-    "hp": 4773,
-    "mp": 205,
-    "st": 105,
+    "hp": 4500,
+    "mp": 200,
+    "st": 100,
     "bp": 0,
     "atk": 10,
     "magic": 560,
-    "speed": 1.1,
+    "speed": 1,
     "attackSpeed": 1,
     "castSpeed": 3,
-    "defense": 11.8,
-    "resistance": 30.9,
+    "defense": 12,
+    "resistance": 32,
     "attackRange": 4,
     "role": "healer",
     "skillIds": [
@@ -1947,10 +1964,10 @@
       "revivePosition": "death"
     },
     "equipment": {
-      "mainWeapon": "item_1781186124129",
-      "subWeapon": "item_1781186124129",
-      "top": "item_gen_20261010_14_01",
-      "bottom": "item_gen_20261010_14_10",
+      "mainWeapon": "item_basic_staff_mainWeapon",
+      "subWeapon": "item_basic_staff_mainWeapon",
+      "top": "item_basic_cloth_top",
+      "bottom": "item_basic_cloth_bottom",
       "accessory": "",
       "special": ""
     },
@@ -1958,10 +1975,10 @@
       {
         "name": "세트 1",
         "equipment": {
-          "mainWeapon": "item_1781186124129",
-          "subWeapon": "item_1781186124129",
-          "top": "item_gen_20261010_14_01",
-          "bottom": "item_gen_20261010_14_10",
+          "mainWeapon": "item_basic_staff_mainWeapon",
+          "subWeapon": "item_basic_staff_mainWeapon",
+          "top": "item_basic_cloth_top",
+          "bottom": "item_basic_cloth_bottom",
           "accessory": "",
           "special": ""
         }
@@ -1973,17 +1990,17 @@
   },
   {
     "name": "질병형",
-    "hp": 4782,
+    "hp": 4500,
     "mp": 200,
-    "st": 105,
+    "st": 100,
     "bp": 0,
     "atk": 12,
     "magic": 560,
-    "speed": 1.1,
+    "speed": 1,
     "attackSpeed": 1,
     "castSpeed": 3,
-    "defense": 11.9,
-    "resistance": 31.3,
+    "defense": 12,
+    "resistance": 32,
     "attackRange": 4,
     "role": "ranged",
     "skillIds": [
@@ -2018,10 +2035,10 @@
       "revivePosition": "death"
     },
     "equipment": {
-      "mainWeapon": "item_1781186124129",
-      "subWeapon": "item_1781186124129",
-      "top": "item_gen_20261010_14_01",
-      "bottom": "item_gen_20261010_14_06",
+      "mainWeapon": "item_basic_staff_mainWeapon",
+      "subWeapon": "item_basic_staff_mainWeapon",
+      "top": "item_basic_cloth_top",
+      "bottom": "item_basic_cloth_bottom",
       "accessory": "",
       "special": ""
     },
@@ -2029,10 +2046,10 @@
       {
         "name": "세트 1",
         "equipment": {
-          "mainWeapon": "item_1781186124129",
-          "subWeapon": "item_1781186124129",
-          "top": "item_gen_20261010_14_01",
-          "bottom": "item_gen_20261010_14_06",
+          "mainWeapon": "item_basic_staff_mainWeapon",
+          "subWeapon": "item_basic_staff_mainWeapon",
+          "top": "item_basic_cloth_top",
+          "bottom": "item_basic_cloth_bottom",
           "accessory": "",
           "special": ""
         }
@@ -2043,76 +2060,76 @@
     "attackType": "magic"
   },
   {
-  "name": "각질형",
-  "hp": 4500,
-  "mp": 100,
-  "st": 100,
-  "bp": 0,
-  "atk": 70,
-  "magic": 10,
-  "speed": 1.2,
-  "attackSpeed": 2,
-  "castSpeed": 0,
-  "defense": 15,
-  "resistance": 5,
-  "attackRange": 1,
-  "role": "tank",
-  "skillIds": [
-    "skill_class_keratin_shell",
-    "skill_class_keratin_molt",
-    "skill_class_keratin_repulsive_shield",
-    "skill_class_keratin_pity"
-  ],
-  "skillSelections": {},
-  "portrait": "assets/images/portraits/돌연변이_각질형.png",
-  "attributes": {
-    "str": 50,
-    "vit": 50,
-    "agi": 0,
-    "focus": 50,
-    "int": 0,
-    "wis": 0
-  },
-  "equipmentRules": {
-    "extraWeaponSlots": 0,
-    "twoHandSingleSlot": false,
-    "sameTargetWeaponPenaltyPercent": 0
-  },
-  "battleRules": {
-    "entryDelay": 0,
-    "reviveCount": 0,
-    "reviveDelay": 0,
-    "reviveHpPercent": 50,
-    "reviveMpPercent": 100,
-    "reviveStPercent": 100,
-    "reviveInvulnerable": 0,
-    "revivePosition": "death"
-  },
-  "equipment": {
-    "mainWeapon": "",
-    "subWeapon": "",
-    "top": "",
-    "bottom": "",
-    "accessory": "",
-    "special": ""
-  },
-  "equipmentSets": [
-    {
-      "name": "세트 1",
-      "equipment": {
-        "mainWeapon": "",
-        "subWeapon": "",
-        "top": "",
-        "bottom": "",
-        "accessory": "",
-        "special": ""
+    "name": "각질형",
+    "hp": 4500,
+    "mp": 100,
+    "st": 100,
+    "bp": 0,
+    "atk": 70,
+    "magic": 10,
+    "speed": 1.2,
+    "attackSpeed": 2,
+    "castSpeed": 0,
+    "defense": 15,
+    "resistance": 5,
+    "attackRange": 1,
+    "role": "tank",
+    "skillIds": [
+      "skill_class_keratin_shell",
+      "skill_class_keratin_molt",
+      "skill_class_keratin_repulsive_shield",
+      "skill_class_keratin_pity"
+    ],
+    "skillSelections": {},
+    "portrait": "assets/images/portraits/돌연변이_각질형.png",
+    "attributes": {
+      "str": 50,
+      "vit": 50,
+      "agi": 0,
+      "focus": 50,
+      "int": 0,
+      "wis": 0
+    },
+    "equipmentRules": {
+      "extraWeaponSlots": 0,
+      "twoHandSingleSlot": false,
+      "sameTargetWeaponPenaltyPercent": 0
+    },
+    "battleRules": {
+      "entryDelay": 0,
+      "reviveCount": 0,
+      "reviveDelay": 0,
+      "reviveHpPercent": 50,
+      "reviveMpPercent": 100,
+      "reviveStPercent": 100,
+      "reviveInvulnerable": 0,
+      "revivePosition": "death"
+    },
+    "equipment": {
+      "mainWeapon": "",
+      "subWeapon": "",
+      "top": "",
+      "bottom": "",
+      "accessory": "",
+      "special": ""
+    },
+    "equipmentSets": [
+      {
+        "name": "세트 1",
+        "equipment": {
+          "mainWeapon": "",
+          "subWeapon": "",
+          "top": "",
+          "bottom": "",
+          "accessory": "",
+          "special": ""
+        }
       }
-    }
-  ],
-  "activeEquipmentSet": 0,
-  "faction": "돌연변이",
-  "attackType": "physical"
-},
+    ],
+    "activeEquipmentSet": 0,
+    "faction": "돌연변이",
+    "attackType": "physical"
+  },
   {
     "name": "응원가",
     "hp": 4500,
@@ -2185,17 +2202,17 @@
   },
   {
     "name": "광대",
-    "hp": 4918,
-    "mp": 215,
-    "st": 105,
+    "hp": 4500,
+    "mp": 200,
+    "st": 100,
     "bp": 0,
     "atk": 12,
     "magic": 560,
     "speed": 1,
     "attackSpeed": 1,
     "castSpeed": 3,
-    "defense": 21.4,
-    "resistance": 25.7,
+    "defense": 22,
+    "resistance": 26,
     "attackRange": 4,
     "role": "ranged",
     "skillIds": [
@@ -2231,10 +2248,10 @@
       "revivePosition": "death"
     },
     "equipment": {
-      "mainWeapon": "item_1781186124129",
-      "subWeapon": "item_1781186124129",
-      "top": "item_gen_20261010_12_01",
-      "bottom": "item_gen_20261010_12_08",
+      "mainWeapon": "item_basic_staff_mainWeapon",
+      "subWeapon": "item_basic_staff_mainWeapon",
+      "top": "item_basic_chain_top",
+      "bottom": "item_basic_chain_bottom",
       "accessory": "",
       "special": ""
     },
@@ -2242,10 +2259,10 @@
       {
         "name": "세트 1",
         "equipment": {
-          "mainWeapon": "item_1781186124129",
-          "subWeapon": "item_1781186124129",
-          "top": "item_gen_20261010_12_01",
-          "bottom": "item_gen_20261010_12_08",
+          "mainWeapon": "item_basic_staff_mainWeapon",
+          "subWeapon": "item_basic_staff_mainWeapon",
+          "top": "item_basic_chain_top",
+          "bottom": "item_basic_chain_bottom",
           "accessory": "",
           "special": ""
         }
@@ -2257,17 +2274,17 @@
   },
   {
     "name": "조련사",
-    "hp": 2418,
-    "mp": 165,
-    "st": 160,
+    "hp": 2000,
+    "mp": 150,
+    "st": 150,
     "bp": 0,
-    "atk": 171,
+    "atk": 220,
     "magic": 60,
     "speed": 2.2,
     "attackSpeed": 2.5,
     "castSpeed": 1.5,
-    "defense": 11.4,
-    "resistance": 10.7,
+    "defense": 12,
+    "resistance": 11,
     "attackRange": 6,
     "role": "melee",
     "skillIds": [
@@ -2299,10 +2316,10 @@
       "revivePosition": "death"
     },
     "equipment": {
-      "mainWeapon": "item_gen_20261010_06_01",
-      "subWeapon": "item_gen_20261010_06_01",
-      "top": "item_gen_20261010_12_01",
-      "bottom": "item_gen_20261010_12_08",
+      "mainWeapon": "item_basic_bow_mainWeapon",
+      "subWeapon": "item_basic_bow_mainWeapon",
+      "top": "item_basic_chain_top",
+      "bottom": "item_basic_chain_bottom",
       "accessory": "",
       "special": ""
     },
@@ -2310,10 +2327,10 @@
       {
         "name": "세트 1",
         "equipment": {
-          "mainWeapon": "item_gen_20261010_06_01",
-          "subWeapon": "item_gen_20261010_06_01",
-          "top": "item_gen_20261010_12_01",
-          "bottom": "item_gen_20261010_12_08",
+          "mainWeapon": "item_basic_bow_mainWeapon",
+          "subWeapon": "item_basic_bow_mainWeapon",
+          "top": "item_basic_chain_top",
+          "bottom": "item_basic_chain_bottom",
           "accessory": "",
           "special": ""
         }
@@ -2326,16 +2343,16 @@
   {
     "name": "마귀",
     "hp": 2000,
-    "mp": 100,
+    "mp": 200,
     "st": 100,
     "bp": 0,
-    "atk": 12,
-    "magic": 10,
+    "atk": 22,
+    "magic": 60,
     "speed": 1,
     "attackSpeed": 2,
-    "castSpeed": 0.5,
+    "castSpeed": 0,
     "defense": 0,
-    "resistance": 0,
+    "resistance": 15,
     "attackRange": 1,
     "role": "ranged",
     "skillIds": [
@@ -2347,9 +2364,9 @@
       "str": 0,
       "vit": 0,
       "agi": 0,
-      "focus": 0,
-      "int": 0,
-      "wis": 0
+      "focus": 50,
+      "int": 50,
+      "wis": 50
     },
     "equipmentRules": {
       "extraWeaponSlots": 0,
@@ -2393,17 +2410,17 @@
   },
   {
     "name": "암살자",
-    "hp": 2338,
+    "hp": 2000,
     "mp": 100,
-    "st": 155,
+    "st": 150,
     "bp": 0,
     "atk": 310,
     "magic": 10,
-    "speed": 2.3,
+    "speed": 2.2,
     "attackSpeed": 0.5,
     "castSpeed": 0,
-    "defense": 12.5,
-    "resistance": 3.8,
+    "defense": 13,
+    "resistance": 4,
     "attackRange": 3,
     "role": "melee",
     "skillIds": [
@@ -2436,10 +2453,10 @@
       "revivePosition": "death"
     },
     "equipment": {
-      "mainWeapon": "item_1793195869879",
-      "subWeapon": "item_1793195869879",
-      "top": "item_gen_20261010_13_01",
-      "bottom": "item_gen_20261010_13_06",
+      "mainWeapon": "item_basic_단검_mainWeapon",
+      "subWeapon": "item_basic_단검_mainWeapon",
+      "top": "item_basic_leather_top",
+      "bottom": "item_basic_leather_bottom",
       "accessory": "",
       "special": ""
     },
@@ -2447,10 +2464,10 @@
       {
         "name": "세트 1",
         "equipment": {
-          "mainWeapon": "item_1793195869879",
-          "subWeapon": "item_1793195869879",
-          "top": "item_gen_20261010_13_01",
-          "bottom": "item_gen_20261010_13_06",
+          "mainWeapon": "item_basic_단검_mainWeapon",
+          "subWeapon": "item_basic_단검_mainWeapon",
+          "top": "item_basic_leather_top",
+          "bottom": "item_basic_leather_bottom",
           "accessory": "",
           "special": ""
         }
@@ -2463,16 +2480,16 @@
   {
     "name": "룬술사",
     "hp": 2000,
-    "mp": 100,
+    "mp": 200,
     "st": 100,
     "bp": 0,
-    "atk": 10,
-    "magic": 10,
+    "atk": 60,
+    "magic": 60,
     "speed": 1,
     "attackSpeed": 2,
-    "castSpeed": 0.5,
-    "defense": 0,
-    "resistance": 0,
+    "castSpeed": 0.1,
+    "defense": 5,
+    "resistance": 15,
     "attackRange": 1,
     "role": "healer",
     "skillIds": [
@@ -2482,12 +2499,12 @@
     "skillSelections": {},
     "portrait": "assets/images/portraits/image-20261018143242049865.png",
     "attributes": {
-      "str": 0,
+      "str": 50,
       "vit": 0,
       "agi": 0,
       "focus": 0,
-      "int": 0,
-      "wis": 0
+      "int": 50,
+      "wis": 50
     },
     "equipmentRules": {
       "extraWeaponSlots": 0,
@@ -2531,27 +2548,37 @@
   },
   {
     "name": "공작",
+    "entityGrade": 2,
     "hp": 2000,
     "mp": 100,
-    "st": 100,
+    "st": 150,
     "bp": 0,
-    "atk": 10,
+    "atk": 220,
     "magic": 10,
-    "speed": 1.2,
-    "attackSpeed": 2,
-    "castSpeed": 0.5,
-    "defense": 0,
-    "resistance": 0,
-    "attackRange": 1,
+    "speed": 2.2,
+    "attackSpeed": 1.5,
+    "castSpeed": 0,
+    "defense": 13,
+    "resistance": 4,
+    "attackRange": 2,
     "role": "melee",
-    "skillIds": [],
+    "skillIds": [
+      "skill_class_duke_immortality",
+      "skill_class_duke_bomb_necklace",
+      "skill_class_duke_unfair_damage",
+      "skill_class_duke_cursed_nail",
+      "skill_class_duke_rapid_revival",
+      "skill_class_duke_near_grave",
+      "skill_class_duke_early_death",
+      "skill_class_duke_anxious_wait"
+    ],
     "skillSelections": {},
     "portrait": "assets/images/portraits/image-20261018142851901914.png",
     "attributes": {
-      "str": 0,
+      "str": 50,
       "vit": 0,
-      "agi": 0,
-      "focus": 0,
+      "agi": 50,
+      "focus": 50,
       "int": 0,
       "wis": 0
     },
@@ -2571,10 +2598,10 @@
       "revivePosition": "death"
     },
     "equipment": {
-      "mainWeapon": "",
+      "mainWeapon": "item_basic_oneHandSword_mainWeapon",
       "subWeapon": "",
-      "top": "",
-      "bottom": "",
+      "top": "item_basic_leather_top",
+      "bottom": "item_basic_leather_bottom",
       "accessory": "",
       "special": ""
     },
@@ -2582,10 +2609,10 @@
       {
         "name": "세트 1",
         "equipment": {
-          "mainWeapon": "",
+          "mainWeapon": "item_basic_oneHandSword_mainWeapon",
           "subWeapon": "",
-          "top": "",
-          "bottom": "",
+          "top": "item_basic_leather_top",
+          "bottom": "item_basic_leather_bottom",
           "accessory": "",
           "special": ""
         }
@@ -2597,17 +2624,17 @@
   },
   {
     "name": "인형술사",
-    "hp": 2361,
+    "hp": 2000,
     "mp": 150,
-    "st": 163,
+    "st": 150,
     "bp": 0,
     "atk": 220,
     "magic": 10,
     "speed": 2,
     "attackSpeed": 2.5,
     "castSpeed": 1.5,
-    "defense": 7.4,
-    "resistance": 13.7,
+    "defense": 8,
+    "resistance": 14,
     "attackRange": 6,
     "role": "healer",
     "skillIds": [
@@ -2643,10 +2670,10 @@
       "revivePosition": "death"
     },
     "equipment": {
-      "mainWeapon": "item_1781162923001",
-      "subWeapon": "item_1781162923001",
-      "top": "item_gen_20261010_13_01",
-      "bottom": "item_gen_20261010_13_09",
+      "mainWeapon": "item_basic_bow_mainWeapon",
+      "subWeapon": "item_basic_bow_mainWeapon",
+      "top": "item_basic_leather_top",
+      "bottom": "item_basic_leather_bottom",
       "accessory": "",
       "special": ""
     },
@@ -2654,10 +2681,10 @@
       {
         "name": "세트 1",
         "equipment": {
-          "mainWeapon": "item_1781162923001",
-          "subWeapon": "item_1781162923001",
-          "top": "item_gen_20261010_13_01",
-          "bottom": "item_gen_20261010_13_09",
+          "mainWeapon": "item_basic_bow_mainWeapon",
+          "subWeapon": "item_basic_bow_mainWeapon",
+          "top": "item_basic_leather_top",
+          "bottom": "item_basic_leather_bottom",
           "accessory": "",
           "special": ""
         }
@@ -2669,17 +2696,17 @@
   },
   {
     "name": "별소환사",
-    "hp": 4782,
+    "hp": 4500,
     "mp": 200,
-    "st": 105,
+    "st": 100,
     "bp": 0,
     "atk": 12,
     "magic": 560,
-    "speed": 1.1,
+    "speed": 1,
     "attackSpeed": 1,
     "castSpeed": 3,
-    "defense": 11.9,
-    "resistance": 31.3,
+    "defense": 12,
+    "resistance": 32,
     "attackRange": 4,
     "role": "ranged",
     "skillIds": [
@@ -2716,10 +2743,10 @@
       "revivePosition": "death"
     },
     "equipment": {
-      "mainWeapon": "item_1781186124129",
-      "subWeapon": "item_1781186124129",
-      "top": "item_gen_20261010_14_01",
-      "bottom": "item_gen_20261010_14_06",
+      "mainWeapon": "item_basic_staff_mainWeapon",
+      "subWeapon": "item_basic_staff_mainWeapon",
+      "top": "item_basic_cloth_top",
+      "bottom": "item_basic_cloth_bottom",
       "accessory": "",
       "special": ""
     },
@@ -2727,10 +2754,10 @@
       {
         "name": "세트 1",
         "equipment": {
-          "mainWeapon": "item_1781186124129",
-          "subWeapon": "item_1781186124129",
-          "top": "item_gen_20261010_14_01",
-          "bottom": "item_gen_20261010_14_06",
+          "mainWeapon": "item_basic_staff_mainWeapon",
+          "subWeapon": "item_basic_staff_mainWeapon",
+          "top": "item_basic_cloth_top",
+          "bottom": "item_basic_cloth_bottom",
           "accessory": "",
           "special": ""
         }

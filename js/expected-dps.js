@@ -18,7 +18,7 @@ function resolvePreviewSkill(unit, originalSkill) {
   while (isChoiceSkill(base)) {
     if (visited.has(base.id)) return null;
     visited.add(base.id);
-    base=getSkillById(getChoiceSkillOption(base,unit.skillSelections?.[base.id])?.skillId);
+    base=getSkillById(getChoiceSkillOption(base,unit.skillSelections?.[base.id],unit.skillIds)?.skillId);
     if (!base) return null;
   }
   return getRuntimeSelectionSkill(unit,getRuntimeItemSkill(unit,base));

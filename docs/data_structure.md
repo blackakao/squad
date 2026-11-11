@@ -1,5 +1,13 @@
 # 데이터 구조
 
+## 공작·반복 부활/조건부 실행 (2026-11-11)
+
+- `passiveTrigger.revival`: `{delay,position:start|death,countsWhileWaiting,hpPercent,mpPercent,stPercent,restoreBaseBp}`. 액션 없는 상시 패시브다. 런타임 `unit.revivalState`에 사망 시 설정을 보관하며 부활 완료/전투 초기화 시 비운다. `battleStartX/Y`를 재사용하고 `battleDeathX/Y`를 사망 시 저장한다. 이 런타임 필드는 캐릭터 저장에 추가하지 않는다.
+- `skill.activation`: `{selfHpAtMost,nearbyEnemyRadius}`. 자기 HP 비율은 최대 HP 기준/이하 경계 포함이고 시작·완료 때 검사한다. `selfDestruct:true`는 피해 적용 후 보호막/무적을 거치지 않는 강제 사망, `revivalOnly:true`는 생존 중 시전 제외/사망 시 부활 단축이다. `cooldownReductions:[{skillId,seconds}]`는 해당 사용 완료 후 남은 쿨다운을 줄인다.
+- `selectionModifier`에 `resourceCostAdd`(비용 모드의 단위, maxPercent면 %p), `revivalDelayAdd`(초), `revivalPosition`, `selfHpAtMost`, `cooldownReductions`를 추가했다. 기본 가산 0/위치 빈 값/HP 조건 null/감소 배열 빈 값으로 구형 데이터 동작을 유지한다.
+- `effect.mode: damage_link`는 효과 시전자가 실제 받은 피해 중 value%를 표식 대상에게 전달한다. 런타임 damageLinked 플래그로 추가 전달을 막으며 일반 피격 이벤트를 재사용한다. 일반 피해/치명 피해의 HP/BP 실제 집계 후 실행한다.
+- 패배 상태는 `getUnitBattleForm(unit).countsForDefeat:false` 또는 사망·부활 대기의 `revivalState.countsWhileWaiting:false`다. 살아있는 공작은 포함하지 않는다. 공통 승패 판정은 상태 타이머보다 먼저 실행한다. [현행 계약](SKILL_ENGINE.md#공작반복-부활공통-패배-상태-2026-11-11).
+
 ## 영혼수확자·치명상 전환/형태별 스킬 (2026-11-09)
 
 - 패시브 `passiveTrigger.lethalTransformation`: `{duration,bodyName,bodyReceivedDamagePercent,bodyBasicAttack?,transform}`. duration은 초(최소 1, 기본 10), bodyReceivedDamagePercent 기본 100이다. 액션 없는 상시 패시브로 처리하고 일반 발동 액션과 분리한다.
@@ -303,7 +311,7 @@ Entity의 선택 불리언 `mainSummon`은 전투 상태창의 주인 아래 표
 
 파일: `data/items.json`
 
-2026-10-10 고정형 샘플 140개를 추가해 기존 6개와 합계 146개입니다. 카테고리 14종에 각 10개이며, 방어구는 각 상의 5개·하의 5개입니다. 스키마 변경은 없습니다. [생성 규칙](data-generation/DATA_GENERATION_RULES.md)과 [실제 이름·능력치 목록](data-generation/DATA_GENERATION_LOG.md)을 참고하세요.
+2026-11-11 현재 기본 무기 15개·방어구 8개(재질별 상의/하의 각각 1개), 합계 23개입니다. 주먹구는 글러브로 통합했고 기존 장착/장비 세트 참조를 남긴 아이템으로 교체했습니다. 스키마 변경은 없습니다. [현재 구성과 DPS 설정](ITEM_MANAGEMENT.md#2026-11-11-장비-통합과-무기-dps-설정). 과거 샘플 생성 이력은 [생성 규칙](data-generation/DATA_GENERATION_RULES.md)을 참고하세요.
 
 - `id`, `name`, `slot`
 - `weaponCategory`, `handType`, `attackType`, `attackSkillId`
@@ -317,6 +325,8 @@ Entity의 선택 불리언 `mainSummon`은 전투 상태창의 주인 아래 표
 - `type`: `weapon` 또는 `armor`
 - `key`, `label`
 - 무기 전용: `handType`, `attackRange`, `attackSpeed`, `castSpeed`, `attackType`, `slotType`
+
+무기 DPS 탭은 기존 Item·Category 필드에 저장하며 DPS는 저장하지 않는 계산값입니다. 주기·사정거리는 카테고리가 원본이며 무기 아이템에도 같은 값을 저장합니다.
 
 ### Faction
 
@@ -355,7 +365,7 @@ Entity의 선택 불리언 `mainSummon`은 전투 상태창의 주인 아래 표
 
 ## 아이콘 매핑 추가 (2026-10-05)
 
-`data/icon-mappings.json`은 `{ group, key, label, icon, removeBackground, backgroundTolerance }` 객체 배열입니다. `group`은 `role`, `slot`, `weapon`, `armor`, `skill`, `faction` 중 하나이며 `key`는 해당 분류의 내부 키(진영은 이름)입니다. `label`은 대체 표시명, `icon`은 원본 로컬 이미지 경로이며 두 필드는 빈 문자열을 허용합니다. `(group, key)`당 하나의 설정을 관리합니다. 초기값은 `[]`이며 기존 게임 데이터의 마이그레이션은 없습니다. [아이콘 관리](ICONS.md)를 참고합니다.
+`data/icon-mappings.json`은 `{ group, key, label, icon, removeBackground, backgroundTolerance }` 객체 배열입니다. `group`은 `role`, `slot`, `weapon`, `armor`, `armorBottom`, `skill`, `faction` 중 하나이며 `key`는 해당 분류의 내부 키(진영은 이름)입니다. `label`은 대체 표시명, `icon`은 원본 로컬 이미지 경로이며 두 필드는 빈 문자열을 허용합니다. `(group, key)`당 하나의 설정을 관리합니다. 초기값은 `[]`이며 게임 데이터의 이름·능력치는 변경하지 않습니다. `armor`는 상의, `armorBottom`은 하의 아이콘이며 같은 방어구 카테고리 키를 사용합니다. [아이콘 관리](ICONS.md)를 참고합니다.
 
 2026-10-09 추가된 `removeBackground`는 배경 자동 제거 여부이며 생략 시 `true`입니다. `backgroundTolerance`는 제거 강도(8~100 정수, 기본 48)입니다. 기존 행은 조회 시 기본값을 사용하며 저장 시 옵션을 포함합니다. 원본 이미지와 `icon` 경로를 유지하고 표시용 투명 PNG는 브라우저 메모리에서만 생성합니다.
 # CharacterViewer GLB 조합 저장 (2026-10-16)
@@ -367,3 +377,13 @@ Entity의 선택 불리언 `mainSummon`은 전투 상태창의 주인 아래 표
 - `equipment[slot]`: `{ assetId, name, color }` 또는 `null`
 
 `assetId`는 자동 카탈로그의 파일 stem이며 파일 경로는 저장 데이터의 핵심 식별자로 사용하지 않는다. `color`는 팔레트를 지원하는 카테고리의 `#RRGGBB` 값이며 미지원 카테고리는 `null`이다. 한글 파일명 전환 전 ID는 `assets/characters/asset-id-aliases.json` 별칭으로 복원한다. 복원 시 ID가 사라졌으면 해당 카테고리만 `없음`으로 처리한다.
+
+### 기사 개편 추가 필드 (2026-11-12)
+
+스킬 `summonVariant`·`summonRequirement`, 이동 `distanceSource`·`distanceAdd`, 계수 `previousMoveDistance`, 선택 보정 `areaAdd`·`knockbackDistanceAdd`, 효과 `requiredOwnedSummonAbsent`를 지원한다. 모두 선택 필드이며 기존 데이터는 기본 동작을 유지한다. [동작 계약](SKILL_ENGINE.md#기사-지원-확장-2026-11-12).
+
+### 마법사 개편 추가 필드 (2026-11-12)
+
+- 선택 옵션 `requiredSkillId`, 선택 보정 `requiredChoiceSkillId`·`requiredChoiceOptionId`·`skillModifiers`.
+- 액션 `triggerEvent`·`targetPreviousDamage`, 효과 `barrierMode:coefficient`, 계수 `previousBarrierCreated`, 버프 능력치 `maxMp`.
+- 모두 선택 필드이며 기존 데이터의 기본 동작을 유지한다. 조건은 선택된 강화 최대 3개를 기준으로 UI·런타임에서 동일하게 적용한다. [동작 계약](SKILL_ENGINE.md#마법사-개편조건부-속성-선택-2026-11-12).

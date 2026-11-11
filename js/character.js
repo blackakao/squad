@@ -230,7 +230,7 @@ function renderCharacterSkillBox(skill, label) {
   if (skill.slot !== 'optional') {
     const choice = isChoiceSkill(skill);
     const tag = choice ? 'button' : 'div';
-    return `<${tag} class="character-skill-box character-skill-fixed" data-skill-id="${escapeHtml(skill.id)}" ${choice ? 'type="button" aria-expanded="false" aria-controls="characterChoicePanel" onclick="openCharacterSkillChoice(this)"' : 'tabindex="0"'} onmouseenter="updateCharacterSkillDpsTooltip(this)" onmouseleave="hideCharacterSkillValueTooltip()" onfocus="updateCharacterSkillDpsTooltip(this)" onblur="hideCharacterSkillValueTooltip()"><small>${label}${choice ? ' · 선택형' : ''}</small>${recordImagePath(skill.icon) ? `<img src="${escapeHtml(skill.icon)}" alt="">` : `<span class="character-skill-placeholder">${escapeHtml(getSkillShortName(skill).slice(0,1))}</span>`}<strong>${escapeHtml(getSkillShortName(skill))}</strong>${choice ? `<small data-choice-label>${escapeHtml(getChoiceSkillOption(skill, characterChoiceSelections[skill.id])?.label || '선택지 없음')}</small>` : ''}</${tag}>`;
+    return `<${tag} class="character-skill-box character-skill-fixed" data-skill-id="${escapeHtml(skill.id)}" ${choice ? 'type="button" aria-expanded="false" aria-controls="characterChoicePanel" onclick="openCharacterSkillChoice(this)"' : 'tabindex="0"'} onmouseenter="updateCharacterSkillDpsTooltip(this)" onmouseleave="hideCharacterSkillValueTooltip()" onfocus="updateCharacterSkillDpsTooltip(this)" onblur="hideCharacterSkillValueTooltip()"><small>${label}${choice ? ' · 선택형' : ''}</small>${recordImagePath(skill.icon) ? `<img src="${escapeHtml(skill.icon)}" alt="">` : `<span class="character-skill-placeholder">${escapeHtml(getSkillShortName(skill).slice(0,1))}</span>`}<strong>${escapeHtml(getSkillShortName(skill))}</strong>${choice ? `<small data-choice-label>${escapeHtml(getChoiceSkillOption(skill, characterChoiceSelections[skill.id],getCharacterSelectedSkillIds())?.label || '선택지 없음')}</small>` : ''}</${tag}>`;
   }
   return `<button type="button" class="character-skill-box" data-skill-id="${escapeHtml(skill.id)}" aria-pressed="${characterSkillSelection.has(skill.id)}" onclick="toggleCharacterSkill(this)" onmouseenter="updateCharacterSkillDpsTooltip(this)" onmouseleave="hideCharacterSkillValueTooltip()" onfocus="updateCharacterSkillDpsTooltip(this)" onblur="hideCharacterSkillValueTooltip()"><small>${label}</small>${recordImagePath(skill.icon) ? `<img src="${escapeHtml(skill.icon)}" alt="" onerror="this.hidden=true">` : `<span class="character-skill-placeholder">${escapeHtml(getSkillShortName(skill).slice(0,1))}</span>`}<strong>${escapeHtml(getSkillShortName(skill))}</strong></button>`;
 }
@@ -264,6 +264,14 @@ function toggleCharacterSkill(button) {
     }
     characterSkillSelection.add(id);
   }
+  for (const skill of getCharacterSelectedSkillIds().map(getSkillById).filter(isChoiceSkill)) {
+    const option=getChoiceSkillOption(skill,characterChoiceSelections[skill.id],getCharacterSelectedSkillIds());
+    if (option) characterChoiceSelections[skill.id]=option.id;
+    const label=characterSkillsEl.querySelector(`[data-skill-id="${skill.id}"] [data-choice-label]`);
+    if (label) label.textContent=option?.label ?? "";
+  }
+  const panel=document.getElementById('characterChoicePanel');
+  if (!panel.hidden) { panel.hidden=true;const source=characterSkillsEl.querySelector(`[data-skill-id="${panel.dataset.skillId}"]`);if(source)openCharacterSkillChoice(source); }
   renderCharacterSelectedSkills();
   renderCharacterCurrentDetails();
   updateCharacterSkillDpsTooltip(button);
@@ -286,8 +294,8 @@ function openCharacterSkillChoice(button) {
   if (!isChoiceSkill(skill)) return;
   panel.dataset.skillId = skill.id;
   button.setAttribute('aria-expanded', 'true');
-  const selected = getChoiceSkillOption(skill, characterChoiceSelections[skill.id]);
-  panel.innerHTML = `<h5>${escapeHtml(getSkillShortName(skill))} · 유형 선택</h5><div class="character-choice-options">${normalizeSkillChoice(skill.choice).options.map(option => {
+  const selected = getChoiceSkillOption(skill, characterChoiceSelections[skill.id],getCharacterSelectedSkillIds());
+  panel.innerHTML = `<h5>${escapeHtml(getSkillShortName(skill))} · 유형 선택</h5><div class="character-choice-options">${getAvailableSkillChoice(skill,getCharacterSelectedSkillIds()).options.map(option => {
     const target = getSkillById(option.skillId);
     return `<button type="button" class="character-skill-box" data-option-id="${escapeHtml(option.id)}" aria-pressed="${selected?.id === option.id}" onclick="selectCharacterSkillChoice(this)">${recordImagePath(target?.icon) ? `<img src="${escapeHtml(target.icon)}" alt="">` : ''}<strong>${escapeHtml(option.label)}</strong><small>${escapeHtml(target?.description || '')}</small></button>`;
   }).join('') || '<p>등록된 선택지가 없습니다.</p>'}</div>`;
@@ -299,7 +307,7 @@ function selectCharacterSkillChoice(button) {
   characterChoiceSelections[panel.dataset.skillId] = button.dataset.optionId;
   panel.querySelectorAll('[data-option-id]').forEach(el => el.setAttribute('aria-pressed', String(el === button)));
   const source = [...characterSkillsEl.querySelectorAll('[data-skill-id]')].find(el => el.dataset.skillId === panel.dataset.skillId);
-  source.querySelector('[data-choice-label]').textContent = getChoiceSkillOption(getSkillById(panel.dataset.skillId), button.dataset.optionId).label;
+  source.querySelector('[data-choice-label]').textContent = getChoiceSkillOption(getSkillById(panel.dataset.skillId), button.dataset.optionId,getCharacterSelectedSkillIds()).label;
   renderCharacterCurrentDetails();
 }
 

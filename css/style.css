@@ -518,6 +518,46 @@ button.selected,
   min-width: 0;
 }
 
+.category-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.category-name > .category-icon:not(:has(img)) {
+  display: none;
+}
+
+#categoryPage [role="tab"][aria-selected="true"] {
+  border-color: currentColor;
+  font-weight: 700;
+}
+
+.weapon-dps-scroll { overflow: auto; max-height: max(240px, calc(100dvh - 370px)); }
+#categoryPage .weapon-dps-table { width: 100%; min-width: 760px; table-layout: fixed; margin: 0; font-size: 13px; border-collapse: separate; border-spacing: 0; }
+#categoryPage .weapon-dps-table th, #categoryPage .weapon-dps-table td { padding: 6px 8px; vertical-align: middle; text-align: center; }
+#categoryPage .weapon-dps-table th:nth-child(1), #categoryPage .weapon-dps-table td:nth-child(1) { width: 20%; }
+#categoryPage .weapon-dps-table th:nth-child(2), #categoryPage .weapon-dps-table td:nth-child(2) { width: 17%; }
+#categoryPage .weapon-dps-table th:nth-child(3), #categoryPage .weapon-dps-table td:nth-child(3),
+#categoryPage .weapon-dps-table th:nth-child(4), #categoryPage .weapon-dps-table td:nth-child(4) { width: 11%; }
+#categoryPage .weapon-dps-table th:nth-child(5), #categoryPage .weapon-dps-table td:nth-child(5),
+#categoryPage .weapon-dps-table th:nth-child(6), #categoryPage .weapon-dps-table td:nth-child(6) { width: 10%; }
+#categoryPage .weapon-dps-table th:nth-child(7), #categoryPage .weapon-dps-table td:nth-child(7) { width: 21%; }
+#categoryPage .weapon-dps-table thead { position: sticky; top: 0; z-index: 3; }
+#categoryPage .weapon-dps-table thead th { position: sticky; top: 0; z-index: 3; white-space: nowrap; background: #f1f5f9; box-shadow: inset 0 -1px #cbd5e1; }
+#categoryPage .weapon-dps-table input, #categoryPage .weapon-dps-table select { display: block; width: 100%; min-width: 0; max-width: 100%; box-sizing: border-box; margin: 0; font-size: inherit; }
+#categoryPage .weapon-dps-table input, #categoryPage .weapon-dps-table select { text-align: center; text-align-last: center; font-variant-numeric: tabular-nums; }
+#categoryPage .weapon-dps-name { display: flex; align-items: center; justify-content: center; gap: 8px; min-width: 0; }
+#categoryPage .weapon-dps-name .equipment-icon { display: inline-flex; flex: 0 0 28px; justify-content: center; }
+#categoryPage .weapon-dps-name .category-icon img { width: 28px; height: 28px; object-fit: contain; }
+#categoryPage .weapon-dps-name input { flex: 1; min-width: 0; }
+#categoryPage .weapon-dps-table td.weapon-dps-changed { background: #fff3b0; box-shadow: none; }
+#categoryPage .weapon-dps-table td.weapon-dps-changed input,
+#categoryPage .weapon-dps-table td.weapon-dps-changed select { background-color: #fff8cf; border-color: #d5ad35; }
+#categoryPage .weapon-dps-power { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 6px; margin: 0; white-space: nowrap; }
+#weaponDpsPanel > p { margin: 8px 0 12px; font-size: 13px; }
+#weaponDpsForm > .data-toolbar { margin-top: 10px; }
+
 .stat-manager {
   display: grid;
   grid-template-columns: minmax(180px, var(--stat-left-width)) minmax(260px, 1fr) minmax(260px, var(--stat-right-width));

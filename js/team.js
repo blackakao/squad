@@ -204,9 +204,9 @@ function getCharacterChoiceSkills(characterId, slot) {
   return (characterJson[characterId]?.skillIds ?? []).map(getSkillById).filter(skill => skill?.slot === slot && isSkillExecutable(skill));
 }
 
-function renderChoiceSelect(skill, selectedOptionId, onchange) {
-  const choice = normalizeSkillChoice(skill.choice);
-  const selected = getChoiceSkillOption(skill, selectedOptionId)?.id;
+function renderChoiceSelect(skill, selectedOptionId, onchange, skillIds=[]) {
+  const choice = getAvailableSkillChoice(skill,skillIds);
+  const selected = getChoiceSkillOption(skill, selectedOptionId,skillIds)?.id;
   return `<label class="team-skill-choice"><span>${escapeHtml(skill.name)}</span><select onchange="${onchange}">${choice.options.map(option =>
     `<option value="${escapeHtml(option.id)}" ${option.id === selected ? "selected" : ""}>${escapeHtml(option.label)}</option>`).join("")}</select></label>`;
 }
@@ -215,7 +215,7 @@ function renderTeamSkillChoices(characterId, team) {
   const skills = getCharacterChoiceSkills(characterId, "choice_team");
   if (!skills.length) return "";
   return `<div class="team-skill-choices">${skills.map(skill => renderChoiceSelect(skill, team?.skillSelections?.[characterId]?.[skill.id] ?? characterJson[characterId]?.skillSelections?.[skill.id],
-    `setTeamSkillChoice(${characterId},'${escapeHtml(skill.id)}',this.value)`)).join("")}</div>`;
+    `setTeamSkillChoice(${characterId},'${escapeHtml(skill.id)}',this.value)`,characterJson[characterId]?.skillIds)).join("")}</div>`;
 }
 
 function setTeamSkillChoice(characterId, skillId, optionId) {
@@ -558,8 +558,8 @@ function renderPreBattleSkillChoices() {
   if (!rows.length && !runeRows) return "";
   return `<section class="battle-selection-section"><div class="battle-selection-section-title">전투 직전 선택 스킬 <span>${rows.length}개</span></div>
     <div class="battle-skill-choice-list">${rows.map(({characterId,skill}) => {
-      const choice = normalizeSkillChoice(skill.choice);
-      const selected = getChoiceSkillOption(skill, selectedPreBattleSkillChoices[characterId]?.[skill.id] ?? characterJson[characterId]?.skillSelections?.[skill.id])?.id;
+      const choice = getAvailableSkillChoice(skill,characterJson[characterId]?.skillIds);
+      const selected = getChoiceSkillOption(skill, selectedPreBattleSkillChoices[characterId]?.[skill.id] ?? characterJson[characterId]?.skillSelections?.[skill.id],characterJson[characterId]?.skillIds)?.id;
       return `<label class="battle-skill-choice-row"><span>${escapeHtml(characterJson[characterId].name)} · ${escapeHtml(skill.name)}</span><select onchange="setPreBattleSkillChoice(${characterId},'${escapeHtml(skill.id)}',this.value)">${choice.options.map(option =>
         `<option value="${escapeHtml(option.id)}" ${option.id === selected ? "selected" : ""}>${escapeHtml(option.label)}</option>`).join("")}</select></label>`;
     }).join("")}${runeRows}</div></section>`;
@@ -721,8 +721,8 @@ function renderDuelSkillChoices() {
     const runeRows=typeof renderRuneChoices === 'function' ? renderRuneChoices(id,duelSkillChoices[side][id],side) : '';
     if (!skills.length && !runeRows) return '';
     return `<section class="battle-selection-section"><h5>${side==='player' ? '아군' : '상대'} 선택 스킬</h5>${skills.map(skill=>{
-      const selected=getChoiceSkillOption(skill,duelSkillChoices[side][id]?.[skill.id] ?? characterJson[id]?.skillSelections?.[skill.id])?.id;
-      return `<label class="battle-skill-choice-row">${escapeHtml(characterJson[id].name)} · ${escapeHtml(skill.name)}<select onchange="setDuelSkillChoice('${side}',${id},'${escapeHtml(skill.id)}',this.value)">${normalizeSkillChoice(skill.choice).options.map(option=>`<option value="${escapeHtml(option.id)}" ${selected===option.id?'selected':''}>${escapeHtml(option.label)}</option>`).join('')}</select></label>`;
+      const selected=getChoiceSkillOption(skill,duelSkillChoices[side][id]?.[skill.id] ?? characterJson[id]?.skillSelections?.[skill.id],characterJson[id]?.skillIds)?.id;
+      return `<label class="battle-skill-choice-row">${escapeHtml(characterJson[id].name)} · ${escapeHtml(skill.name)}<select onchange="setDuelSkillChoice('${side}',${id},'${escapeHtml(skill.id)}',this.value)">${getAvailableSkillChoice(skill,characterJson[id]?.skillIds).options.map(option=>`<option value="${escapeHtml(option.id)}" ${selected===option.id?'selected':''}>${escapeHtml(option.label)}</option>`).join('')}</select></label>`;
     }).join('')}${runeRows}</section>`;
   }).join('')).join('');
 }

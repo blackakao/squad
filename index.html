@@ -395,7 +395,11 @@
 <div id="categoryPage" class="page hidden">
   <div class="panel">
     <h4>장비 카테고리 관리</h4>
-    <div class="category-manager">
+    <div class="data-toolbar" role="tablist" aria-label="장비 카테고리 관리">
+      <button id="categorySettingsTab" type="button" role="tab" aria-selected="true" aria-controls="categorySettingsPanel" onclick="showCategoryTab('settings')">카테고리 설정</button>
+      <button id="weaponDpsTab" type="button" role="tab" aria-selected="false" aria-controls="weaponDpsPanel" onclick="showCategoryTab('dps')">무기 DPS 계산 및 설정</button>
+    </div>
+    <div id="categorySettingsPanel" class="category-manager" role="tabpanel" aria-labelledby="categorySettingsTab">
       <section>
         <h5>무기 카테고리</h5>
         <div class="data-toolbar">
@@ -430,6 +434,8 @@
             <tr>
               <th>선택</th>
               <th>이름</th>
+              <th>상의</th>
+              <th>하의</th>
               <th>수정</th>
             </tr>
           </thead>
@@ -437,6 +443,22 @@
         </table>
       </section>
     </div>
+    <section id="weaponDpsPanel" class="hidden" role="tabpanel" aria-labelledby="weaponDpsTab">
+      <p>최종 DPS = 공격력(마력) ÷ (시전속도 + 공격속도). 속도는 초 단위 주기입니다. 스킬 계수·방어력·캐릭터 보정은 포함하지 않습니다.</p>
+      <form id="weaponDpsForm" onsubmit="saveWeaponDpsSettings(event)" oninput="updateWeaponDpsPreview(event)">
+        <div class="weapon-dps-scroll table-responsive">
+          <table class="data-table weapon-dps-table">
+            <thead><tr><th>장비명</th><th>공격력(마력)</th><th>시전속도</th><th>공격속도</th><th>최종 DPS</th><th>사정거리</th><th>적용스킬</th></tr></thead>
+            <tbody id="weaponDpsTableBody"></tbody>
+          </table>
+        </div>
+        <div class="data-toolbar">
+          <button type="submit">설정 저장</button>
+          <button type="button" onclick="renderWeaponDpsTable()">변경 취소</button>
+          <span id="weaponDpsStatus" role="status" aria-live="polite"></span>
+        </div>
+      </form>
+    </section>
   </div>
 </div>
 
@@ -830,6 +852,7 @@
           </div>
           <div id="skillPassiveFields" class="skill-settings-card hidden">
             <label>고립 판정 반경 (m)<input id="skillPassive_aloneRadius" type="number" min="0.1" step="0.1" value="5"></label>
+<label>반복 부활 설정 (JSON, 비우면 미사용)<textarea id="skillPassiveRevival" rows="6" oninput="updateSkillTypeFields()"></textarea></label>
 <label>치명상 형태 전환 설정 (JSON, 비우면 미사용)<textarea id="skillPassiveLethalTransformation" rows="8" oninput="updateSkillTypeFields()"></textarea></label>
 <label>반복 발동 (초, 0: 사용 안 함)<input id="skillPassiveRepeatInterval" type="number" min="0" step="0.1" value="0"></label>
 <label>선택 룬 개수 (0: 미사용)<input id="skillPassiveRuneCount" type="number" min="0" max="10" value="0"></label><label>기본 룬 ID (쉼표 구분)<input id="skillPassiveDefaultRunes"></label>
@@ -860,6 +883,7 @@
             </div>
             <small>조건 충족 시 즉시 실행합니다. 아래 자원 소모와 쿨타임을 적용하며, 동일 패시브는 한 전투 틱에 한 번만 발동합니다. 패시브 효과로 다른 패시브를 연쇄 발동하지 않습니다. 기절·침묵 중에도 발동하지만 사망한 유닛은 발동하지 않습니다.</small>
           </div>
+          <label>조건·사후 자폭·부활 전용·쿨다운 감소 설정 (JSON)<textarea id="skillExecutionRules" rows="5" oninput="updateSkillTypeFields()"></textarea></label>
           <label id="skillOptionalFields" class="hidden">선택 강화 설정 (JSON)<textarea id="skillOptionalModifier" rows="8"></textarea></label>
           <div id="skillChoiceFields" class="skill-settings-card hidden">
             <div class="skill-settings-card-title">선택 스킬 설정</div>
@@ -1028,7 +1052,7 @@
 <script src="js/portrait/catalog.js?v=20261007-parts1"></script>
 <script src="js/ui.js?v=20261107-mixed-battle"></script>
 <script src="js/ui-portrait-editor.js?v=20261104-refactor1"></script>
-<script src="js/ui-battle-view.js?20261109-soul"></script>
+<script src="js/ui-battle-view.js?20261111-duke"></script>
 <script src="js/ui-page-navigation.js?v=20261104-refactor1"></script>
 <script src="js/portrait/bridge.js?v=20260929-bald1"></script>
 <script src="js/api.js?v=20260914-image-assets"></script>
@@ -1036,11 +1060,11 @@
 <script src="js/category.js?v=20261005-icons"></script>
 <script src="js/battle-events.js?20261109-keratin"></script>
 <script src="js/skill-channel.js?20261109-serum"></script>
-<script src="js/skill-passives.js?20261109-soul"></script>
-<script src="js/skill-effects.js?20261109-soul"></script>
-  <script src="js/skill.js?20261109-soul"></script>
+<script src="js/skill-passives.js?20261112-mage"></script>
+<script src="js/skill-effects.js?20261112-mage"></script>
+  <script src="js/skill.js?20261112-mage"></script>
 <script src="js/rune.js?v=20261107-rune-mount-ui"></script>
-<script src="js/skill-editor-view.js?20261109-soul"></script>
+<script src="js/skill-editor-view.js?20261112-mage"></script>
 <script src="js/entity.js?v=20261109-spirits"></script>
 <script src="js/layout.js?v=20260817-layout"></script>
 <script src="js/combat-power.js?v=20261014-v1"></script>
@@ -1049,18 +1073,18 @@
 <script src="js/equipment-editor-view.js?v=20261104-refactor4"></script>
 <script src="js/monster.js?v=20261018-duel"></script>
 <script src="js/faction.js?v=20261005-icons"></script>
-<script src="js/character.js?20261109-serum"></script>
+<script src="js/character.js?20261112-mage"></script>
 <script src="js/synergy.js?v=20261011-v1"></script>
 <script src="js/synergy-ui.js?v=20261015-record-images"></script>
-<script src="js/team.js?v=20261107-rune-mount-ui"></script>
+<script src="js/team.js?20261112-mage"></script>
 <script src="js/stats.js?v=20261014-cp-v1"></script>
 <script src="js/record.js?v=20261012-contributions"></script>
-<script src="js/battle.js?20261109-soul"></script>
+<script src="js/battle.js?20261111-duke"></script>
 <script src="https://js.puter.com/v2/"></script>
 <script src="js/image-generator.js?v=20261005-image-actions"></script>
 <script src="js/icon-background.js?v=20261009"></script>
 <script src="js/icons.js?v=20261009-icon-background"></script>
-<script src="js/expected-dps.js?v=20261103-v2"></script>
+<script src="js/expected-dps.js?20261112-mage"></script>
 <script src="js/main.js?v=20261107-rune-mount-ui"></script>
 <script src="js/simulation-analysis.js?v=20261107-combinations"></script>
 <script src="js/simulation.js?v=20261107-combinations"></script>

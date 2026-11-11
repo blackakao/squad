@@ -68,11 +68,11 @@ test('knight mount is invisible and untargetable but still shares damage and app
  const passive=e.getSkillById('skill_class_knight_magic_horse');knight.skillIds=[passive.id];e.applySkill(knight,knight,passive);const horse=e.getLivingOwnedSummons(knight,'knight_magic_horse')[0];assert.ok(horse);
  assert.equal(horse.commandOnly,true);assert.equal(horse.targetable,false);assert.equal(horse.collidable,false);assert.equal(e.isMountedCompanion(horse),true);e.drawUnit(horse,false);
  assert.equal(e.getActiveBattleEntities(e.playerSquad).includes(horse),false);
- const area=e.normalizeSkillAction({type:'deal_damage',target:'enemy',area:20,areaCenter:'self',damageType:'fixed',coefficients:[{type:'fixed',value:100}]});e.applySkill(enemy,knight,skill(e,area));assert.equal(knight.hp,920);assert.equal(horse.hp,980);
+ const area=e.normalizeSkillAction({type:'deal_damage',target:'enemy',area:20,areaCenter:'self',damageType:'fixed',coefficients:[{type:'fixed',value:100}]});e.applySkill(enemy,knight,skill(e,area));assert.equal(knight.hp,920);assert.equal(horse.hp,480);
  const x=horse.x;e.moveUnit(horse,[enemy]);e.takeAction(horse,[knight,horse],[enemy]);assert.equal(horse.x,x);assert.equal(horse.pendingAction,null);
  e.document={addEventListener(){}};e.getRoleLabel=String;e.getUnitDps=()=>0;e.recordImagePath=()=>'';
  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','ui-battle-view.js'),'utf8'),e);
- const html=e.renderStatus(e.playerSquad,()=> 'blue');assert.ok(html.includes('main-summon-group'));assert.ok(html.includes(horse.name));assert.ok(html.includes('980 / 1000'));
+ const html=e.renderStatus(e.playerSquad,()=> 'blue');assert.ok(html.includes('main-summon-group'));assert.ok(html.includes(horse.name));assert.ok(html.includes('480 / 500'));
 });
 
 function cheerEngine() {
@@ -954,6 +954,106 @@ test('unsupported weapon assignment falls back to an executable unit attack', ()
   assert.equal(fallback.actions[0].damageType,'magic');
 });
 
+function dukeEngine(options=[]) {
+ const e=engine();e.skillsJson=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8')));
+ e.duke=id=>e.getSkillById('skill_class_duke_'+id);e.owner=unit(e);e.ally=unit(e,'player',105);e.enemy=unit(e,'enemy',110);e.enemyAlly=unit(e,'enemy',115);
+ for(const u of [e.owner,e.ally,e.enemy,e.enemyAlly]){u.hp=u.maxHp=1000;u.atk=100;u.attackRange=1;u.speed=1;}
+ e.owner.battleStartX=100;e.owner.battleStartY=100;
+ e.owner.skillIds=['immortality','bomb_necklace','unfair_damage','cursed_nail','rapid_revival',...options].map(id=>e.duke(id).id);
+ e.runtime=id=>e.getRuntimeSelectionSkill(e.owner,e.duke(id));
+ e.kill=()=>{e.owner.hp=0;e.syncAliveState(e.owner,{source:e.enemy});};
+ e.hit=(value=100,target=e.owner)=>e.applyActionDamage(e.enemy,target,e.normalizeSkillAction({type:'deal_damage',target:'enemy',damageType:'physical',coefficients:[{type:'fixed',value}]}),{id:'duke_test_hit',slot:'active'});
+ e.wait=()=>{e.owner.skillCooldowns[e.duke('rapid_revival').id]=99999;e.kill();};return e;
+}
+
+test('duke revives repeatedly after ten seconds at the start position with full resources and preserved cooldowns',()=>{
+ const e=dukeEngine(),s=e.owner;s.baseBp=25;s.maxBp=100;s.bp=7;s.mp=1;s.st=2;s.skillCooldowns[e.duke('cursed_nail').id]=1200;s.x=180;s.y=190;e.wait();
+ assert.equal(s.reviveTicks,600);assert.equal(s.alive,false);assert.equal(s.battleDeathX,180);assert.equal(e.isBattleDefeatState(s),true);assert.equal(e.canSquadContinueBattle(e.playerSquad),true);
+ for(let i=0;i<599;i++)e.updateBattleReentries();assert.equal(s.alive,false);e.updateBattleReentries();
+ assert.equal(s.alive,true);assert.equal(s.hp,1000);assert.equal(s.mp,100);assert.equal(s.st,100);assert.equal(s.bp,25);assert.equal(s.maxBp,25);assert.equal(s.x,100);assert.equal(s.y,100);
+ assert.equal(s.skillCooldowns[e.duke('cursed_nail').id],600);assert.equal(e.isBattleDefeatState(s),false);
+ for(let cycle=0;cycle<2;cycle++){e.kill();for(let i=0;i<600;i++)e.updateBattleReentries();assert.equal(s.alive,true);}
+ assert.equal(e.getBattleEvents('death').filter(v=>v.target.id===e.getBattleEvents('death')[0].target.id).length,3);
+});
+
+test('duke selected grave and waiting modifiers use the recorded death position and eight-second delay',()=>{
+ const e=dukeEngine(['near_grave','anxious_wait']),s=e.owner;s.x=170;s.y=180;e.wait();assert.equal(s.reviveTicks,480);
+ s.x=250;s.y=250;for(let i=0;i<480;i++)e.updateBattleReentries();assert.equal(s.x,170);assert.equal(s.y,180);assert.equal(s.alive,true);
+ const other=dukeEngine();other.owner.x=170;other.wait();for(let i=0;i<600;i++)other.updateBattleReentries();assert.equal(other.owner.x,100);
+});
+
+test('duke rapid revival triggers only on death, consumes sixty-second cooldown, and cannot keep a defeated side alive',()=>{
+ const e=dukeEngine(),s=e.owner;assert.equal(e.getEquippedSkills(s).some(sk=>sk.revivalOnly),false);
+ s.baseBp=25;s.bp=7;let recoveredBp;e.subscribeBattleEvent('cast_complete',(event,refs)=>{if(event.skillId===e.duke('rapid_revival').id)recoveredBp=refs.source.bp;});
+ e.kill();assert.equal(s.alive,false);assert.equal(s.reviveTicks,1);assert.equal(s.skillCooldowns[e.duke('rapid_revival').id],3600);
+ e.updateBattleReentries();assert.equal(s.alive,true);assert.equal(s.skillCooldowns[e.duke('rapid_revival').id],3599);assert.equal(recoveredBp,25);
+ e.kill();assert.equal(s.reviveTicks,600);
+ const solo=dukeEngine();solo.ally.alive=false;solo.ally.hp=0;assert.equal(solo.canSquadContinueBattle(solo.playerSquad),true);
+ solo.kill();assert.equal(solo.canSquadContinueBattle(solo.playerSquad),false);assert.equal(solo.owner.reviveTicks,600);
+ solo.owner.reviveTicks=1;solo.updateBattleReentries();assert.equal(solo.owner.alive,false);assert.equal(solo.owner.reviveTicks,1);
+});
+
+test('mixed soul reaper soul and duke revival are defeat states together while a living duke still counts',()=>{
+ const e=dukeEngine(),s=e.owner,reaper=e.ally;
+ reaper.skillIds=['skill_class_soul_reaper_soul_and_body','skill_class_soul_reaper_black_assault'];reaper.hp=0;e.syncAliveState(reaper,{source:e.enemy});
+ assert.equal(e.isBattleDefeatState(reaper),true);assert.equal(e.canSquadContinueBattle(e.playerSquad),true);
+ e.kill();assert.equal(e.isBattleDefeatState(s),true);assert.equal(e.canSquadContinueBattle(e.playerSquad),false);
+ s.reviveTicks=1;e.getLifeCycleForm(reaper).remainingTicks=2;e.updateBattleReentries();assert.equal(s.alive,false);
+ let outcome;e.finishBattle=result=>{outcome=result;};e.updateCombat();assert.equal(outcome,'패배');
+ // The scheduler must settle defeat before a one-tick soul return or revival can rescue the side.
+ e.getLifeCycleForm(reaper).remainingTicks=1;e.isBattleRunning=true;e.gameSpeed=1;e.updateResources=()=>{};
+ e.finishBattle=result=>{outcome=result;e.isBattleRunning=false;};e.runBattleTick();
+ assert.equal(outcome,'패배');assert.equal(s.alive,false);assert.equal(e.getLifeCycleForm(reaper).remainingTicks,1);
+ // Ordinary finite revival retains its pre-existing keep-alive behavior.
+ const normal=dukeEngine();normal.owner.alive=false;normal.owner.hp=0;normal.ally.revivesRemaining=1;normal.ally.hp=0;normal.syncAliveState(normal.ally);
+ assert.equal(normal.isBattleDefeatState(normal.ally),false);assert.equal(normal.canSquadContinueBattle(normal.playerSquad),true);
+});
+
+test('duke bomb checks HP and ST, explodes before forced suicide and bypasses BP and revival immunity',()=>{
+ const e=dukeEngine(),s=e.owner,bomb=e.runtime('bomb_necklace');s.hp=101;assert.equal(e.canPaySkillResourceCosts(s,bomb),false);
+ s.hp=100;s.st=29;assert.equal(e.canPaySkillResourceCosts(s,bomb),false);s.st=100;s.bp=1000;s.reviveInvulnerableTicks=999;e.enemyAlly.x=141;
+ assert.equal(e.tryUseReadySkill(s,e.playerSquad,e.enemySquad),true);assert.equal(s.pendingAction.skill.id,bomb.id);assert.equal(s.st,70);
+ for(let i=0;i<60;i++)e.updateCast(s);assert.equal(e.enemy.hp,700);assert.equal(e.enemyAlly.hp,1000);assert.equal(s.hp,0);assert.equal(s.alive,false);assert.equal(s.isWaiting,true);
+ assert.equal(e.getBattleEvents('death').at(-1).reason,'자폭');
+});
+
+test('duke bomb rechecks HP and nearby enemies after cast, supports early-death selection, and has no empty-area suicide',()=>{
+ const e=dukeEngine(),s=e.owner;s.hp=100;e.tryUseReadySkill(s,e.playerSquad,e.enemySquad);s.hp=101;for(let i=0;i<60;i++)e.updateCast(s);
+ assert.equal(s.alive,true);assert.equal(e.enemy.hp,1000);assert.equal(s.st,70);
+ const early=dukeEngine(['early_death']);early.owner.hp=200;assert.equal(early.canPaySkillResourceCosts(early.owner,early.runtime('bomb_necklace')),true);
+ early.owner.hp=201;assert.equal(early.canPaySkillResourceCosts(early.owner,early.runtime('bomb_necklace')),false);
+ early.owner.hp=200;early.enemy.x=200;early.enemyAlly.x=220;assert.equal(early.canActivateSkill(early.owner,early.runtime('bomb_necklace')),false);
+});
+
+test('duke unfair damage selected cost damage and rapid cooldown reductions apply only while equipped',()=>{
+ for(const selected of [false,true]){
+  const e=dukeEngine(selected?['more_unfair','installment_revival']:[]),s=e.owner,sk=e.runtime('unfair_damage');s.skillIds=s.skillIds.filter(id=>id!==e.duke('bomb_necklace').id);s.skillCooldowns[e.duke('rapid_revival').id]=600;
+  e.tryUseReadySkill(s,e.playerSquad,e.enemySquad);e.updateProjectiles();
+  assert.equal(s.hp,selected?850:900);assert.equal(e.enemy.hp,selected?780:800);assert.equal(s.skillCooldowns[e.duke('rapid_revival').id],selected?540:600);
+ }
+});
+
+test('duke nail transfers actual HP and BP damage including lethal hits but excludes costs and avoids cycles',()=>{
+ const e=dukeEngine(),s=e.owner;e.applySkill(s,e.enemy,e.runtime('cursed_nail'));e.hit(100);assert.equal(e.enemy.hp,970);
+ s.bp=50;e.hit(80);assert.equal(e.enemy.hp,955);s.bp=0;s.hp=10;e.hit(100);assert.equal(e.enemy.hp,952);assert.equal(s.alive,false);
+ const costs=dukeEngine();costs.applySkill(costs.owner,costs.enemy,costs.runtime('cursed_nail'));costs.spendSkillResourceCosts(costs.owner,costs.runtime('unfair_damage'));assert.equal(costs.enemy.hp,1000);
+ costs.enemy.skillIds=[costs.duke('cursed_nail').id];costs.applySkill(costs.enemy,costs.owner,costs.runtime('cursed_nail'));costs.hit(100);
+ assert.equal(costs.enemy.hp,970);assert.equal(costs.owner.hp,800);
+});
+
+test('duke rusty nail is conditional and ticks only on the selected marked enemy',()=>{
+ for(const selected of [false,true]){
+  const e=dukeEngine(selected?['rusty_nail']:[]);e.applySkill(e.owner,e.enemy,e.runtime('cursed_nail'));
+  for(let i=0;i<60;i++)e.updateBattleEffects();assert.equal(e.enemy.hp,selected?995:1000);assert.equal(e.enemyAlly.hp,1000);
+ }
+});
+
+test('duke data normalization preserves revival-only and conditional execution and optional choices remain limited to three',()=>{
+ const e=dukeEngine(['near_grave','anxious_wait','early_death','more_unfair']),before=JSON.stringify(e.skillsJson);
+ assert.equal(JSON.stringify(e.normalizeSkillJson(e.skillsJson)),before);assert.equal(e.getSkillsForClass('공작').length,11);assert.equal(e.getEquippedSkills(e.owner).length,3);
+ assert.equal(e.runtime('unfair_damage').resourceCosts[0].value,10);assert.equal(e.runtime('bomb_necklace').activation.selfHpAtMost,20);
+});
+
 // The reaper's normal checks always start in a two-versus-two formation.
 function soulEngine() {
  const e=engine();e.skillsJson=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8')));
@@ -1171,6 +1271,107 @@ test('serum definitions normalize repeatedly without losing optional, pulse, and
  assert.equal(e.getSkillsForClass('혈청형').length,11);
  assert.equal(e.runtime('transfusion').channel.pulseResourceCosts[0].value,5);
  assert.equal(e.runtime('barrier').actions[0].fieldFollowSource,true);
+});
+
+function mageEngine(element='lightning',options=[]) {
+ const e=engine();e.skillsJson=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'../data/skills.json'),'utf8')));
+ const source=unit(e),target=unit(e,'enemy',110);source.magic=100;source.attackRange=5;source.hp=source.maxHp=1000;source.mp=source.maxMp=200;target.hp=target.maxHp=2000;
+ source.skillIds=['element_choice','arrow','barrier','area','quick',...options].map(id=>'skill_class_mage_'+id);source.skillSelections={skill_class_mage_element_choice:element};
+ e.publishBattleEvents([{type:'battle_entry',source,target:source}]);
+ return {e,source,target,skill:name=>e.getEquippedSkills(source).find(s=>s.id==='skill_class_mage_'+name)};
+}
+
+test('mage ice choice requires equipped unlock and respects the three optional limit',()=>{
+ const {e,source}=mageEngine('ice');const choice=e.getSkillById('skill_class_mage_element_choice');
+ assert.equal(e.getChoiceSkillOption(choice,'ice',source.skillIds).id,'lightning');
+ source.skillIds.push('skill_class_mage_forbidden_ice');assert.equal(e.getChoiceSkillOption(choice,'ice',source.skillIds).id,'ice');
+ source.skillIds=['skill_class_mage_element_choice','skill_class_mage_efficient_arrow','skill_class_mage_explosive','skill_class_mage_numbing_strike','skill_class_mage_forbidden_ice'];
+ assert.equal(e.getChoiceSkillOption(choice,'ice',source.skillIds).id,'lightning');assert.equal(e.resolveSelectedSkillIds(source.skillIds,source.skillSelections).includes('skill_class_mage_element_ice'),false);
+});
+
+test('mage wind earth and ice entry bonuses stay exclusive and do not grow on recalculation',()=>{
+ const wind=mageEngine('wind');assert.equal(wind.source.maxMp,250);assert.equal(wind.source.mp,250);assert.ok(Math.abs(wind.skill('arrow').castTime-2.1)<1e-9);
+ const earth=mageEngine('earth');assert.equal(earth.source.magic,105);assert.equal(earth.source.maxMp,200);assert.equal(earth.skill('arrow').resourceCosts[0].value,12);assert.equal(earth.skill('arrow').actions[0].coefficients[0].value,115);
+ for(let i=0;i<3;i++){wind.e.recalculateBattleBuffs(wind.source);earth.e.recalculateBattleBuffs(earth.source);}assert.equal(wind.source.mp,250);assert.equal(earth.source.magic,105);
+ const ice=mageEngine('ice',['forbidden_ice']);assert.equal(ice.source.defense,10);assert.equal(ice.target.activeEffects.length,0);
+ ice.target.speed=2;ice.target.attackSpeed=2;ice.e.applySkill(ice.source,ice.target,ice.skill('quick'));assert.equal(ice.target.speed,1.6);assert.ok(Math.abs(ice.target.attackSpeed-2/.9)<1e-9);
+ for(let i=0;i<120;i++)ice.e.updateBattleEffects();assert.equal(ice.target.speed,2);assert.equal(ice.target.attackSpeed,2);assert.equal(ice.source.defense,10);
+});
+
+test('mage lightning magnetic copies damage conditionally and never duplicates explosion',()=>{
+ const {e,source,target,skill}=mageEngine('lightning',['magnetic_field','explosive']);const near=unit(e,'enemy',135);near.hp=near.maxHp=2000;
+ e.applySkill(source,target,skill('arrow'));assert.equal(target.hp,1900);assert.equal(near.hp,1950);assert.equal(skill('arrow').castTime,2.8);
+ const area=skill('area');assert.equal(area.actions[0].area,7);assert.equal(area.actions[0].coefficients[0].value,156);assert.equal(area.resourceCosts[0].value,24);assert.equal(area.actions[0].splashPercent ?? 0,0);
+ e.applySkill(source,target,area);assert.equal(target.hp,1744);assert.equal(near.hp,1794);
+ const wind=mageEngine('wind',['magnetic_field']);assert.equal(wind.skill('arrow').actions[0].splashPercent ?? 0,0);
+});
+
+test('mage timed barrier scales from magic copies thirty percent and leaves ordinary BP on expiry',()=>{
+ const {e,source,skill}=mageEngine();const ally=unit(e,'player',115),far=unit(e,'player',140);source.bp=source.maxBp=40;
+ e.applySkill(source,source,skill('barrier'));assert.equal(e.getUnitBarrierValue(source),140);assert.equal(e.getUnitBarrierValue(ally),30);assert.equal(e.getUnitBarrierValue(far),0);
+ for(let i=0;i<300;i++)e.updateBattleEffects();assert.equal(e.getUnitBarrierValue(source),40);assert.equal(e.getUnitBarrierValue(ally),0);
+});
+
+test('mage regenerative barrier heals half generated amount and removes exactly one harmful effect',()=>{
+ const {e,source,skill}=mageEngine('earth',['regenerative_barrier']);source.hp=500;
+ for(const id of ['one','two'])e.applyTimedEffectAction(source,source,e.normalizeSkillAction({type:'add_state',duration:20,effect:{id,name:id,state:'root',polarity:'harmful'}}));
+ const barrier=skill('barrier');e.dispatchSkillActions(source,source,barrier,false);
+ assert.ok(Math.abs(e.getUnitBarrierValue(source)-120.75)<1e-9);assert.ok(Math.abs(source.hp-560.375)<1e-9);assert.equal(source.activeEffects.filter(x=>x.polarity==='harmful').length,1);
+});
+
+test('mage selected efficient arrow and numbing strike affect only selected skills and damage recipients',()=>{
+ const {e,source,target,skill}=mageEngine('wind',['efficient_arrow','numbing_strike']);assert.equal(skill('arrow').resourceCosts[0].value,5);assert.equal(skill('quick').cooldown,6);assert.equal(skill('quick').resourceCosts[0].value,10);
+ e.applySkill(source,target,skill('quick'));assert(e.hasBattleState(target,'stun'));assert.equal(target.hp,1850);
+ const bare=mageEngine('wind');assert.equal(bare.skill('arrow').resourceCosts[0].value,10);assert.equal(bare.skill('quick').actions.length,1);
+ const lightning=mageEngine('lightning',['numbing_strike']);const nearby=unit(lightning.e,'enemy',125);nearby.hp=nearby.maxHp=2000;
+ lightning.e.applySkill(lightning.source,lightning.target,lightning.skill('quick'));assert(lightning.e.hasBattleState(nearby,'stun'));assert.equal(nearby.hp,1955);
+});
+
+function knightEngine(options=[]) {
+ const e=engine();e.skillsJson=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'../data/skills.json'),'utf8')));
+ e.horseDefinition=JSON.parse(fs.readFileSync(path.join(__dirname,'../data/entities/knight_magic_horse.json'),'utf8'));vm.runInContext('entitiesJson.push(horseDefinition)',e);
+ const owner=unit(e),enemy=unit(e,'enemy',150);owner.atk=100;owner.speed=2;owner.attackRange=1;owner.hp=owner.maxHp=1000;enemy.hp=enemy.maxHp=2000;
+ const id=s=>'skill_class_knight_'+s;
+ owner.skillIds=['magic_horse','haste_horse','charge','pierce','spinning_slash',...options].map(id);
+ e.publishBattleEvents([{type:'battle_entry',source:owner,target:owner}]);
+ return {e,owner,enemy,skill:s=>e.getEquippedSkills(owner).find(row=>row.id===id(s)),horse:()=>e.getLivingOwnedSummons(owner,'knight_magic_horse')[0]};
+}
+
+test('knight variants keep independent costs cooldowns and recheck mount at completion',()=>{
+ const {e,owner,skill,horse}=knightEngine(['stable']);
+ const haste=skill('haste_horse');assert.equal(haste.castTime,0);assert.equal(haste.cooldown,5);assert.equal(e.getSkillResourceCosts(haste)[0].value,0);
+ e.resolveSkillCast(owner,{skill:haste,target:owner});assert.equal(owner.skillCooldowns[haste.id],300);
+ horse().hp=0;e.syncAliveState(horse());
+ const summon=skill('summon_horse');assert.equal(summon.cooldown,25);assert.equal(summon.castTime,3);assert.equal(summon.resourceCosts[0].value,50);
+ assert.equal(e.canActivateSkill(owner,haste),false);assert.equal(e.canActivateSkill(owner,summon),true);
+ const mp=owner.mp;assert(e.tryUseReadySkill(owner,e.playerSquad,e.enemySquad));assert.equal(owner.mp,mp-50);assert.equal(owner.castTimer,180);
+ for(let i=0;i<180;i++)e.updateCast(owner);
+ assert(horse());assert.equal(horse().hp,500);assert.equal(owner.skillCooldowns[summon.id],1500);assert.equal(owner.skillCooldowns[haste.id],300);
+ assert.equal(e.canActivateSkill(owner,summon),false);assert.equal(skill('haste_horse').id,haste.id);
+});
+
+test('knight charge uses actual collision-limited distance for damage and knockback',()=>{
+ const {e,owner,enemy,skill}=knightEngine(['battlefield_ruler']);const charge=skill('charge');assert.equal(charge.cooldown,5);
+ const start=owner.x,enemyStart=enemy.x;e.dispatchSkillActions(owner,enemy,charge,false);
+ const moved=(owner.x-start)/10;assert(moved>0 && moved<5);assert.equal(2000-enemy.hp,150+moved*50);
+ assert.ok(Math.abs((enemy.x-enemyStart)/10-(moved+2))<1e-9);
+});
+
+test('knight optional defense toggles with mount and march buffs only one nearby ally',()=>{
+ const {e,owner,skill,horse}=knightEngine(['vulnerable','march']);owner.defense=0;e.recalculateBattleBuffs(owner);assert.equal(owner.defense,0);
+ const ally=unit(e,'player',110),other=unit(e,'player',120),far=unit(e,'player',200);ally.atk=other.atk=far.atk=100;
+ e.applySkill(owner,owner,skill('haste_horse'));assert.equal(ally.atk,120);assert.equal(other.atk,100);assert.equal(far.atk,100);
+ horse().hp=0;e.syncAliveState(horse());e.updateBattleEffects();assert.equal(owner.defense,10);assert.equal(owner.speed,2);
+ e.applySkill(owner,owner,skill('summon_horse'));e.updateBattleEffects();assert.equal(owner.defense,0);assert.equal(owner.speed,2.6);
+});
+
+test('knight pierce and spin honor weapon range selected debuff and both combo stages',()=>{
+ const {e,owner,enemy,skill}=knightEngine(['prey','spinning_wind']);enemy.x=110;enemy.defense=30;enemy.speed=2;
+ const pierce=skill('pierce');assert.equal(pierce.actions[0].rangeMode,'mainWeapon');e.applySkill(owner,enemy,pierce);assert.equal(enemy.hp,1900);assert.equal(enemy.defense,10);assert.equal(enemy.speed,1);
+ const spin=skill('spinning_slash');const stage=e.getRuntimeComboSkill(owner,spin);assert.equal(stage.actions[0].area,6);assert.equal(stage.resourceCosts[0].value,5);
+ e.resolveSkillCast(owner,{skill:stage,target:enemy});assert.equal(enemy.hp,1820);assert.equal(owner.skillCooldowns[spin.id],30);
+ const second=e.getRuntimeComboSkill(owner,spin);assert.equal(second.actions[0].area,6);e.resolveSkillCast(owner,{skill:second,target:enemy});assert.equal(enemy.hp,1700);assert.equal(owner.skillCooldowns[spin.id],600);
+ const bare=knightEngine();assert.equal(bare.skill('spinning_slash').combo.stages[0].actions[0].area,3);assert.equal(bare.skill('pierce').actions.length,2);
 });
 
 function engine() {
@@ -2704,9 +2905,9 @@ function damageProxyAction(e,percent=20,priority=100,scope='all') {
 test('knight mount and demon brute branch on owned summon state and proxy owner damage', () => {
   const e=engine();
   const allSkills=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8'));
-  const ids=['skill_class_knight_magic_horse','skill_class_knight_haste_horse','skill_class_demon_brute'];
+  const ids=['skill_class_knight_magic_horse','skill_class_knight_haste_horse','skill_class_knight_summon_horse','skill_class_demon_brute'];
   const actual=allSkills.filter(candidate=>ids.includes(candidate.id));
-  assert.equal(actual.length,3);
+  assert.equal(actual.length,4);
   e.skillsJson=e.normalizeSkillJson(actual);
   e.newEntities=['knight_magic_horse','demon_brute'].map(id=>JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','entities',`${id}.json`),'utf8')));
   vm.runInContext('entitiesJson.push(...newEntities)',e);
@@ -2720,20 +2921,20 @@ test('knight mount and demon brute branch on owned summon state and proxy owner 
   e.publishBattleEvents([{type:'battle_entry',source:knight,target:knight}]);
   assert.equal(knight.summons.filter(summon=>summon.alive).length,1);
   const horse=knight.summons[0];
-  assert.equal(horse.entityId,'knight_magic_horse');assert.equal(horse.maxHp,1000);
-  assert.ok(Math.abs(knight.speed-1.95)<1e-9);
+  assert.equal(horse.entityId,'knight_magic_horse');assert.equal(horse.maxHp,500);
+  assert.ok(Math.abs(knight.speed-1.69)<1e-9);
   e.applyActionDamage(enemy,knight,{damageType:'fixed',coefficients:[{type:'fixed',value:100}]});
-  assert.equal(knight.hp,20);assert.equal(horse.hp,980);
+  assert.equal(knight.hp,20);assert.equal(horse.hp,480);
 
   const summonCount=knight.summons.length;
   e.applySkill(knight,knight,haste);
   assert.equal(knight.summons.length,summonCount);
-  assert.equal(knight.atk,112.5);assert.equal(knight.attackSpeed,1.5);
+  assert.equal(knight.atk,108);assert.equal(knight.effectAttackRateMultiplier,1.2);
   horse.hp=0;e.syncAliveState(horse);e.updateBattleEffects(knight);
   assert.equal(knight.speed,1.3);
-  e.applySkill(knight,knight,haste);
+  e.applySkill(knight,knight,e.getFormSkill(knight,haste));
   assert.equal(knight.summons.filter(summon=>summon.alive).length,1);
-  assert.equal(knight.atk,90);assert.equal(knight.attackSpeed,2);
+  assert.equal(knight.atk,108);assert.equal(knight.attackSpeed,2/1.2);
 
   const demon=unit(e);demon.name='악마';demon.magic=60;demon.hp=demon.maxHp=500;
   const bruteSkill=e.skillsJson.find(candidate=>candidate.id==='skill_class_demon_brute');
@@ -3573,11 +3774,11 @@ test('prebattle selection modifiers change only their configured skills',()=>{
  e.skillsJson=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8')));
  const mage=unit(e);mage.skillIds=['skill_class_mage_element_choice','skill_class_mage_arrow','skill_class_mage_area'];
  mage.skillSelections={skill_class_mage_element_choice:'wind'};
- let arrow=e.getEquippedSkills(mage).find(item=>item.id==='skill_class_mage_arrow');assert.equal(arrow.castTime,.35);assert.equal(arrow.actions[0].coefficients[0].value,100);
+ let arrow=e.getEquippedSkills(mage).find(item=>item.id==='skill_class_mage_arrow');assert.ok(Math.abs(arrow.castTime-2.1)<1e-9);assert.equal(arrow.actions[0].coefficients[0].value,100);
  mage.skillSelections.skill_class_mage_element_choice='earth';
- arrow=e.getEquippedSkills(mage).find(item=>item.id==='skill_class_mage_arrow');assert.equal(arrow.castTime,.5);assert.equal(arrow.resourceCosts[0].value,12);assert.equal(arrow.actions[0].coefficients[0].value,115);
+ arrow=e.getEquippedSkills(mage).find(item=>item.id==='skill_class_mage_arrow');assert.equal(arrow.castTime,3);assert.equal(arrow.resourceCosts[0].value,12);assert.equal(arrow.actions[0].coefficients[0].value,115);
  mage.skillSelections.skill_class_mage_element_choice='lightning';
- const area=e.getEquippedSkills(mage).find(item=>item.id==='skill_class_mage_area');assert.equal(area.actions[0].area,2.6);assert.equal(area.actions[0].splashPercent,30);assert.equal(area.actions[0].splashRadius,2);
+ const area=e.getEquippedSkills(mage).find(item=>item.id==='skill_class_mage_area');assert.equal(area.actions[0].area,5);assert.equal(area.actions[0].coefficients[0].value,130);assert.equal(area.actions[0].splashPercent ?? 0,0);
 });
 
 test('lightning selection copies thirty percent to nearby secondary targets without rehitting the primary',()=>{
@@ -3594,8 +3795,8 @@ test('mage element choice data uses lightning by default and is assigned before 
  const e=engine(),skills=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8')));
  const characters=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','characters.json'),'utf8'));
  const choice=skills.find(item=>item.id==='skill_class_mage_element_choice'),mage=characters.find(item=>item.name==='마법사');
- assert.equal(choice.slot,'choice_prebattle');assert.equal(choice.choice.defaultOptionId,'lightning');assert.deepEqual(Array.from(choice.choice.options,option=>option.id),['lightning','wind','earth']);
- assert.deepEqual(mage.skillIds,['skill_class_mage_element_choice','skill_class_mage_arrow','skill_class_mage_barrier','skill_class_mage_quick','skill_class_mage_area']);
+ assert.equal(choice.slot,'choice_prebattle');assert.equal(choice.choice.defaultOptionId,'lightning');assert.deepEqual(Array.from(e.getAvailableSkillChoice(choice,mage.skillIds).options,option=>option.id),['lightning','wind','earth']);
+ assert.deepEqual(mage.skillIds,['skill_class_mage_element_choice','skill_class_mage_barrier','skill_class_mage_area','skill_class_mage_quick','skill_class_mage_arrow']);
 });
 
 test('scholar brain muscle continuously converts magic and resources without double counting',()=>{

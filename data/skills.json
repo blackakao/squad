@@ -339,21 +339,11 @@
   },
   {
     "id": "skill_class_knight_charge",
-    "name": "기사 · 돌진 (기본형)",
+    "name": "기사 · 돌진",
     "className": "기사",
-    "icon": "assets/images/skills/기사_돌진.png",
-    "description": "",
     "slot": "active",
+    "castTime": 0,
     "cooldown": 8,
-    "castTime": 0.5,
-    "castReceivedDamagePercent": 100,
-    "channel": {
-      "duration": 0,
-      "interval": 1,
-      "interruptOnDamage": true,
-      "lockTarget": false,
-      "receivedDamagePercent": 100
-    },
     "resourceCosts": [
       {
         "resource": "ST",
@@ -366,129 +356,49 @@
         "type": "move",
         "target": "enemy",
         "rangeMode": "custom",
-        "rangeValue": 5,
-        "rangeMultiplier": 100,
-        "minRange": 0,
-        "allowSelfTarget": true,
-        "requiredTargetEffectId": "",
-        "requiredTargetEffectCaster": "any",
-        "targetHpBelow": 100,
-        "targetCooldown": 0,
-        "targetCooldownScope": "caster",
-        "targetCooldownEffectId": "",
-        "targetCooldownEffectName": "",
-        "ownedSummonCondition": "any",
-        "ownedSummonEntityId": "",
-        "targetSummonEntityId": "",
-        "chainCount": 0,
-        "chainRange": 3,
-        "chainOrigin": "previous",
-        "coefficients": [],
-        "healResource": "HP",
-        "fullResourceAlternative": "",
-        "drainResource": "MP",
-        "damageType": "physical",
-        "area": 0,
-        "areaCenter": "target",
-        "maxTargets": 0,
-        "critical": 0,
-        "penetration": 0,
         "moveType": "Dash",
-        "movePlacement": "target",
-        "moveSpeed": 1,
         "distance": 10,
-        "duration": 0,
-        "fieldShape": "circle",
-        "fieldRadius": 0,
-        "fieldWidth": 2,
-        "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 5,
-        "fieldMoveType": "Push",
-        "fieldDistance": 1,
-        "fieldCenter": "target",
-        "fieldInterval": 1,
-        "fieldMovementStCostCenter": 0,
-        "fieldMovementStCostFalloff": 0,
-        "fieldMovementStCostMinimum": 0,
-        "fieldAuras": []
+        "rangeValue": 6
       },
       {
         "type": "deal_damage",
         "target": "enemy",
         "rangeMode": "custom",
-        "rangeValue": 1,
-        "rangeMultiplier": 100,
-        "minRange": 0,
-        "allowSelfTarget": true,
-        "requiredTargetEffectId": "",
-        "requiredTargetEffectCaster": "any",
-        "targetHpBelow": 100,
-        "targetCooldown": 0,
-        "targetCooldownScope": "caster",
-        "targetCooldownEffectId": "",
-        "targetCooldownEffectName": "",
-        "ownedSummonCondition": "any",
-        "ownedSummonEntityId": "",
-        "targetSummonEntityId": "",
-        "chainCount": 0,
-        "chainRange": 3,
-        "chainOrigin": "previous",
         "coefficients": [
           {
             "type": "calculated",
             "field": "atk",
             "calc": "percent",
-            "value": 100,
-            "effectId": ""
+            "value": 150
+          },
+          {
+            "type": "calculated",
+            "field": "previousMoveDistance",
+            "calc": "percent",
+            "value": 5000
           }
         ],
-        "healResource": "HP",
-        "fullResourceAlternative": "",
-        "drainResource": "MP",
         "damageType": "physical",
-        "area": 0,
-        "areaCenter": "target",
-        "maxTargets": 0,
-        "critical": 0,
-        "penetration": 0,
-        "moveType": "Walk",
-        "movePlacement": "target",
-        "moveSpeed": 1,
-        "distance": 0,
-        "duration": 0,
-        "fieldShape": "circle",
-        "fieldRadius": 0,
-        "fieldWidth": 2,
-        "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 5,
-        "fieldMoveType": "Push",
-        "fieldDistance": 1,
-        "fieldCenter": "target",
-        "fieldInterval": 1,
-        "fieldMovementStCostCenter": 0,
-        "fieldMovementStCostFalloff": 0,
-        "fieldMovementStCostMinimum": 0,
-        "fieldAuras": []
+        "rangeValue": 6
+      },
+      {
+        "type": "move",
+        "target": "enemy",
+        "rangeMode": "custom",
+        "moveType": "Knockback",
+        "distanceSource": "previousMoveDistance",
+        "rangeValue": 6
       }
-    ]
+    ],
+    "icon": "assets/images/skills/기사_돌진.png"
   },
   {
     "id": "skill_class_mage_arrow",
     "name": "마법사 · 마법화살",
     "className": "마법사",
-    "icon": "assets/images/skills/마법사_마법화살.png",
-    "description": "",
     "slot": "active",
-    "cooldown": 8,
-    "castTime": 0.5,
-    "castReceivedDamagePercent": 100,
-    "channel": {
-      "duration": 0,
-      "interval": 1,
-      "interruptOnDamage": true,
-      "lockTarget": false,
-      "receivedDamagePercent": 100
-    },
+    "castTime": 3,
+    "cooldown": 0,
     "resourceCosts": [
       {
         "resource": "MP",
@@ -500,165 +410,68 @@
       {
         "type": "deal_damage",
         "target": "enemy",
-        "rangeMode": "custom",
-        "rangeValue": 5,
-        "rangeMultiplier": 100,
-        "minRange": 0,
-        "allowSelfTarget": true,
-        "requiredTargetEffectId": "",
-        "requiredTargetEffectCaster": "any",
-        "targetHpBelow": 100,
-        "targetCooldown": 0,
-        "targetCooldownScope": "caster",
-        "targetCooldownEffectId": "",
-        "targetCooldownEffectName": "",
-        "ownedSummonCondition": "any",
-        "ownedSummonEntityId": "",
-        "targetSummonEntityId": "",
-        "chainCount": 0,
-        "chainRange": 3,
-        "chainOrigin": "previous",
+        "rangeMode": "mainWeapon",
+        "damageType": "magic",
         "coefficients": [
           {
             "type": "calculated",
             "field": "magic",
             "calc": "percent",
-            "value": 100,
-            "effectId": ""
+            "value": 100
           }
-        ],
-        "healResource": "HP",
-        "fullResourceAlternative": "",
-        "drainResource": "MP",
-        "damageType": "magic",
-        "area": 0,
-        "areaCenter": "target",
-        "maxTargets": 0,
-        "critical": 0,
-        "penetration": 0,
-        "moveType": "Walk",
-        "movePlacement": "target",
-        "moveSpeed": 1,
-        "distance": 0,
-        "duration": 0,
-        "fieldShape": "circle",
-        "fieldRadius": 0,
-        "fieldWidth": 2,
-        "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 5,
-        "fieldMoveType": "Push",
-        "fieldDistance": 1,
-        "fieldCenter": "target",
-        "fieldInterval": 1,
-        "fieldMovementStCostCenter": 0,
-        "fieldMovementStCostFalloff": 0,
-        "fieldMovementStCostMinimum": 0,
-        "fieldAuras": []
+        ]
       }
-    ]
+    ],
+    "icon": "assets/images/skills/마법사_마법화살.png"
   },
   {
     "id": "skill_class_mage_barrier",
     "name": "마법사 · 보호막",
     "className": "마법사",
-    "icon": "assets/images/skills/마법사_보호막.png",
-    "description": "",
     "slot": "active",
-    "cooldown": 8,
     "castTime": 0.5,
-    "castReceivedDamagePercent": 100,
-    "channel": {
-      "duration": 0,
-      "interval": 1,
-      "interruptOnDamage": true,
-      "lockTarget": false,
-      "receivedDamagePercent": 100
-    },
+    "cooldown": 10,
     "resourceCosts": [
       {
         "resource": "MP",
         "mode": "fixed",
-        "value": 10
+        "value": 20
       }
     ],
     "actions": [
       {
-        "type": "heal",
+        "type": "add_buff",
         "target": "self",
-        "rangeMode": "custom",
-        "rangeValue": 5,
-        "rangeMultiplier": 100,
-        "minRange": 0,
-        "allowSelfTarget": true,
-        "requiredTargetEffectId": "",
-        "requiredTargetEffectCaster": "any",
-        "targetHpBelow": 100,
-        "targetCooldown": 0,
-        "targetCooldownScope": "caster",
-        "targetCooldownEffectId": "",
-        "targetCooldownEffectName": "",
-        "ownedSummonCondition": "any",
-        "ownedSummonEntityId": "",
-        "targetSummonEntityId": "",
-        "chainCount": 0,
-        "chainRange": 3,
-        "chainOrigin": "previous",
+        "rangeMode": "mainWeapon",
+        "duration": 5,
         "coefficients": [
           {
             "type": "calculated",
             "field": "magic",
             "calc": "percent",
-            "value": 100,
-            "effectId": ""
+            "value": 100
           }
         ],
-        "healResource": "BP",
-        "fullResourceAlternative": "",
-        "drainResource": "MP",
-        "damageType": "physical",
-        "area": 0,
-        "areaCenter": "target",
-        "maxTargets": 0,
-        "critical": 0,
-        "penetration": 0,
-        "moveType": "Walk",
-        "movePlacement": "target",
-        "moveSpeed": 1,
-        "distance": 0,
-        "duration": 0,
-        "fieldShape": "circle",
-        "fieldRadius": 0,
-        "fieldWidth": 2,
-        "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 5,
-        "fieldMoveType": "Push",
-        "fieldDistance": 1,
-        "fieldCenter": "target",
-        "fieldInterval": 1,
-        "fieldMovementStCostCenter": 0,
-        "fieldMovementStCostFalloff": 0,
-        "fieldMovementStCostMinimum": 0,
-        "fieldAuras": []
+        "effect": {
+          "id": "mage_barrier",
+          "name": "보호막",
+          "stat": "maxHp",
+          "value": 1,
+          "mode": "barrier",
+          "category": "magic",
+          "barrierMode": "coefficient"
+        }
       }
-    ]
+    ],
+    "icon": "assets/images/skills/마법사_보호막.png"
   },
   {
     "id": "skill_class_mage_quick",
-    "name": "마법사 · 즉시시전 공격 (기본형)",
+    "name": "마법사 · 마법강타",
     "className": "마법사",
-    "icon": "assets/images/skills/_-20261026221925114613.png",
-    "description": "",
     "slot": "active",
-    "cooldown": 8,
     "castTime": 0,
-    "castReceivedDamagePercent": 100,
-    "channel": {
-      "duration": 0,
-      "interval": 1,
-      "interruptOnDamage": true,
-      "lockTarget": false,
-      "receivedDamagePercent": 100
-    },
+    "cooldown": 8,
     "resourceCosts": [
       {
         "resource": "MP",
@@ -670,62 +483,19 @@
       {
         "type": "deal_damage",
         "target": "enemy",
-        "rangeMode": "custom",
-        "rangeValue": 5,
-        "rangeMultiplier": 100,
-        "minRange": 0,
-        "allowSelfTarget": true,
-        "requiredTargetEffectId": "",
-        "requiredTargetEffectCaster": "any",
-        "targetHpBelow": 100,
-        "targetCooldown": 0,
-        "targetCooldownScope": "caster",
-        "targetCooldownEffectId": "",
-        "targetCooldownEffectName": "",
-        "ownedSummonCondition": "any",
-        "ownedSummonEntityId": "",
-        "targetSummonEntityId": "",
-        "chainCount": 0,
-        "chainRange": 3,
-        "chainOrigin": "previous",
+        "rangeMode": "mainWeapon",
+        "damageType": "magic",
         "coefficients": [
           {
             "type": "calculated",
             "field": "magic",
             "calc": "percent",
-            "value": 100,
-            "effectId": ""
+            "value": 150
           }
-        ],
-        "healResource": "HP",
-        "fullResourceAlternative": "",
-        "drainResource": "MP",
-        "damageType": "magic",
-        "area": 0,
-        "areaCenter": "target",
-        "maxTargets": 0,
-        "critical": 0,
-        "penetration": 0,
-        "moveType": "Dash",
-        "movePlacement": "target",
-        "moveSpeed": 1,
-        "distance": 0,
-        "duration": 0,
-        "fieldShape": "circle",
-        "fieldRadius": 0,
-        "fieldWidth": 2,
-        "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 0,
-        "fieldMoveType": "Push",
-        "fieldDistance": 1,
-        "fieldCenter": "target",
-        "fieldInterval": 1,
-        "fieldMovementStCostCenter": 0,
-        "fieldMovementStCostFalloff": 0,
-        "fieldMovementStCostMinimum": 0,
-        "fieldAuras": []
+        ]
       }
-    ]
+    ],
+    "icon": "assets/images/skills/마법사_마법강타.png"
   },
   {
     "id": "skill_class_priest_smite",
@@ -3262,88 +3032,37 @@
   },
   {
     "id": "skill_class_mage_area",
-    "name": "마법사 · 마력 폭발",
+    "name": "마법사 · 마법폭발",
     "className": "마법사",
-    "icon": "assets/images/skills/_-20261026222031680153.png",
-    "description": "",
     "slot": "active",
-    "cooldown": 8,
-    "castTime": 0.5,
-    "castReceivedDamagePercent": 100,
-    "channel": {
-      "duration": 0,
-      "interval": 1,
-      "interruptOnDamage": true,
-      "lockTarget": false,
-      "receivedDamagePercent": 100
-    },
+    "castTime": 1,
+    "cooldown": 10,
     "resourceCosts": [
       {
         "resource": "MP",
         "mode": "fixed",
-        "value": 10
+        "value": 20
       }
     ],
     "actions": [
       {
         "type": "deal_damage",
         "target": "enemy",
-        "rangeMode": "custom",
-        "rangeValue": 5,
-        "rangeMultiplier": 100,
-        "minRange": 0,
-        "allowSelfTarget": true,
-        "requiredTargetEffectId": "",
-        "requiredTargetEffectCaster": "any",
-        "targetHpBelow": 100,
-        "targetCooldown": 0,
-        "targetCooldownScope": "caster",
-        "targetCooldownEffectId": "",
-        "targetCooldownEffectName": "",
-        "ownedSummonCondition": "any",
-        "ownedSummonEntityId": "",
-        "targetSummonEntityId": "",
-        "chainCount": 0,
-        "chainRange": 3,
-        "chainOrigin": "previous",
+        "rangeMode": "mainWeapon",
+        "area": 5,
+        "areaCenter": "target",
+        "damageType": "magic",
         "coefficients": [
           {
             "type": "calculated",
             "field": "magic",
             "calc": "percent",
-            "value": 100,
-            "effectId": ""
+            "value": 100
           }
-        ],
-        "healResource": "HP",
-        "fullResourceAlternative": "",
-        "drainResource": "MP",
-        "damageType": "magic",
-        "area": 2,
-        "areaCenter": "target",
-        "maxTargets": 0,
-        "critical": 0,
-        "penetration": 0,
-        "moveType": "Dash",
-        "movePlacement": "target",
-        "moveSpeed": 1,
-        "distance": 0,
-        "duration": 0,
-        "fieldShape": "circle",
-        "fieldRadius": 0,
-        "fieldWidth": 2,
-        "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 0,
-        "fieldMoveType": "Push",
-        "fieldDistance": 1,
-        "fieldCenter": "target",
-        "fieldInterval": 1,
-        "fieldMovementStCostCenter": 0,
-        "fieldMovementStCostFalloff": 0,
-        "fieldMovementStCostMinimum": 0,
-        "fieldAuras": []
+        ]
       }
-    ]
+    ],
+    "icon": "assets/images/skills/마법사_마법폭발.png"
   },
   {
     "id": "skill_class_monk_area_heal",
@@ -4998,24 +4717,9 @@
     "id": "skill_class_knight_magic_horse",
     "name": "기사 · 마법말",
     "className": "기사",
-    "icon": "assets/images/skills/기사_마법말.png",
-    "description": "전투 시작 시 마법말을 소환합니다. 마법말이 생존하는 동안 이동속도가 50% 증가하며, 받는 피해의 20%를 마법말이 대신 받습니다.",
     "slot": "passive",
-    "cooldown": 0,
     "castTime": 0,
-    "castReceivedDamagePercent": 100,
-    "channel": {
-      "duration": 0,
-      "interval": 1,
-      "interruptOnDamage": true,
-      "lockTarget": false,
-      "receivedDamagePercent": 100
-    },
-    "passiveTrigger": {
-      "event": "battle_entry",
-      "chance": 100,
-      "includePeriodic": false
-    },
+    "cooldown": 0,
     "resourceCosts": [
       {
         "resource": "MP",
@@ -5027,470 +4731,89 @@
       {
         "type": "summon_entity",
         "target": "self",
-        "rangeMode": "custom",
-        "rangeValue": 0,
-        "rangeMultiplier": 100,
-        "minRange": 0,
-        "allowSelfTarget": true,
-        "requiredTargetEffectId": "",
-        "requiredTargetEffectCaster": "any",
-        "targetHpBelow": 100,
-        "targetCooldown": 0,
-        "targetCooldownScope": "caster",
-        "targetCooldownEffectId": "",
-        "targetCooldownEffectName": "",
-        "ownedSummonCondition": "absent",
-        "ownedSummonEntityId": "knight_magic_horse",
-        "targetSummonEntityId": "",
-        "chainCount": 0,
-        "chainRange": 3,
-        "chainOrigin": "previous",
-        "coefficients": [
-          {
-            "type": "fixed",
-            "field": "atk",
-            "calc": "percent",
-            "value": 1,
-            "effectId": ""
-          }
-        ],
-        "healResource": "HP",
-        "fullResourceAlternative": "",
-        "drainResource": "MP",
-        "damageType": "physical",
-        "area": 0,
-        "areaCenter": "target",
-        "maxTargets": 0,
+        "rangeMode": "mainWeapon",
         "entityId": "knight_magic_horse",
-        "summonCenter": "self",
-        "inheritStats": {
-          "hp": 0,
-          "mp": 0,
-          "st": 0,
-          "atk": 0,
-          "magic": 0,
-          "defense": 0,
-          "resistance": 0,
-          "speed": 0
-        },
+        "duration": 0,
         "count": 1,
         "limit": 1,
         "protectOwnerPercent": 20,
         "protectOwnerScope": "all",
-        "protectOwnerPriority": 20,
-        "transferStateScope": "none",
-        "transferStatePriority": 0,
-        "critical": 0,
-        "penetration": 0,
-        "moveType": "Walk",
-        "movePlacement": "target",
-        "moveSpeed": 1,
-        "distance": 0,
-        "duration": 0,
-        "fieldShape": "circle",
-        "fieldRadius": 0,
-        "fieldWidth": 2,
-        "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 5,
-        "fieldMoveType": "Push",
-        "fieldDistance": 1,
-        "fieldCenter": "target",
-        "fieldInterval": 1,
-        "fieldMovementStCostCenter": 0,
-        "fieldMovementStCostFalloff": 0,
-        "fieldMovementStCostMinimum": 0,
-        "fieldAuras": []
+        "ownedSummonEntityId": "knight_magic_horse",
+        "ownedSummonCondition": "absent"
       },
       {
         "type": "add_buff",
         "target": "self",
-        "rangeMode": "custom",
-        "rangeValue": 0,
-        "rangeMultiplier": 100,
-        "minRange": 0,
-        "allowSelfTarget": true,
-        "requiredTargetEffectId": "",
-        "requiredTargetEffectCaster": "any",
-        "targetHpBelow": 100,
-        "targetCooldown": 0,
-        "targetCooldownScope": "caster",
-        "targetCooldownEffectId": "",
-        "targetCooldownEffectName": "",
-        "ownedSummonCondition": "any",
-        "ownedSummonEntityId": "knight_magic_horse",
-        "targetSummonEntityId": "",
+        "rangeMode": "mainWeapon",
+        "duration": 0,
         "effect": {
           "id": "knight_magic_horse_speed",
           "name": "마법말 탑승",
-          "state": "buff",
-          "category": "magic",
-          "polarity": "beneficial",
-          "tags": [],
-          "dispellable": true,
-          "dispelMode": "id",
-          "dispelTags": [],
-          "dispelCategory": "general",
-          "dispelPolarity": "any",
           "stat": "speed",
-          "sourceStat": "atk",
+          "value": 30,
           "mode": "percent",
-          "value": 50,
-          "requiredOwnedSummonEntityId": "knight_magic_horse",
-          "nextCastTimePercent": 100,
-          "nextResourceCostPercent": 100,
-          "nextCooldownPercent": 100,
-          "reflectPercent": 20,
-          "reflectScope": "all",
-          "reflectDamageType": "fixed",
-          "proxyPercent": 20,
-          "proxyPriority": 100,
-          "proxyScope": "all",
-          "counterOnMelee": false,
-          "movementStCostPercent": 100,
-          "movementTriggerDistance": 0,
-          "movementTriggerState": "stun",
-          "movementTriggerDuration": 0,
-          "uses": 0,
-          "consumeOn": "hit",
-          "consumePeriodic": false,
-          "maxStacks": 1,
-          "stackMode": "refresh"
-        },
-        "chainCount": 0,
-        "chainRange": 3,
-        "chainOrigin": "previous",
-        "coefficients": [
-          {
-            "type": "fixed",
-            "field": "atk",
-            "calc": "percent",
-            "value": 1,
-            "effectId": ""
-          }
-        ],
-        "healResource": "HP",
-        "fullResourceAlternative": "",
-        "drainResource": "MP",
-        "damageType": "physical",
-        "area": 0,
-        "areaCenter": "target",
-        "maxTargets": 0,
-        "critical": 0,
-        "penetration": 0,
-        "moveType": "Walk",
-        "movePlacement": "target",
-        "moveSpeed": 1,
-        "distance": 0,
-        "duration": 0,
-        "fieldShape": "circle",
-        "fieldRadius": 0,
-        "fieldWidth": 2,
-        "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 5,
-        "fieldMoveType": "Push",
-        "fieldDistance": 1,
-        "fieldCenter": "target",
-        "fieldInterval": 1,
-        "fieldMovementStCostCenter": 0,
-        "fieldMovementStCostFalloff": 0,
-        "fieldMovementStCostMinimum": 0,
-        "fieldAuras": []
+          "requiredOwnedSummonEntityId": "knight_magic_horse"
+        }
       }
-    ]
+    ],
+    "icon": "assets/images/skills/기사_마법말.png",
+    "passiveTrigger": {
+      "event": "battle_entry",
+      "chance": 100
+    },
+    "description": "말 HP 500, 탑승 중 이동속도 +30%, 기사 80% / 말 20% 피해 분담."
   },
   {
     "id": "skill_class_knight_haste_horse",
-    "name": "기사 · 가속/마법말소환",
+    "name": "기사 · 가속",
     "className": "기사",
-    "icon": "assets/images/skills/기사_가속.png",
-    "description": "마법말이 없으면 다시 소환합니다. 마법말이 생존 중이면 5초 동안 공격력 25% 증가, 공격 간격 25% 감소 효과를 얻습니다.",
     "slot": "active",
-    "cooldown": 15,
     "castTime": 0,
-    "castReceivedDamagePercent": 100,
-    "channel": {
-      "duration": 0,
-      "interval": 1,
-      "interruptOnDamage": true,
-      "lockTarget": false,
-      "receivedDamagePercent": 100
-    },
+    "cooldown": 5,
     "resourceCosts": [
       {
-        "resource": "ST",
+        "resource": "MP",
         "mode": "fixed",
-        "value": 30
+        "value": 0
       }
     ],
     "actions": [
       {
-        "type": "summon_entity",
-        "target": "self",
-        "rangeMode": "custom",
-        "rangeValue": 0,
-        "rangeMultiplier": 100,
-        "minRange": 0,
-        "allowSelfTarget": true,
-        "requiredTargetEffectId": "",
-        "requiredTargetEffectCaster": "any",
-        "targetHpBelow": 100,
-        "targetCooldown": 0,
-        "targetCooldownScope": "caster",
-        "targetCooldownEffectId": "",
-        "targetCooldownEffectName": "",
-        "ownedSummonCondition": "absent",
-        "ownedSummonEntityId": "knight_magic_horse",
-        "targetSummonEntityId": "",
-        "chainCount": 0,
-        "chainRange": 3,
-        "chainOrigin": "previous",
-        "coefficients": [
-          {
-            "type": "fixed",
-            "field": "atk",
-            "calc": "percent",
-            "value": 1,
-            "effectId": ""
-          }
-        ],
-        "healResource": "HP",
-        "fullResourceAlternative": "",
-        "drainResource": "MP",
-        "damageType": "physical",
-        "area": 0,
-        "areaCenter": "target",
-        "maxTargets": 0,
-        "entityId": "knight_magic_horse",
-        "summonCenter": "self",
-        "inheritStats": {
-          "hp": 0,
-          "mp": 0,
-          "st": 0,
-          "atk": 0,
-          "magic": 0,
-          "defense": 0,
-          "resistance": 0,
-          "speed": 0
-        },
-        "count": 1,
-        "limit": 1,
-        "protectOwnerPercent": 20,
-        "protectOwnerScope": "all",
-        "protectOwnerPriority": 20,
-        "transferStateScope": "none",
-        "transferStatePriority": 0,
-        "critical": 0,
-        "penetration": 0,
-        "moveType": "Walk",
-        "movePlacement": "target",
-        "moveSpeed": 1,
-        "distance": 0,
-        "duration": 0,
-        "fieldShape": "circle",
-        "fieldRadius": 0,
-        "fieldWidth": 2,
-        "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 5,
-        "fieldMoveType": "Push",
-        "fieldDistance": 1,
-        "fieldCenter": "target",
-        "fieldInterval": 1,
-        "fieldMovementStCostCenter": 0,
-        "fieldMovementStCostFalloff": 0,
-        "fieldMovementStCostMinimum": 0,
-        "fieldAuras": []
-      },
-      {
         "type": "add_buff",
         "target": "self",
-        "rangeMode": "custom",
-        "rangeValue": 0,
-        "rangeMultiplier": 100,
-        "minRange": 0,
-        "allowSelfTarget": true,
-        "requiredTargetEffectId": "",
-        "requiredTargetEffectCaster": "any",
-        "targetHpBelow": 100,
-        "targetCooldown": 0,
-        "targetCooldownScope": "caster",
-        "targetCooldownEffectId": "",
-        "targetCooldownEffectName": "",
-        "ownedSummonCondition": "alive",
-        "ownedSummonEntityId": "knight_magic_horse",
-        "targetSummonEntityId": "",
+        "rangeMode": "mainWeapon",
+        "duration": 3,
         "effect": {
-          "id": "knight_horse_haste_atk",
-          "name": "마법말 가속 · 공격력",
-          "state": "buff",
-          "category": "magic",
-          "polarity": "beneficial",
-          "tags": [],
-          "dispellable": true,
-          "dispelMode": "id",
-          "dispelTags": [],
-          "dispelCategory": "general",
-          "dispelPolarity": "any",
+          "id": "knight_haste_atk",
+          "name": "가속 · 공격력",
           "stat": "atk",
-          "sourceStat": "atk",
-          "mode": "percent",
-          "value": 25,
-          "requiredOwnedSummonEntityId": "knight_magic_horse",
-          "nextCastTimePercent": 100,
-          "nextResourceCostPercent": 100,
-          "nextCooldownPercent": 100,
-          "reflectPercent": 20,
-          "reflectScope": "all",
-          "reflectDamageType": "fixed",
-          "proxyPercent": 20,
-          "proxyPriority": 100,
-          "proxyScope": "all",
-          "counterOnMelee": false,
-          "movementStCostPercent": 100,
-          "movementTriggerDistance": 0,
-          "movementTriggerState": "stun",
-          "movementTriggerDuration": 0,
-          "uses": 0,
-          "consumeOn": "hit",
-          "consumePeriodic": false,
-          "maxStacks": 1,
-          "stackMode": "refresh"
-        },
-        "chainCount": 0,
-        "chainRange": 3,
-        "chainOrigin": "previous",
-        "coefficients": [
-          {
-            "type": "fixed",
-            "field": "atk",
-            "calc": "percent",
-            "value": 1,
-            "effectId": ""
-          }
-        ],
-        "healResource": "HP",
-        "fullResourceAlternative": "",
-        "drainResource": "MP",
-        "damageType": "physical",
-        "area": 0,
-        "areaCenter": "target",
-        "maxTargets": 0,
-        "critical": 0,
-        "penetration": 0,
-        "moveType": "Walk",
-        "movePlacement": "target",
-        "moveSpeed": 1,
-        "distance": 0,
-        "duration": 5,
-        "fieldShape": "circle",
-        "fieldRadius": 0,
-        "fieldWidth": 2,
-        "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 5,
-        "fieldMoveType": "Push",
-        "fieldDistance": 1,
-        "fieldCenter": "target",
-        "fieldInterval": 1,
-        "fieldMovementStCostCenter": 0,
-        "fieldMovementStCostFalloff": 0,
-        "fieldMovementStCostMinimum": 0,
-        "fieldAuras": []
+          "value": 20,
+          "mode": "percent"
+        }
       },
       {
         "type": "add_buff",
         "target": "self",
-        "rangeMode": "custom",
-        "rangeValue": 0,
-        "rangeMultiplier": 100,
-        "minRange": 0,
-        "allowSelfTarget": true,
-        "requiredTargetEffectId": "",
-        "requiredTargetEffectCaster": "any",
-        "targetHpBelow": 100,
-        "targetCooldown": 0,
-        "targetCooldownScope": "caster",
-        "targetCooldownEffectId": "",
-        "targetCooldownEffectName": "",
-        "ownedSummonCondition": "alive",
-        "ownedSummonEntityId": "knight_magic_horse",
-        "targetSummonEntityId": "",
+        "rangeMode": "mainWeapon",
+        "duration": 3,
         "effect": {
-          "id": "knight_horse_haste_speed",
-          "name": "마법말 가속 · 공격속도",
-          "state": "buff",
-          "category": "magic",
-          "polarity": "beneficial",
-          "tags": [],
-          "dispellable": true,
-          "dispelMode": "id",
-          "dispelTags": [],
-          "dispelCategory": "general",
-          "dispelPolarity": "any",
+          "id": "knight_haste_rate",
+          "name": "가속 · 공격속도",
           "stat": "attackSpeed",
-          "sourceStat": "atk",
-          "mode": "percent",
-          "value": -25,
-          "requiredOwnedSummonEntityId": "knight_magic_horse",
-          "nextCastTimePercent": 100,
-          "nextResourceCostPercent": 100,
-          "nextCooldownPercent": 100,
-          "reflectPercent": 20,
-          "reflectScope": "all",
-          "reflectDamageType": "fixed",
-          "proxyPercent": 20,
-          "proxyPriority": 100,
-          "proxyScope": "all",
-          "counterOnMelee": false,
-          "movementStCostPercent": 100,
-          "movementTriggerDistance": 0,
-          "movementTriggerState": "stun",
-          "movementTriggerDuration": 0,
-          "uses": 0,
-          "consumeOn": "hit",
-          "consumePeriodic": false,
-          "maxStacks": 1,
-          "stackMode": "refresh"
-        },
-        "chainCount": 0,
-        "chainRange": 3,
-        "chainOrigin": "previous",
-        "coefficients": [
-          {
-            "type": "fixed",
-            "field": "atk",
-            "calc": "percent",
-            "value": 1,
-            "effectId": ""
-          }
-        ],
-        "healResource": "HP",
-        "fullResourceAlternative": "",
-        "drainResource": "MP",
-        "damageType": "physical",
-        "area": 0,
-        "areaCenter": "target",
-        "maxTargets": 0,
-        "critical": 0,
-        "penetration": 0,
-        "moveType": "Walk",
-        "movePlacement": "target",
-        "moveSpeed": 1,
-        "distance": 0,
-        "duration": 5,
-        "fieldShape": "circle",
-        "fieldRadius": 0,
-        "fieldWidth": 2,
-        "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 5,
-        "fieldMoveType": "Push",
-        "fieldDistance": 1,
-        "fieldCenter": "target",
-        "fieldInterval": 1,
-        "fieldMovementStCostCenter": 0,
-        "fieldMovementStCostFalloff": 0,
-        "fieldMovementStCostMinimum": 0,
-        "fieldAuras": []
+          "value": 20,
+          "mode": "attack_rate_percent"
+        }
       }
-    ]
+    ],
+    "icon": "assets/images/skills/기사_가속.png",
+    "summonVariant": {
+      "entityId": "knight_magic_horse",
+      "absentSkillId": "skill_class_knight_summon_horse"
+    },
+    "summonRequirement": {
+      "ownedSummonEntityId": "knight_magic_horse",
+      "ownedSummonCondition": "alive"
+    }
   },
   {
     "id": "skill_class_demon_brute",
@@ -7899,20 +7222,9 @@
     "id": "skill_class_mage_element_lightning",
     "name": "마법사 · 번개 속성",
     "className": "마법사",
-    "icon": "assets/images/skills/마법사_번개 속성.png",
-    "description": "마법 효과의 30%를 주 대상 주변 2m의 다른 대상에게 복제하고 마력 폭발의 범위를 30% 증가시킵니다.",
     "slot": "passive",
-    "cooldown": 0,
     "castTime": 0,
-    "castReceivedDamagePercent": 100,
-    "channel": {
-      "duration": 0,
-      "interval": 1,
-      "interruptOnDamage": true,
-      "lockTarget": false,
-      "receivedDamagePercent": 100
-    },
-    "passiveTrigger": null,
+    "cooldown": 0,
     "resourceCosts": [
       {
         "resource": "MP",
@@ -7920,85 +7232,36 @@
         "value": 0
       }
     ],
-    "actions": [
-      {
-        "type": "deal_damage",
-        "target": "enemy",
-        "rangeMode": "mainWeapon",
-        "rangeValue": 1,
-        "rangeMultiplier": 100,
-        "minRange": 0,
-        "allowSelfTarget": true,
-        "requiredTargetEffectId": "",
-        "requiredTargetEffectCaster": "any",
-        "targetHpBelow": 100,
-        "targetCooldown": 0,
-        "targetCooldownScope": "caster",
-        "targetCooldownEffectId": "",
-        "targetCooldownEffectName": "",
-        "ownedSummonCondition": "any",
-        "ownedSummonEntityId": "",
-        "targetSummonEntityId": "",
-        "chainCount": 0,
-        "chainRange": 3,
-        "chainOrigin": "previous",
-        "coefficients": [
-          {
-            "type": "calculated",
-            "field": "atk",
-            "calc": "percent",
-            "value": 100,
-            "effectId": ""
-          }
-        ],
-        "healResource": "HP",
-        "fullResourceAlternative": "",
-        "drainResource": "MP",
-        "damageType": "physical",
-        "area": 0,
-        "areaCenter": "target",
-        "maxTargets": 0,
-        "critical": 0,
-        "penetration": 0,
-        "moveType": "Walk",
-        "movePlacement": "target",
-        "moveSpeed": 1,
-        "distance": 0,
-        "duration": 0,
-        "fieldShape": "circle",
-        "fieldRadius": 0,
-        "fieldWidth": 2,
-        "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 5,
-        "fieldMoveType": "Push",
-        "fieldDistance": 1,
-        "fieldCenter": "target",
-        "fieldInterval": 1,
-        "fieldMovementStCostCenter": 0,
-        "fieldMovementStCostFalloff": 0,
-        "fieldMovementStCostMinimum": 0,
-        "fieldAuras": []
-      }
-    ]
+    "actions": [],
+    "icon": "assets/images/skills/마법사_번개 속성.png",
+    "description": "주변 2m 효과 30% 복제. 마법폭발은 복제 대신 피해 +30%. 시전시간 -0.2초.",
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_mage_arrow",
+        "skill_class_mage_barrier",
+        "skill_class_mage_quick"
+      ],
+      "splashPercent": 30,
+      "splashRadius": 2,
+      "castTimeAdd": -0.2,
+      "skillModifiers": [
+        {
+          "targetSkillIds": [
+            "skill_class_mage_area"
+          ],
+          "coefficientPercent": 130,
+          "castTimeAdd": -0.2
+        }
+      ]
+    }
   },
   {
     "id": "skill_class_mage_element_wind",
     "name": "마법사 · 바람 속성",
     "className": "마법사",
-    "icon": "assets/images/skills/마법사_바람 속성.png",
-    "description": "마법사 스킬의 시전시간을 30% 감소시킵니다.",
     "slot": "passive",
-    "cooldown": 0,
     "castTime": 0,
-    "castReceivedDamagePercent": 100,
-    "channel": {
-      "duration": 0,
-      "interval": 1,
-      "interruptOnDamage": true,
-      "lockTarget": false,
-      "receivedDamagePercent": 100
-    },
-    "passiveTrigger": null,
+    "cooldown": 0,
     "resourceCosts": [
       {
         "resource": "MP",
@@ -8008,83 +7271,44 @@
     ],
     "actions": [
       {
-        "type": "deal_damage",
-        "target": "enemy",
+        "type": "add_buff",
+        "target": "self",
         "rangeMode": "mainWeapon",
-        "rangeValue": 1,
-        "rangeMultiplier": 100,
-        "minRange": 0,
-        "allowSelfTarget": true,
-        "requiredTargetEffectId": "",
-        "requiredTargetEffectCaster": "any",
-        "targetHpBelow": 100,
-        "targetCooldown": 0,
-        "targetCooldownScope": "caster",
-        "targetCooldownEffectId": "",
-        "targetCooldownEffectName": "",
-        "ownedSummonCondition": "any",
-        "ownedSummonEntityId": "",
-        "targetSummonEntityId": "",
-        "chainCount": 0,
-        "chainRange": 3,
-        "chainOrigin": "previous",
-        "coefficients": [
-          {
-            "type": "calculated",
-            "field": "atk",
-            "calc": "percent",
-            "value": 100,
-            "effectId": ""
-          }
-        ],
-        "healResource": "HP",
-        "fullResourceAlternative": "",
-        "drainResource": "MP",
-        "damageType": "physical",
-        "area": 0,
-        "areaCenter": "target",
-        "maxTargets": 0,
-        "critical": 0,
-        "penetration": 0,
-        "moveType": "Walk",
-        "movePlacement": "target",
-        "moveSpeed": 1,
-        "distance": 0,
         "duration": 0,
-        "fieldShape": "circle",
-        "fieldRadius": 0,
-        "fieldWidth": 2,
-        "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 5,
-        "fieldMoveType": "Push",
-        "fieldDistance": 1,
-        "fieldCenter": "target",
-        "fieldInterval": 1,
-        "fieldMovementStCostCenter": 0,
-        "fieldMovementStCostFalloff": 0,
-        "fieldMovementStCostMinimum": 0,
-        "fieldAuras": []
+        "effect": {
+          "id": "mage_wind_mp",
+          "name": "바람 속성",
+          "stat": "maxMp",
+          "value": 50,
+          "mode": "flat",
+          "category": "magic",
+          "dispellable": false
+        }
       }
-    ]
+    ],
+    "icon": "assets/images/skills/마법사_바람 속성.png",
+    "description": "시전시간 -30%, 최대 MP +50.",
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_mage_arrow",
+        "skill_class_mage_barrier",
+        "skill_class_mage_area",
+        "skill_class_mage_quick"
+      ],
+      "castTimePercent": 70
+    },
+    "passiveTrigger": {
+      "event": "battle_entry",
+      "chance": 100
+    }
   },
   {
     "id": "skill_class_mage_element_earth",
     "name": "마법사 · 대지 속성",
     "className": "마법사",
-    "icon": "assets/images/skills/마법사_대지 속성.png",
-    "description": "마법사 스킬의 적용 계수를 15% 증가시키고 MP 소모량을 20% 증가시킵니다.",
     "slot": "passive",
-    "cooldown": 0,
     "castTime": 0,
-    "castReceivedDamagePercent": 100,
-    "channel": {
-      "duration": 0,
-      "interval": 1,
-      "interruptOnDamage": true,
-      "lockTarget": false,
-      "receivedDamagePercent": 100
-    },
-    "passiveTrigger": null,
+    "cooldown": 0,
     "resourceCosts": [
       {
         "resource": "MP",
@@ -8094,82 +7318,58 @@
     ],
     "actions": [
       {
-        "type": "deal_damage",
-        "target": "enemy",
+        "type": "add_buff",
+        "target": "self",
         "rangeMode": "mainWeapon",
-        "rangeValue": 1,
-        "rangeMultiplier": 100,
-        "minRange": 0,
-        "allowSelfTarget": true,
-        "requiredTargetEffectId": "",
-        "requiredTargetEffectCaster": "any",
-        "targetHpBelow": 100,
-        "targetCooldown": 0,
-        "targetCooldownScope": "caster",
-        "targetCooldownEffectId": "",
-        "targetCooldownEffectName": "",
-        "ownedSummonCondition": "any",
-        "ownedSummonEntityId": "",
-        "targetSummonEntityId": "",
-        "chainCount": 0,
-        "chainRange": 3,
-        "chainOrigin": "previous",
-        "coefficients": [
-          {
-            "type": "calculated",
-            "field": "atk",
-            "calc": "percent",
-            "value": 100,
-            "effectId": ""
-          }
-        ],
-        "healResource": "HP",
-        "fullResourceAlternative": "",
-        "drainResource": "MP",
-        "damageType": "physical",
-        "area": 0,
-        "areaCenter": "target",
-        "maxTargets": 0,
-        "critical": 0,
-        "penetration": 0,
-        "moveType": "Walk",
-        "movePlacement": "target",
-        "moveSpeed": 1,
-        "distance": 0,
         "duration": 0,
-        "fieldShape": "circle",
-        "fieldRadius": 0,
-        "fieldWidth": 2,
-        "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 5,
-        "fieldMoveType": "Push",
-        "fieldDistance": 1,
-        "fieldCenter": "target",
-        "fieldInterval": 1,
-        "fieldMovementStCostCenter": 0,
-        "fieldMovementStCostFalloff": 0,
-        "fieldMovementStCostMinimum": 0,
-        "fieldAuras": []
+        "effect": {
+          "id": "mage_earth_magic",
+          "name": "대지 속성",
+          "stat": "magic",
+          "value": 5,
+          "mode": "percent",
+          "category": "magic",
+          "dispellable": false
+        }
       }
-    ]
+    ],
+    "icon": "assets/images/skills/마법사_대지 속성.png",
+    "description": "적용 계수 +15%, MP 비용 +20%, 마력 +5%.",
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_mage_arrow",
+        "skill_class_mage_barrier",
+        "skill_class_mage_area",
+        "skill_class_mage_quick"
+      ],
+      "coefficientPercent": 115,
+      "resourceCostPercent": 120,
+      "resourceTypes": [
+        "MP"
+      ]
+    },
+    "passiveTrigger": {
+      "event": "battle_entry",
+      "chance": 100
+    }
   },
   {
     "id": "skill_class_mage_element_choice",
     "name": "마법사 · 속성선택",
     "className": "마법사",
-    "icon": "assets/images/skills/마법사_속성선택.png",
-    "description": "전투 직전에 번개, 바람, 대지 중 하나를 선택합니다. 선택한 속성은 해당 전투 동안 마법사 스킬에 적용됩니다.",
     "slot": "choice_prebattle",
-    "cooldown": 0,
     "castTime": 0,
-    "castReceivedDamagePercent": 100,
-    "channel": {
-      "duration": 0,
-      "interval": 1,
-      "interruptOnDamage": true,
-      "lockTarget": false,
-      "receivedDamagePercent": 100
-    },
+    "cooldown": 0,
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 0
+      }
+    ],
+    "actions": [],
+    "icon": "assets/images/skills/마법사_속성선택.png",
+    "description": "전투 전 번개·바람·대지를 선택. 금지된 원소-얼음 장착 시 얼음 해금.",
     "choice": {
       "defaultOptionId": "lightning",
       "options": [
@@ -8187,17 +7387,15 @@
           "id": "earth",
           "label": "대지",
           "skillId": "skill_class_mage_element_earth"
+        },
+        {
+          "id": "ice",
+          "label": "얼음",
+          "skillId": "skill_class_mage_element_ice",
+          "requiredSkillId": "skill_class_mage_forbidden_ice"
         }
       ]
-    },
-    "resourceCosts": [
-      {
-        "resource": "MP",
-        "mode": "fixed",
-        "value": 0
-      }
-    ],
-    "actions": []
+    }
   },
   {
     "id": "skill_class_scholar_brain_muscle",
@@ -13020,6 +12218,7 @@
   "icon": "assets/images/skills/각질형_돌연변이 껍질.png"
 },
 {
+    "icon": "assets/images/skills/각질형_탈피.png",
   "id": "skill_class_keratin_molt",
   "name": "각질형 · 탈피",
   "className": "각질형",
@@ -13076,6 +12275,7 @@
   "description": "자신 주변 반경 3m에 공격력 80% 물리 피해를 주고 3초간 방어력·저항력 +5. 각질 스택을 소모하지 않는다."
 },
 {
+    "icon": "assets/images/skills/각질형_역겨운 보호막.png",
   "id": "skill_class_keratin_repulsive_shield",
   "name": "각질형 · 역겨운 보호막",
   "className": "각질형",
@@ -13110,6 +12310,7 @@
   "description": "최대 HP 10% 보호막을 3초간 부여한다. 적의 공격으로 소진되면 반경 4m 적에게 최대 HP 5% 물리 피해와 끈적이는 껍질조각을 3초간 부여한다. 만료·해제 시 폭발하지 않는다."
 },
 {
+    "icon": "assets/images/skills/각질형_역겨운 보호막.png",
   "id": "skill_class_keratin_shield_burst",
   "name": "각질형 · 역겨운 보호막 파열",
   "className": "각질형",
@@ -13170,6 +12371,7 @@
   "description": "역겨운 보호막이 적의 공격으로 소진될 때만 실행하는 내부 반응."
 },
 {
+    "icon": "assets/images/skills/각질형_동정의 시선.png",
   "id": "skill_class_keratin_pity",
   "name": "각질형 · 동정의 시선",
   "className": "각질형",
@@ -13204,6 +12406,7 @@
   "description": "5m 적 하나에게 왠지 때리기 싫음을 5초 부여한다. 적용 시 공격력·마력 중 높은 능력치 하나가 100 감소한다."
 },
 {
+    "icon": "assets/images/skills/영혼수확자_육신과 영혼.png",
   "id": "skill_class_soul_reaper_soul_and_body",
   "name": "영혼수확자 · 영혼과 육신",
   "className": "영혼수확자",
@@ -13247,6 +12450,7 @@
   }
 },
 {
+    "icon": "assets/images/skills/영혼수확자_검은습격.png",
   "id": "skill_class_soul_reaper_black_assault",
   "name": "영혼수확자 · 검은습격",
   "className": "영혼수확자",
@@ -13293,6 +12497,7 @@
   "description": "육신상태의 1스킬. 주무기 사거리 적에게 공격력 130% 물리 피해와 3초 기절. 영혼상태에서는 같은 쿨다운 슬롯의 영혼입김으로 바뀐다."
 },
 {
+    "icon": "assets/images/skills/영혼수확자_영혼입김.png",
   "id": "skill_class_soul_reaper_soul_breath",
   "name": "영혼수확자 · 영혼입김",
   "className": "영혼수확자",
@@ -13325,5 +12530,994 @@
   ],
   "internal": true,
   "description": "영혼상태의 1스킬. 주무기 사거리 아군 HP를 공격력 100% 회복한다. 검은습격과 남은 쿨다운을 공유하며 복귀 시 검은습격으로 돌아간다."
-}
+},
+  {
+    "id": "skill_class_duke_immortality",
+    "name": "공작 · 불사",
+    "className": "공작",
+    "slot": "passive",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 0
+      }
+    ],
+    "actions": [],
+    "description": "사망 후 10초를 기다려 시작 위치에서 HP·MP·ST 최대와 초기 BP로 반복 부활한다. 부활 대기 중에는 전투 지속 인원에서 제외하며, 살아 있는 공작은 정상적으로 전투를 지속한다.",
+    "passiveTrigger": {
+      "event": "battle_entry",
+      "revival": {
+        "delay": 10,
+        "position": "start",
+        "countsWhileWaiting": false,
+        "hpPercent": 100,
+        "mpPercent": 100,
+        "stPercent": 100,
+        "restoreBaseBp": true
+      }
+    },
+    "icon": "assets/images/skills/공작_불사.png"
+  },
+  {
+    "id": "skill_class_duke_unfair_damage",
+    "name": "공작 · 불공정한 피해",
+    "className": "공작",
+    "slot": "active",
+    "castTime": 0,
+    "cooldown": 5,
+    "resourceCosts": [
+      {
+        "resource": "HP",
+        "mode": "maxPercent",
+        "value": 10
+      }
+    ],
+    "actions": [
+      {
+        "type": "deal_damage",
+        "target": "enemy",
+        "rangeMode": "mainWeapon",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "atk",
+            "calc": "percent",
+            "value": 200
+          }
+        ],
+        "damageType": "physical"
+      }
+    ],
+    "description": "최대 HP 10%를 지불하고 주무기 사거리 적에게 공격력 200% 물리 피해.",
+    "icon": "assets/images/skills/공작_불공정한 피해.png"
+  },
+  {
+    "icon": "assets/images/skills/공작_폭탄목걸이.png",
+    "id": "skill_class_duke_bomb_necklace",
+    "name": "공작 · 폭탄목걸이",
+    "className": "공작",
+    "slot": "active",
+    "castTime": 1,
+    "cooldown": 0,
+    "resourceCosts": [
+      {
+        "resource": "ST",
+        "mode": "fixed",
+        "value": 30
+      }
+    ],
+    "actions": [
+      {
+        "type": "deal_damage",
+        "target": "enemy",
+        "rangeMode": "mainWeapon",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "atk",
+            "calc": "percent",
+            "value": 300
+          }
+        ],
+        "damageType": "physical",
+        "area": 4,
+        "areaCenter": "self"
+      }
+    ],
+    "activation": {
+      "selfHpAtMost": 10,
+      "nearbyEnemyRadius": 4
+    },
+    "selfDestruct": true,
+    "description": "HP 10% 이하·ST 30·반경 4m 적이 있을 때 사용. 시전 완료 시 조건을 재확인해 공격력 300% 물리 광역 피해 후 강제 자살한다. BP·무적은 자살을 막지 못한다."
+  },
+  {
+    "id": "skill_class_duke_cursed_nail",
+    "name": "공작 · 저주받은 대못",
+    "className": "공작",
+    "slot": "active",
+    "castTime": 0,
+    "cooldown": 20,
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 0
+      }
+    ],
+    "actions": [
+      {
+        "type": "add_buff",
+        "target": "enemy",
+        "rangeMode": "mainWeapon",
+        "coefficients": [],
+        "duration": 6,
+        "effect": {
+          "id": "duke_cursed_nail",
+          "name": "저주받은 대못",
+          "stat": "atk",
+          "mode": "damage_link",
+          "value": 30,
+          "polarity": "harmful",
+          "category": "physical"
+        }
+      }
+    ],
+    "description": "주무기 사거리 적에게 6초간 대못을 심는다. 자신이 실제로 받은 HP/BP 피해의 30%를 고정 피해로 전달한다. HP 자원 비용은 제외하며 피해 재전달을 막는다.",
+    "icon": "assets/images/skills/공작_저주받은 대못.png"
+  },
+  {
+    "id": "skill_class_duke_rapid_revival",
+    "name": "공작 · 신속부활",
+    "className": "공작",
+    "slot": "active",
+    "castTime": 0,
+    "cooldown": 60,
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 0
+      }
+    ],
+    "actions": [],
+    "revivalOnly": true,
+    "description": "사망 시 사용 가능하고 전투를 유지할 아군이 있으면 다음 부활 처리 틱에 즉시 복귀한다. 재사용 60초이며 사망 중에도 감소한다.",
+    "icon": "assets/images/skills/공작_신속부활.png"
+  },
+  {
+    "icon": "assets/images/skills/공작_가까운 무덤.png",
+    "id": "skill_class_duke_near_grave",
+    "name": "공작 · 가까운 무덤",
+    "className": "공작",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 0
+      }
+    ],
+    "actions": [],
+    "description": "사망 위치에서 부활한다.",
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_duke_immortality"
+      ],
+      "revivalPosition": "death"
+    }
+  },
+  {
+    "icon": "assets/images/skills/공작_초조한 대기시간.png",
+    "id": "skill_class_duke_anxious_wait",
+    "name": "공작 · 초조한 대기시간",
+    "className": "공작",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 0
+      }
+    ],
+    "actions": [],
+    "description": "불사 대기시간 10초 → 8초.",
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_duke_immortality"
+      ],
+      "revivalDelayAdd": -2
+    }
+  },
+  {
+    "icon": "assets/images/skills/공작_적립식 부활.png",
+    "id": "skill_class_duke_installment_revival",
+    "name": "공작 · 적립식 부활",
+    "className": "공작",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 0
+      }
+    ],
+    "actions": [],
+    "description": "불공정한 피해 완료 시 신속부활의 남은 쿨다운 1초 감소.",
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_duke_unfair_damage"
+      ],
+      "cooldownReductions": [
+        {
+          "skillId": "skill_class_duke_rapid_revival",
+          "seconds": 1
+        }
+      ]
+    }
+  },
+  {
+    "icon": "assets/images/skills/공작_이른 죽음.png",
+    "id": "skill_class_duke_early_death",
+    "name": "공작 · 이른 죽음",
+    "className": "공작",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 0
+      }
+    ],
+    "actions": [],
+    "description": "폭탄목걸이 HP 조건 10% → 20% 이하.",
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_duke_bomb_necklace"
+      ],
+      "selfHpAtMost": 20
+    }
+  },
+  {
+    "icon": "assets/images/skills/공작_녹슨대못.png",
+    "id": "skill_class_duke_rusty_nail",
+    "name": "공작 · 녹슨대못",
+    "className": "공작",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 0
+      }
+    ],
+    "actions": [],
+    "description": "대못을 심은 대상에게 6초 동안 매초 공격력 5% 물리 피해.",
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_duke_cursed_nail"
+      ],
+      "additionalActions": [
+        {
+          "type": "add_state",
+          "target": "enemy",
+          "rangeMode": "mainWeapon",
+          "coefficients": [],
+          "duration": 6,
+          "requiredTargetEffectId": "duke_cursed_nail",
+          "requiredTargetEffectCaster": "self",
+          "effect": {
+            "id": "duke_rusty_nail",
+            "name": "녹슨대못",
+            "state": "periodic",
+            "category": "physical",
+            "polarity": "harmful",
+            "periodic": {
+              "type": "damage",
+              "interval": 1,
+              "damageType": "physical",
+              "coefficient": {
+                "type": "calculated",
+                "field": "atk",
+                "calc": "percent",
+                "value": 5
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "icon": "assets/images/skills/공작_더욱 불공정한 피해.png",
+    "id": "skill_class_duke_more_unfair",
+    "name": "공작 · 더욱 불공정한 피해",
+    "className": "공작",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 0
+      }
+    ],
+    "actions": [],
+    "description": "불공정한 피해 HP 비용 10% → 15%, 피해 계수 200% → 220%.",
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_duke_unfair_damage"
+      ],
+      "resourceTypes": [
+        "HP"
+      ],
+      "resourceCostAdd": 5,
+      "coefficientPercent": 110
+    }
+  },
+  {
+    "icon": "assets/images/skills/기사_마법말소환.png",
+    "id": "skill_class_knight_summon_horse",
+    "name": "기사 · 마법말소환",
+    "className": "기사",
+    "slot": "active",
+    "castTime": 3,
+    "cooldown": 30,
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 50
+      }
+    ],
+    "actions": [
+      {
+        "type": "summon_entity",
+        "target": "self",
+        "rangeMode": "mainWeapon",
+        "entityId": "knight_magic_horse",
+        "duration": 0,
+        "count": 1,
+        "limit": 1,
+        "protectOwnerPercent": 20,
+        "protectOwnerScope": "all",
+        "ownedSummonEntityId": "knight_magic_horse",
+        "ownedSummonCondition": "absent"
+      },
+      {
+        "type": "add_buff",
+        "target": "self",
+        "rangeMode": "mainWeapon",
+        "duration": 0,
+        "effect": {
+          "id": "knight_magic_horse_speed",
+          "name": "마법말 탑승",
+          "stat": "speed",
+          "value": 30,
+          "mode": "percent",
+          "requiredOwnedSummonEntityId": "knight_magic_horse"
+        }
+      }
+    ],
+    "internal": true,
+    "summonRequirement": {
+      "ownedSummonEntityId": "knight_magic_horse",
+      "ownedSummonCondition": "absent"
+    }
+  },
+  {
+    "icon": "assets/images/skills/기사_궤뚫기.png",
+    "id": "skill_class_knight_pierce",
+    "name": "기사 · 궤뚫기",
+    "className": "기사",
+    "slot": "active",
+    "castTime": 0.5,
+    "cooldown": 12,
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 0
+      }
+    ],
+    "actions": [
+      {
+        "type": "deal_damage",
+        "target": "enemy",
+        "rangeMode": "mainWeapon",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "atk",
+            "calc": "percent",
+            "value": 100
+          }
+        ],
+        "damageType": "physical"
+      },
+      {
+        "type": "add_buff",
+        "target": "enemy",
+        "rangeMode": "mainWeapon",
+        "duration": 5,
+        "effect": {
+          "id": "knight_pierce",
+          "name": "궤뚫기",
+          "stat": "defense",
+          "value": -20,
+          "mode": "flat"
+        }
+      }
+    ]
+  },
+  {
+    "icon": "assets/images/skills/기사_회전베기.png",
+    "id": "skill_class_knight_spinning_slash",
+    "name": "기사 · 회전베기",
+    "className": "기사",
+    "slot": "active",
+    "castTime": 0.5,
+    "cooldown": 10,
+    "resourceCosts": [
+      {
+        "resource": "ST",
+        "mode": "fixed",
+        "value": 5
+      }
+    ],
+    "actions": [
+      {
+        "type": "deal_damage",
+        "target": "enemy",
+        "rangeMode": "mainWeapon",
+        "area": 3,
+        "areaCenter": "self",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "atk",
+            "calc": "percent",
+            "value": 80
+          }
+        ],
+        "damageType": "physical"
+      }
+    ],
+    "combo": {
+      "stages": [
+        {
+          "name": "1타",
+          "actions": [
+            {
+              "type": "deal_damage",
+              "target": "enemy",
+              "rangeMode": "weapon",
+              "area": 3,
+              "areaCenter": "self",
+              "coefficients": [
+                {
+                  "type": "calculated",
+                  "field": "atk",
+                  "calc": "percent",
+                  "value": 80
+                }
+              ],
+              "damageType": "physical"
+            }
+          ]
+        },
+        {
+          "name": "2타",
+          "actions": [
+            {
+              "type": "deal_damage",
+              "target": "enemy",
+              "rangeMode": "weapon",
+              "area": 3,
+              "areaCenter": "self",
+              "coefficients": [
+                {
+                  "type": "calculated",
+                  "field": "atk",
+                  "calc": "percent",
+                  "value": 120
+                }
+              ],
+              "damageType": "physical"
+            }
+          ]
+        }
+      ],
+      "stepCooldown": 0.5
+    }
+  },
+  {
+    "icon": "assets/images/skills/기사_마구간.png",
+    "id": "skill_class_knight_stable",
+    "name": "기사 · 마구간",
+    "className": "기사",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 0
+      }
+    ],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_knight_summon_horse"
+      ],
+      "cooldownAdd": -5
+    }
+  },
+  {
+    "icon": "assets/images/skills/기사_취약한 상태.png",
+    "id": "skill_class_knight_vulnerable",
+    "name": "기사 · 취약한 상태",
+    "className": "기사",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 0
+      }
+    ],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_knight_magic_horse"
+      ],
+      "additionalActions": [
+        {
+          "type": "add_buff",
+          "target": "self",
+          "rangeMode": "weapon",
+          "duration": 0,
+          "effect": {
+            "id": "knight_dismount_defense",
+            "name": "취약한 상태",
+            "stat": "defense",
+            "value": 10,
+            "mode": "flat",
+            "requiredOwnedSummonEntityId": "knight_magic_horse",
+            "requiredOwnedSummonAbsent": true
+          }
+        }
+      ]
+    }
+  },
+  {
+    "icon": "assets/images/skills/기사_진군.png",
+    "id": "skill_class_knight_march",
+    "name": "기사 · 진군",
+    "className": "기사",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 0
+      }
+    ],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_knight_haste_horse"
+      ],
+      "additionalActions": [
+        {
+          "type": "add_buff",
+          "target": "ally",
+          "rangeMode": "custom",
+          "duration": 3,
+          "effect": {
+            "id": "knight_haste_atk",
+            "name": "가속 · 공격력",
+            "stat": "atk",
+            "value": 20,
+            "mode": "percent"
+          },
+          "allowSelfTarget": false,
+          "rangeValue": 5,
+          "maxTargets": 1
+        },
+        {
+          "type": "add_buff",
+          "target": "ally",
+          "rangeMode": "custom",
+          "duration": 3,
+          "effect": {
+            "id": "knight_haste_rate",
+            "name": "가속 · 공격속도",
+            "stat": "attackSpeed",
+            "value": 20,
+            "mode": "attack_rate_percent"
+          },
+          "allowSelfTarget": false,
+          "rangeValue": 5,
+          "maxTargets": 1
+        }
+      ]
+    }
+  },
+  {
+    "icon": "assets/images/skills/기사_전장의 지배자.png",
+    "id": "skill_class_knight_battlefield_ruler",
+    "name": "기사 · 전장의 지배자",
+    "className": "기사",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 0
+      }
+    ],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_knight_charge"
+      ],
+      "cooldownAdd": -3,
+      "knockbackDistanceAdd": 2
+    }
+  },
+  {
+    "icon": "assets/images/skills/기사_먹잇감.png",
+    "id": "skill_class_knight_prey",
+    "name": "기사 · 먹잇감",
+    "className": "기사",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 0
+      }
+    ],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_knight_pierce"
+      ],
+      "additionalActions": [
+        {
+          "type": "add_buff",
+          "target": "enemy",
+          "rangeMode": "weapon",
+          "duration": 5,
+          "effect": {
+            "id": "knight_prey",
+            "name": "먹잇감",
+            "stat": "speed",
+            "value": -50,
+            "mode": "percent"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "icon": "assets/images/skills/기사_회전풍.png",
+    "id": "skill_class_knight_spinning_wind",
+    "name": "기사 · 회전풍",
+    "className": "기사",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 0
+      }
+    ],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_knight_spinning_slash"
+      ],
+      "areaAdd": 3
+    }
+  },
+  {
+    "icon": "assets/images/skills/마법사_얼음.png",
+    "id": "skill_class_mage_element_ice",
+    "name": "마법사 · 얼음 속성",
+    "className": "마법사",
+    "slot": "passive",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 0
+      }
+    ],
+    "actions": [
+      {
+        "type": "add_buff",
+        "target": "self",
+        "rangeMode": "mainWeapon",
+        "triggerEvent": "battle_entry",
+        "duration": 0,
+        "effect": {
+          "id": "mage_ice_defense",
+          "name": "얼음 속성",
+          "stat": "defense",
+          "value": 10,
+          "mode": "flat",
+          "category": "magic",
+          "dispellable": false
+        }
+      },
+      {
+        "type": "add_buff",
+        "target": "enemy",
+        "rangeMode": "mainWeapon",
+        "triggerEvent": "hit",
+        "duration": 2,
+        "effect": {
+          "id": "mage_ice_speed",
+          "name": "얼음 · 이동속도",
+          "stat": "speed",
+          "value": -20,
+          "mode": "percent",
+          "category": "magic",
+          "polarity": "harmful"
+        }
+      },
+      {
+        "type": "add_buff",
+        "target": "enemy",
+        "rangeMode": "mainWeapon",
+        "triggerEvent": "hit",
+        "duration": 2,
+        "effect": {
+          "id": "mage_ice_rate",
+          "name": "얼음 · 공격속도",
+          "stat": "attackSpeed",
+          "value": -10,
+          "mode": "attack_rate_percent",
+          "category": "magic",
+          "polarity": "harmful"
+        }
+      }
+    ],
+    "internal": true,
+    "description": "방어력 +10. 자신의 피해 적중 시 2초 이동속도 -20%, 공격속도 -10%.",
+    "passiveTrigger": {
+      "events": [
+        "battle_entry",
+        "hit"
+      ],
+      "chance": 100,
+      "allowMultiplePerTick": true
+    }
+  },
+  {
+    "icon": "assets/images/skills/마법사_자기장.png",
+    "id": "skill_class_mage_magnetic_field",
+    "name": "마법사 · 자기장",
+    "className": "마법사",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 0
+      }
+    ],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_mage_arrow",
+        "skill_class_mage_quick"
+      ],
+      "requiredChoiceSkillId": "skill_class_mage_element_choice",
+      "requiredChoiceOptionId": "lightning",
+      "splashPercent": 50,
+      "splashRadius": 3
+    }
+  },
+  {
+    "icon": "assets/images/skills/마법사_폭발성.png",
+    "id": "skill_class_mage_explosive",
+    "name": "마법사 · 폭발성",
+    "className": "마법사",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 0
+      }
+    ],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_mage_area"
+      ],
+      "areaAdd": 2,
+      "coefficientPercent": 120,
+      "resourceCostPercent": 120,
+      "resourceTypes": [
+        "MP"
+      ]
+    }
+  },
+  {
+    "icon": "assets/images/skills/마법사_금지된 원소-얼음.png",
+    "id": "skill_class_mage_forbidden_ice",
+    "name": "마법사 · 금지된 원소-얼음",
+    "className": "마법사",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 0
+      }
+    ],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_mage_element_ice"
+      ]
+    }
+  },
+  {
+    "icon": "assets/images/skills/마법사_효율화살.png",
+    "id": "skill_class_mage_efficient_arrow",
+    "name": "마법사 · 효율화살",
+    "className": "마법사",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 0
+      }
+    ],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_mage_arrow"
+      ],
+      "resourceCostPercent": 50,
+      "resourceTypes": [
+        "MP"
+      ]
+    }
+  },
+  {
+    "icon": "assets/images/skills/마법사_재생의 보호막.png",
+    "id": "skill_class_mage_regenerative_barrier",
+    "name": "마법사 · 재생의 보호막",
+    "className": "마법사",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 0
+      }
+    ],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_mage_barrier"
+      ],
+      "additionalActions": [
+        {
+          "type": "delete_buff",
+          "target": "self",
+          "rangeMode": "mainWeapon",
+          "effect": {
+            "id": "mage_regenerative_cleanse",
+            "name": "재생의 보호막 · 정화",
+            "dispelMode": "all",
+            "dispelPolarity": "harmful",
+            "dispelKinds": [
+              "buff",
+              "state"
+            ],
+            "dispelLimit": 1
+          }
+        },
+        {
+          "type": "heal",
+          "target": "self",
+          "rangeMode": "mainWeapon",
+          "healResource": "HP",
+          "coefficients": [
+            {
+              "type": "calculated",
+              "field": "previousBarrierCreated",
+              "calc": "percent",
+              "value": 50
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "icon": "assets/images/skills/마법사_얼얼한 강타.png",
+    "id": "skill_class_mage_numbing_strike",
+    "name": "마법사 · 얼얼한 강타",
+    "className": "마법사",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 0
+      }
+    ],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_mage_quick"
+      ],
+      "cooldownAdd": -2,
+      "additionalActions": [
+        {
+          "type": "add_state",
+          "target": "enemy",
+          "rangeMode": "mainWeapon",
+          "requirePreviousDamage": true,
+          "targetPreviousDamage": true,
+          "duration": 2,
+          "effect": {
+            "id": "mage_numbing_stun",
+            "name": "얼얼한 강타",
+            "state": "stun",
+            "category": "magic",
+            "polarity": "harmful"
+          }
+        }
+      ]
+    }
+  }
 ]
