@@ -1,5 +1,58 @@
 # 데이터 구조
 
+
+## 의무병 조건·임시 부활 필드 (2026-11-15)
+
+- `passiveTrigger.damageTypes`: 물리/마법/고정 피해 타입 목록. 액션 `triggerDamageType`은 해당 피해 이벤트에서 실행할 액션을 제한한다. 편집 시 기존 다중 타입과 액션 분기 필드를 보존한다.
+- 액션 `contactRange`, `unlimitedRange`, `targetHpStrict`, `moveToRear`: boolean, 기본 false. 일반 범위값은 유지하고 이 플래그가 있을 때 접촉/무제한/경계 제외/아군 후방 이동을 적용한다. 관리 행 데이터로 보존하며 사거리 요약에도 구분한다.
+- 액션 `temporaryReviveDuration`(기본 0초), `temporaryReviveAttackRatePercent`(0), `temporaryReviveCastTimePercent`(100). 선택 보정도 같은 공격/시전 필드를 사용한다. 선택 `targetCooldownAdd`는 기본 0초다.
+- 런타임 `unit.temporaryRevival: {remainingTicks,skillId}`와 `temporaryReviveUsed`는 저장하지 않는다. 새 전투에서 초기화하고 재사망 때도 used는 유지한다. 임시 활동 효과는 해제로 종료되지 않으며 실제 종료/중도 사망이 활동 가능 여부를 결정한다.
+
+
+## 성직자 보호막·만료 반환 필드 (2026-11-15)
+
+- 계수 `field: alliedEffectMagic`, `effectId`: 자기에게 해당 효과를 받은 생존 아군 수×현재 마력. 기존 calculated/percent 계산과 효과 ID 입력을 재사용한다.
+- 효과 `receivedDamagePercent`(기본 100)는 barrier 유지 중 피해 배율이다. `breakRecreatePercent`(기본 0)는 공격 소진 시 초기 보호막 생성량의 비율로 1회 재생성한다. 두 값은 관리 입력·정규화에 연결한다.
+- 효과 `refundMpOnExpire`(기본 false), 런타임 `refundMp`(실제 지불한 MP 스냅샷). 자연 만료에만 반환하고 이전 갱신분은 버린다. 지불량 런타임 값을 스킬/캐릭터 데이터에 저장하지 않는다.
+- 선택 보정 `barrierBreakRecreatePercent`(0), `effectRefundMpOnExpire`(false), `reviveInvulnerable`(0초)은 해당 기본 스킬의 효과/부활 액션에만 적용한다.
+- 기록 이벤트 `resource_refund`: 기존 표준 이벤트의 resource/amount/reason을 사용하고 상세 기록에 반환량을 표시한다. 전투 기여도에서는 resourceRecovery에 합산하며 HP 치유량에는 더하지 않는다. 기존 이벤트/기록 형식은 유지한다.
+
+
+## 궁사 주기 공격·방벽 필드 (2026-11-15)
+
+- 패시브 `basicAttackCycle: {every:5,coefficientPercent:200}`. 액션 없는 상시 패시브이며 실행 규칙 JSON에서 편집한다. `unit.basicAttackCounts[skillId]`와 준비 스킬의 `_basicCyclePrepared`는 런타임 전용이다.
+- 선택 보정 `basicAttackEvery`, `maxTargetsAdd`, `guardHpAdd`, `defenseIgnoreFlat`는 기본 0이다. 일반 액션 `defenseIgnoreFlat`는 해당 물리 피해 계산에만 적용한다. 편집 행 데이터로 기존 값을 보존한다.
+- `effect.mode: attached_guard`, `value`=HP, `guardHits`=최대 방어 횟수(기본 3). 인스턴스 `guardInitial`, `guardRemaining`, `guardRemainingHits`는 런타임 전용이며 BP/Entity에 포함하지 않는다.
+- `effect.mode: basic_cycle_repeat`, `value`=주기 강화 공격 반복 수. 궁도는 2회/10초다. 두 효과 모드는 효과 편집 선택지·정규화·요약에 연결했다.
+
+
+## 광속시전·채널 시작 효과 (2026-11-14)
+
+- 패시브 스킬 `instantCastHpPerTenth`: 양수, 없앤 보정 후 시전시간 0.1초당 HP 비용이다. 실행 규칙 JSON에서 편집하며 액션 없는 상시 패시브로 정규화한다.
+- `selectionModifier.healCoefficientAdd`(기본 0): 회복 액션의 calculated/magic 계수에 가산하는 %p. `instantCastHpPerTenth`(기본 0)는 패시브 단가 대체, `channelReceivedDamagePercent`(기본 null)는 채널 중 받는 피해 비율 대체다.
+- `channel.startActions`: 선택 배열, 액션 정규화를 재사용한다. 시작 시 한 번 적용하며 채널 정리 시 해당 시전자·스킬·효과 ID의 효과를 제거한다. 기존 채널 데이터의 기본값은 빈 배열이다. 관리 UI에 별도 JSON 입력을 제공한다.
+- 광속시전 비용은 시작 시 HP에서 직접 차감하며 `resourceSpent.HP`/`total`에 합산한다. 기본 공격은 기존 자원 지불 규칙을 유지한다. 런타임 전용 상태를 캐릭터에 저장하지 않는다.
+
+
+## 정령 수와 선택 보정 (2026-11-14)
+
+- `selectionModifier.summonLimitAdd`, `summonCostAdd`, `repeatIntervalAdd`: 기본 0, 각각 소환 액션 상한·소환 재료 수·반복 패시브 주기(초)에 가산한다. 상한/재료 수/주기는 최소 1이다.
+- `statEffects[].countChoiceSkillId`: 선택 종류 Entity의 자기 생존 개수를 중첩 수로 사용한다. 선택 효과 정규화·관리 JSON 편집을 거치며 실제 개수는 저장하지 않는다.
+- `effect.mode: cast_time_flat`: value초를 모든 시전시간에 가산한다. 선택 statEffects 및 시간제 버프에서 지원하며 기존 transform.castTimeAdd와 합산한다.
+- `skill.summonCounterChoiceId`: 효과 아이콘에 해당 선택 종류의 현재 생존 개수를 표시한다. `getBattleEffectIconEntries()`의 `summonCount`/`iconSkillId`는 그리기용 합성 필드이며 저장 스키마에는 추가하지 않는다.
+
+
+## 암살자 전투 주기 필드 (2026-11-14)
+
+- `passiveTrigger.combatCycle: {stMultiplier:3}`: 자동 반복 대신 교전 시작 시 발동. `unit.combatCycle: {phase:ready|active|spent,skillId}`는 저장하지 않는 런타임 상태다.
+- 스킬 `resetCombat`, `combatSpentOnly`, `combatActiveOnly`(boolean), `maxUses`(양의 정수). `unit.skillUseCounts`는 완료 시 증가하고 새 전투 때 초기화한다.
+- 효과 `evadeDirect`, `holdAttacks`(boolean), `mode: priority_attack_damage|received_healing_percent`. 회복 배율의 value=50은 기존 회복량의 50%이며 poison 태그로 독 해제를 지원한다.
+- `selectionModifier.castRangeAdd`는 사용자 지정 사거리 가산값(m), 기본 0이다. 선택 효과는 장착한 최대 3개만 적용한다.
+
+### 전투 테스트 대용량 저장 추가 (2026-11-14)
+
+웹 Job의 result.json 스키마는 유지하며 JSON 요소별로 나누어 기록합니다. 같은 디렉터리의 summary.json은 result.json에서 inputSnapshot·results를 제외한 조회용 객체입니다(targetMarkdown 포함). 원본과 보고서가 저장된 후 생성하며, 서버는 이 파일이 없으면 기존 원본 읽기를 사용합니다. 복구 기록에는 recovery 객체(recoveredAt/source/originalError/partial)가 추가될 수 있고 이전 메타데이터는 job.before-recovery.json에 보존합니다. `DELETE /api/simulations/<id>`는 종료된 Job 디렉터리 전체 또는 과거 CLI JSON/Markdown 쌍을 삭제하며 활성 작업에는 409를 반환합니다.
+
 ## 공작·반복 부활/조건부 실행 (2026-11-11)
 
 - `passiveTrigger.revival`: `{delay,position:start|death,countsWhileWaiting,hpPercent,mpPercent,stPercent,restoreBaseBp}`. 액션 없는 상시 패시브다. 런타임 `unit.revivalState`에 사망 시 설정을 보관하며 부활 완료/전투 초기화 시 비운다. `battleStartX/Y`를 재사용하고 `battleDeathX/Y`를 사망 시 저장한다. 이 런타임 필드는 캐릭터 저장에 추가하지 않는다.
@@ -387,3 +440,16 @@ Entity의 선택 불리언 `mainSummon`은 전투 상태창의 주인 아래 표
 - 선택 옵션 `requiredSkillId`, 선택 보정 `requiredChoiceSkillId`·`requiredChoiceOptionId`·`skillModifiers`.
 - 액션 `triggerEvent`·`targetPreviousDamage`, 효과 `barrierMode:coefficient`, 계수 `previousBarrierCreated`, 버프 능력치 `maxMp`.
 - 모두 선택 필드이며 기존 데이터의 기본 동작을 유지한다. 조건은 선택된 강화 최대 3개를 기준으로 UI·런타임에서 동일하게 적용한다. [동작 계약](SKILL_ENGINE.md#마법사-개편조건부-속성-선택-2026-11-12).
+
+### 저격수 재개편 추가 필드 (2026-11-13)
+
+- 스킬: `stationaryTargetBonusPercent`, `consecutiveUses`.
+- 선택 보정: `stationaryTargetBonusPercent`, `consecutiveUses`, `statEffects`, `transformHealPercent`, `transformDamageMinRange`, `transformDamagePercent`.
+- 효과: `requiredWeaponCategory`, `periodic.type:interrupt`. 모드: `castTimeAdd`, `periodicHealPercent`, `distanceDamageMinRange`, `distanceDamagePercent`.
+- 런타임 무기: `weaponCategory`. 시전 대상 좌표와 연속 사용 횟수는 전투 중 상태이며 캐릭터 저장 필드로 추가하지 않는다. 모두 선택 필드이며 기존 기본값은 유지한다. [상세 계약](SKILL_ENGINE.md#저격수-재개편-2026-11-13).
+
+### 화염술사 선택 강화 추가 필드 (2026-11-14)
+
+- 선택 보정 `effectDurationAdd`, `channelDurationAdd`, `periodicCopies`와 액션 `periodicCopies`를 지원한다. 기본값은 각각 0초·0초·1개다.
+- `statEffects`의 지능/힘 `mode:attribute`, 상태 `immunity`도 선택한 최대 3개에 한해 적용한다. 도마뱀 복제 ID·타이머·예상 피해 합계는 런타임 상태이며 저장 캐릭터 스키마는 변경하지 않는다.
+- [동작·초기값](SKILL_ENGINE.md#화염술사-재개편-2026-11-14).

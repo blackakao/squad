@@ -8,6 +8,8 @@ function renderSkillClassIdentity(skill) {
 }
 
 function formatSkillValueSummary(skill) {
+  if (skill?.basicAttackCycle) return `<span class="skill-value-summary">일반 공격 ${skill.basicAttackCycle.every}회마다 공격력 ${skill.basicAttackCycle.coefficientPercent}%</span>`;
+  if (skill?.instantCastHpPerTenth>0) return `<span class="skill-value-summary"><span><strong>광속시전</strong> 모든 시전 0초</span><span>보정 후 줄인 0.1초당 HP ${skill.instantCastHpPerTenth}</span></span>`;
   if (skill?.slot === "optional") {
     const targets=(skill.selectionModifier?.targetSkillIds ?? []).map(id=>getSkillById(id)).filter(Boolean).map(getSkillShortName);
     return `<span class="skill-value-summary"><span><strong>선택 강화</strong> 캐릭터별 최대 3개</span><span><strong>대상</strong> ${escapeHtml(targets.join(", ") || "장착 스킬")}</span></span>`;
@@ -192,7 +194,7 @@ function renderSkillActionRow(action, index) {
   }
   const targetOptions = getActionTargetsForType(action.type);
   return `
-    <div class="skill-action-row" data-action-index="${index}" data-reflected="${action.reflected === true}" data-distance-source="${action.distanceSource ?? ''}" data-distance-add="${action.distanceAdd ?? 0}" data-trigger-event="${escapeHtml(action.triggerEvent ?? '')}" data-target-previous-damage="${action.targetPreviousDamage === true}">
+    <div class="skill-action-row" data-action-index="${index}" data-reflected="${action.reflected === true}" data-distance-source="${action.distanceSource ?? ''}" data-distance-add="${action.distanceAdd ?? 0}" data-trigger-event="${escapeHtml(action.triggerEvent ?? '')}" data-periodic-copies="${action.periodicCopies ?? 1}" data-barrier-received="${action.effect?.receivedDamagePercent ?? 100}" data-barrier-recreate="${action.effect?.breakRecreatePercent ?? 0}" data-refund-mp="${action.effect?.refundMpOnExpire === true}" data-contact-range="${action.contactRange === true}" data-unlimited-range="${action.unlimitedRange === true}" data-hp-strict="${action.targetHpStrict === true}" data-move-to-rear="${action.moveToRear === true}" data-trigger-damage-type="${action.triggerDamageType ?? ''}" data-temporary-revive="${action.temporaryReviveDuration ?? 0}" data-temporary-revive-attack="${action.temporaryReviveAttackRatePercent ?? 0}" data-temporary-revive-cast="${action.temporaryReviveCastTimePercent ?? 100}" data-defense-ignore="${action.defenseIgnoreFlat ?? 0}" data-guard-hits="${action.effect?.guardHits ?? 3}" data-count-choice="${escapeHtml(action.effect?.countChoiceSkillId ?? '')}" data-evade-direct="${action.effect?.evadeDirect === true}" data-hold-attacks="${action.effect?.holdAttacks === true}" data-target-previous-damage="${action.targetPreviousDamage === true}" data-transform-heal-percent="${action.transform?.periodicHealPercent ?? 0}" data-transform-damage-min-range="${action.transform?.distanceDamageMinRange ?? 0}" data-transform-damage-percent="${action.transform?.distanceDamagePercent ?? 0}">
       <label>무피해 유지 조건 (초)<input class="skill-action-undamaged" type="number" min="0" step="0.1" value="${action.noDamageSeconds ?? 0}"></label>
       ${action.type === "create_field" ? `<label>대상 1체·매회 최대 HP 축적 (%)<input class="skill-action-store-hp" type="number" min="0" step="0.1" value="${action.fieldStoreHpPercent ?? 0}"></label><label><input class="skill-action-follow-source" type="checkbox" ${action.fieldFollowSource ? "checked" : ""}>시전자 추적 · 만료 시 축적량 회복</label>` : ""}
       <div class="skill-action-card-header">
@@ -373,7 +375,7 @@ function renderSkillActionRow(action, index) {
 // Coefficient, resource-cost and action-row editor controls.
 function renderSkillCoefficientRow(coefficient) {
   const normalized = normalizeCoefficient(coefficient);
-  const effectIdField = normalized.type === "calculated" && ["sourceEffectIdStacks","targetEffectIdStacks"].includes(normalized.field)
+  const effectIdField = normalized.type === "calculated" && ["sourceEffectIdStacks","targetEffectIdStacks","alliedEffectMagic"].includes(normalized.field)
     ? `<label class="skill-coefficient-effect-id">효과 ID<input class="skill-coefficient-effect-id-input" value="${escapeHtml(normalized.effectId)}" placeholder="예: bleed"></label>` : "";
   const effectTagField = normalized.type === "calculated" && normalized.field === "targetEffectTagStacks"
     ? `<label class="skill-coefficient-effect-id">효과 태그<input class="skill-coefficient-effect-tag-input" value="${escapeHtml(normalized.effectTag)}" placeholder="예: disease"></label>
@@ -644,9 +646,13 @@ function readSkillActionsFromForm() {
     }
     const range = readSkillRangeFromRow(row);
     return normalizeSkillAction({
+      contactRange:row.dataset.contactRange === "true",unlimitedRange:row.dataset.unlimitedRange === "true",targetHpStrict:row.dataset.hpStrict === "true",moveToRear:row.dataset.moveToRear === "true",
+      triggerDamageType:row.dataset.triggerDamageType ?? "",temporaryReviveDuration:Number(row.dataset.temporaryRevive) || 0,temporaryReviveAttackRatePercent:Number(row.dataset.temporaryReviveAttack) || 0,temporaryReviveCastTimePercent:Number(row.dataset.temporaryReviveCast ?? 100),
+      defenseIgnoreFlat:Number(row.dataset.defenseIgnore) || 0,
       reflected:row.dataset.reflected === "true",
       distanceSource:row.dataset.distanceSource ?? "",
       distanceAdd:Number(row.dataset.distanceAdd) || 0,
+      periodicCopies:Number(row.dataset.periodicCopies) || 1,
       triggerEvent:row.dataset.triggerEvent ?? "",
       targetPreviousDamage:row.dataset.targetPreviousDamage === "true",
       noDamageSeconds:Number(row.querySelector(".skill-action-undamaged")?.value || 0),
@@ -687,6 +693,10 @@ function readSkillActionsFromForm() {
         skillIds:[...row.querySelectorAll('.skill-transform-skills option:checked')].map(option=>option.value),
         attackSkillId:row.querySelector('.skill-transform-attack-skill')?.value ?? "",
         receivedDamagePercent:Number(row.querySelector('.skill-transform-received-damage')?.value ?? 100),
+        castTimeAdd:Number(row.querySelector('.skill-transform-cast-add')?.value || 0),
+        periodicHealPercent:Number(row.dataset.transformHealPercent || 0),
+        distanceDamageMinRange:Number(row.dataset.transformDamageMinRange || 0),
+        distanceDamagePercent:Number(row.dataset.transformDamagePercent || 0),
         damageExitStun:Number(row.querySelector(".skill-transform-damage-exit-stun")?.value ?? 0),
         immobile:Boolean(row.querySelector('.skill-transform-immobile')?.checked),
         exitHpBelow:Number(row.querySelector('.skill-transform-exit-hp')?.value ?? 0),
@@ -823,6 +833,7 @@ function renderTransformActionArea(action) {
     <label>피해 시 해제 후 기절 (초, 0: 미사용)<input class="skill-transform-damage-exit-stun" type="number" min="0" step="0.1" value="${transform.damageExitStun}"></label>
     <label>자동 해제 HP 이하 (%)<input class="skill-transform-exit-hp" type="number" min="0" max="100" step="1" value="${transform.exitHpBelow}"></label>
     <label>해제 후 후퇴 HP 이하 (%)<input class="skill-transform-retreat-hp" type="number" min="0" max="100" step="1" value="${transform.retreatHpBelow}"></label>
+    <label>모든 시전시간 가산 (초)<input class="skill-transform-cast-add" type="number" step="0.1" value="${transform.castTimeAdd ?? 0}"></label>
     <div class="skill-transform-modifiers">${TRANSFORM_STATS.map(stat=>`<label>${BUFF_STAT_LABELS[stat] ?? stat}<input class="skill-transform-stat" data-stat="${stat}" type="number" step="0.1" value="${transform.modifiers[stat]}"></label>`).join("")}</div>
     <small>형태 스킬을 하나 이상 선택하면 변신 중 원래 액티브 목록을 교체합니다. 새 변신은 기존 변신을 교체하며 만료·사망·전투 종료 시 원래 능력치와 스킬로 복원합니다.</small>
   </div>`;

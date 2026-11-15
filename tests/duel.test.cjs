@@ -21,7 +21,7 @@ test('rune choices appear in formation summaries for both sides and preserve ind
 });
 
 test('mage ice unlock filters character prebattle and both duel sides using equipped optional skills',()=>{
- const run=fixture();run(`globalThis.mageId=characterJson.findIndex(c=>c.name==='마법사');duelCharacterIds={player:[mageId],enemy:[mageId]};duelSkillChoices.player[mageId]={'skill_class_mage_element_choice':'ice'};`);
+ const run=fixture();run(`globalThis.mageId=characterJson.findIndex(c=>c.name==='마법사');characterJson[mageId].skillIds=characterJson[mageId].skillIds.filter(id=>getSkillById(id)?.slot!=='optional');duelCharacterIds={player:[mageId],enemy:[mageId]};duelSkillChoices.player[mageId]={'skill_class_mage_element_choice':'ice'};`);
  assert.equal((run('renderDuelSkillChoices()').match(/<option/g)||[]).length,6);
  assert.equal(run(`getChoiceSkillOption(getSkillById('skill_class_mage_element_choice'),'ice',characterJson[mageId].skillIds).id`),'lightning');
  run(`characterJson[mageId].skillIds.push('skill_class_mage_forbidden_ice')`);

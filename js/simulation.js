@@ -11,6 +11,8 @@ const SimulationPage = (() => {
   let sortKey = 'winRate', descending = true, targetsLoaded = false, followRunning = false;
   let historySignature = '';
   let loadedId = null;
+  const deleteSelection=new Set();
+  let deleting=false;
   async function api(path='', options={}) {
     const response = await fetch('/api/' + path, {cache:'no-store', ...options,
       headers:{'Content-Type':'application/json', ...options.headers}});
@@ -31,11 +33,41 @@ const SimulationPage = (() => {
     if(job.persistenceWarning)el('Timing').textContent+=' · 상태 저장 지연: 계산 결과는 별도로 보존합니다. 개발 로그를 확인해 주세요.';
   }
   function history() {
-    const signature=JSON.stringify([selected,jobs]);
+    for(const id of deleteSelection)if(!jobs.some(j=>j.simulationId===id && !active(j)))deleteSelection.delete(id);
+    const signature=JSON.stringify([selected,jobs,[...deleteSelection],deleting]);
     if(signature===historySignature)return;
     historySignature=signature;
     el('History').innerHTML=jobs.length ? `<table class="data-table"><thead><tr><th>실행 일시</th><th>설정</th><th>상태</th><th>완료</th><th>실행시간</th><th>평균 전투</th><th>결과</th></tr></thead><tbody>${jobs.map(j=>`<tr${selected===j.simulationId?' class="simulation-selected"':''}><td>${html(date(j.startedAt))}</td><td>${number(j.total)}회 · ${j.settings.teamSize}v${j.settings.teamSize} · seed ${j.settings.seed}</td><td>${html(labels[j.status] || j.status)}</td><td>${number(j.completed)}</td><td>${time(j.elapsedSeconds)}</td><td>${j.averageDuration == null ? '—' : number(j.averageDuration)+'초'}</td><td><button type="button" data-job="${html(j.simulationId)}">${active(j)?'진행 보기':'결과 보기'}</button></td></tr>`).join('')}</tbody></table>` : '아직 실행 기록이 없습니다.';
     el('History').querySelectorAll('[data-job]').forEach(button=>button.addEventListener('click',()=>select(button.dataset.job)));
+    if(jobs.length) {
+      const table=el('History').querySelector('table');
+      table.querySelector('thead tr').insertAdjacentHTML('afterbegin','<th>삭제 선택</th>');
+      table.querySelectorAll('tbody tr').forEach((row,i)=>{
+        const job=jobs[i],cell=document.createElement('td'),check=document.createElement('input');
+        check.type='checkbox';check.checked=deleteSelection.has(job.simulationId);
+        check.disabled=active(job)||deleting;check.setAttribute('aria-label',`${date(job.startedAt)} ${job.settings.teamSize} vs ${job.settings.teamSize} 기록 삭제 선택`);
+        check.addEventListener('change',()=>{if(check.checked)deleteSelection.add(job.simulationId);else deleteSelection.delete(job.simulationId);history();});
+        cell.append(check);row.prepend(cell);
+      });
+      const toolbar=document.createElement('div');
+      toolbar.innerHTML=`<button type="button" data-select-all ${deleting?'disabled':''}>종료 기록 전체 선택</button> <button type="button" data-clear-selection ${deleting?'disabled':''}>선택 해제</button> <button type="button" data-delete-selected ${deleting||!deleteSelection.size?'disabled':''}>선택 삭제 (${deleteSelection.size})</button>`;
+      toolbar.querySelector('[data-select-all]').onclick=()=>{jobs.filter(j=>!active(j)).forEach(j=>deleteSelection.add(j.simulationId));history();};
+      toolbar.querySelector('[data-clear-selection]').onclick=()=>{deleteSelection.clear();history();};
+      toolbar.querySelector('[data-delete-selected]').onclick=deleteSelected;
+      el('History').prepend(toolbar);
+    }
+  }
+  async function deleteSelected() {
+    const ids=[...deleteSelection];
+    if(deleting||!ids.length||!confirm(`선택한 ${ids.length}개 기록의 결과·전투 원본·입력 스냅샷·로그를 영구 삭제합니다. 복구할 수 없습니다. 삭제할까요?`))return;
+    deleting=true;history();error(null);
+    try {
+      for(const id of ids) {
+        await api(`simulations/${encodeURIComponent(id)}`,{method:'DELETE'});
+        deleteSelection.delete(id);jobs=jobs.filter(j=>j.simulationId!==id);
+        if(selected===id){selected=null;loadedId=null;result=null;followRunning=false;localStorage.removeItem('simulationSelected');el('Result').innerHTML='';}
+      }
+    } catch(cause){error(cause);} finally {deleting=false;history();await refresh();}
   }
   function assessment(metric, value, lowSample) {
     const bounds=result.targets[metric];
@@ -127,7 +159,7 @@ const SimulationPage = (() => {
     catch(cause) {if(selected!==id)return;loadedId=id;el('Result').innerHTML=`<p class="simulation-error">${html(job?.error || cause.message)}</p><p>종료: ${html(date(job?.finishedAt))} · 완료 ${number(job?.completed)}회</p>${id.startsWith('simulation_')?`<a target="_blank" rel="noopener" href="/api/simulations/${encodeURIComponent(id)}/log">개발 로그</a> · <a target="_blank" rel="noopener" href="/api/simulations/${encodeURIComponent(id)}/journal">완료 전투 원본</a>`:''}`;}
   }
   async function refresh() {
-    if(loading)return;
+    if(loading||deleting)return;
     loading=true;
     try {
       const data=await api('simulations');jobs=data.jobs;

@@ -184,7 +184,7 @@ function renderRecordEvents(events = []) {
   if (!events.length) return "-";
   return `<details class="record-events"><summary>${events.length}건 보기</summary><div class="record-event-list">${events.map(event => {
     const label=BATTLE_EVENT_LABELS[event.type] ?? event.type;
-    const amount=["hit","damaged","heal","resource_drain","damage_redirect","forced_move"].includes(event.type) ? ` · ${event.amount.toFixed(1)}${event.resource ? ` ${escapeHtml(event.resource)}` : ""}` : "";
+    const amount=["hit","damaged","heal","resource_drain","resource_refund","damage_redirect","forced_move"].includes(event.type) ? ` · ${event.amount.toFixed(1)}${event.resource ? ` ${escapeHtml(event.resource)}` : ""}` : "";
     return `<div><time>${(event.tick/60).toFixed(2)}s</time> ${escapeHtml(label)} · ${escapeHtml(event.source?.name || "환경")} → ${escapeHtml(event.target?.name || "-")}${event.skillName ? ` · ${escapeHtml(event.skillName)}` : ""}${amount}${event.reason ? ` · ${escapeHtml(event.reason)}` : ""}</div>`;
   }).join("")}</div></details>`;
 }

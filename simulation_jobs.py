@@ -30,6 +30,11 @@ def read_json(path):
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def read_run(path):
+    summary = path.with_name("summary.json")
+    return read_json(summary if summary.is_file() else path)
+
+
 def atomic_json(path, value):
     temp = path.with_name(path.name + "." + uuid.uuid4().hex + ".tmp")
     try:
@@ -105,7 +110,7 @@ class SimulationJobs:
                     # The worker may have completed immediately before shutdown.
                     result_path = path.parent / "result.json"
                     if result_path.exists():
-                        run = read_json(result_path)
+                        run = read_run(result_path)
                         job.update(self._run_metadata(run))
                     else:
                         journal = path.parent / "battles.ndjson"
@@ -240,7 +245,7 @@ class SimulationJobs:
             code = process.wait()
             if code or not (directory / "result.json").exists():
                 raise RuntimeError(f"실행기가 종료되었습니다 (exit {code}).")
-            update = self._run_metadata(read_json(directory / "result.json"))
+            update = self._run_metadata(read_run(directory / "result.json"))
         except Exception as exc:
             failure = str(exc)
             with (directory / "error.log").open("a", encoding="utf-8") as errors:
@@ -309,6 +314,28 @@ class SimulationJobs:
                 raise SimulationError("실행 기록을 찾을 수 없습니다.", 404)
             return dict(job)
 
+    def delete(self, job_id):
+        with self.lock:
+            job = self.get(job_id)
+            if job["status"] in ACTIVE:
+                raise SimulationError("진행 중인 테스트는 삭제할 수 없습니다. 먼저 중단해 주세요.", 409)
+            if job_id in self.jobs:
+                directory = self.storage / job_id
+                if directory.is_symlink() or directory.resolve().parent != self.storage.resolve():
+                    raise SimulationError("잘못된 기록 경로입니다.", 400)
+                # Only this known job directory is removed; game data is separate.
+                shutil.rmtree(directory)
+                del self.jobs[job_id]
+            else:
+                stem = job_id.removeprefix("legacy_")
+                paths = [self.legacy_dir / (stem + suffix) for suffix in (".json", ".md")]
+                if any(p.is_symlink() or p.resolve().parent != self.legacy_dir.resolve() for p in paths):
+                    raise SimulationError("잘못된 기록 경로입니다.", 400)
+                for path in paths:
+                    path.unlink(missing_ok=True)
+                self.legacy_cache.pop(stem + ".json", None)
+            return {"deleted": job_id}
+
     def file(self, job_id, kind):
         self.get(job_id)  # Only known IDs can resolve paths.
         if kind not in ("json", "markdown", "log", "journal"):
@@ -325,7 +352,8 @@ class SimulationJobs:
         return path
 
     def result(self, job_id):
-        run = read_json(self.file(job_id, "json"))
+        path = self.file(job_id, "json")
+        run = read_run(path) if job_id in self.jobs else read_json(path)
         # Dashboard responses exclude the large immutable input and per-battle traces.
         return {**{key: value for key, value in run.items() if key not in ("inputSnapshot", "results", "targetMarkdown")},
                 "simulationId": job_id, "targets": parse_targets(run.get("targetMarkdown") or

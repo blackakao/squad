@@ -38,7 +38,12 @@ function resetUnitForBattle(unit) {
   unit.weaponAttackStates = (unit.weaponAttacks ?? []).map(weapon=>({weapon,cooldown:0,castTimer:0,target:null}));
   unit.skillCooldowns = {};
   unit.skillCooldownTotals = {};
+  unit.skillUseCounts = {};
+  unit.combatCycle = null;
+  unit.temporaryRevival = null;unit.temporaryReviveUsed = false;
+  unit.basicAttackCounts = {};
   unit.skillComboStages = {};
+  unit.skillConsecutiveUses = {};
   unit.runtimeCopiedSkills = [];
   unit.runtimeRuleOverrides = [];
   unit.temporaryReserveTicks = null;
@@ -132,6 +137,7 @@ function removeSummonedBattleUnit(unit) {
     if (index >= 0) squad.splice(index, 1);
   }
   // Keep scalar attribution for saved events, never a removed runtime graph.
+  refreshSummonCountBuffs(unit.owner ?? unit.summoner);
   unit.owner = null;
   unit.summoner = null;
 }
@@ -200,6 +206,7 @@ function summonBattleUnits(source, action, skill, target = source) {
     registerBattleContribution(unit);
     created.push(unit);
   }
+  if (created.length) refreshSummonCountBuffs(getSummonOwner(source));
   if (action.retreatBehindSummons && created.length) {
     // The opposing side defines the front; search a collision-free position behind every clone.
     const enemies=getActiveBattleEntities(source.side === "enemy" ? playerSquad : enemySquad);
@@ -298,13 +305,13 @@ function updateResources() {
 
       unit.st = Math.min(maxSt, (Number(unit.st) || 0) + exhaustedRegenPerSecond * elapsedSeconds);
       if (unit.isMoving) {
-        unit.st = Math.max(0, unit.st - (ST_MOVE_COST_PER_SECOND * getMovementStCostPercent(unit) / 100 + getBattleFieldMovementStCostFlat(unit)) * elapsedSeconds);
+        unit.st = Math.max(0, unit.st - (ST_MOVE_COST_PER_SECOND * getMovementStCostPercent(unit) / 100 + getBattleFieldMovementStCostFlat(unit)) * getCombatStMultiplier(unit) * elapsedSeconds);
       }
       if (unit.st >= exhaustedRecoveryThreshold) {
         unit.exhausted = false;
       }
     } else if (unit.isMoving) {
-      unit.st = Math.max(0, (Number(unit.st) || 0) - (ST_MOVE_COST_PER_SECOND * getMovementStCostPercent(unit) / 100 + getBattleFieldMovementStCostFlat(unit)) * elapsedSeconds);
+      unit.st = Math.max(0, (Number(unit.st) || 0) - (ST_MOVE_COST_PER_SECOND * getMovementStCostPercent(unit) / 100 + getBattleFieldMovementStCostFlat(unit)) * getCombatStMultiplier(unit) * elapsedSeconds);
       if (unit.st <= 0) {
         unit.exhausted = true;
       }
@@ -338,7 +345,7 @@ function hasEnoughStForPhysicalAttack(unit) {
     return true;
   }
 
-  if ((Number(unit.st) || 0) >= ST_PHYSICAL_ATTACK_COST) {
+  if ((Number(unit.st) || 0) >= ST_PHYSICAL_ATTACK_COST * getCombatStMultiplier(unit,true)) {
     return true;
   }
 
@@ -351,7 +358,7 @@ function spendStForPhysicalAttack(unit) {
     return;
   }
 
-  unit.st = Math.max(0, (Number(unit.st) || 0) - ST_PHYSICAL_ATTACK_COST);
+  unit.st = Math.max(0, (Number(unit.st) || 0) - ST_PHYSICAL_ATTACK_COST * getCombatStMultiplier(unit,true));
   if (unit.st <= 0) {
     unit.exhausted = true;
   }
@@ -407,18 +414,19 @@ function syncAliveState(unit, context = {}) {
     unit.hp = 0;
     unit.alive = false;
     if (wasAlive) {
+      unit.temporaryRevival=null;
       unit.battleDeathX=unit.x;unit.battleDeathY=unit.y;
       if (unit.pendingAction) events.push({type:"cast_interrupt",source:unit,target:unit.pendingAction.target,skill:unit.pendingAction.skill,reason:"사망"});
       if (unit.channelAction) events.push(...finishBattleChannel(unit,"사망",{deferEvents:true}));
       unit.pendingAction=null;unit.castTimer=0;unit.castDuration=0;
       unit.isWaiting = false;
-      if (!queueRepeatingRevival(unit) && !unit.isSummon && unit.revivesRemaining > 0) {
+      if (!context.preventRevival && !queueRepeatingRevival(unit) && !unit.isSummon && unit.revivesRemaining > 0) {
         unit.revivesRemaining--;
         unit.reviveTicks = Math.max(1, Math.ceil(normalizeBattleRules(unit.battleRules).reviveDelay * BASE_ATTACK_COOLDOWN));
         unit.isWaiting = true;
       }
       events.push({type:"death",source:context.source ?? null,target:unit,skill:context.skill,periodic:context.periodic,reason:context.reason ?? "HP 소진"});
-      if (unit.isSummon && !unit.isEntityPreview) pendingSummonDeaths.add(unit);
+      if (unit.isSummon && !unit.isEntityPreview) {pendingSummonDeaths.add(unit);refreshSummonCountBuffs(unit.owner ?? unit.summoner);}
       if (unit.isSummon && unit.ownerDiesOnDeath && unit.owner?.alive) {
         unit.owner.hp=0;
         events.push(...syncAliveState(unit.owner,{...context,deferEvents:true,reason:"소환수 사망 연동"}));
@@ -500,7 +508,7 @@ function swapBattleUnitWithReserve(source, target, action) {
 }
 
 function reviveBattleUnitWithSkill(source,target,action,skill) {
-  if (!source?.alive || !target || target.alive || target.isSummon || target.isWaiting || target.isReserve || target.side !== source.side || target.hp > 0) return false;
+  if (!source?.alive || !target || target.alive || target.isSummon || target.isWaiting || target.isReserve || target.side !== source.side || target.hp > 0 || (action.temporaryReviveDuration>0 && target.temporaryReviveUsed)) return false;
   clearBattleEffects(target);clearBattleChannel(target);
   target.alive=true;target.isWaiting=false;target.isReserve=false;target.entryTicks=0;target.reviveTicks=0;
   target.hp=Math.max(1,target.maxHp*Math.max(1,Math.min(100,Number(action.reviveHpPercent)||50))/100);
@@ -510,6 +518,13 @@ function reviveBattleUnitWithSkill(source,target,action,skill) {
   target.reviveInvulnerableTicks=Math.max(0,Math.ceil((Number(action.reviveInvulnerable)||0)*BASE_ATTACK_COOLDOWN));
   if (action.revivePosition === "start" && Number.isFinite(target.battleStartX) && Number.isFinite(target.battleStartY)) {
     target.x=target.battleStartX;target.y=target.battleStartY;clampPosition(target);
+  }
+  if (action.temporaryReviveDuration>0) {
+    target.temporaryReviveUsed=true;target.temporaryRevival={remainingTicks:Math.ceil(action.temporaryReviveDuration*BASE_ATTACK_COOLDOWN),skillId:skill?.id};
+    const effects=[{id:"medic_stimulant",name:"각성제",stat:"atk",mode:"flat",value:0}];
+    if (action.temporaryReviveAttackRatePercent>0) effects.push({id:"medic_zombie_attack",name:"좀비",stat:"attackSpeed",mode:"attack_rate_percent",value:action.temporaryReviveAttackRatePercent});
+    if (action.temporaryReviveCastTimePercent<100) effects.push({id:"medic_zombie_cast",name:"좀비",stat:"castSpeed",mode:"cast_time_percent",value:action.temporaryReviveCastTimePercent-100});
+    for(const effect of effects) applyTimedEffectAction(source,target,{type:"add_buff",duration:action.temporaryReviveDuration,effect:{...effect,polarity:"beneficial",dispellable:false}},skill);
   }
   publishBattleEvents([{type:"revive",source,target,skill}]);
   return true;
@@ -562,7 +577,18 @@ function deployReserveReinforcements(squad) {
   }
 }
 
+function updateTemporaryRevivals() {
+  for (const unit of [...playerSquad,...enemySquad]) {
+    if (!unit.temporaryRevival) continue;
+    if (!unit.alive) {unit.temporaryRevival=null;continue;}
+    if (--unit.temporaryRevival.remainingTicks>0) continue;
+    const skill=getSkillById(unit.temporaryRevival.skillId);unit.temporaryRevival=null;
+    unit.hp=0;syncAliveState(unit,{source:unit,skill,forceDeath:true,preventRevival:true,reason:"각성제 종료"});
+  }
+}
+
 function updateBattleReentries() {
+  updateTemporaryRevivals();
   updateTemporaryReserveDeployments();
   [...playerSquad, ...enemySquad].forEach(unit => {
     if (unit.reviveInvulnerableTicks > 0) unit.reviveInvulnerableTicks--;
@@ -833,6 +859,17 @@ function updateMovement() {
   enemySquad.forEach(unit => moveUnit(unit, playerSquad));
 }
 
+function getContactSupportApproach(unit) {
+  for (const skill of getEquippedSkills(unit)) {
+    if ((unit.skillCooldowns?.[skill.id] || 0)>0 || !canPaySkillResourceCosts(unit,skill)) continue;
+    for (const action of skill.actions.filter(a=>a.contactRange && a.target === "ally")) {
+      const target=resolveSkillActionTarget(unit,{...action,contactRange:false,unlimitedRange:true},null,skill);
+      if (target && target!==unit) return {target,action};
+    }
+  }
+  return null;
+}
+
 function moveUnit(unit, targets) {
   if (unit.commandOnly || unit.suspendedTicks>0) {unit.vx=unit.vy=0;unit.isMoving=false;return;}
   if (!unit.alive) {
@@ -861,7 +898,9 @@ function moveUnit(unit, targets) {
   if (!charm && !hasBattleState(unit,"flee") && unit.isSummon && unit.ai === "healer") {
     targets = getSummonSquad(unit).filter(candidate => candidate !== unit && candidate.alive && candidate.hp < candidate.maxHp);
   }
-  const target = targets.find(candidate => candidate.alive);
+  const contactSupport=!charm && !hasBattleState(unit,"flee") && !supportForm ? getContactSupportApproach(unit) : null;
+  if (contactSupport) targets=[contactSupport.target];
+  const target = targets.find(candidate => candidate.alive || candidate === contactSupport?.target);
   if (!target) {
     unit.vx=unit.vy=0;unit.isMoving=false;
     return;
@@ -880,14 +919,14 @@ function moveUnit(unit, targets) {
     (Number(unit.skillCooldowns?.[skill.id]) || 0) <= 0
     && canPaySkillResourceCosts(unit,skill,getNextSkillModifier(unit).resourceCostPercent)
     && skill.actions.some(action=>action.target === "enemy"));
-  const weaponRanges=(unit.weaponAttackStates ?? []).map(state=>Number(state.weapon.attackRange)*ATTACK_RANGE_UNIT).filter(range=>range>0);
+  const weaponRanges=(unit.weaponAttackStates ?? []).map(state=>getIndependentWeaponRange(unit,state.weapon)*ATTACK_RANGE_UNIT).filter(range=>range>0);
   const basicRange=weaponRanges.length>1 ? Math.min(getUnitRange(unit),...weaponRanges) : getUnitRange(unit);
   const supportAction=supportForm ? getEquippedSkills(unit).flatMap(skill=>skill.actions).find(action=>action.type === "heal" && action.target === "ally") : null;
-  const desiredRange=charm ? COLLISION_DISTANCE : supportAction ? getActionRangePixels(unit,supportAction) : readySkill
+  const desiredRange=contactSupport ? COLLISION_DISTANCE : charm ? COLLISION_DISTANCE : supportAction ? getActionRangePixels(unit,supportAction) : readySkill
     ? Math.min(getUnitRange(unit),...readySkill.actions.filter(action=>action.target === "enemy").map(action=>getActionRangePixels(unit,action)))
     : basicRange;
 
-  if (hasBattleState(unit,"flee") || (unit.retreatHpBelow > 0 && hpPercent <= unit.retreatHpBelow)) {
+  if ((unit.activeEffects ?? []).some(effect=>effect.mode === "stealth" && effect.holdAttacks) || hasBattleState(unit,"flee") || (unit.retreatHpBelow > 0 && hpPercent <= unit.retreatHpBelow)) {
     unit.vx = -(dx / dist) * speed;
     unit.vy = -(dy / dist) * speed;
   } else if (dist > desiredRange) {
@@ -1002,6 +1041,7 @@ function takeAction(unit, allies, enemies) {
     return;
   }
 
+  if ((unit.activeEffects ?? []).some(effect=>effect.mode === "stealth" && effect.holdAttacks)) return;
   if (tryUseReadySkill(unit, allies, enemies)) {
     return;
   }
@@ -1023,6 +1063,7 @@ function takeAction(unit, allies, enemies) {
     return;
   }
 
+  if (unit.hp<getInstantCastHpCost(unit,basicSkill)) return;
   if (isMagicAttackUnit(unit)) {
     if (!hasEnoughMpForAction(unit)) {
       return;
@@ -1047,12 +1088,13 @@ function tickSkillCooldowns(unit) {
 }
 
 function tryUseReadySkill(unit, allies, enemies) {
+  if ((unit.activeEffects ?? []).some(effect=>effect.mode === "stealth" && effect.holdAttacks)) return false;
   if (hasBattleState(unit,"flee") || hasBattleState(unit,"charm")) return false;
   if (hasBattleState(unit,"stun") || hasBattleState(unit,"silence")) return false;
   const nextSkillModifier=getNextSkillModifier(unit);
   const skill = getEquippedSkills(unit).map(candidate => getRuntimeComboSkill(unit,candidate)).find(candidate => {
     const cooldownLeft = Number(unit.skillCooldowns?.[candidate.id]) || 0;
-    return cooldownLeft <= 0 && canPaySkillResourceCosts(unit, candidate, nextSkillModifier.resourceCostPercent) && resolveSkillTarget(unit, candidate, allies, enemies);
+    return cooldownLeft <= 0 && canPaySkillResourceCosts(unit, candidate, nextSkillModifier.resourceCostPercent) && unit.hp>=getInstantCastHpCost(unit,candidate,nextSkillModifier)+getSkillResourceCosts(candidate).filter(c=>c.resource === "HP").reduce((sum,c)=>sum+getResourceCostAmount(unit,c,nextSkillModifier.resourceCostPercent,candidate),0) && resolveSkillTarget(unit, candidate, allies, enemies);
   });
 
   if (!skill) {
@@ -1060,6 +1102,7 @@ function tryUseReadySkill(unit, allies, enemies) {
   }
 
   const target = resolveSkillTarget(unit, skill, allies, enemies);
+  beginOffensiveAction(unit,skill);
   const resourceSpent=spendSkillResourceCosts(unit, skill, nextSkillModifier.resourceCostPercent);
   consumeNextSkillModifier(unit,nextSkillModifier);
   showSkillBubble(unit, skill.runtimeCombo ? `${skill.name} · ${skill.runtimeCombo.stageName}` : skill.name, skill.icon);
@@ -1084,6 +1127,38 @@ function resolveSkillTarget(unit, skill, allies, enemies) {
   return null;
 }
 
+function getInstantCastPassive(unit) {
+  const base=resolveSelectedSkillIds(unit?.skillIds,unit?.skillSelections).map(getSkillById)
+    .find(skill=>skill?.slot === "passive" && skill.instantCastHpPerTenth>0 && !isUnitSkillDisabled(unit,skill));
+  return base ? getRuntimeSelectionSkill(unit,getRuntimeItemSkill(unit,base)) : null;
+}
+
+function getPreInstantCastSeconds(unit,skill,modifier=null,weapon=null) {
+  const explicit=normalizeSkillCastTime(skill?.castTime);
+  let seconds=weapon ? weapon.castSpeed : explicit == null ? getCastDuration(unit)/BASE_ATTACK_COOLDOWN : explicit;
+  if (!weapon && explicit != null && getInstantCastPassive(unit)) {
+    seconds+=(getStatAbilityBonus(unit.attributes ?? {}).castSpeed || 0);
+    const base=unit.effectBaseStats?.castSpeed;
+    if (base) seconds+=(Number(unit.castSpeed)||0)-base.value;
+  }
+  return Math.max(0,seconds+(unit.effectCastTimeAdd || 0))*(modifier?.castTimePercent ?? 100)/100*(unit.effectCastTimeMultiplier ?? 1);
+}
+
+function getInstantCastHpCost(unit,skill,modifier=null,weapon=null) {
+  const passive=getInstantCastPassive(unit);
+  return passive ? Math.max(0,Number((getPreInstantCastSeconds(unit,skill,modifier,weapon)*10*passive.instantCastHpPerTenth).toFixed(8))) : 0;
+}
+
+function payInstantCastHp(unit,amount,action) {
+  if (!(amount>0)) return true;
+  if (unit.hp<amount) return false;
+  unit.hp-=amount;
+  const spent=action.resourceSpent ??= {total:0,HP:0,MP:0,ST:0,BP:0};
+  spent.HP=(spent.HP || 0)+amount;spent.total=(spent.total || 0)+amount;
+  syncAliveState(unit,{source:unit,skill:action.skill,reason:"광속시전 HP 소모"});
+  return unit.alive;
+}
+
 function startCast(unit, action) {
   if (action.type === "attack" && getUnitBattleForm(unit)?.basicAttackDisabled) return;
   if (hasBattleState(unit,"flee") || (action.type === "attack" && hasBattleState(unit,"disarm"))) return;
@@ -1093,10 +1168,15 @@ function startCast(unit, action) {
   if (!isSkillExecutable(skill)) return;
   if (action.type === "skill" && !canActivateSkill(unit,skill)) return;
   const castTime = normalizeSkillCastTime(unit.isSummon && action.type !== "skill" ? unit.castSpeed : skill?.castTime);
-  const castDuration = Math.round((castTime == null ? getCastDuration(unit) : castTime * BASE_ATTACK_COOLDOWN) * (action.skillModifier?.castTimePercent ?? 100) / 100 * (unit.effectCastTimeMultiplier ?? 1));
+  const instant=getInstantCastPassive(unit);
+  const castDuration = instant ? 0 : Math.round(Math.max(0,(castTime == null ? getCastDuration(unit)/BASE_ATTACK_COOLDOWN : castTime)+(unit.effectCastTimeAdd || 0)) * BASE_ATTACK_COOLDOWN * (action.skillModifier?.castTimePercent ?? 100) / 100 * (unit.effectCastTimeMultiplier ?? 1));
+  if (instant && !payInstantCastHp(unit,getInstantCastHpCost(unit,skill,action.skillModifier),action)) return;
 
   markAction(unit);
-  const pendingAction = { ...action, skill };
+  if (skill.stationaryTargetBonusPercent>0 && action.target) action.target.effectCasterId ??= nextEffectCasterId++;
+  beginOffensiveAction(unit,skill);
+  const pendingAction = { ...action, skill,
+    ...(skill.stationaryTargetBonusPercent>0 && action.target ? {castTargetPosition:{targetId:action.target.effectCasterId,x:action.target.x,y:action.target.y}} : {}) };
   unit.pendingAction = pendingAction;
   unit.castTimer = castDuration;
   unit.castDuration = castDuration;
@@ -1148,12 +1228,16 @@ function resolveCastAction(unit, action) {
   const completedSkill = action.skill ?? getUnitSkill(unit,action.type === "heal" ? DEFAULT_HEAL_SKILL_ID : DEFAULT_ATTACK_SKILL_ID);
   if (hasBattleState(unit,"stun") || (action.type === "skill" && hasBattleState(unit,"silence"))) return;
   if (action.type === "skill" && !canActivateSkill(unit,completedSkill)) {publishBattleEvents([{type:"cast_interrupt",source:unit,target:action.target,skill:completedSkill,reason:"사용 조건 미충족"}]);return;}
+  if (action.type === "skill" && hasEvasiveConcealment(action.target) && isDirectHostileSkill(unit,action.target,completedSkill)) {unit.skillCooldowns[completedSkill.id]=getModifiedSkillCooldownTicks(completedSkill,unit,action.skillModifier);publishBattleEvents([{type:"cast_interrupt",source:unit,target:action.target,skill:completedSkill,reason:"대상 은신"}]);return;}
+  if (action.type === "attack" && hasEvasiveConcealment(action.target)) return;
   if (completedSkill.slot !== "passive" && normalizeSkillChannel(completedSkill.channel).duration > 0) {
     startBattleChannel(unit,action,completedSkill);return;
   }
   if (action.type === "skill" && completedSkill.summonCost && !paySkillSummonCost(unit,completedSkill)) {
     publishBattleEvents([{type:"cast_interrupt",source:unit,target:action.target,skill:completedSkill,reason:"소환 재료 부족"}]);return;
   }
+  const position=action.castTargetPosition;
+  if (position) action.castTargetStationary=position.targetId === action.target?.effectCasterId && Math.hypot(action.target.x-position.x,action.target.y-position.y)<=1e-6;
   breakAttackConcealment(unit,completedSkill);
   publishBattleEvents([{type:"cast_complete",source:unit,target:action.target,skill:completedSkill,resourceSpent:action.resourceSpent}]);
   if (!unit.alive || hasBattleState(unit,"stun") || (action.type === "skill" && hasBattleState(unit,"silence"))) return;
@@ -1170,17 +1254,30 @@ function resolveCastAction(unit, action) {
 }
 
 function resolveSkillCast(unit, action) {
-  const skill = action.skill;
+  let skill = action.skill;
+  if (skill && action.castTargetStationary) skill={...skill,_stationaryTargetBonus:{targetId:action.castTargetPosition.targetId,percent:skill.stationaryTargetBonusPercent}};
   if (!skill) {
     return;
   }
 
-  unit.skillCooldowns[skill.id] = getResolvedSkillCooldownTicks(skill,unit,action.skillModifier);
+  unit.skillUseCounts ??= {};unit.skillUseCounts[skill.id]=(unit.skillUseCounts[skill.id] || 0)+1;
+  if (skill.resetCombat) resetCombatCycle(unit);
+  const uses=Math.max(1,skill.consecutiveUses || 1);
+  unit.skillConsecutiveUses ??= {};
+  const used=(unit.skillConsecutiveUses[skill.id] || 0)+1;
+  unit.skillConsecutiveUses[skill.id]=used<uses ? used : 0;
+  unit.skillCooldowns[skill.id] = used<uses ? 0 : getResolvedSkillCooldownTicks(skill,unit,action.skillModifier);
   unit.skillCooldownTotals[skill.id] = unit.skillCooldowns[skill.id];
   dispatchSkillActions(unit, action.target, skill, !skill.selfDestruct && unit.hp>0, false, null, action.resourceSpent);
   for(const reduction of skill.cooldownReductions ?? []) unit.skillCooldowns[reduction.skillId]=Math.max(0,(unit.skillCooldowns[reduction.skillId] ?? 0)-Math.round(reduction.seconds*BASE_ATTACK_COOLDOWN));
   advanceSkillCombo(unit,skill);
   if (skill.selfDestruct || unit.hp<=0) {unit.hp=0;syncAliveState(unit,{source:unit,skill,forceDeath:skill.selfDestruct === true,reason:skill.selfDestruct ? "자폭" : "HP 자원 소진"});}
+}
+
+function getIndependentWeaponRange(unit,weapon) {
+  const addition=(unit.activeEffects ?? []).filter(effect=>effect.kind === "transform" && effect.mode === "flat")
+    .reduce((sum,effect)=>sum+(Number(effect.modifiers?.attackRange) || 0),0);
+  return Math.max(1,(Number(weapon.attackRange) || 1)+addition);
 }
 
 function getIndependentWeaponSkill(unit,weapon,target) {
@@ -1191,18 +1288,18 @@ function getIndependentWeaponSkill(unit,weapon,target) {
   const focusedCount=(unit.weaponAttackStates ?? []).filter(state=>state.focusTarget===target).length;
   skill.weaponDamagePercent=Math.max(0,100-(Number(unit.sameTargetWeaponPenaltyPercent)||0)*Math.max(0,focusedCount-1));
   skill.actions=skill.actions.map(action=>action.rangeMode === "mainWeapon"
-    ? {...action,rangeMode:"custom",rangeValue:weapon.attackRange} : action);
+    ? {...action,rangeMode:"custom",rangeValue:getIndependentWeaponRange(unit,weapon)} : action);
   return skill;
 }
 
 function canPayIndependentWeaponCost(unit,weapon) {
-  return weapon.attackType === "magic" ? (Number(unit.mp)||0)>=MP_ACTION_COST : (Number(unit.st)||0)>=ST_PHYSICAL_ATTACK_COST;
+  return weapon.attackType === "magic" ? (Number(unit.mp)||0)>=MP_ACTION_COST : (Number(unit.st)||0)>=ST_PHYSICAL_ATTACK_COST*getCombatStMultiplier(unit,true);
 }
 
 function spendIndependentWeaponCost(unit,weapon) {
   if (weapon.attackType === "magic") unit.mp=Math.max(0,(Number(unit.mp)||0)-MP_ACTION_COST);
   else {
-    unit.st=Math.max(0,(Number(unit.st)||0)-ST_PHYSICAL_ATTACK_COST);
+    unit.st=Math.max(0,(Number(unit.st)||0)-ST_PHYSICAL_ATTACK_COST*getCombatStMultiplier(unit,true));
     if (unit.st<=0) unit.exhausted=true;
   }
 }
@@ -1212,7 +1309,7 @@ function resolveIndependentWeaponAttack(unit,state) {
   state.target=null;
   if (!unit.alive || !target?.alive || hasBattleState(unit,"disarm") || hasBattleState(unit,"flee")) return;
   const skill=getIndependentWeaponSkill(unit,state.weapon,target);
-  if (state.weapon.attackRange>1) spawnProjectile(unit,target,"attack",skill);
+  if (getIndependentWeaponRange(unit,state.weapon)>1) spawnProjectile(unit,target,"attack",skill);
   else doAttack(unit,target,skill);
 }
 
@@ -1226,19 +1323,43 @@ function updateIndependentWeaponAttacks(unit,enemies,startNew=true) {
       return;
     }
     if (!startNew || state.cooldown>0 || !canPayIndependentWeaponCost(unit,state.weapon)) return;
-    const range=state.weapon.attackRange*ATTACK_RANGE_UNIT;
+    const range=getIndependentWeaponRange(unit,state.weapon)*ATTACK_RANGE_UNIT;
     const skill=getIndependentWeaponSkill(unit,state.weapon,null);
     const target=resolveSkillTarget(unit,skill,getSummonSquad(unit),enemies);
     if (!target || distance(unit,target)>range) return;
+    const instantCost=getInstantCastHpCost(unit,skill,null,state.weapon);
+    if (unit.hp<instantCost) return;
+    if (!payInstantCastHp(unit,instantCost,{skill})) return;
     spendIndependentWeaponCost(unit,state.weapon);
+    beginOffensiveAction(unit,skill);
     markAction(unit);
     state.target=target;
     state.focusTarget=target;
     state.cooldown=Math.max(1,Math.round(BASE_ATTACK_COOLDOWN*state.weapon.attackSpeed/(unit.effectAttackRateMultiplier ?? 1)));
-    state.castTimer=Math.max(0,Math.round(BASE_ATTACK_COOLDOWN*state.weapon.castSpeed*(unit.effectCastTimeMultiplier ?? 1)));
+    state.castTimer=getInstantCastPassive(unit) ? 0 : Math.max(0,Math.round(BASE_ATTACK_COOLDOWN*Math.max(0,state.weapon.castSpeed+(unit.effectCastTimeAdd || 0))*(unit.effectCastTimeMultiplier ?? 1)));
     if (state.castTimer<=0) resolving.push(state);
   });
   resolving.forEach(state=>resolveIndependentWeaponAttack(unit,state));
+}
+
+function moveBattleUnitToRear(source,target) {
+  if (!target?.alive) return 0;
+  const bounds=target.isEntityPreview ? target.previewBounds ?? canvas : canvas;
+  const ys=[Math.max(UNIT_RADIUS,Math.min(bounds.height-UNIT_RADIUS,target.y))];
+  for(let y=UNIT_RADIUS;y<=bounds.height-UNIT_RADIUS;y+=COLLISION_DISTANCE) ys.push(y);
+  const ordered=[...new Set(ys)].sort((a,b)=>Math.abs(a-target.y)-Math.abs(b-target.y));
+  for(let column=UNIT_RADIUS;column<=bounds.width/2;column+=COLLISION_DISTANCE) for(const y of ordered) {
+    const x=target.side === "enemy" ? bounds.width-column : column;
+    if (Math.hypot(target.x-x,target.y-y)<1e-6) return 0;
+    const moved=moveUnitWithCollision(target,x,y,{sweep:false});
+    if (moved>0) {
+      target.moveDistanceTotal=(target.moveDistanceTotal ?? 0)+moved/ATTACK_RANGE_UNIT;
+      processMovementEffectTriggers(target);
+      publishBattleEvents([{type:"forced_move",source,target,moveType:"Teleport",amount:moved/ATTACK_RANGE_UNIT}]);
+      return moved;
+    }
+  }
+  return 0;
 }
 
 function getClampedPosition(unit,x,y) {
@@ -1414,7 +1535,7 @@ function dispatchSkillActions(source, preferredTarget, skill, allowProjectiles, 
     const lockTarget=Boolean(channelAction && normalizeSkillChannel(skill.channel).lockTarget && action.target !== "self");
     const target = resolveSkillActionTarget(source, action, preferredTarget, skill, lockTarget);
     if (!target) return;
-    const ranged = allowProjectiles && !hasMovement && ["deal_damage", "heal", "drain_resource"].includes(action.type)
+    const ranged = allowProjectiles && !hasMovement && !action.contactRange && ["deal_damage", "heal", "drain_resource"].includes(action.type)
       && target !== source && (forceProjectile || distance(source, target) > ATTACK_RANGE_UNIT)
       && !(!isChainAction(action) && action.area > 0 && (action.areaCenter === "self" || action.target === "self"));
     if (ranged) {
@@ -1446,7 +1567,7 @@ function dispatchSkillActionSequence(source, preferredTarget, skill, allowProjec
       execution.previousResourceDrained=0;
       continue;
     }
-    const ranged=allowProjectiles && !hasMovement && ["deal_damage","heal","drain_resource"].includes(action.type)
+    const ranged=allowProjectiles && !hasMovement && !action.contactRange && ["deal_damage","heal","drain_resource"].includes(action.type)
       && target !== source && (forceProjectile || distance(source,target)>ATTACK_RANGE_UNIT)
       && !(!isChainAction(action) && action.area>0 && (action.areaCenter === "self" || action.target === "self"));
     if (ranged) {
@@ -1476,12 +1597,32 @@ function applyHeal(healer, target, skill = getUnitSkill(healer, DEFAULT_HEAL_SKI
   applySkill(healer, target, skill);
 }
 
+function prepareCountedBasicAttack(unit,skill) {
+  if (skill?.slot !== "basic" || skill.triggered || skill._basicCyclePrepared) return skill;
+  const base=resolveSelectedSkillIds(unit.skillIds,unit.skillSelections).map(getSkillById)
+    .find(passive=>passive?.slot === "passive" && passive.basicAttackCycle && !isUnitSkillDisabled(unit,passive));
+  if (!base) return skill;
+  const passive=getRuntimeSelectionSkill(unit,getRuntimeItemSkill(unit,base)),config=passive.basicAttackCycle;
+  unit.basicAttackCounts ??= {};
+  const count=(unit.basicAttackCounts[base.id] || 0)+1;
+  unit.basicAttackCounts[base.id]=count%config.every;
+  const result=structuredClone(skill);result._basicCyclePrepared=true;
+  if (count%config.every) return result;
+  result.actions=result.actions.map(action=>action.type === "deal_damage" ? {...action,damageType:"physical",coefficients:[{type:"calculated",field:"atk",calc:"percent",value:config.coefficientPercent}]} : action);
+  const repeats=Math.max(1,...(unit.activeEffects ?? []).filter(effect=>effect.mode === "basic_cycle_repeat").map(effect=>Math.floor(effect.value)));
+  const extra=result.actions.filter(action=>action.type === "deal_damage").map(action=>({...action,requirePreviousDamage:true,targetPreviousDamage:true}));
+  for(let i=1;i<repeats;i++) result.actions.push(...structuredClone(extra));
+  return result;
+}
+
 function doAttack(attacker, target, skill = getUnitSkill(attacker, DEFAULT_ATTACK_SKILL_ID)) {
+  skill=prepareCountedBasicAttack(attacker,skill);
   breakAttackConcealment(attacker,skill);
   applySkill(attacker, target, skill);
 }
 
 function spawnProjectile(source, target, type, skill) {
+  if (type === "attack") skill=prepareCountedBasicAttack(source,skill);
   breakAttackConcealment(source,skill);
   dispatchSkillActions(source, target, skill, true, true);
 }
@@ -1506,6 +1647,7 @@ function updateProjectiles() {
       return;
     }
 
+    if (hasEvasiveConcealment(target) && isDirectHostileSkill(source,target,projectile.skillAction ? {actions:[projectile.skillAction]} : skill)) return;
     const dx = target.x - projectile.x;
     const dy = target.y - projectile.y;
     const dist = Math.hypot(dx, dy);
@@ -1574,7 +1716,14 @@ function getBattleEffectIconEntries(unit) {
     const key=JSON.stringify([effect.skillId || effect.id,effect.casterId,effect.polarity ?? (effect.kind === "state" ? "harmful" : "beneficial"),effect.remainingTicks,effect.stacks]);
     if (!groups.has(key)) groups.set(key,effect);
   }
-  return [...groups.values()];
+  const entries=[...groups.values()];
+  for (const skill of limitOptionalSkillIds(unit.skillIds).map(getSkillById)) {
+    if (!skill?.summonCounterChoiceId || isUnitSkillDisabled(unit,skill)) continue;
+    const option=getChoiceSkillOption(getSkillById(skill.summonCounterChoiceId),unit.skillSelections?.[skill.summonCounterChoiceId],unit.skillIds);
+    entries.push({id:skill.id,skillId:skill.id,iconSkillId:option?.skillId,name:skill.name,kind:"buff",polarity:"beneficial",remainingTicks:null,
+      summonCount:getSelectedSummonCount(unit,skill.summonCounterChoiceId)});
+  }
+  return entries;
 }
 
 function drawBattleEffectIcons(unit,statusOffset) {
@@ -1588,7 +1737,7 @@ function drawBattleEffectIcons(unit,statusOffset) {
     let timing=battleEffectDisplayTimes.get(effect);
     if(!timing || remaining>timing.last) timing={total:remaining,last:remaining};
     timing.last=remaining;battleEffectDisplayTimes.set(effect,timing);
-    const skill=getSkillById(effect.skillId);
+    const skill=getSkillById(effect.iconSkillId || effect.skillId);
     const icon=skill?.icon && typeof getCachedRecordImage === "function" ? getCachedRecordImage(skill.icon) : null;
     const harmful=(effect.polarity ?? (effect.kind === "state" ? "harmful" : "beneficial")) === "harmful";
     ctx.save();ctx.fillStyle="#172033";ctx.fillRect(x,y,size,size);
@@ -1601,8 +1750,9 @@ function drawBattleEffectIcons(unit,statusOffset) {
     }
     ctx.strokeStyle=harmful ? "#ef4444" : "#22c55e";ctx.lineWidth=2*scale;ctx.strokeRect(x,y,size,size);
     ctx.font=`bold ${9*scale}px Arial`;ctx.textAlign="center";ctx.lineWidth=2*scale;ctx.strokeStyle="#111827";ctx.fillStyle="#fff";
-    const label=remaining===null ? "∞" : `${Math.ceil(remaining/BASE_ATTACK_COOLDOWN)}s`;
+    const label=effect.summonCount != null ? "" : remaining===null ? "∞" : `${Math.ceil(remaining/BASE_ATTACK_COOLDOWN)}s`;
     ctx.strokeText(label,x+size/2,y+size-2*scale);ctx.fillText(label,x+size/2,y+size-2*scale);
+    if(effect.summonCount != null) {ctx.textAlign="right";ctx.strokeText(String(effect.summonCount),x+size-1*scale,y+size-2*scale);ctx.fillText(String(effect.summonCount),x+size-1*scale,y+size-2*scale);}
     if(effect.stacks>1) {ctx.textAlign="right";ctx.fillText(`×${effect.stacks}`,x+size,y+8*scale);}
     ctx.restore();
   });
@@ -1738,6 +1888,13 @@ function drawUnit(unit, isEnemy) {
   ctx.font = `${10 * scale}px Arial`;
   ctx.fillText(`${unit.name}${getLifeCycleFormLabel(unit) ? ` · ${getLifeCycleFormLabel(unit)}` : ""}`, unit.x - 12 * scale, unit.y - statusOffset - 4 * scale);
 
+  const guard=getAttachedGuardEffect(unit);
+  if (guard) {
+    ctx.save();ctx.strokeStyle="#60a5fa";ctx.fillStyle="rgba(37,99,235,.35)";ctx.lineWidth=2*scale;
+    ctx.fillRect(unit.x+13*scale,unit.y-10*scale,6*scale,20*scale);ctx.strokeRect(unit.x+13*scale,unit.y-10*scale,6*scale,20*scale);
+    ctx.fillStyle="#2563eb";ctx.fillRect(unit.x-15*scale,unit.y-statusOffset+5*scale,30*scale*guard.guardRemaining/guard.guardInitial,3*scale);
+    ctx.fillStyle="#111827";ctx.font=`${9*scale}px Arial`;ctx.textAlign="center";ctx.fillText(`${Math.ceil(guard.guardRemaining)} · ${guard.guardRemainingHits}회`,unit.x,unit.y-statusOffset+17*scale);ctx.restore();
+  }
   const effectHeight=drawBattleEffectIcons(unit,statusOffset);
   drawSkillBubble(unit, statusOffset+effectHeight);
 }

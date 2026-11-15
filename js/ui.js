@@ -466,7 +466,7 @@ function getCharacterWeaponAttacks(character) {
     const category=getWeaponCategory(item.weaponCategory);
     if (!category) return [];
     return [{slot:slot.key,itemId:item.id,name:item.name,attackSkillId:item.attackSkillId ?? "",
-      attackType:category.attackType,attackRange:Math.max(1,Number(category.attackRange)||1),
+      weaponCategory:category.key,attackType:category.attackType,attackRange:Math.max(1,Number(category.attackRange)||1),
       attackSpeed:Math.max(0.1,Number(category.attackSpeed)||BARE_HAND_ATTACK_SPEED),
       castSpeed:Math.max(0,Number(category.castSpeed)||0)}];
   });

@@ -1,15 +1,16 @@
-const PASSIVE_TRIGGER_LABELS = {alone:"주변에 다른 유닛이 없을 때",battle_entry:"전투 진입시",hit:"자신이 적중시",damaged:"자신이 피격시",cast_complete:"자신의 시전 완료시",heal:"자신이 회복시",dispel:"자신이 효과 해제시",kill:"자신이 적 처치시"};
+const PASSIVE_TRIGGER_LABELS = {combat_start:"교전 시작",alone:"주변에 다른 유닛이 없을 때",battle_entry:"전투 진입시",hit:"자신이 적중시",damaged:"자신이 피격시",cast_complete:"자신의 시전 완료시",heal:"자신이 회복시",dispel:"자신이 효과 해제시",kill:"자신이 적 처치시"};
 
 function normalizePassiveTrigger(trigger) {
   if (!trigger || typeof trigger !== "object") return null;
   const mitigation=trigger.recentAttackerMitigation;
+  const combatCycle=trigger.combatCycle ? {stMultiplier:Math.max(1,Number(trigger.combatCycle.stMultiplier) || 3)} : null;
   const damageType=["physical","magic","fixed"].includes(trigger.damageType) ? trigger.damageType : "";
   const events=[...new Set((Array.isArray(trigger.events) ? trigger.events : [trigger.event]).map(String).filter(event=>Object.hasOwn(PASSIVE_TRIGGER_LABELS,event)))];
   const event=events[0] ?? String(trigger.event ?? "");
   const requiredTargetEffectTags=[...new Set((Array.isArray(trigger.requiredTargetEffectTags) ? trigger.requiredTargetEffectTags : String(trigger.requiredTargetEffectTags ?? "").split(",")).map(tag=>String(tag).trim()).filter(Boolean))];
   const damageMultiplierPercent=Number(trigger.damageMultiplierPercent);
   const {allowMultiplePerTick:_allowMultiplePerTick,recentAttackerMitigation:_recentAttackerMitigation,damageType:_damageType,events:_events,requiredTargetEffectTags:_requiredTargetEffectTags,damageMultiplierPercent:_damageMultiplierPercent,...rest}=trigger;
-  return {...rest,...(trigger.revival ? {revival:normalizeRevival(trigger.revival)} : {}),...(trigger.lethalTransformation ? {lethalTransformation:normalizeLethalTransformation(trigger.lethalTransformation)} : {}),event,...(event === "alone" ? {aloneRadius:Math.max(.1,Number(trigger.aloneRadius) || 5),aloneLossDuration:Math.max(.1,Number(trigger.aloneLossDuration) || 2),aloneLossDamagePercent:Math.max(0,Number(trigger.aloneLossDamagePercent ?? 130))} : {}),chance:trigger.chance == null ? 100 : Number(trigger.chance),includePeriodic:trigger.includePeriodic === true,
+  return {...rest,...(combatCycle ? {combatCycle} : {}),...(trigger.revival ? {revival:normalizeRevival(trigger.revival)} : {}),...(trigger.lethalTransformation ? {lethalTransformation:normalizeLethalTransformation(trigger.lethalTransformation)} : {}),event,...(event === "alone" ? {aloneRadius:Math.max(.1,Number(trigger.aloneRadius) || 5),aloneLossDuration:Math.max(0,Number(trigger.aloneLossDuration ?? 2)),aloneLossDamagePercent:Math.max(0,Number(trigger.aloneLossDamagePercent ?? 130))} : {}),chance:trigger.chance == null ? 100 : Number(trigger.chance),includePeriodic:trigger.includePeriodic === true,
     ...(trigger.meleeOnly === true ? {meleeOnly:true} : {}),
     ...(trigger.basicAttackOnly === true ? {basicAttackOnly:true} : {}),
     ...(events.length > 1 ? {events} : {}),
@@ -56,6 +57,7 @@ function renderPassiveTriggerForm(skill = null) {
   document.getElementById("skillPassiveRecentAttackersAdditional").value=mitigation?.additionalReductionPercent ?? 3;
   document.getElementById("skillPassiveRecentAttackersMax").value=mitigation?.maxReductionPercent ?? 25;
   for (const [key,fallback] of [["aloneRadius",5],["aloneLossDuration",2],["aloneLossDamagePercent",130]]) document.getElementById(`skillPassive_${key}`).value=trigger?.[key] ?? fallback;
+  document.getElementById("skillPassiveCombatCycle").value=trigger?.combatCycle ? JSON.stringify(trigger.combatCycle,null,2) : "";
   document.getElementById("skillPassiveRevival").value=trigger?.revival ? JSON.stringify(trigger.revival,null,2) : "";
   document.getElementById("skillPassiveLethalTransformation").value=trigger?.lethalTransformation ? JSON.stringify(trigger.lethalTransformation,null,2) : "";
   document.getElementById("skillPassiveRepeatInterval").value=trigger?.repeatInterval ?? 0;
@@ -88,6 +90,7 @@ function readPassiveTriggerForm() {
   const requiredTargetEffectTags=String(document.getElementById("skillPassiveRequiredTargetTags").value ?? "").split(",").map(tag=>tag.trim()).filter(Boolean);
   const conditionalDamage=document.getElementById("skillPassiveTargetState").checked || requiredTargetEffectTags.length>0;
   return normalizePassiveTrigger({event:events[0] ?? "",events,
+    ...(document.getElementById("skillPassiveCombatCycle").value.trim() ? {combatCycle:JSON.parse(document.getElementById("skillPassiveCombatCycle").value)} : {}),
     ...(document.getElementById("skillPassiveRevival").value.trim() ? {revival:normalizeRevival(JSON.parse(document.getElementById("skillPassiveRevival").value))} : {}),
     ...(document.getElementById("skillPassiveLethalTransformation").value.trim() ? {lethalTransformation:normalizeLethalTransformation(JSON.parse(document.getElementById("skillPassiveLethalTransformation").value))} : {}),
     ...Object.fromEntries(["aloneRadius","aloneLossDuration","aloneLossDamagePercent"].map(key=>[key,Number(document.getElementById(`skillPassive_${key}`).value)])),
@@ -100,6 +103,7 @@ function readPassiveTriggerForm() {
     stateDurationExtension:Number(document.getElementById("skillPassiveStateExtension").value),
     preserveSleep:document.getElementById("skillPassivePreserveSleep").checked,
     chance:Number(document.getElementById("skillPassiveChance").value),damageType:document.getElementById("skillPassiveDamageType").value,meleeOnly:document.getElementById("skillPassiveMeleeOnly").checked,basicAttackOnly:document.getElementById("skillPassiveBasicAttackOnly").checked,includePeriodic:document.getElementById("skillPassivePeriodic").checked,allowMultiplePerTick:document.getElementById("skillPassiveMultiplePerTick").checked,
+    ...((typeof skillEditIndexEl !== "undefined" && skillEditIndexEl.value !== "" && skillsJson[Number(skillEditIndexEl.value)]?.passiveTrigger?.damageTypes) ? {damageTypes:skillsJson[Number(skillEditIndexEl.value)].passiveTrigger.damageTypes} : {}),
     requiredTargetEffectTags,...(conditionalDamage ? {damageMultiplierPercent:Number(document.getElementById("skillPassiveDamageMultiplier").value)} : {}),
     ...(mitigationEnabled ? {recentAttackerMitigation:{enabled:true,window:Number(document.getElementById("skillPassiveRecentAttackersWindow").value),threshold:Number(document.getElementById("skillPassiveRecentAttackersThreshold").value),initialReductionPercent:Number(document.getElementById("skillPassiveRecentAttackersInitial").value),additionalReductionPercent:Number(document.getElementById("skillPassiveRecentAttackersAdditional").value),maxReductionPercent:Number(document.getElementById("skillPassiveRecentAttackersMax").value)}} : {})});
 }
@@ -176,15 +180,16 @@ function handlePassiveBattleEvent(event, context) {
   const preferred = event.type === "battle_entry" ? owner : event.type === "damaged" ? context.source : context.target;
   const skills = resolveSelectedSkillIds(owner.skillIds, owner.skillSelections).map(getSkillById).filter(skill => skill?.slot === "passive" && isSkillExecutable(skill) && !isUnitSkillDisabled(owner,skill)).map(skill => getRuntimeSelectionSkill(owner,getRuntimeItemSkill(owner,skill)));
   for (const configuredSkill of skills) {
-    const skill={...configuredSkill,actions:configuredSkill.actions.filter(action=>!action.triggerEvent || action.triggerEvent === triggerType)};
+    const skill={...configuredSkill,actions:configuredSkill.actions.filter(action=>(!action.triggerEvent || action.triggerEvent === triggerType) && (!action.triggerDamageType || action.triggerDamageType === event.damageType))};
     if (!owner.alive) break;
     const trigger = skill.passiveTrigger;
-    if (!trigger) continue;
+    if (!trigger || trigger.combatCycle) continue;
     if (trigger.revival || trigger.lethalTransformation || trigger.damageMultiplierPercent != null || skill.actions.some(action=>action.effect?.mode === "damage_pool")) continue;
     if (trigger.skillOnly && getSkillById(event.skillId)?.slot !== "active") continue;
     if (!(trigger.events ?? [trigger.event]).includes(triggerType) || (event.periodic && !trigger.includePeriodic)) continue;
     if (trigger.meleeOnly && !event.melee) continue;
     if (trigger.damageType && event.damageType !== trigger.damageType) continue;
+    if (trigger.damageTypes?.length && !trigger.damageTypes.includes(event.damageType)) continue;
     if (trigger.basicAttackOnly && getSkillById(event.skillId)?.slot !== "basic") continue;
     owner.passiveLastTriggerTick ??= {};
     owner.skillCooldowns ??= {};

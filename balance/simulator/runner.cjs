@@ -75,7 +75,9 @@ async function main(args = process.argv.slice(2)) {
   const filename=run.startedAt.replace(/[:.]/g,'-')+'_'+options.count+'.json';
   const resultDir=path.join(ROOT,'balance/results');
   fs.mkdirSync(resultDir,{recursive:true});
-  fs.writeFileSync(path.join(resultDir,filename),JSON.stringify(run,null,2)+'\n',{flag:'wx'});
+  const {atomicParts,jsonParts}=require('./storage.cjs');
+  if(fs.existsSync(path.join(resultDir,filename)))throw new Error('Result already exists');
+  atomicParts(path.join(resultDir,filename),jsonParts(run));
   const report=makeReport(run,targets,'../../balance/results/'+filename);
   fs.writeFileSync(path.join(ROOT,'docs/balance/BALANCE_REPORT.md'),report);
   fs.writeFileSync(path.join(resultDir,filename.replace('.json','.md')),makeReport(run,targets,'./'+filename)

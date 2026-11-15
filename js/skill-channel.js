@@ -1,19 +1,20 @@
 function normalizeSkillChannel(channel) {
   if (!channel || typeof channel !== "object") return {duration:0,interval:1,interruptOnDamage:true,lockTarget:false,receivedDamagePercent:100};
   const receivedDamagePercent=Number(channel.receivedDamagePercent);
-  return {...(Array.isArray(channel.pulseResourceCosts) && channel.pulseResourceCosts.length ? {pulseResourceCosts:channel.pulseResourceCosts.map(normalizeResourceCost)} : {}),duration:normalizeSkillCooldown(channel.duration),interval:channel.interval == null ? 1 : Number(channel.interval),
+  return {...(Array.isArray(channel.startActions) && channel.startActions.length ? {startActions:channel.startActions.map(normalizeSkillAction)} : {}),...(Array.isArray(channel.pulseResourceCosts) && channel.pulseResourceCosts.length ? {pulseResourceCosts:channel.pulseResourceCosts.map(normalizeResourceCost)} : {}),duration:normalizeSkillCooldown(channel.duration),interval:channel.interval == null ? 1 : Number(channel.interval),
     interruptOnDamage:channel.interruptOnDamage !== false,lockTarget:channel.lockTarget === true,
     receivedDamagePercent:Number.isFinite(receivedDamagePercent) ? Math.max(0,receivedDamagePercent) : 100};
 }
 
 function isSkillChannelConfigured(skill) {
   const channel = normalizeSkillChannel(skill?.channel);
-  return skill?.slot === "passive" || channel.duration === 0 || (Number.isFinite(channel.interval) && channel.interval > 0);
+  return (channel.startActions ?? []).every(isSkillActionSupported) && (skill?.slot === "passive" || channel.duration === 0 || (Number.isFinite(channel.interval) && channel.interval > 0));
 }
 
 function renderSkillChannelForm(skill) {
   const channel = normalizeSkillChannel(skill?.channel);
   document.getElementById("skillChannelPulseCosts").value=JSON.stringify(channel.pulseResourceCosts ?? []);
+  document.getElementById("skillChannelStartActions").value=JSON.stringify(channel.startActions ?? [],null,2);
   document.getElementById("skillChannelDuration").value = channel.duration;
   document.getElementById("skillChannelInterval").value = channel.interval;
   document.getElementById("skillChannelDamage").checked = channel.interruptOnDamage;
@@ -22,14 +23,21 @@ function renderSkillChannelForm(skill) {
 }
 
 function readSkillChannelForm() {
-  return normalizeSkillChannel({pulseResourceCosts:JSON.parse(document.getElementById("skillChannelPulseCosts").value || "[]"),duration:document.getElementById("skillChannelDuration").value,
+  return normalizeSkillChannel({startActions:JSON.parse(document.getElementById("skillChannelStartActions").value || "[]"),pulseResourceCosts:JSON.parse(document.getElementById("skillChannelPulseCosts").value || "[]"),duration:document.getElementById("skillChannelDuration").value,
     interval:document.getElementById("skillChannelInterval").value,interruptOnDamage:document.getElementById("skillChannelDamage").checked,
     lockTarget:document.getElementById("skillChannelLockTarget").checked,
     receivedDamagePercent:document.getElementById("skillChannelReceivedDamagePercent").value});
 }
 
 function clearBattleChannel(unit) {
+  const action=unit.channelAction;
   unit.channelAction=null;unit.channelTimer=0;unit.channelDuration=0;unit.channelPulseTimer=0;
+  const ids=new Set((action?.skill?.channel?.startActions ?? []).map(a=>a.effect?.id).filter(Boolean));
+  if (ids.size) for (const target of [...playerSquad,...enemySquad]) {
+    const previous=target.activeEffects?.length;
+    target.activeEffects=(target.activeEffects ?? []).filter(effect=>!(effect.skillId === action.skill.id && effect.casterId === unit.effectCasterId && ids.has(effect.id)));
+    if (previous !== target.activeEffects.length) recalculateBattleBuffs(target);
+  }
 }
 
 function startBattleChannel(unit,action,skill) {
@@ -39,6 +47,7 @@ function startBattleChannel(unit,action,skill) {
   unit.channelDuration=unit.channelTimer;
   unit.channelPulseTimer=Math.max(1,Math.ceil(channel.interval*BASE_ATTACK_COOLDOWN));
   unit.vx=0;unit.vy=0;unit.isMoving=false;
+  if (channel.startActions?.length) applySkill(unit,action.target,{...skill,channel:null,actions:channel.startActions,triggered:true});
   publishBattleEvents([{type:"channel_start",source:unit,target:action.target,skill}]);
 }
 

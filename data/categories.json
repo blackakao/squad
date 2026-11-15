@@ -6,7 +6,7 @@
     "handType": "oneHand",
     "attackRange": 1,
     "attackSpeed": 2,
-    "castSpeed": 0.1,
+    "castSpeed": 0.5,
     "attackType": "physical",
     "slotType": "both"
   },
@@ -70,7 +70,7 @@
     "key": "gun",
     "label": "총",
     "handType": "oneHand",
-    "attackRange": 5,
+    "attackRange": 4,
     "attackSpeed": 1.5,
     "castSpeed": 0.5,
     "attackType": "physical",
@@ -104,7 +104,7 @@
     "label": "단검",
     "handType": "oneHand",
     "attackRange": 1,
-    "attackSpeed": 1,
+    "attackSpeed": 0.8,
     "castSpeed": 0.2,
     "attackType": "physical",
     "slotType": "both"
@@ -115,8 +115,8 @@
     "label": "글러브",
     "handType": "oneHand",
     "attackRange": 1,
-    "attackSpeed": 1,
-    "castSpeed": 0.5,
+    "attackSpeed": 0.5,
+    "castSpeed": 0.2,
     "attackType": "physical",
     "slotType": "both"
   },
@@ -126,8 +126,8 @@
     "label": "석궁",
     "handType": "twoHand",
     "attackRange": 5,
-    "attackSpeed": 3.5,
-    "castSpeed": 2,
+    "attackSpeed": 5,
+    "castSpeed": 1,
     "attackType": "physical",
     "slotType": "mainOnly"
   },

@@ -2,6 +2,7 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 import json
 import os
+import shutil
 import re
 import base64
 import sys
@@ -203,16 +204,18 @@ class BattleHandler(SimpleHTTPRequestHandler):
                 job_id, action = match.groups()
                 if action == "cancel" and self.command == "POST":
                     result = jobs.cancel(job_id)
+                elif action is None and self.command == "DELETE":
+                    result = jobs.delete(job_id)
                 elif self.command == "GET" and action in (None, "result"):
                     result = jobs.result(job_id) if action else jobs.get(job_id)
                 elif self.command == "GET" and action in ("json", "markdown", "log", "journal"):
-                    content = jobs.file(job_id, action).read_bytes()
-                    self.send_response(200)
-                    self.send_header("Content-Type", "application/json; charset=utf-8" if action == "json" else "text/plain; charset=utf-8")
-                    self.send_header("Content-Length", str(len(content)))
-                    self.send_header("Cache-Control", "no-store")
-                    self.end_headers()
-                    self.wfile.write(content)
+                    with jobs.file(job_id, action).open("rb") as content:
+                        self.send_response(200)
+                        self.send_header("Content-Type", "application/json; charset=utf-8" if action == "json" else "text/plain; charset=utf-8")
+                        self.send_header("Content-Length", str(os.fstat(content.fileno()).st_size))
+                        self.send_header("Cache-Control", "no-store")
+                        self.end_headers()
+                        shutil.copyfileobj(content, self.wfile, length=1024 * 1024)
                     return True
                 else:
                     raise SimulationError("지원하지 않는 요청 방식입니다.", 405)
@@ -315,6 +318,8 @@ class BattleHandler(SimpleHTTPRequestHandler):
         self.handle_api_write()
 
     def do_DELETE(self):
+        if self.handle_simulation_request(self.path.split("?", 1)[0]):
+            return
         self.handle_entities(self.path.split("?", 1)[0])
 
     def handle_entities(self, path):

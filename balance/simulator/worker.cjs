@@ -2,8 +2,7 @@
 const fs=require('node:fs');
 const path=require('node:path');
 const {runSimulation}=require('./service.cjs');
-const {parseTargets,makeReport}=require('./report.cjs');
-function atomic(file,text){const temp=file+'.tmp';fs.writeFileSync(temp,text);fs.renameSync(temp,file);}
+const {saveRun}=require('./storage.cjs');
 async function main(){
   const dir=path.resolve(process.argv[2]);
   const input=JSON.parse(fs.readFileSync(path.join(dir,'request.json'),'utf8'));
@@ -28,8 +27,7 @@ async function main(){
         }
       }});
   } finally {fs.closeSync(journal);}
-  atomic(path.join(dir,'result.json'),JSON.stringify(run,null,2)+'\n');
-  atomic(path.join(dir,'report.md'),makeReport(run,parseTargets(run.targetMarkdown),'./result.json'));
+  saveRun(dir,run);
   emit({type:'finished',status:run.status,error:run.error,completed:run.completed,
     total:run.settings.count,elapsedSeconds:run.elapsedSeconds,dataHash:run.dataHash,engineHash:run.engineHash,gitRevision:run.gitRevision,
     averageDuration:run.summary.duration.average});

@@ -55,6 +55,25 @@ class SimulationJobTests(unittest.TestCase):
         self.assertEqual(self.manager().result(job['simulationId']), result)
         self.assertEqual((self.folder / 'data/characters.json').read_bytes(), original)
 
+    def test_summary_avoids_loading_raw_and_delete_removes_only_selected_job(self):
+        job = self.jobs.start({'count': 1, 'teamSize': 1, 'maxSeconds': 1})
+        self.finish(job['simulationId'])
+        directory = self.jobs.storage / job['simulationId']
+        self.assertTrue((directory / 'summary.json').is_file())
+        with patch('simulation_jobs.read_json', wraps=__import__('simulation_jobs').read_json) as reader:
+            self.assertEqual(self.jobs.result(job['simulationId'])['summary']['battles'], 1)
+            self.assertTrue(all(call.args[0].name != 'result.json' for call in reader.call_args_list))
+        self.jobs.jobs[job['simulationId']]['status'] = 'RUNNING'
+        with self.assertRaises(SimulationError) as caught:
+            self.jobs.delete(job['simulationId'])
+        self.assertEqual(caught.exception.status, 409)
+        self.jobs.jobs[job['simulationId']]['status'] = 'COMPLETED'
+        self.jobs.delete(job['simulationId'])
+        self.assertFalse(directory.exists())
+        self.assertTrue((self.folder / 'data/characters.json').exists())
+        with self.assertRaises(SimulationError):
+            self.jobs.delete('../data')
+
     def test_duplicate_requests_and_cancel_preserve_finished_battles(self):
         def start():
             try:
