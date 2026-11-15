@@ -401,7 +401,10 @@
       "skill_class_archer_guard",
       "skill_class_archer_push",
       "skill_class_archer_multishot",
-      "skill_class_archer_power_shot"
+      "skill_class_archer_power_shot",
+      "skill_class_archer_quadruple_shot",
+      "skill_class_archer_deadly_man",
+      "skill_class_archer_bow_mastery"
     ],
     "skillSelections": {},
     "portrait": "assets/images/portraits/character-006.png",
@@ -451,7 +454,9 @@
     ],
     "activeEquipmentSet": 0,
     "faction": "프라가",
-    "attackType": "physical"
+    "attackType": "physical",
+    "entityGrade": 2,
+    "customResources": []
   },
   {
     "name": "갑사",
@@ -614,7 +619,11 @@
       "skill_class_warlock_zone",
       "skill_class_warlock_dragon",
       "skill_class_warlock_lightning",
-      "skill_class_warlock_bite"
+      "skill_class_warlock_bite",
+      "skill_class_warlock_barrier",
+      "skill_class_warlock_demonic_bite",
+      "skill_class_warlock_overwhelming",
+      "skill_class_warlock_lightning_mage"
     ],
     "skillSelections": {},
     "portrait": "assets/images/portraits/character-009.png",
@@ -664,7 +673,9 @@
     ],
     "activeEquipmentSet": 0,
     "faction": "철엘프",
-    "attackType": "magic"
+    "attackType": "magic",
+    "entityGrade": 2,
+    "customResources": []
   },
   {
     "name": "해병",
@@ -757,7 +768,10 @@
       "skill_class_medic_stimulant",
       "skill_class_medic_inargansin",
       "skill_class_medic_first_aid",
-      "skill_class_medic_endurance"
+      "skill_class_medic_endurance",
+      "skill_class_medic_medical_agreement",
+      "skill_class_medic_battlefield_feet",
+      "skill_class_medic_zombie"
     ],
     "skillSelections": {},
     "portrait": "assets/images/portraits/image-20261018142815345651.png",
@@ -807,7 +821,9 @@
     ],
     "activeEquipmentSet": 0,
     "faction": "릴마리온",
-    "attackType": "physical"
+    "attackType": "physical",
+    "entityGrade": 2,
+    "customResources": []
   },
   {
     "name": "제독",
@@ -899,7 +915,10 @@
       "skill_class_fire_meditation",
       "skill_class_fire_lizard",
       "skill_class_fire_drunken",
-      "skill_class_fire_ignite"
+      "skill_class_fire_ignite",
+      "skill_class_fire_undying_embers",
+      "skill_class_fire_clarity",
+      "skill_class_fire_explosive_ignite"
     ],
     "skillSelections": {},
     "portrait": "assets/images/portraits/슈련_화염술사.png",
@@ -949,7 +968,9 @@
     ],
     "activeEquipmentSet": 0,
     "faction": "슈련",
-    "attackType": "magic"
+    "attackType": "magic",
+    "entityGrade": 2,
+    "customResources": []
   },
   {
     "name": "광전사",
@@ -1039,7 +1060,10 @@
       "skill_class_sniper_shadow",
       "skill_class_sniper_mode",
       "skill_class_sniper_falcon",
-      "skill_class_sniper_shot"
+      "skill_class_sniper_shot",
+      "skill_class_sniper_crossbow_expert",
+      "skill_class_sniper_headshot",
+      "skill_class_sniper_siege_expert"
     ],
     "skillSelections": {},
     "portrait": "assets/images/portraits/image-20261018144259496185.png",
@@ -1089,7 +1113,9 @@
     ],
     "activeEquipmentSet": 0,
     "faction": "슈련",
-    "attackType": "physical"
+    "attackType": "physical",
+    "entityGrade": 2,
+    "customResources": []
   },
   {
     "name": "수도승",
@@ -2442,7 +2468,10 @@
       "skill_class_assassin_rune_blade_ultimate",
       "skill_class_assassin_wound_poison",
       "skill_class_assassin_death_sentence",
-      "skill_class_assassin_ambush"
+      "skill_class_assassin_ambush",
+      "skill_class_assassin_quicker_finish",
+      "skill_class_assassin_fear_of_execution",
+      "skill_class_assassin_far_sighted"
     ],
     "skillSelections": {},
     "portrait": "assets/images/portraits/달빛교단_암살자.png",
@@ -2492,7 +2521,9 @@
     ],
     "activeEquipmentSet": 0,
     "faction": "달빛교단",
-    "attackType": "physical"
+    "attackType": "physical",
+    "entityGrade": 2,
+    "customResources": []
   },
   {
     "name": "룬술사",
