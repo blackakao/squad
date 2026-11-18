@@ -1,5 +1,11 @@
 # 아키텍처
 
+- 광전사의 치명 피해 자동 시전은 `battle.js` 사망 확정 전 훅, 피해/선택/적중 차단은 `skill.js`, 피해 저장·HP 하한·지연 재적용은 `skill-effects.js`를 사용한다. 기존 궁 해금·횟수·피해·회복·기록 경로를 재사용한다. [계약](SKILL_ENGINE.md#치명-피해-자동-시전피해-저장-회복-2026-11-18).
+
+
+- 검의무희의 검별 상태·배정·회수·자율 공격은 `battle.js`의 기존 독립 무기 구조를 확장한다. `skill.js`는 명령·조건·선택·피해, `skill-effects.js`는 효과 수명에 연결된 검 예약, `equipment.js`/`ui.js`는 장비 제한·개별 무기 공격력, `ui-battle-view.js`는 가용 검 수를 맡는다. [현행 계약](SKILL_ENGINE.md#독립-검-배정회수자율-공격-2026-11-18).
+
+
 - 반복 부활/사망 위치·부활 전용 스킬/공통 패배 상태는 battle.js, 실행 조건과 선택 보정은 skill.js, 실제 피격 피해 전달은 skill-effects.js, 패시브 설정/표시는 skill-passives.js·skill-editor-view.js·ui-battle-view.js에 연결된다. 기존 사망·부활·피해 이벤트 경로를 재사용한다. [공작 계약](SKILL_ENGINE.md#공작반복-부활공통-패배-상태-2026-11-11).
 
 - 치명상 형태 전환은 battle.js의 사망 진입 전 검사와 대상/행동 분리, skill-effects.js의 기존 변신/만료·형태 조회, skill.js의 피해/회복 차단·슬롯 치환, ui-battle-view.js의 현재 스킬·복귀 타이머를 사용한다. [영혼수확자 계약](SKILL_ENGINE.md#영혼수확자치명상-형태-전환-2026-11-09).

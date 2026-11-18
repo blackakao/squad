@@ -4,6 +4,92 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const path = require('node:path');
 
+test('ultimate opening lock uses battle ticks, permits other skills, and resets each battle',()=>{
+ const e=warlockEngine(),s=e.owner,t=e.target,skill=e.runtime('collapse_ultimate');
+ e.resetBattleEvents();
+ assert.equal(e.canActivateSkill(s,skill),false);
+ assert.equal(e.canActivateSkill(s,{id:'ordinary',slot:'active'}),true);
+ const mp=s.mp;
+ e.startCast(s,{type:'skill',target:t,skill});
+ assert.equal(s.mp,mp);assert.equal(s.pendingAction == null,true);
+ vm.runInContext('combatEventTick=1799;',e);
+ assert.equal(e.canActivateSkill(s,skill),false);
+ const bySlot=e.normalizeSkillJson([{id:'test_barrage',name:'포격',slot:'ultimate',actions:[]}]).find(x=>x.id==='test_barrage');
+ assert.equal(bySlot.slot,'ultimate');assert.equal(e.canActivateSkill(s,bySlot),false);
+ vm.runInContext('combatEventTick=1800;',e);
+ assert.equal(e.canActivateSkill(s,skill),true);assert.equal(e.canActivateSkill(s,bySlot),true);
+ s.skillUseCounts={[bySlot.id]:1};assert.equal(e.canActivateSkill(s,bySlot),false);
+ e.resetBattleEvents();s.skillUseCounts={};assert.equal(e.canActivateSkill(s,skill),false);
+});
+
+function paladinEngine(options=[]) {
+ const e=engine();e.skillsJson=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8')));
+ e.paladin=id=>e.getSkillById('skill_class_paladin_'+id);const s=e.owner=unit(e),t=e.target=unit(e,'enemy',110);s.atk=100;s.magic=20;s.maxHp=2000;s.hp=1000;s.mp=100;s.resistance=20;s.defense=20;t.hp=t.maxHp=10000;
+ s.skillIds=['punishment','divine_protection_ultimate','stigmata','magic_guardian','judgement_sword','flash',...options].map(id=>e.paladin(id).id);e.runtime=id=>e.getRuntimeSelectionSkill(s,e.paladin(id));
+ e.basic=e.normalizeSkillJson([{id:'paladin_test_basic',name:'basic',slot:'basic',castTime:0,actions:[{type:'deal_damage',target:'enemy',rangeMode:'mainWeapon',damageType:'physical',coefficients:[{type:'calculated',field:'atk',calc:'percent',value:100}]}]}]).find(x=>x.id==='paladin_test_basic');return e;
+}
+
+test('paladin marks only one enemy per caster and adds thirty percent actual damage without recursive procs',()=>{
+ const e=paladinEngine(),s=e.owner,t=e.target,other=unit(e,'enemy',120);other.hp=other.maxHp=10000;
+ e.doAttack(s,t,e.basic);assert.equal(t.hp,9870);assert.equal(e.getSingleMarkedTarget(s),t);
+ e.doAttack(s,other,e.basic);assert.equal(other.hp,9870);assert.equal(t.activeEffects.filter(x=>x.id==='paladin_punishment').length,0);assert.equal(e.getSingleMarkedTarget(s),other);
+ const second=unit(e,'player',105);second.atk=100;second.skillIds=[e.paladin('punishment').id];e.doAttack(second,t,e.basic);assert.equal(e.getSingleMarkedTarget(second),t);assert.equal(e.getSingleMarkedTarget(s),other);
+});
+
+test('paladin judgement stun requires the prior mark and area auxiliary targets cannot steal the primary mark',()=>{
+ const e=paladinEngine(),s=e.owner,t=e.target,other=unit(e,'enemy',120);other.hp=other.maxHp=10000;
+ e.applySkill(s,t,e.runtime('judgement_sword'));assert.equal(e.hasBattleState(t,'stun'),false);e.applySkill(s,t,e.runtime('judgement_sword'));assert(e.hasBattleState(t,'stun'));
+ e.applySkill(s,other,e.runtime('judgement_sword'));assert.equal(e.hasBattleState(other,'stun'),false);
+ const before=t.hp;e.applySkill(s,other,e.runtime('flash'));assert.equal(e.getSingleMarkedTarget(s),other);assert.equal(t.hp,before-40);
+});
+
+test('paladin punishment uses total actual damage including damage redirected to a protector',()=>{
+ const e=paladinEngine(),s=e.owner,t=e.target,protector=unit(e,'enemy',120);protector.hp=protector.maxHp=10000;
+ e.applyTimedEffectAction(protector,t,e.normalizeSkillAction({type:'add_buff',duration:10,effect:{id:'proxy',mode:'damage_proxy',proxyPercent:100,proxyScope:'all',proxyPriority:1}}));
+ e.doAttack(s,t,e.basic);assert.equal(t.hp,10000);assert.equal(protector.hp,9870);assert.equal(s.stats.damage,130);assert.equal(e.getSingleMarkedTarget(s),t);
+});
+
+test('paladin stigmata forwards actual received damage and selected actual HP healing to the current mark',()=>{
+ const e=paladinEngine(['alone']),s=e.owner,t=e.target,other=unit(e,'enemy',120);other.hp=other.maxHp=10000;
+ e.doAttack(s,t,e.basic);e.applySkill(s,s,e.runtime('stigmata'));const hp=t.hp;e.applyActionDamage(other,s,{damageType:'fixed',coefficients:[{type:'fixed',value:100}]});assert.equal(s.hp,900);assert.equal(t.hp,hp-20);
+ e.applyActionHeal(other,s,{healResource:'HP',coefficients:[{type:'fixed',value:50}]});assert.equal(s.hp,950);assert.equal(t.hp,hp-30);
+ e.doAttack(s,other,e.basic);const old=t.hp,next=other.hp;e.applyActionDamage(t,s,{damageType:'fixed',coefficients:[{type:'fixed',value:100}]});assert.equal(t.hp,old);assert.equal(other.hp,next-20);
+ for(let i=0;i<300;i++)e.updateBattleEffects();const final=other.hp;e.applyActionHeal(s,s,{healResource:'HP',coefficients:[{type:'fixed',value:100}]});assert.equal(other.hp,final);
+});
+
+test('paladin magic guardian costs only ten MP blocks magic once and preserves its two-second resistance buff',()=>{
+ const e=paladinEngine(),s=e.owner,t=e.target;const skill=e.runtime('magic_guardian');const spent=e.spendSkillResourceCosts(s,skill);assert.equal(spent.MP,10);e.startCast(s,{type:'skill',target:s,skill,resourceSpent:spent});assert.equal(s.mp,90);assert.equal(s.resistance,22);
+ const hit=type=>e.applyActionDamage(t,s,{damageType:type,coefficients:[{type:'fixed',value:100}]});hit('physical');assert.equal(s.hp,900);e.applyActionDamage(t,s,{damageType:'magic',coefficients:[{type:'fixed',value:0}]});assert(s.activeEffects.some(x=>x.mode==='damage_immunity'));hit('magic');assert.equal(s.hp,900);assert.equal(s.mp,90);hit('magic');assert.equal(s.hp,800);assert.equal(s.resistance,22);
+ for(let i=0;i<120;i++)e.updateBattleEffects();assert.equal(s.resistance,20);
+});
+
+test('paladin reflected light returns the blocked raw magic attack with the attacker resistance and never reflects twice',()=>{
+ const e=paladinEngine(['reflected_light']),s=e.owner,t=e.target;t.resistance=20;
+ e.getReducedDamage=(source,target,type,raw)=>type==='magic' ? raw*(1-(target.resistance||0)/100) : raw;
+ e.applySkill(s,s,e.runtime('magic_guardian'));e.applyActionDamage(t,s,{damageType:'magic',coefficients:[{type:'fixed',value:100}]});assert.equal(s.hp,1000);assert.equal(t.hp,9920);assert.equal(e.getSingleMarkedTarget(s),null);
+ e.applySkill(s,s,e.runtime('magic_guardian'));e.applySkill(t,t,e.runtime('magic_guardian'));e.applyActionDamage(t,s,{damageType:'magic',coefficients:[{type:'fixed',value:100}]});assert.equal(s.hp,1000);assert.equal(t.hp,9920);
+});
+
+test('paladin flash blinds the next attack once including whole attack skills but leaves healing and old projectiles alone',()=>{
+ const e=paladinEngine(),s=e.owner,t=e.target;t.skillIds=[];t.atk=100;
+ e.spawnProjectile(t,s,'attack',e.basic);e.applySkill(s,t,e.runtime('flash'));e.updateProjectiles();assert.equal(s.hp,900);assert(t.activeEffects.some(x=>x.mode==='next_attack_miss'));
+ t.hp=100;e.applySkill(t,t,e.normalizeSkillJson([{id:'testheal',name:'heal',actions:[{type:'heal',target:'self',coefficients:[{type:'fixed',value:10}]}]}]).find(x=>x.id==='testheal'));assert.equal(t.hp,110);assert(t.activeEffects.some(x=>x.mode==='next_attack_miss'));
+ e.doAttack(t,s,e.basic);assert.equal(s.hp,900);assert.equal(t.activeEffects.some(x=>x.mode==='next_attack_miss'),false);e.doAttack(t,s,e.basic);assert.equal(s.hp,800);
+ e.applySkill(s,t,e.runtime('flash'));const multi=e.normalizeSkillJson([{id:'blind_multi_test',name:'multi',slot:'active',actions:[{type:'deal_damage',target:'enemy',coefficients:[{type:'fixed',value:100}]},{type:'deal_damage',target:'enemy',coefficients:[{type:'fixed',value:100}]}]}]).find(x=>x.id==='blind_multi_test');e.applySkill(t,s,multi);assert.equal(s.hp,800);assert.equal(t.activeEffects.some(x=>x.mode==='next_attack_miss'),false);
+});
+
+test('paladin selected faith scripture dim light and holy judgement are gated by the three-choice limit',()=>{
+ const e=paladinEngine(['faith','scripture','dim_light','holy_judgement']),s=e.owner,t=e.target;e.recalculateBattleBuffs(s);assert.equal(s.defense,19);assert.equal(s.resistance,23);
+ const flash=e.runtime('flash');assert.equal(flash.actions[0].area,7);assert.equal(flash.actions[0].coefficients[0].value,20);s.mp=0;e.doAttack(s,t,e.basic);assert.equal(s.mp,1);assert.equal(t.hp,9870);
+ s.skillIds=s.skillIds.filter(id=>id!==e.paladin('faith').id);e.doAttack(s,t,e.basic);assert.equal(t.hp,9734);
+});
+
+test('paladin divine protection uses eight-meter radius one-second cast and one use per battle',()=>{
+ const e=paladinEngine(),s=e.owner,a=unit(e,'player',179),far=unit(e,'player',181);a.defense=a.resistance=10;far.defense=far.resistance=10;const skill=e.runtime('divine_protection_ultimate');
+ e.startCast(s,{type:'skill',target:s,skill});assert.equal(s.castDuration,60);for(let i=0;i<60;i++)e.updateCast(s);assert.equal(s.defense,50);assert.equal(s.resistance,50);assert.equal(a.defense,40);assert.equal(far.defense,10);assert.equal(e.canActivateSkill(s,skill),false);
+ for(let i=0;i<600;i++)e.updateBattleEffects();assert.equal(s.defense,20);assert.equal(a.resistance,10);
+});
+
 function medicEngine(options=[]) {
  const e=engine();e.skillsJson=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8')));
  e.medic=id=>e.getSkillById('skill_class_medic_'+id);const s=e.owner=unit(e),t=e.target=unit(e,'enemy',130);s.hp=s.maxHp=2000;s.mp=s.maxMp=200;s.speed=1;s.defense=10;s.resistance=10;s.atk=100;t.hp=t.maxHp=10000;
@@ -1905,6 +1991,8 @@ function engine() {
   for (const file of ['js/battle-events.js', 'js/skill-channel.js', 'js/skill-passives.js', 'js/skill-effects.js', 'js/skill.js', 'js/rune.js', 'js/entity.js', 'js/battle.js', 'js/record.js', 'js/monster.js']) {
     vm.runInContext(fs.readFileSync(path.join(__dirname, '..', file), 'utf8'), context);
   }
+  // Most effect tests exercise combat after the opening ultimate lockout.
+  vm.runInContext('combatEventTick = 1800;', context);
   return context;
 }
 function unit(e, side = 'player', x = 100) {
@@ -2824,6 +2912,7 @@ test('target HP condition is inclusive, skips healthy targets and prevents resou
 });
 test('target cooldown separates targets, casters and actions and expires at its exact tick',()=>{
  const e=engine(),s=unit(e),other=unit(e),t=unit(e,'enemy',105),t2=unit(e,'enemy',106);
+ vm.runInContext('combatEventTick=0',e);
  const sk=skill(e,{type:'deal_damage',target:'enemy',targetCooldown:1,coefficients:[{type:'fixed',value:10}]});
  e.applySkill(s,t,sk);e.applySkill(s,t,sk);assert.equal(t.hp,90);assert.equal(t2.hp,90);
  e.applySkill(s,t,sk);assert.equal(t.hp,90);
@@ -3393,7 +3482,7 @@ test('marine guard and viking counter data match class rules and assignments',()
  const skills=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8'));
  const characters=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','characters.json'),'utf8'));
  const guard=skills.find(item=>item.id==='skill_class_marine_guard'),counter=skills.find(item=>item.id==='skill_class_viking_counter');
- assert.deepEqual([guard.castTime,guard.cooldown,guard.actions[0].effect.uses,guard.actions[0].effect.consumePeriodic],[0,10,2,false]);
+ assert.deepEqual([guard.castTime,guard.cooldown,guard.actions[0].effect.uses,guard.actions[0].effect.consumePeriodic],[0,7,2,false]);
  assert.deepEqual([counter.castTime,counter.cooldown,counter.actions[0].effect.uses,counter.actions[0].effect.consumePeriodic,counter.actions[0].effect.counterOnMelee],[0,3,1,false,true]);
  assert.ok(characters.find(character=>character.name==='해병').skillIds.includes(guard.id));
  assert.deepEqual(characters.find(character=>character.name==='바이킹').skillIds,[counter.id]);
@@ -4185,9 +4274,9 @@ test('monk four strike and berserker fire strike data match their combo rules',(
  const fire=skills.find(item=>item.id==='skill_class_berserker_fire_strike');
  const values=skill=>skill.combo.stages.map(stage=>stage.actions[0].coefficients[0].value);
  assert.deepEqual([monk.name,monk.castTime,monk.cooldown,monk.combo.stepCooldown,values(monk)],['승려 · 4연격',0,12,.5,[120,130,140,150]]);
- assert.deepEqual([fire.castTime,fire.cooldown,fire.combo.stepCooldown,values(fire)],[0,10,.5,[125,135,145]]);
+ assert.deepEqual([fire.castTime,fire.cooldown,fire.combo.stepCooldown,values(fire)],[0,10,.5,[125,150,175]]);
  assert.deepEqual(fire.combo.stages.map(stage=>stage.actions.length),[2,2,2]);
- assert.deepEqual([fire.combo.completionActions[0].effect.stat,fire.combo.completionActions[0].effect.value,fire.combo.completionActions[0].duration],['attackSpeed',-20,3]);
+ assert.deepEqual([fire.combo.completionActions[0].effect.stat,fire.combo.completionActions[0].effect.mode,fire.combo.completionActions[0].effect.value,fire.combo.completionActions[0].duration],['attackSpeed','attack_rate_percent',20,3]);
  assert.ok(characters.find(character=>character.name==='광전사').skillIds.includes(fire.id));
 });
 
@@ -4499,4 +4588,144 @@ test('druid skill data keeps cleanse contracts and character assignment',()=>{
   ['delete_state','category','magic',[]],['delete_buff','category','magic',[]],['delete_state','tags','general',['curse']],['delete_buff','tags','general',['curse']]
  ]);
  assert.deepEqual(characters.find(character=>character.name==='드루이드').skillIds,[natural.id,wound.id,curse.id]);
+});
+
+
+function marineEngine(options=[]) {
+ const e=engine();e.skillsJson=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8')));
+ const s=e.owner=unit(e),t=e.target=unit(e,'enemy',145);s.atk=100;s.defense=50;s.shieldDefense=20;s.attackRange=6;s.hp=s.maxHp=2000;t.hp=t.maxHp=10000;
+ e.marine=id=>e.getSkillById('skill_class_marine_'+id);s.skillIds=['cannon_passive','barrage','expansion','guard','bash','boomerang',...options].map(id=>e.marine(id).id);e.runtime=id=>e.getRuntimeSelectionSkill(s,e.marine(id));return e;
+}
+test('marine replaces basic attacks with a free fixed interval cannon and only selected reload changes it',()=>{
+ const e=marineEngine(['reload']),s=e.owner,t=e.target,c=e.getBasicAttackReplacement(s);assert.equal(c.fixedAttackInterval,2.5);assert.equal(c.castTime,1);assert.equal(c.actions[0].area,3);assert.equal(e.getUnitSkill(s).id,c.id);
+ const ui=fs.readFileSync(path.join(__dirname,'..','js/ui.js'),'utf8');for(const name of ['getUnitRange','getAttackCooldown']){const start=ui.indexOf('function '+name+'(');vm.runInContext(ui.slice(start,ui.indexOf('\n}',start)+2),e);}assert.equal(e.getAttackCooldown(s),150);assert.equal(e.getUnitRange(s),50);assert.equal(e.getActionRangePixels(s,e.runtime('bash').actions[0]),60);
+ const st=s.st,mp=s.mp;s.skillIds=[e.marine('cannon_passive').id,e.marine('reload').id];e.takeAction(s,[s],[t]);assert.equal(s.st,st);assert.equal(s.mp,mp);assert.equal(s.castTimer,60);
+ s.skillIds=[e.marine('cannon_passive').id];assert.equal(e.getBasicAttackReplacement(s).fixedAttackInterval,3);s.skillIds=[];assert.equal(e.getBasicAttackReplacement(s),null);
+});
+test('marine expansion raises shield-only defense bash damage and future guard uses until expiry',()=>{
+ const e=marineEngine(),s=e.owner,t=e.target;assert.equal(e.getActionCoefficientValue(e.runtime('bash').actions[0],s,t),170);
+ e.applySkill(s,s,e.runtime('expansion'));assert.equal(s.defense,55);assert.equal(s.shieldDefense,25);assert.equal(e.getActionCoefficientValue(e.runtime('bash').actions[0],s,t),210);assert.equal(e.runtime('guard').actions[0].effect.uses,3);
+ e.applySkill(s,s,e.runtime('guard'));assert.equal(s.activeEffects.find(x=>x.id==='marine_guard').usesRemaining,3);
+ for(let i=0;i<300;i++)e.updateBattleEffects();assert.equal(s.defense,50);assert.equal(s.shieldDefense,20);assert.equal(e.runtime('guard').actions[0].effect.uses,2);assert.equal(s.activeEffects.find(x=>x.id==='marine_guard').usesRemaining,3);
+});
+test('marine guard blocks only physical direct attacks and removes its linked shell after the last block',()=>{
+ const e=marineEngine(['shell']),s=e.owner,t=e.target;e.applySkill(s,s,e.runtime('guard'));assert.equal(e.getTimedBarriers(s)[0].shieldRemaining,100);
+ const hit=type=>e.applyActionDamage(t,s,{damageType:type,coefficients:[{type:'fixed',value:10}]});hit('magic');assert.equal(s.activeEffects.find(x=>x.id==='marine_guard').usesRemaining,2);hit('physical');assert.equal(s.activeEffects.find(x=>x.id==='marine_guard').usesRemaining,1);hit('physical');assert.equal(e.getTimedBarriers(s).length,0);assert.equal(s.activeEffects.some(x=>x.id==='marine_guard'),false);
+ e.applySkill(s,s,e.runtime('guard'));s.activeEffects=s.activeEffects.filter(x=>x.id!=='marine_guard');e.recalculateBattleBuffs(s);assert.equal(e.getTimedBarriers(s).length,0);
+});
+test('marine boomerang respects the minimum range chains once per target and knocks every hit target back',()=>{
+ const e=marineEngine(['haze']),s=e.owner,t=e.target;const others=[155,165,175,185].map(x=>{const u=unit(e,'enemy',x);u.hp=u.maxHp=10000;return u;});const b=e.runtime('boomerang');assert.equal(b.actions[0].chainCount,4);assert.equal(b.actions[0].maxTargets,5);
+ t.x=130;assert.notEqual(e.resolveSkillTarget(s,b,[s],[t]),t);t.x=145;e.applySkill(s,t,b);for(const u of [t,...others]){assert.equal(u.hp,9900);assert(u.x>=(u===t?145:155));}
+});
+test('marine cannon roar stuns only damaged targets and enlarges the splash',()=>{
+ const e=marineEngine(['roar']),s=e.owner,t=e.target;const near=unit(e,'enemy',180);near.hp=near.maxHp=10000;const far=unit(e,'enemy',200);far.hp=far.maxHp=10000;const c=e.getBasicAttackReplacement(s);assert.equal(c.actions[0].area,4);e.doAttack(s,t,c);assert.equal(t.hp,9700);assert.equal(near.hp,9700);assert(e.hasBattleState(t,'stun'));assert(e.hasBattleState(near,'stun'));assert.equal(far.hp,10000);assert.equal(e.hasBattleState(far,'stun'),false);
+});
+test('marine barrage fires one overlapping cannon per enemy and uses selected raid and roar modifiers',()=>{
+ const e=marineEngine(['air_raid','roar']),s=e.owner,t=e.target;const near=unit(e,'enemy',150);near.hp=near.maxHp=10000;const far=unit(e,'enemy',1000);far.hp=far.maxHp=10000;
+ e.applySkill(s,t,e.runtime('barrage'));assert.equal(t.hp,9220);assert.equal(near.hp,9220);assert.equal(far.hp,9610);assert(e.hasBattleState(far,'stun'));assert.equal(e.marine('barrage').castTime,.5);assert.equal(e.marine('barrage').maxUses,1);
+ e.dispatchSkillActions(s,t,e.runtime('barrage'),true);assert.equal(e.projectiles.length,3);assert(e.projectiles.every(p=>p.skill.id===e.marine('barrage').id && p.skillAction.area===4));
+});
+test('marine optional skills apply only three equipped choices and preserve extension metadata',()=>{
+ const e=marineEngine(['one_chance','haze','roar','reload']),s=e.owner;assert.equal(e.runtime('expansion').actions[0].duration,8);assert.equal(e.getBasicAttackReplacement(s).fixedAttackInterval,3);assert.equal(e.getBasicAttackReplacement(s).actions[0].area,4);
+ assert.equal(e.runtime('expansion').actions[0].effect.skillModifiers.length,2);assert.equal(e.isSkillExecutable(e.marine('cannon_passive')),true);assert.equal(e.isSkillExecutable(e.marine('expansion')),true);
+});
+
+
+function dancerEngine(options=[]) {
+ const e=engine();e.skillsJson=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8')));
+ const s=e.owner=unit(e),t=e.target=unit(e,'enemy',105);s.atk=100;s.hp=500;s.maxHp=1000;s.mp=s.maxMp=100;s.st=100;t.hp=t.maxHp=100000;
+ s.weaponAttacks=Array.from({length:6},(_,i)=>({slot:'sword'+i,weaponCategory:'oneHandSword',atk:0,attackType:'physical',attackSpeed:1,castSpeed:0,attackRange:1}));s.weaponAttackStates=s.weaponAttacks.map(weapon=>({weapon,castTimer:0,cooldown:0,target:null}));
+ e.dancer=id=>e.getSkillById('skill_class_dancer_'+id);s.skillIds=['sovereign','flower','ward','body','focus','scatter',...options].map(id=>e.dancer(id).id);e.runtime=id=>e.getRuntimeComboSkill(s,e.getRuntimeSelectionSkill(s,e.dancer(id)));return e;
+}
+test('dancer each sword uses its own equipment attack plus shared character attack without adding all equipped swords again',()=>{
+ const e=dancerEngine(),s=e.owner,t=e.target;s.weaponAttackStates.forEach((state,i)=>state.weapon.atk=10*(i+1));s.atk=310;
+ assert.equal(JSON.stringify(e.getControlledWeaponStates(s).map(state=>e.getControlledWeaponAttackPower(s,state.weapon))),JSON.stringify([110,120,130,140,150,160]));e.applySkill(s,t,e.runtime('focus'));assert.equal(t.hp,99595);
+});
+test('dancer six independent swords use quarter damage and one MP per sword without spending ST',()=>{
+ const e=dancerEngine(),s=e.owner,t=e.target;e.updateIndependentWeaponAttacks(s,[t]);assert.equal(t.hp,99850);assert.equal(s.mp,94);assert.equal(s.st,100);assert.equal(e.getAvailableControlledWeapons(s).length,6);
+ s.mp=2;s.weaponAttackStates.forEach(state=>state.cooldown=0);e.updateIndependentWeaponAttacks(s,[t]);assert.equal(t.hp,99800);assert.equal(s.mp,0);
+});
+test('dancer focus uses only free swords and honors contact range and selected flying sword range',()=>{
+ const e=dancerEngine(),s=e.owner,t=e.target;e.applySkill(s,s,e.runtime('ward'));assert.equal(e.getAvailableControlledWeapons(s).length,4);e.applySkill(s,t,e.runtime('focus'));assert.equal(t.hp,99800);
+ t.x=140;e.applySkill(s,t,e.runtime('focus'));assert.equal(t.hp,99800);s.skillIds.push(e.dancer('flying_sword').id);assert.equal(e.runtime('focus').actions[0].contactRange,false);assert.equal(e.getActionRangePixels(s,e.runtime('focus').actions[0]),50);e.applySkill(s,t,e.runtime('focus'));assert.equal(t.hp,99600);
+});
+test('dancer ward reserves two swords until its physical blocks are consumed or its effect expires or is dispelled',()=>{
+ const e=dancerEngine(),s=e.owner,t=e.target;e.applySkill(s,s,e.runtime('ward'));const hit=type=>e.applyActionDamage(t,s,{damageType:type,coefficients:[{type:'fixed',value:10}]});hit('magic');assert.equal(e.getAvailableControlledWeapons(s).length,4);hit('physical');hit('physical');assert.equal(e.getAvailableControlledWeapons(s).length,6);
+ e.applySkill(s,s,e.runtime('ward'));for(let i=0;i<300;i++)e.updateBattleEffects();assert.equal(e.getAvailableControlledWeapons(s).length,6);
+ e.applySkill(s,s,e.runtime('ward'));e.applyTimedEffectAction(s,s,e.normalizeSkillAction({type:'delete_buff',target:'self',effect:{id:'dancer_ward'}}));assert.equal(e.getAvailableControlledWeapons(s).length,6);
+});
+test('dancer body spends ST immediately reserves nothing while casting then reserves three swords and restores eight MP each second',()=>{
+ const e=dancerEngine(),s=e.owner;const skill=e.runtime('body');const spent=e.spendSkillResourceCosts(s,skill);e.startCast(s,{type:'skill',target:s,skill,resourceSpent:spent});assert.equal(s.st,70);assert.equal(e.getAvailableControlledWeapons(s).length,6);for(let i=0;i<60;i++)e.updateCast(s);assert.equal(e.getAvailableControlledWeapons(s).length,3);s.mp=0;
+ for(let i=0;i<59;i++)e.updateBattleEffects();assert.equal(s.mp,0);e.updateBattleEffects();assert.equal(s.mp,8);for(let i=0;i<240;i++)e.updateBattleEffects();assert.equal(s.mp,40);assert.equal(e.getAvailableControlledWeapons(s).length,6);
+});
+test('dancer scatter excludes ward and body swords and recall pays ten MP per stage with full cooldown only after recall',()=>{
+ const e=dancerEngine(),s=e.owner,t=e.target;const other=unit(e,'enemy',110);other.hp=other.maxHp=100000;e.applySkill(s,s,e.runtime('ward'));e.applySkill(s,s,e.runtime('body'));assert.equal(e.getAvailableControlledWeapons(s).length,1);
+ let skill=e.runtime('scatter');assert.equal(e.spendSkillResourceCosts(s,skill).MP,10);e.applySkill(s,t,skill);assert.equal(t.hp,99900);assert.equal(other.hp,100000);assert.equal(e.getAvailableControlledWeapons(s).length,0);assert.equal(e.getResolvedSkillCooldownTicks(skill,s),0);e.advanceSkillCombo(s,skill);
+ skill=e.runtime('scatter');assert.equal(e.canActivateSkill(s,skill),true);assert.equal(e.spendSkillResourceCosts(s,skill).MP,10);e.applySkill(s,s,skill);assert.equal(t.hp,99800);assert.equal(e.getAvailableControlledWeapons(s).length,1);assert.equal(e.getResolvedSkillCooldownTicks(skill,s),900);e.advanceSkillCombo(s,skill);assert.equal(s.skillComboStages[skill.id],0);
+});
+test('dancer ghost sword uses the average power without an equipment slot and the optional limit gates the fourth choice',()=>{
+ const e=dancerEngine(['ghost_sword','good_mind','flying_sword','healing_sword']),s=e.owner;s.weaponAttackStates.forEach((state,i)=>state.weapon.atk=10*(i+1));s.atk=310;
+ const states=e.getControlledWeaponStates(s);assert.equal(states.length,7);assert.equal(states[6].weapon.atk,35);assert.equal(e.getControlledWeaponAttackPower(s,states[6].weapon),135);e.recalculateBattleBuffs(s);assert.equal(s.maxMp,130);const hp=s.hp;e.doAttack(s,e.target,e.createControlledWeaponAttack(s,states[0].weapon));assert.equal(s.hp,hp);
+});
+test('dancer selected sword healing and fixed damage apply per sword hit with no recursive bonus or mitigation',()=>{
+ const e=dancerEngine(['healing_sword','sharp_sword']),s=e.owner,t=e.target;e.getReducedDamage=()=>1;t.runtimeRuleOverrides=[{receivedDamagePercent:50}];e.doAttack(s,t,e.createControlledWeaponAttack(s,s.weaponAttacks[0]));assert.equal(t.hp,99997);assert.equal(s.hp,505);
+});
+test('dancer flower reclaims reserved and scattered swords while preserving buffs and assigns excess swords to nearest enemies',()=>{
+ const e=dancerEngine(['beautiful_flower','ghost_sword']),s=e.owner,t=e.target;const other=unit(e,'enemy',115);other.hp=other.maxHp=100000;e.applySkill(s,s,e.runtime('ward'));e.applySkill(s,s,e.runtime('body'));e.applySkill(s,t,e.runtime('scatter'));assert.equal(e.getAvailableControlledWeapons(s).length,0);
+ const before=s.activeEffects.map(x=>[x.id,x.remainingTicks,x.usesRemaining]);const flower=e.runtime('flower');assert.equal(flower.weaponCommand.duration,15);e.applySkill(s,t,flower);assert.equal(s.weaponFlower.entries.length,7);assert.equal(s.weaponFlower.entries.filter(x=>x.target===t).length,4);assert.equal(s.weaponFlower.entries.filter(x=>x.target===other).length,3);assert.equal(s.weaponDeployment,null);assert.equal(JSON.stringify(s.activeEffects.map(x=>[x.id,x.remainingTicks,x.usesRemaining])),JSON.stringify(before));assert.equal(e.canActivateSkill(s,e.runtime('focus')),false);
+ const mp=s.mp,st=s.st;e.takeAction(s,[s],[t,other]);assert.equal(s.mp,mp);assert.equal(s.st,st);assert.equal(t.hp,99500);assert.equal(other.hp,99600);assert.equal(e.getAvailableControlledWeapons(s).length,0);
+ s.mp=0;for(let i=0;i<60;i++)e.updateBattleEffects();assert.equal(s.mp,8);const hp=s.hp;e.applyActionDamage(t,s,{damageType:'physical',coefficients:[{type:'fixed',value:10}]});assert.equal(s.hp,hp);assert.equal(s.activeEffects.find(x=>x.id==='dancer_ward').usesRemaining,1);assert.equal(e.getAvailableControlledWeapons(s).length,0);
+ s.weaponFlower.remainingTicks=1;e.takeAction(s,[s],[t,other]);assert.equal(s.weaponFlower,null);assert.equal(e.getAvailableControlledWeapons(s).length,7);assert.equal(s.activeEffects.length,2);
+});
+test('dancer flower retargets dead enemies and clears reservations and deployment on death reset',()=>{
+ const e=dancerEngine(),s=e.owner,t=e.target;const other=unit(e,'enemy',115);other.hp=other.maxHp=100000;e.applySkill(s,t,e.runtime('flower'));t.alive=false;t.hp=0;e.updateWeaponFlower(s);assert(s.weaponFlower.entries.every(x=>x.target===other));e.clearBattleEffects(s);assert.equal(s.weaponFlower,null);assert.equal(s.weaponDeployment,null);assert.equal(e.getAvailableControlledWeapons(s).length,6);
+});
+
+
+function berserkerEngine(options=[]) {
+ const e=engine();e.skillsJson=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8')));
+ const s=e.owner=unit(e),t=e.target=unit(e,'enemy',105);s.atk=100;s.attackSpeed=2;s.speed=1;s.hp=s.maxHp=1000;s.st=s.maxSt=100;s.weaponAttacks=[{weaponCategory:'oneHandSword'},{weaponCategory:'oneHandSword'}];t.hp=t.maxHp=100000;
+ e.berserker=id=>e.getSkillById('skill_class_berserker_'+id);s.skillIds=['armor_tattoo','liberation','pain_recovery','blood_scent','fire_strike','flame_slash',...options].map(id=>e.berserker(id).id);e.runtime=id=>e.getRuntimeComboSkill(s,e.getRuntimeSelectionSkill(s,e.berserker(id)));e.hit=(amount,type='fixed')=>e.applyActionDamage(t,s,{damageType:type,coefficients:[{type:'fixed',value:amount}]});return e;
+}
+test('berserker fire strike dual attacks use the revised three coefficients and four ST per stage',()=>{
+ const e=berserkerEngine(),s=e.owner,t=e.target;
+ for(const value of [125,150,175]){const skill=e.runtime('fire_strike');assert.equal(skill.actions.filter(a=>a.type==='deal_damage').length,2);assert.equal(skill.actions[0].coefficients[0].value,value);assert.equal(e.spendSkillResourceCosts(s,skill).ST,4);e.applySkill(s,t,skill);e.advanceSkillCombo(s,skill);}
+ assert.equal(t.hp,99100);assert.equal(s.st,88);assert.equal(s.effectAttackRateMultiplier,1.2);assert.equal(e.runtime('fire_strike').runtimeCombo.stageIndex,0);
+});
+test('berserker blood scent pays current HP and selected heat doubles only the HP cost and cleanses harmful effects',()=>{
+ const e=berserkerEngine(['blood_heat']),s=e.owner;s.hp=500;e.applyTimedEffectAction(s,s,e.normalizeSkillAction({type:'add_state',duration:5,effect:{id:'root',state:'root'}}));e.applyTimedEffectAction(s,s,e.normalizeSkillAction({type:'add_buff',duration:5,effect:{id:'good',stat:'defense',mode:'flat',value:10}}));
+ const skill=e.runtime('blood_scent');assert.equal(e.spendSkillResourceCosts(s,skill).HP,50);e.applySkill(s,s,skill);assert.equal(s.hp,450);assert.equal(s.effectAttackRateMultiplier,1.2);assert.equal(e.hasBattleState(s,'root'),false);assert(s.activeEffects.some(x=>x.id==='good'));for(let i=0;i<360;i++)e.updateBattleEffects();assert.equal(s.effectAttackRateMultiplier,1);
+ const plain=berserkerEngine();plain.owner.hp=500;assert.equal(plain.spendSkillResourceCosts(plain.owner,plain.runtime('blood_scent')).HP,25);
+});
+test('berserker pain recovery receives full damage and heals the stored percentage only at its three-second natural expiry',()=>{
+ const e=berserkerEngine(['pain_opportunity']),s=e.owner;e.applySkill(s,s,e.runtime('pain_recovery'));e.hit(100);e.hit(200);assert.equal(s.hp,700);assert.equal(s.activeEffects.find(x=>x.mode==='damage_recovery').storedDamage,300);for(let i=0;i<179;i++)e.updateBattleEffects();assert.equal(s.hp,700);e.updateBattleEffects();assert.equal(s.hp,790);
+ const plain=berserkerEngine();plain.applySkill(plain.owner,plain.owner,plain.runtime('pain_recovery'));plain.hit(100);for(let i=0;i<180;i++)plain.updateBattleEffects();assert.equal(plain.owner.hp,920);
+});
+test('berserker pain recovery neither heals on dispel nor resurrects a dead character',()=>{
+ const e=berserkerEngine(),s=e.owner;s.skillIds=s.skillIds.filter(id=>id!==e.berserker('liberation').id);e.applySkill(s,s,e.runtime('pain_recovery'));e.hit(100);e.applyTimedEffectAction(s,s,e.normalizeSkillAction({type:'delete_buff',effect:{id:'berserker_pain_recovery'}}));for(let i=0;i<180;i++)e.updateBattleEffects();assert.equal(s.hp,900);
+ e.applySkill(s,s,e.runtime('pain_recovery'));e.hit(1000);for(let i=0;i<180;i++)e.updateBattleEffects();assert.equal(s.hp,0);assert.equal(s.alive,false);
+});
+test('berserker liberation only auto-casts on lethal damage after the thirty-second boundary and once per battle',()=>{
+ const early=berserkerEngine();vm.runInContext('combatEventTick=1799',early);early.hit(2000);assert.equal(early.owner.alive,false);assert.equal(early.owner.skillUseCounts[early.berserker('liberation').id],undefined);
+ const e=berserkerEngine(),s=e.owner;e.hit(100);assert.equal(s.hp,900);assert.equal(s.skillUseCounts[e.berserker('liberation').id],undefined);assert.equal(e.getEquippedSkills(s).some(x=>x.lethalActivation),false);e.hit(1000);assert.equal(s.hp,1);assert.equal(s.alive,true);assert.equal(s.skillUseCounts[e.berserker('liberation').id],1);assert.equal(s.atk,130);assert.equal(s.speed,1.2);assert.equal(s.effectAttackRateMultiplier,1.5);e.hit(99999);assert.equal(s.hp,1);
+ e.applyActionHeal(s,s,{healResource:'HP',coefficients:[{type:'fixed',value:99}]});assert.equal(s.hp,100);for(let i=0;i<360;i++)e.updateBattleEffects();assert.equal(s.hp,100);assert.equal(s.atk,100);assert.equal(s.speed,1);e.hit(1000);assert.equal(s.alive,false);
+ e.resetUnitForBattle(s);e.hit(2000);assert.equal(s.alive,true);assert.equal(s.skillUseCounts[e.berserker('liberation').id],1);
+});
+test('berserker liberation reacts to periodic lethal damage and does not interrupt an already running cast',()=>{
+ const e=berserkerEngine(),s=e.owner;s.pendingAction={type:'skill',skill:e.runtime('flame_slash'),target:e.target};s.castTimer=30;s.castDuration=30;const pending=s.pendingAction;e.applyActionDamage(e.target,s,{damageType:'fixed',periodic:true,coefficients:[{type:'fixed',value:2000}]});assert.equal(s.hp,1);assert.equal(s.pendingAction,pending);assert.equal(s.castTimer,30);assert.equal(s.skillBubbleText,'광전사 해방');
+ const resource=berserkerEngine();resource.owner.hp=0;resource.syncAliveState(resource.owner,{source:resource.owner,reason:'HP 자원 소진'});assert.equal(resource.owner.alive,false);assert.equal(resource.owner.skillUseCounts[resource.berserker('liberation').id],undefined);
+});
+test('berserker afterglow waits five full seconds then repeats protection and buffs for three seconds without consuming another ultimate use or looping',()=>{
+ const e=berserkerEngine(['afterglow']),s=e.owner;e.hit(2000);for(let i=0;i<360;i++)e.updateBattleEffects();assert.equal(s.hp,1);assert.equal(s.activeEffects.some(x=>x.mode==='hp_floor'),false);assert.equal(s.delayedEffectRepeats.length,1);
+ for(let i=0;i<299;i++)e.updateBattleEffects();assert.equal(s.activeEffects.length,0);e.updateBattleEffects();assert(s.activeEffects.some(x=>x.mode==='hp_floor'));assert.equal(s.atk,130);assert.equal(s.skillUseCounts[e.berserker('liberation').id],1);assert.equal(s.skillBubbleText,'홍염');e.hit(1000);assert.equal(s.hp,1);for(let i=0;i<180;i++)e.updateBattleEffects();assert.equal(s.atk,100);assert.equal(s.activeEffects.length,0);for(let i=0;i<600;i++)e.updateBattleEffects();assert.equal(s.activeEffects.length,0);assert.equal(s.delayedEffectRepeats.length,0);
+});
+test('berserker afterglow is cancelled by death during the unprotected delay',()=>{
+ const e=berserkerEngine(['afterglow']),s=e.owner;e.hit(2000);for(let i=0;i<360;i++)e.updateBattleEffects();e.hit(10);for(let i=0;i<500;i++)e.updateBattleEffects();assert.equal(s.alive,false);assert.equal(s.activeEffects.length,0);assert.equal(s.delayedEffectRepeats.length,0);
+});
+test('berserker dual wield qualification is conditional and flame afterimage changes only the magic packet',()=>{
+ const e=berserkerEngine(['qualification','flame_afterimage']),s=e.owner,t=e.target;e.recalculateBattleBuffs(s);assert.equal(s.effectAttackRateMultiplier,1.15);s.weaponAttacks=[s.weaponAttacks[0]];e.recalculateBattleBuffs(s);assert.equal(s.effectAttackRateMultiplier,1);const skill=e.runtime('flame_slash');assert.equal(skill.actions[0].coefficients[0].value,100);assert.equal(skill.actions[1].coefficients[0].value,40);e.applySkill(s,t,skill);assert.equal(t.hp,99860);
+});
+test('berserker interrupting strikes stop casts without adding a stun and options beyond the first three remain inactive',()=>{
+ const e=berserkerEngine(['interrupting_strikes']),s=e.owner,t=e.target;t.pendingAction={type:'skill',skill:e.runtime('flame_slash'),target:s};t.castTimer=100;t.castDuration=100;e.applySkill(s,t,e.runtime('fire_strike'));assert.equal(t.pendingAction,null);assert.equal(t.castTimer,0);assert.equal(e.hasBattleState(t,'stun'),false);
+ const limited=berserkerEngine(['blood_heat','pain_opportunity','qualification','flame_afterimage']);assert.equal(limited.runtime('flame_slash').actions[1].coefficients[0].value,20);
 });

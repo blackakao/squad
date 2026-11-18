@@ -35,6 +35,7 @@ function estimateSkillDps(character, originalSkill, weapon = null) {
   const hasDamage = actions.some(action=>action.type==='deal_damage' || action.fieldEffect==='deal_damage' && action.type==='create_field' || action.effect?.periodic?.type==='damage');
   if (!hasDamage) return null;
   const unavailable = reason => ({dps:null, reason});
+  if (skill.weaponCommand) return unavailable('현재 배정된 검 수·각 검의 공격력과 공격 주기에 따라 달라집니다.');
   if (skill.slot === 'passive') return unavailable('패시브 발동 빈도에 따라 달라집니다.');
   if (actions.some(action=>action.type==='create_field' || action.effect?.periodic?.type==='damage')) return unavailable('지속 피해의 유지·중첩 조건에 따라 달라집니다.');
   if (actions.some(action=>['transform','swap_equipment_set','override_rule','add_buff','add_state','apply_next_skill_modifier'].includes(action.type))) return unavailable('전투 중 능력치·효과 변화에 따라 달라집니다.');
@@ -75,6 +76,7 @@ function getCurrentSkillValueRows(character,originalSkill) {
   const unit=createDpsPreviewUnit(character);
   const skill=resolvePreviewSkill(unit,originalSkill);
   if (!skill) return [];
+  if (skill.weaponCommand) return {skill,unit,rows:[{label:'검 명령',type:'damage',coefficient:'사용 가능한 검별 공격력',value:null,interval:0}]};
   const sourceFields=new Set(['hp','mp','st','bp','atk','magic','defense','resistance',...CHARACTER_STAT_DEFS.map(row=>row.key)]);
   const previewable=coefficient=>coefficient.type==='fixed' || sourceFields.has(coefficient.field);
   const combo=normalizeSkillCombo(skill.combo);

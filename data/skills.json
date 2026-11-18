@@ -469,21 +469,11 @@
   },
   {
     "id": "skill_class_marine_bash",
-    "name": "해병 · 쉴드배쉬 (기본형)",
+    "name": "쉴드배쉬",
     "className": "해병",
-    "icon": "assets/images/skills/해병_쉴드배쉬.png",
-    "description": "",
     "slot": "active",
-    "cooldown": 8,
-    "castTime": 0.5,
-    "castReceivedDamagePercent": 100,
-    "channel": {
-      "duration": 0,
-      "interval": 1,
-      "interruptOnDamage": true,
-      "lockTarget": false,
-      "receivedDamagePercent": 100
-    },
+    "cooldown": 5,
+    "castTime": 0,
     "resourceCosts": [
       {
         "resource": "ST",
@@ -495,85 +485,39 @@
       {
         "type": "deal_damage",
         "target": "enemy",
-        "rangeMode": "custom",
-        "rangeValue": 1,
-        "rangeMultiplier": 100,
-        "minRange": 0,
-        "allowSelfTarget": true,
-        "requiredTargetEffectId": "",
-        "requiredTargetEffectCaster": "any",
-        "targetHpBelow": 100,
-        "targetCooldown": 0,
-        "targetCooldownScope": "caster",
-        "targetCooldownEffectId": "",
-        "targetCooldownEffectName": "",
-        "ownedSummonCondition": "any",
-        "ownedSummonEntityId": "",
-        "targetSummonEntityId": "",
-        "chainCount": 0,
-        "chainRange": 3,
-        "chainOrigin": "previous",
+        "rangeMode": "mainWeapon",
+        "damageType": "physical",
         "coefficients": [
           {
             "type": "calculated",
             "field": "atk",
             "calc": "percent",
-            "value": 100,
-            "effectId": ""
+            "value": 150
+          },
+          {
+            "type": "calculated",
+            "field": "shieldDefense",
+            "calc": "percent",
+            "value": 100
           }
-        ],
-        "healResource": "HP",
-        "fullResourceAlternative": "",
-        "drainResource": "MP",
-        "damageType": "physical",
-        "area": 0,
-        "areaCenter": "target",
-        "maxTargets": 0,
-        "critical": 0,
-        "penetration": 0,
-        "moveType": "Walk",
-        "movePlacement": "target",
-        "moveSpeed": 1,
-        "distance": 0,
-        "duration": 0,
-        "fieldShape": "circle",
-        "fieldRadius": 0,
-        "fieldWidth": 2,
-        "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 5,
-        "fieldMoveType": "Push",
-        "fieldDistance": 1,
-        "fieldCenter": "target",
-        "fieldInterval": 1,
-        "fieldMovementStCostCenter": 0,
-        "fieldMovementStCostFalloff": 0,
-        "fieldMovementStCostMinimum": 0,
-        "fieldAuras": []
+        ]
       }
-    ]
+    ],
+    "icon": "assets/images/skills/해병_쉴드배쉬.png",
+    "description": "주무기 사거리의 적에게 공격력 150% + 장착한 방패 방어력 100% 물리 피해. 즉시 시전, ST 10, 재사용 5초."
   },
   {
     "id": "skill_class_marine_boomerang",
-    "name": "해병 · 쉴드 부메랑 (기본형)",
+    "name": "쉴드부메랑",
     "className": "해병",
-    "icon": "assets/images/skills/해병_쉴드 부메랑.png",
-    "description": "",
     "slot": "active",
-    "cooldown": 8,
+    "cooldown": 15,
     "castTime": 0.5,
-    "castReceivedDamagePercent": 100,
-    "channel": {
-      "duration": 0,
-      "interval": 1,
-      "interruptOnDamage": true,
-      "lockTarget": false,
-      "receivedDamagePercent": 100
-    },
     "resourceCosts": [
       {
         "resource": "ST",
         "mode": "fixed",
-        "value": 10
+        "value": 15
       }
     ],
     "actions": [
@@ -581,61 +525,42 @@
         "type": "deal_damage",
         "target": "enemy",
         "rangeMode": "custom",
-        "rangeValue": 5,
-        "rangeMultiplier": 100,
-        "minRange": 0,
-        "allowSelfTarget": true,
-        "requiredTargetEffectId": "",
-        "requiredTargetEffectCaster": "any",
-        "targetHpBelow": 100,
-        "targetCooldown": 0,
-        "targetCooldownScope": "caster",
-        "targetCooldownEffectId": "",
-        "targetCooldownEffectName": "",
-        "ownedSummonCondition": "any",
-        "ownedSummonEntityId": "",
-        "targetSummonEntityId": "",
-        "chainCount": 0,
-        "chainRange": 3,
-        "chainOrigin": "previous",
+        "damageType": "physical",
         "coefficients": [
           {
             "type": "calculated",
             "field": "atk",
             "calc": "percent",
-            "value": 100,
-            "effectId": ""
+            "value": 100
           }
         ],
-        "healResource": "HP",
-        "fullResourceAlternative": "",
-        "drainResource": "MP",
+        "rangeValue": 6,
+        "minRange": 4,
+        "chainCount": 2,
+        "chainRange": 3,
+        "maxTargets": 3
+      },
+      {
+        "type": "move",
+        "target": "enemy",
+        "rangeMode": "mainWeapon",
         "damageType": "physical",
-        "area": 0,
-        "areaCenter": "target",
-        "maxTargets": 0,
-        "critical": 0,
-        "penetration": 0,
-        "moveType": "Walk",
-        "movePlacement": "target",
-        "moveSpeed": 1,
-        "distance": 0,
-        "duration": 0,
-        "fieldShape": "circle",
-        "fieldRadius": 0,
-        "fieldWidth": 2,
-        "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 5,
-        "fieldMoveType": "Push",
-        "fieldDistance": 1,
-        "fieldCenter": "target",
-        "fieldInterval": 1,
-        "fieldMovementStCostCenter": 0,
-        "fieldMovementStCostFalloff": 0,
-        "fieldMovementStCostMinimum": 0,
-        "fieldAuras": []
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "atk",
+            "calc": "percent",
+            "value": 100
+          }
+        ],
+        "distance": 1,
+        "moveType": "Knockback",
+        "targetPreviousDamage": true,
+        "requirePreviousDamage": true
       }
-    ]
+    ],
+    "icon": "assets/images/skills/해병_쉴드 부메랑.png",
+    "description": "4~6m의 적에게 공격력 100% 물리 피해를 주고, 피격 대상 주변 3m 안의 적에게 최초 대상 포함 최대 3명까지 연쇄한다. 맞은 대상은 1m 넉백. 시전 0.5초, ST 15, 재사용 15초."
   },
   {
     "id": "skill_class_medic_inargansin",
@@ -756,24 +681,14 @@
   },
   {
     "id": "skill_class_dancer_scatter",
-    "name": "검의무희 · 검 흩뿌리기 (기본형)",
+    "name": "검 흩뿌리기/검회수하기",
     "className": "검의무희",
-    "icon": "assets/images/skills/검의무희_검 흩뿌리기.png",
-    "description": "",
     "slot": "active",
-    "cooldown": 8,
+    "cooldown": 15,
     "castTime": 0.5,
-    "castReceivedDamagePercent": 100,
-    "channel": {
-      "duration": 0,
-      "interval": 1,
-      "interruptOnDamage": true,
-      "lockTarget": false,
-      "receivedDamagePercent": 100
-    },
     "resourceCosts": [
       {
-        "resource": "ST",
+        "resource": "MP",
         "mode": "fixed",
         "value": 10
       }
@@ -783,82 +698,86 @@
         "type": "deal_damage",
         "target": "enemy",
         "rangeMode": "custom",
-        "rangeValue": 5,
-        "rangeMultiplier": 100,
-        "minRange": 0,
-        "allowSelfTarget": true,
-        "requiredTargetEffectId": "",
-        "requiredTargetEffectCaster": "any",
-        "targetHpBelow": 100,
-        "targetCooldown": 0,
-        "targetCooldownScope": "caster",
-        "targetCooldownEffectId": "",
-        "targetCooldownEffectName": "",
-        "ownedSummonCondition": "any",
-        "ownedSummonEntityId": "",
-        "targetSummonEntityId": "",
-        "chainCount": 0,
-        "chainRange": 3,
-        "chainOrigin": "previous",
+        "rangeValue": 0,
+        "damageType": "physical",
         "coefficients": [
           {
             "type": "calculated",
-            "field": "magic",
+            "field": "atk",
             "calc": "percent",
-            "value": 100,
-            "effectId": ""
+            "value": 100
           }
         ],
-        "healResource": "HP",
-        "fullResourceAlternative": "",
-        "drainResource": "MP",
-        "damageType": "magic",
-        "area": 0,
-        "areaCenter": "target",
-        "maxTargets": 0,
-        "critical": 0,
-        "penetration": 0,
-        "moveType": "Walk",
-        "movePlacement": "target",
-        "moveSpeed": 1,
-        "distance": 0,
-        "duration": 0,
-        "fieldShape": "circle",
-        "fieldRadius": 0,
-        "fieldWidth": 2,
-        "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 5,
-        "fieldMoveType": "Push",
-        "fieldDistance": 1,
-        "fieldCenter": "target",
-        "fieldInterval": 1,
-        "fieldMovementStCostCenter": 0,
-        "fieldMovementStCostFalloff": 0,
-        "fieldMovementStCostMinimum": 0,
-        "fieldAuras": []
+        "area": 4,
+        "areaCenter": "self"
       }
-    ]
+    ],
+    "weaponCommand": {
+      "mode": "scatter",
+      "percent": 100
+    },
+    "combo": {
+      "stepCooldown": 0,
+      "stages": [
+        {
+          "name": "검 흩뿌리기",
+          "actions": [
+            {
+              "type": "deal_damage",
+              "target": "enemy",
+              "rangeMode": "custom",
+              "rangeValue": 0,
+              "damageType": "physical",
+              "coefficients": [
+                {
+                  "type": "calculated",
+                  "field": "atk",
+                  "calc": "percent",
+                  "value": 100
+                }
+              ],
+              "area": 4,
+              "areaCenter": "self"
+            }
+          ]
+        },
+        {
+          "name": "검회수하기",
+          "actions": [
+            {
+              "type": "add_buff",
+              "target": "self",
+              "duration": 0,
+              "effect": {
+                "id": "dancer_recall_placeholder",
+                "name": "recall_placeholder",
+                "category": "magic",
+                "polarity": "beneficial",
+                "dispellable": true,
+                "maxStacks": 1,
+                "stackMode": "refresh",
+                "stat": "atk",
+                "mode": "flat",
+                "value": 0
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "description": "자신 주변 4m의 적에게 현재 공격 가능한 검을 한 자루씩 배정해 검마다 원래 공격력 100% 피해를 준다. 회수하기도 동일 피해를 주고 검을 돌려받는다. 단계마다 시전 0.5초/MP 10, 회수 완료 후 재사용 15초.",
+    "icon": "assets/images/skills/검의무희_검 흩뿌리기.png"
   },
   {
     "id": "skill_class_dancer_focus",
-    "name": "검의무희 · 검무 집중 (기본형)",
+    "name": "검의 집중",
     "className": "검의무희",
-    "icon": "assets/images/skills/검의무희_검무 집중.png",
-    "description": "",
     "slot": "active",
-    "cooldown": 8,
-    "castTime": 0.5,
-    "castReceivedDamagePercent": 100,
-    "channel": {
-      "duration": 0,
-      "interval": 1,
-      "interruptOnDamage": true,
-      "lockTarget": false,
-      "receivedDamagePercent": 100
-    },
+    "cooldown": 7,
+    "castTime": 1,
     "resourceCosts": [
       {
-        "resource": "ST",
+        "resource": "MP",
         "mode": "fixed",
         "value": 10
       }
@@ -868,351 +787,25 @@
         "type": "deal_damage",
         "target": "enemy",
         "rangeMode": "custom",
-        "rangeValue": 1,
-        "rangeMultiplier": 100,
-        "minRange": 0,
-        "allowSelfTarget": true,
-        "requiredTargetEffectId": "",
-        "requiredTargetEffectCaster": "any",
-        "targetHpBelow": 100,
-        "targetCooldown": 0,
-        "targetCooldownScope": "caster",
-        "targetCooldownEffectId": "",
-        "targetCooldownEffectName": "",
-        "ownedSummonCondition": "any",
-        "ownedSummonEntityId": "",
-        "targetSummonEntityId": "",
-        "chainCount": 0,
-        "chainRange": 3,
-        "chainOrigin": "previous",
+        "rangeValue": 0,
+        "damageType": "physical",
         "coefficients": [
           {
             "type": "calculated",
             "field": "atk",
             "calc": "percent",
-            "value": 25,
-            "effectId": ""
+            "value": 50
           }
         ],
-        "healResource": "HP",
-        "fullResourceAlternative": "",
-        "drainResource": "MP",
-        "damageType": "physical",
-        "area": 0,
-        "areaCenter": "target",
-        "maxTargets": 0,
-        "critical": 0,
-        "penetration": 0,
-        "moveType": "Walk",
-        "movePlacement": "target",
-        "moveSpeed": 1,
-        "distance": 0,
-        "duration": 0,
-        "fieldShape": "circle",
-        "fieldRadius": 0,
-        "fieldWidth": 2,
-        "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 5,
-        "fieldMoveType": "Push",
-        "fieldDistance": 1,
-        "fieldCenter": "target",
-        "fieldInterval": 1,
-        "fieldMovementStCostCenter": 0,
-        "fieldMovementStCostFalloff": 0,
-        "fieldMovementStCostMinimum": 0,
-        "fieldAuras": []
-      },
-      {
-        "type": "deal_damage",
-        "target": "enemy",
-        "rangeMode": "custom",
-        "rangeValue": 1,
-        "rangeMultiplier": 100,
-        "minRange": 0,
-        "allowSelfTarget": true,
-        "requiredTargetEffectId": "",
-        "requiredTargetEffectCaster": "any",
-        "targetHpBelow": 100,
-        "targetCooldown": 0,
-        "targetCooldownScope": "caster",
-        "targetCooldownEffectId": "",
-        "targetCooldownEffectName": "",
-        "ownedSummonCondition": "any",
-        "ownedSummonEntityId": "",
-        "targetSummonEntityId": "",
-        "chainCount": 0,
-        "chainRange": 3,
-        "chainOrigin": "previous",
-        "coefficients": [
-          {
-            "type": "calculated",
-            "field": "atk",
-            "calc": "percent",
-            "value": 25,
-            "effectId": ""
-          }
-        ],
-        "healResource": "HP",
-        "fullResourceAlternative": "",
-        "drainResource": "MP",
-        "damageType": "physical",
-        "area": 0,
-        "areaCenter": "target",
-        "maxTargets": 0,
-        "critical": 0,
-        "penetration": 0,
-        "moveType": "Walk",
-        "movePlacement": "target",
-        "moveSpeed": 1,
-        "distance": 0,
-        "duration": 0,
-        "fieldShape": "circle",
-        "fieldRadius": 0,
-        "fieldWidth": 2,
-        "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 5,
-        "fieldMoveType": "Push",
-        "fieldDistance": 1,
-        "fieldCenter": "target",
-        "fieldInterval": 1,
-        "fieldMovementStCostCenter": 0,
-        "fieldMovementStCostFalloff": 0,
-        "fieldMovementStCostMinimum": 0,
-        "fieldAuras": []
-      },
-      {
-        "type": "deal_damage",
-        "target": "enemy",
-        "rangeMode": "custom",
-        "rangeValue": 1,
-        "rangeMultiplier": 100,
-        "minRange": 0,
-        "allowSelfTarget": true,
-        "requiredTargetEffectId": "",
-        "requiredTargetEffectCaster": "any",
-        "targetHpBelow": 100,
-        "targetCooldown": 0,
-        "targetCooldownScope": "caster",
-        "targetCooldownEffectId": "",
-        "targetCooldownEffectName": "",
-        "ownedSummonCondition": "any",
-        "ownedSummonEntityId": "",
-        "targetSummonEntityId": "",
-        "chainCount": 0,
-        "chainRange": 3,
-        "chainOrigin": "previous",
-        "coefficients": [
-          {
-            "type": "calculated",
-            "field": "atk",
-            "calc": "percent",
-            "value": 25,
-            "effectId": ""
-          }
-        ],
-        "healResource": "HP",
-        "fullResourceAlternative": "",
-        "drainResource": "MP",
-        "damageType": "physical",
-        "area": 0,
-        "areaCenter": "target",
-        "maxTargets": 0,
-        "critical": 0,
-        "penetration": 0,
-        "moveType": "Walk",
-        "movePlacement": "target",
-        "moveSpeed": 1,
-        "distance": 0,
-        "duration": 0,
-        "fieldShape": "circle",
-        "fieldRadius": 0,
-        "fieldWidth": 2,
-        "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 5,
-        "fieldMoveType": "Push",
-        "fieldDistance": 1,
-        "fieldCenter": "target",
-        "fieldInterval": 1,
-        "fieldMovementStCostCenter": 0,
-        "fieldMovementStCostFalloff": 0,
-        "fieldMovementStCostMinimum": 0,
-        "fieldAuras": []
-      },
-      {
-        "type": "deal_damage",
-        "target": "enemy",
-        "rangeMode": "custom",
-        "rangeValue": 1,
-        "rangeMultiplier": 100,
-        "minRange": 0,
-        "allowSelfTarget": true,
-        "requiredTargetEffectId": "",
-        "requiredTargetEffectCaster": "any",
-        "targetHpBelow": 100,
-        "targetCooldown": 0,
-        "targetCooldownScope": "caster",
-        "targetCooldownEffectId": "",
-        "targetCooldownEffectName": "",
-        "ownedSummonCondition": "any",
-        "ownedSummonEntityId": "",
-        "targetSummonEntityId": "",
-        "chainCount": 0,
-        "chainRange": 3,
-        "chainOrigin": "previous",
-        "coefficients": [
-          {
-            "type": "calculated",
-            "field": "atk",
-            "calc": "percent",
-            "value": 25,
-            "effectId": ""
-          }
-        ],
-        "healResource": "HP",
-        "fullResourceAlternative": "",
-        "drainResource": "MP",
-        "damageType": "physical",
-        "area": 0,
-        "areaCenter": "target",
-        "maxTargets": 0,
-        "critical": 0,
-        "penetration": 0,
-        "moveType": "Walk",
-        "movePlacement": "target",
-        "moveSpeed": 1,
-        "distance": 0,
-        "duration": 0,
-        "fieldShape": "circle",
-        "fieldRadius": 0,
-        "fieldWidth": 2,
-        "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 5,
-        "fieldMoveType": "Push",
-        "fieldDistance": 1,
-        "fieldCenter": "target",
-        "fieldInterval": 1,
-        "fieldMovementStCostCenter": 0,
-        "fieldMovementStCostFalloff": 0,
-        "fieldMovementStCostMinimum": 0,
-        "fieldAuras": []
-      },
-      {
-        "type": "deal_damage",
-        "target": "enemy",
-        "rangeMode": "custom",
-        "rangeValue": 1,
-        "rangeMultiplier": 100,
-        "minRange": 0,
-        "allowSelfTarget": true,
-        "requiredTargetEffectId": "",
-        "requiredTargetEffectCaster": "any",
-        "targetHpBelow": 100,
-        "targetCooldown": 0,
-        "targetCooldownScope": "caster",
-        "targetCooldownEffectId": "",
-        "targetCooldownEffectName": "",
-        "ownedSummonCondition": "any",
-        "ownedSummonEntityId": "",
-        "targetSummonEntityId": "",
-        "chainCount": 0,
-        "chainRange": 3,
-        "chainOrigin": "previous",
-        "coefficients": [
-          {
-            "type": "calculated",
-            "field": "atk",
-            "calc": "percent",
-            "value": 25,
-            "effectId": ""
-          }
-        ],
-        "healResource": "HP",
-        "fullResourceAlternative": "",
-        "drainResource": "MP",
-        "damageType": "physical",
-        "area": 0,
-        "areaCenter": "target",
-        "maxTargets": 0,
-        "critical": 0,
-        "penetration": 0,
-        "moveType": "Walk",
-        "movePlacement": "target",
-        "moveSpeed": 1,
-        "distance": 0,
-        "duration": 0,
-        "fieldShape": "circle",
-        "fieldRadius": 0,
-        "fieldWidth": 2,
-        "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 5,
-        "fieldMoveType": "Push",
-        "fieldDistance": 1,
-        "fieldCenter": "target",
-        "fieldInterval": 1,
-        "fieldMovementStCostCenter": 0,
-        "fieldMovementStCostFalloff": 0,
-        "fieldMovementStCostMinimum": 0,
-        "fieldAuras": []
-      },
-      {
-        "type": "deal_damage",
-        "target": "enemy",
-        "rangeMode": "custom",
-        "rangeValue": 1,
-        "rangeMultiplier": 100,
-        "minRange": 0,
-        "allowSelfTarget": true,
-        "requiredTargetEffectId": "",
-        "requiredTargetEffectCaster": "any",
-        "targetHpBelow": 100,
-        "targetCooldown": 0,
-        "targetCooldownScope": "caster",
-        "targetCooldownEffectId": "",
-        "targetCooldownEffectName": "",
-        "ownedSummonCondition": "any",
-        "ownedSummonEntityId": "",
-        "targetSummonEntityId": "",
-        "chainCount": 0,
-        "chainRange": 3,
-        "chainOrigin": "previous",
-        "coefficients": [
-          {
-            "type": "calculated",
-            "field": "atk",
-            "calc": "percent",
-            "value": 25,
-            "effectId": ""
-          }
-        ],
-        "healResource": "HP",
-        "fullResourceAlternative": "",
-        "drainResource": "MP",
-        "damageType": "physical",
-        "area": 0,
-        "areaCenter": "target",
-        "maxTargets": 0,
-        "critical": 0,
-        "penetration": 0,
-        "moveType": "Walk",
-        "movePlacement": "target",
-        "moveSpeed": 1,
-        "distance": 0,
-        "duration": 0,
-        "fieldShape": "circle",
-        "fieldRadius": 0,
-        "fieldWidth": 2,
-        "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 5,
-        "fieldMoveType": "Push",
-        "fieldDistance": 1,
-        "fieldCenter": "target",
-        "fieldInterval": 1,
-        "fieldMovementStCostCenter": 0,
-        "fieldMovementStCostFalloff": 0,
-        "fieldMovementStCostMinimum": 0,
-        "fieldAuras": []
+        "contactRange": true
       }
-    ]
+    ],
+    "weaponCommand": {
+      "mode": "focus",
+      "percent": 50
+    },
+    "description": "현재 공격 가능한 모든 검이 한 적에게 각 검 공격력 50% 물리 피해를 준다. 기본 사거리 0(근접 접촉), 시전 1초, MP 10, 재사용 7초.",
+    "icon": "assets/images/skills/검의무희_검의 집중.png"
   },
   {
     "id": "skill_class_monk_combo",
@@ -4903,22 +4496,54 @@
   },
   {
     "id": "skill_class_berserker_fire_strike",
-    "name": "광전사 · 불의일격",
+    "name": "불의일격",
     "className": "광전사",
-    "icon": "assets/images/skills/광전사_불의일격.png",
-    "description": "0.5초 간격으로 쌍수 무기가 각각 125%·135%·145% 근접 물리 피해를 줍니다. 완주하면 3초간 공격속도가 20% 증가하고 10초 후 다시 사용할 수 있습니다.",
     "slot": "active",
     "cooldown": 10,
     "castTime": 0,
-    "castReceivedDamagePercent": 100,
-    "channel": {
-      "duration": 0,
-      "interval": 1,
-      "interruptOnDamage": true,
-      "lockTarget": false,
-      "receivedDamagePercent": 100
-    },
+    "resourceCosts": [
+      {
+        "resource": "ST",
+        "mode": "fixed",
+        "value": 4
+      }
+    ],
+    "actions": [
+      {
+        "type": "deal_damage",
+        "target": "enemy",
+        "rangeMode": "mainWeapon",
+        "damageType": "physical",
+        "area": 0,
+        "areaCenter": "target",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "atk",
+            "calc": "percent",
+            "value": 125
+          }
+        ]
+      },
+      {
+        "type": "deal_damage",
+        "target": "enemy",
+        "rangeMode": "mainWeapon",
+        "damageType": "physical",
+        "area": 0,
+        "areaCenter": "target",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "atk",
+            "calc": "percent",
+            "value": 125
+          }
+        ]
+      }
+    ],
     "combo": {
+      "stepCooldown": 0.5,
       "stages": [
         {
           "name": "1격",
@@ -4926,118 +4551,34 @@
             {
               "type": "deal_damage",
               "target": "enemy",
-              "rangeMode": "custom",
-              "rangeValue": 1,
-              "rangeMultiplier": 100,
-              "minRange": 0,
-              "allowSelfTarget": true,
-              "requiredTargetEffectId": "",
-              "requiredTargetEffectCaster": "any",
-              "targetHpBelow": 100,
-              "targetCooldown": 0,
-              "targetCooldownScope": "caster",
-              "targetCooldownEffectId": "",
-              "targetCooldownEffectName": "",
-              "ownedSummonCondition": "any",
-              "ownedSummonEntityId": "",
-              "targetSummonEntityId": "",
-              "chainCount": 0,
-              "chainRange": 3,
-              "chainOrigin": "previous",
+              "rangeMode": "mainWeapon",
+              "damageType": "physical",
+              "area": 0,
+              "areaCenter": "target",
               "coefficients": [
                 {
                   "type": "calculated",
                   "field": "atk",
                   "calc": "percent",
-                  "value": 125,
-                  "effectId": ""
+                  "value": 125
                 }
-              ],
-              "healResource": "HP",
-              "fullResourceAlternative": "",
-              "drainResource": "MP",
-              "damageType": "physical",
-              "area": 0,
-              "areaCenter": "target",
-              "maxTargets": 0,
-              "critical": 0,
-              "penetration": 0,
-              "moveType": "Walk",
-              "movePlacement": "target",
-              "moveSpeed": 1,
-              "distance": 0,
-              "duration": 0,
-              "fieldShape": "circle",
-              "fieldRadius": 0,
-              "fieldWidth": 2,
-              "fieldEffect": "deal_damage",
-              "fieldEffectDuration": 5,
-              "fieldMoveType": "Push",
-              "fieldDistance": 1,
-              "fieldCenter": "target",
-              "fieldInterval": 1,
-              "fieldMovementStCostCenter": 0,
-              "fieldMovementStCostFalloff": 0,
-              "fieldMovementStCostMinimum": 0,
-              "fieldAuras": []
+              ]
             },
             {
               "type": "deal_damage",
               "target": "enemy",
-              "rangeMode": "custom",
-              "rangeValue": 1,
-              "rangeMultiplier": 100,
-              "minRange": 0,
-              "allowSelfTarget": true,
-              "requiredTargetEffectId": "",
-              "requiredTargetEffectCaster": "any",
-              "targetHpBelow": 100,
-              "targetCooldown": 0,
-              "targetCooldownScope": "caster",
-              "targetCooldownEffectId": "",
-              "targetCooldownEffectName": "",
-              "ownedSummonCondition": "any",
-              "ownedSummonEntityId": "",
-              "targetSummonEntityId": "",
-              "chainCount": 0,
-              "chainRange": 3,
-              "chainOrigin": "previous",
+              "rangeMode": "mainWeapon",
+              "damageType": "physical",
+              "area": 0,
+              "areaCenter": "target",
               "coefficients": [
                 {
                   "type": "calculated",
                   "field": "atk",
                   "calc": "percent",
-                  "value": 125,
-                  "effectId": ""
+                  "value": 125
                 }
-              ],
-              "healResource": "HP",
-              "fullResourceAlternative": "",
-              "drainResource": "MP",
-              "damageType": "physical",
-              "area": 0,
-              "areaCenter": "target",
-              "maxTargets": 0,
-              "critical": 0,
-              "penetration": 0,
-              "moveType": "Walk",
-              "movePlacement": "target",
-              "moveSpeed": 1,
-              "distance": 0,
-              "duration": 0,
-              "fieldShape": "circle",
-              "fieldRadius": 0,
-              "fieldWidth": 2,
-              "fieldEffect": "deal_damage",
-              "fieldEffectDuration": 5,
-              "fieldMoveType": "Push",
-              "fieldDistance": 1,
-              "fieldCenter": "target",
-              "fieldInterval": 1,
-              "fieldMovementStCostCenter": 0,
-              "fieldMovementStCostFalloff": 0,
-              "fieldMovementStCostMinimum": 0,
-              "fieldAuras": []
+              ]
             }
           ]
         },
@@ -5047,118 +4588,34 @@
             {
               "type": "deal_damage",
               "target": "enemy",
-              "rangeMode": "custom",
-              "rangeValue": 1,
-              "rangeMultiplier": 100,
-              "minRange": 0,
-              "allowSelfTarget": true,
-              "requiredTargetEffectId": "",
-              "requiredTargetEffectCaster": "any",
-              "targetHpBelow": 100,
-              "targetCooldown": 0,
-              "targetCooldownScope": "caster",
-              "targetCooldownEffectId": "",
-              "targetCooldownEffectName": "",
-              "ownedSummonCondition": "any",
-              "ownedSummonEntityId": "",
-              "targetSummonEntityId": "",
-              "chainCount": 0,
-              "chainRange": 3,
-              "chainOrigin": "previous",
+              "rangeMode": "mainWeapon",
+              "damageType": "physical",
+              "area": 0,
+              "areaCenter": "target",
               "coefficients": [
                 {
                   "type": "calculated",
                   "field": "atk",
                   "calc": "percent",
-                  "value": 135,
-                  "effectId": ""
+                  "value": 150
                 }
-              ],
-              "healResource": "HP",
-              "fullResourceAlternative": "",
-              "drainResource": "MP",
-              "damageType": "physical",
-              "area": 0,
-              "areaCenter": "target",
-              "maxTargets": 0,
-              "critical": 0,
-              "penetration": 0,
-              "moveType": "Walk",
-              "movePlacement": "target",
-              "moveSpeed": 1,
-              "distance": 0,
-              "duration": 0,
-              "fieldShape": "circle",
-              "fieldRadius": 0,
-              "fieldWidth": 2,
-              "fieldEffect": "deal_damage",
-              "fieldEffectDuration": 5,
-              "fieldMoveType": "Push",
-              "fieldDistance": 1,
-              "fieldCenter": "target",
-              "fieldInterval": 1,
-              "fieldMovementStCostCenter": 0,
-              "fieldMovementStCostFalloff": 0,
-              "fieldMovementStCostMinimum": 0,
-              "fieldAuras": []
+              ]
             },
             {
               "type": "deal_damage",
               "target": "enemy",
-              "rangeMode": "custom",
-              "rangeValue": 1,
-              "rangeMultiplier": 100,
-              "minRange": 0,
-              "allowSelfTarget": true,
-              "requiredTargetEffectId": "",
-              "requiredTargetEffectCaster": "any",
-              "targetHpBelow": 100,
-              "targetCooldown": 0,
-              "targetCooldownScope": "caster",
-              "targetCooldownEffectId": "",
-              "targetCooldownEffectName": "",
-              "ownedSummonCondition": "any",
-              "ownedSummonEntityId": "",
-              "targetSummonEntityId": "",
-              "chainCount": 0,
-              "chainRange": 3,
-              "chainOrigin": "previous",
+              "rangeMode": "mainWeapon",
+              "damageType": "physical",
+              "area": 0,
+              "areaCenter": "target",
               "coefficients": [
                 {
                   "type": "calculated",
                   "field": "atk",
                   "calc": "percent",
-                  "value": 135,
-                  "effectId": ""
+                  "value": 150
                 }
-              ],
-              "healResource": "HP",
-              "fullResourceAlternative": "",
-              "drainResource": "MP",
-              "damageType": "physical",
-              "area": 0,
-              "areaCenter": "target",
-              "maxTargets": 0,
-              "critical": 0,
-              "penetration": 0,
-              "moveType": "Walk",
-              "movePlacement": "target",
-              "moveSpeed": 1,
-              "distance": 0,
-              "duration": 0,
-              "fieldShape": "circle",
-              "fieldRadius": 0,
-              "fieldWidth": 2,
-              "fieldEffect": "deal_damage",
-              "fieldEffectDuration": 5,
-              "fieldMoveType": "Push",
-              "fieldDistance": 1,
-              "fieldCenter": "target",
-              "fieldInterval": 1,
-              "fieldMovementStCostCenter": 0,
-              "fieldMovementStCostFalloff": 0,
-              "fieldMovementStCostMinimum": 0,
-              "fieldAuras": []
+              ]
             }
           ]
         },
@@ -5168,466 +4625,97 @@
             {
               "type": "deal_damage",
               "target": "enemy",
-              "rangeMode": "custom",
-              "rangeValue": 1,
-              "rangeMultiplier": 100,
-              "minRange": 0,
-              "allowSelfTarget": true,
-              "requiredTargetEffectId": "",
-              "requiredTargetEffectCaster": "any",
-              "targetHpBelow": 100,
-              "targetCooldown": 0,
-              "targetCooldownScope": "caster",
-              "targetCooldownEffectId": "",
-              "targetCooldownEffectName": "",
-              "ownedSummonCondition": "any",
-              "ownedSummonEntityId": "",
-              "targetSummonEntityId": "",
-              "chainCount": 0,
-              "chainRange": 3,
-              "chainOrigin": "previous",
+              "rangeMode": "mainWeapon",
+              "damageType": "physical",
+              "area": 0,
+              "areaCenter": "target",
               "coefficients": [
                 {
                   "type": "calculated",
                   "field": "atk",
                   "calc": "percent",
-                  "value": 145,
-                  "effectId": ""
+                  "value": 175
                 }
-              ],
-              "healResource": "HP",
-              "fullResourceAlternative": "",
-              "drainResource": "MP",
-              "damageType": "physical",
-              "area": 0,
-              "areaCenter": "target",
-              "maxTargets": 0,
-              "critical": 0,
-              "penetration": 0,
-              "moveType": "Walk",
-              "movePlacement": "target",
-              "moveSpeed": 1,
-              "distance": 0,
-              "duration": 0,
-              "fieldShape": "circle",
-              "fieldRadius": 0,
-              "fieldWidth": 2,
-              "fieldEffect": "deal_damage",
-              "fieldEffectDuration": 5,
-              "fieldMoveType": "Push",
-              "fieldDistance": 1,
-              "fieldCenter": "target",
-              "fieldInterval": 1,
-              "fieldMovementStCostCenter": 0,
-              "fieldMovementStCostFalloff": 0,
-              "fieldMovementStCostMinimum": 0,
-              "fieldAuras": []
+              ]
             },
             {
               "type": "deal_damage",
               "target": "enemy",
-              "rangeMode": "custom",
-              "rangeValue": 1,
-              "rangeMultiplier": 100,
-              "minRange": 0,
-              "allowSelfTarget": true,
-              "requiredTargetEffectId": "",
-              "requiredTargetEffectCaster": "any",
-              "targetHpBelow": 100,
-              "targetCooldown": 0,
-              "targetCooldownScope": "caster",
-              "targetCooldownEffectId": "",
-              "targetCooldownEffectName": "",
-              "ownedSummonCondition": "any",
-              "ownedSummonEntityId": "",
-              "targetSummonEntityId": "",
-              "chainCount": 0,
-              "chainRange": 3,
-              "chainOrigin": "previous",
+              "rangeMode": "mainWeapon",
+              "damageType": "physical",
+              "area": 0,
+              "areaCenter": "target",
               "coefficients": [
                 {
                   "type": "calculated",
                   "field": "atk",
                   "calc": "percent",
-                  "value": 145,
-                  "effectId": ""
+                  "value": 175
                 }
-              ],
-              "healResource": "HP",
-              "fullResourceAlternative": "",
-              "drainResource": "MP",
-              "damageType": "physical",
-              "area": 0,
-              "areaCenter": "target",
-              "maxTargets": 0,
-              "critical": 0,
-              "penetration": 0,
-              "moveType": "Walk",
-              "movePlacement": "target",
-              "moveSpeed": 1,
-              "distance": 0,
-              "duration": 0,
-              "fieldShape": "circle",
-              "fieldRadius": 0,
-              "fieldWidth": 2,
-              "fieldEffect": "deal_damage",
-              "fieldEffectDuration": 5,
-              "fieldMoveType": "Push",
-              "fieldDistance": 1,
-              "fieldCenter": "target",
-              "fieldInterval": 1,
-              "fieldMovementStCostCenter": 0,
-              "fieldMovementStCostFalloff": 0,
-              "fieldMovementStCostMinimum": 0,
-              "fieldAuras": []
+              ]
             }
           ]
         }
       ],
-      "stepCooldown": 0.5,
       "completionActions": [
         {
           "type": "add_buff",
           "target": "self",
-          "rangeMode": "custom",
-          "rangeValue": 0,
-          "rangeMultiplier": 100,
-          "minRange": 0,
-          "allowSelfTarget": true,
-          "requiredTargetEffectId": "",
-          "requiredTargetEffectCaster": "any",
-          "targetHpBelow": 100,
-          "targetCooldown": 0,
-          "targetCooldownScope": "caster",
-          "targetCooldownEffectId": "",
-          "targetCooldownEffectName": "",
-          "ownedSummonCondition": "any",
-          "ownedSummonEntityId": "",
-          "targetSummonEntityId": "",
+          "duration": 3,
           "effect": {
             "id": "berserker_fire_strike_speed",
-            "name": "불의일격 완주",
-            "state": "buff",
+            "name": "fire_strike_speed",
             "category": "physical",
             "polarity": "beneficial",
-            "tags": [],
             "dispellable": true,
-            "dispelMode": "id",
-            "dispelTags": [],
-            "dispelCategory": "general",
-            "dispelPolarity": "any",
-            "stat": "attackSpeed",
-            "sourceStat": "atk",
-            "mode": "percent",
-            "value": -20,
-            "requiredOwnedSummonEntityId": "",
-            "nextCastTimePercent": 100,
-            "nextResourceCostPercent": 100,
-            "nextCooldownPercent": 100,
-            "reflectPercent": 20,
-            "reflectScope": "all",
-            "reflectDamageType": "fixed",
-            "proxyPercent": 20,
-            "proxyPriority": 100,
-            "proxyScope": "all",
-            "counterOnMelee": false,
-            "movementStCostPercent": 100,
-            "movementTriggerDistance": 0,
-            "movementTriggerState": "stun",
-            "movementTriggerDuration": 0,
-            "uses": 0,
-            "consumeOn": "hit",
-            "consumePeriodic": false,
             "maxStacks": 1,
-            "stackMode": "refresh"
-          },
-          "chainCount": 0,
-          "chainRange": 3,
-          "chainOrigin": "previous",
-          "coefficients": [
-            {
-              "type": "fixed",
-              "field": "atk",
-              "calc": "percent",
-              "value": 1,
-              "effectId": ""
-            }
-          ],
-          "healResource": "HP",
-          "fullResourceAlternative": "",
-          "drainResource": "MP",
-          "damageType": "physical",
-          "area": 0,
-          "areaCenter": "target",
-          "maxTargets": 0,
-          "critical": 0,
-          "penetration": 0,
-          "moveType": "Walk",
-          "movePlacement": "target",
-          "moveSpeed": 1,
-          "distance": 0,
-          "duration": 3,
-          "fieldShape": "circle",
-          "fieldRadius": 0,
-          "fieldWidth": 2,
-          "fieldEffect": "deal_damage",
-          "fieldEffectDuration": 5,
-          "fieldMoveType": "Push",
-          "fieldDistance": 1,
-          "fieldCenter": "target",
-          "fieldInterval": 1,
-          "fieldMovementStCostCenter": 0,
-          "fieldMovementStCostFalloff": 0,
-          "fieldMovementStCostMinimum": 0,
-          "fieldAuras": []
+            "stackMode": "refresh",
+            "stat": "attackSpeed",
+            "mode": "attack_rate_percent",
+            "value": 20
+          }
         }
       ]
     },
-    "resourceCosts": [
-      {
-        "resource": "ST",
-        "mode": "fixed",
-        "value": 10
-      }
-    ],
-    "actions": [
-      {
-        "type": "deal_damage",
-        "target": "enemy",
-        "rangeMode": "custom",
-        "rangeValue": 1,
-        "rangeMultiplier": 100,
-        "minRange": 0,
-        "allowSelfTarget": true,
-        "requiredTargetEffectId": "",
-        "requiredTargetEffectCaster": "any",
-        "targetHpBelow": 100,
-        "targetCooldown": 0,
-        "targetCooldownScope": "caster",
-        "targetCooldownEffectId": "",
-        "targetCooldownEffectName": "",
-        "ownedSummonCondition": "any",
-        "ownedSummonEntityId": "",
-        "targetSummonEntityId": "",
-        "chainCount": 0,
-        "chainRange": 3,
-        "chainOrigin": "previous",
-        "coefficients": [
-          {
-            "type": "calculated",
-            "field": "atk",
-            "calc": "percent",
-            "value": 125,
-            "effectId": ""
-          }
-        ],
-        "healResource": "HP",
-        "fullResourceAlternative": "",
-        "drainResource": "MP",
-        "damageType": "physical",
-        "area": 0,
-        "areaCenter": "target",
-        "maxTargets": 0,
-        "critical": 0,
-        "penetration": 0,
-        "moveType": "Walk",
-        "movePlacement": "target",
-        "moveSpeed": 1,
-        "distance": 0,
-        "duration": 0,
-        "fieldShape": "circle",
-        "fieldRadius": 0,
-        "fieldWidth": 2,
-        "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 5,
-        "fieldMoveType": "Push",
-        "fieldDistance": 1,
-        "fieldCenter": "target",
-        "fieldInterval": 1,
-        "fieldMovementStCostCenter": 0,
-        "fieldMovementStCostFalloff": 0,
-        "fieldMovementStCostMinimum": 0,
-        "fieldAuras": []
-      },
-      {
-        "type": "deal_damage",
-        "target": "enemy",
-        "rangeMode": "custom",
-        "rangeValue": 1,
-        "rangeMultiplier": 100,
-        "minRange": 0,
-        "allowSelfTarget": true,
-        "requiredTargetEffectId": "",
-        "requiredTargetEffectCaster": "any",
-        "targetHpBelow": 100,
-        "targetCooldown": 0,
-        "targetCooldownScope": "caster",
-        "targetCooldownEffectId": "",
-        "targetCooldownEffectName": "",
-        "ownedSummonCondition": "any",
-        "ownedSummonEntityId": "",
-        "targetSummonEntityId": "",
-        "chainCount": 0,
-        "chainRange": 3,
-        "chainOrigin": "previous",
-        "coefficients": [
-          {
-            "type": "calculated",
-            "field": "atk",
-            "calc": "percent",
-            "value": 125,
-            "effectId": ""
-          }
-        ],
-        "healResource": "HP",
-        "fullResourceAlternative": "",
-        "drainResource": "MP",
-        "damageType": "physical",
-        "area": 0,
-        "areaCenter": "target",
-        "maxTargets": 0,
-        "critical": 0,
-        "penetration": 0,
-        "moveType": "Walk",
-        "movePlacement": "target",
-        "moveSpeed": 1,
-        "distance": 0,
-        "duration": 0,
-        "fieldShape": "circle",
-        "fieldRadius": 0,
-        "fieldWidth": 2,
-        "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 5,
-        "fieldMoveType": "Push",
-        "fieldDistance": 1,
-        "fieldCenter": "target",
-        "fieldInterval": 1,
-        "fieldMovementStCostCenter": 0,
-        "fieldMovementStCostFalloff": 0,
-        "fieldMovementStCostMinimum": 0,
-        "fieldAuras": []
-      }
-    ]
+    "description": "쌍수 무기로 각각 공격력 125%/150%/175% 물리 피해를 주는 3단 연계. 사거리는 주무기 기준, 즉시 시전, 단계당 ST 4. 단계 간격 0.5초, 완주 후 재사용 10초. 기존 완주 보상인 3초간 공격속도 +20%를 유지한다.",
+    "icon": "assets/images/skills/광전사_불의일격.png"
   },
   {
     "id": "skill_class_marine_guard",
-    "name": "해병 · 가드",
+    "name": "가드",
     "className": "해병",
-    "icon": "assets/images/skills/해병_가드.png",
-    "description": "방패를 들어 다음 직접 피해 2회를 완전히 무시합니다. DOT와 지역 지속 피해에는 횟수가 소모되지 않습니다.",
     "slot": "active",
-    "cooldown": 10,
+    "cooldown": 7,
     "castTime": 0,
-    "castReceivedDamagePercent": 100,
-    "channel": {
-      "duration": 0,
-      "interval": 1,
-      "interruptOnDamage": true,
-      "lockTarget": false,
-      "receivedDamagePercent": 100
-    },
     "resourceCosts": [
       {
         "resource": "ST",
         "mode": "fixed",
-        "value": 10
+        "value": 5
       }
     ],
     "actions": [
       {
         "type": "add_buff",
         "target": "self",
-        "rangeMode": "mainWeapon",
-        "rangeValue": 1,
-        "rangeMultiplier": 100,
-        "minRange": 0,
-        "allowSelfTarget": true,
-        "requiredTargetEffectId": "",
-        "requiredTargetEffectCaster": "any",
-        "targetHpBelow": 100,
-        "targetCooldown": 0,
-        "targetCooldownScope": "caster",
-        "targetCooldownEffectId": "",
-        "targetCooldownEffectName": "",
-        "ownedSummonCondition": "any",
-        "ownedSummonEntityId": "",
-        "targetSummonEntityId": "",
         "effect": {
           "id": "marine_guard",
-          "name": "가드",
+          "name": "guard",
           "category": "physical",
           "polarity": "beneficial",
-          "tags": [],
           "dispellable": true,
-          "dispelMode": "id",
-          "dispelTags": [],
-          "dispelCategory": "general",
-          "dispelPolarity": "any",
-          "sourceStat": "magic",
+          "maxStacks": 1,
+          "stackMode": "refresh",
           "mode": "damage_immunity",
-          "value": 0,
-          "requiredOwnedSummonEntityId": "",
-          "nextCastTimePercent": 100,
-          "nextResourceCostPercent": 100,
-          "nextCooldownPercent": 100,
-          "reflectPercent": 20,
-          "reflectScope": "all",
-          "reflectDamageType": "fixed",
-          "proxyPercent": 20,
-          "proxyPriority": 100,
-          "proxyScope": "all",
-          "counterOnMelee": false,
-          "movementStCostPercent": 100,
-          "movementTriggerDistance": 0,
-          "movementTriggerState": "stun",
-          "movementTriggerDuration": 0,
           "uses": 2,
           "consumeOn": "damaged",
           "consumePeriodic": false,
-          "maxStacks": 1,
-          "stackMode": "refresh"
-        },
-        "chainCount": 0,
-        "chainRange": 3,
-        "chainOrigin": "previous",
-        "coefficients": [
-          {
-            "type": "fixed",
-            "field": "atk",
-            "calc": "percent",
-            "value": 1,
-            "effectId": ""
-          }
-        ],
-        "healResource": "HP",
-        "fullResourceAlternative": "",
-        "drainResource": "MP",
-        "damageType": "physical",
-        "area": 0,
-        "areaCenter": "target",
-        "maxTargets": 0,
-        "critical": 0,
-        "penetration": 0,
-        "moveType": "Walk",
-        "movePlacement": "target",
-        "moveSpeed": 1,
-        "distance": 0,
-        "duration": 0,
-        "fieldShape": "circle",
-        "fieldRadius": 0,
-        "fieldWidth": 2,
-        "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 5,
-        "fieldMoveType": "Push",
-        "fieldDistance": 1,
-        "fieldCenter": "target",
-        "fieldInterval": 1,
-        "fieldMovementStCostCenter": 0,
-        "fieldMovementStCostFalloff": 0,
-        "fieldMovementStCostMinimum": 0,
-        "fieldAuras": []
+          "damageTypeFilter": "physical"
+        }
       }
-    ]
+    ],
+    "icon": "assets/images/skills/해병_가드.png",
+    "description": "자신이 받는 다음 물리 공격 2회를 완전히 방어한다. 횟수 소진까지 유지하며 지속 피해에는 소모하지 않는다. ST 5, 재사용 7초."
   },
   {
     "id": "skill_class_viking_counter",
@@ -13587,6 +12675,7 @@
     }
   },
   {
+    "icon": "assets/images/skills/흑마법사_암흑지대.png",
     "id": "skill_class_warlock_zone",
     "name": "흑마법사 · 암흑지대",
     "className": "흑마법사",
@@ -13822,6 +12911,7 @@
     }
   },
   {
+    "icon": "assets/images/skills/궁사_치명타.png",
     "id": "skill_class_archer_critical",
     "name": "궁사 · 치명타",
     "className": "궁사",
@@ -13840,6 +12930,7 @@
     }
   },
   {
+    "icon": "assets/images/skills/궁사_방벽설치.png",
     "id": "skill_class_archer_guard",
     "name": "궁사 · 방벽설치",
     "className": "궁사",
@@ -13874,6 +12965,7 @@
     ]
   },
   {
+    "icon": "assets/images/skills/궁사_밀쳐내기.png",
     "id": "skill_class_archer_push",
     "name": "궁사 · 밀쳐내기",
     "className": "궁사",
@@ -13972,6 +13064,7 @@
     "maxUses": 1
   },
   {
+    "icon": "assets/images/skills/궁사_치명적인 남자.png",
     "id": "skill_class_archer_deadly_man",
     "name": "궁사 · 치명적인 남자",
     "className": "궁사",
@@ -14107,6 +13200,7 @@
     }
   },
   {
+    "icon": "assets/images/skills/성직자_신성폭발.png",
     "id": "skill_class_priest_explosion",
     "name": "성직자 · 신성폭발",
     "className": "성직자",
@@ -14560,5 +13654,1302 @@
         }
       ]
     }
+  },
+  {
+    "icon": "assets/images/skills/성기사_징벌대상.png",
+    "id": "skill_class_paladin_punishment",
+    "name": "성기사 · 징벌대상",
+    "className": "성기사",
+    "slot": "passive",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "singleTargetMark": {
+      "effectId": "paladin_punishment",
+      "bonusPercent": 30
+    },
+    "passiveTrigger": {
+      "event": "hit",
+      "chance": 100
+    }
+  },
+  {
+    "icon": "assets/images/skills/성기사_심판의검.png",
+    "id": "skill_class_paladin_judgement_sword",
+    "name": "성기사 · 심판의검",
+    "className": "성기사",
+    "slot": "active",
+    "castTime": 0,
+    "cooldown": 12,
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 10
+      }
+    ],
+    "actions": [
+      {
+        "type": "deal_damage",
+        "target": "enemy",
+        "rangeMode": "custom",
+        "rangeValue": 5,
+        "damageType": "physical",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "atk",
+            "calc": "percent",
+            "value": 100
+          }
+        ]
+      },
+      {
+        "type": "add_state",
+        "target": "enemy",
+        "rangeMode": "custom",
+        "rangeValue": 5,
+        "duration": 2,
+        "requiredPriorMark": true,
+        "requirePreviousDamage": true,
+        "targetPreviousDamage": true,
+        "effect": {
+          "id": "paladin_judgement_stun",
+          "name": "심판의검",
+          "state": "stun",
+          "category": "magic",
+          "polarity": "harmful",
+          "dispellable": true
+        }
+      }
+    ]
+  },
+  {
+    "icon": "assets/images/skills/성기사_성흔.png",
+    "id": "skill_class_paladin_stigmata",
+    "name": "성기사 · 성흔",
+    "className": "성기사",
+    "slot": "active",
+    "castTime": 0,
+    "cooldown": 20,
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 20
+      }
+    ],
+    "actions": [
+      {
+        "type": "add_buff",
+        "target": "self",
+        "rangeMode": "mainWeapon",
+        "duration": 5,
+        "effect": {
+          "id": "paladin_stigmata",
+          "name": "성흔",
+          "stat": "atk",
+          "mode": "mark_damage_link",
+          "value": 20,
+          "category": "magic",
+          "polarity": "beneficial",
+          "dispellable": true,
+          "maxStacks": 1,
+          "stackMode": "refresh"
+        }
+      }
+    ]
+  },
+  {
+    "icon": "assets/images/skills/성기사_마법수호자.png",
+    "id": "skill_class_paladin_magic_guardian",
+    "name": "성기사 · 마법수호자",
+    "className": "성기사",
+    "slot": "active",
+    "castTime": 0,
+    "cooldown": 7,
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 10
+      }
+    ],
+    "actions": [
+      {
+        "type": "add_buff",
+        "target": "self",
+        "rangeMode": "mainWeapon",
+        "duration": 2,
+        "effect": {
+          "id": "paladin_magic_guard",
+          "name": "마법수호자",
+          "stat": "atk",
+          "mode": "damage_immunity",
+          "value": 0,
+          "category": "magic",
+          "polarity": "beneficial",
+          "dispellable": true,
+          "maxStacks": 1,
+          "stackMode": "refresh",
+          "uses": 1,
+          "damageTypeFilter": "magic"
+        }
+      },
+      {
+        "type": "add_buff",
+        "target": "self",
+        "rangeMode": "mainWeapon",
+        "duration": 2,
+        "effect": {
+          "id": "paladin_magic_guard_resistance",
+          "name": "마법수호자",
+          "stat": "resistance",
+          "mode": "percent",
+          "value": 10,
+          "category": "magic",
+          "polarity": "beneficial",
+          "dispellable": true,
+          "maxStacks": 1,
+          "stackMode": "refresh"
+        }
+      }
+    ]
+  },
+  {
+    "icon": "assets/images/skills/성기사_빛의 섬광.png",
+    "id": "skill_class_paladin_flash",
+    "name": "성기사 · 빛의 섬광",
+    "className": "성기사",
+    "slot": "active",
+    "castTime": 0,
+    "cooldown": 10,
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 25
+      }
+    ],
+    "actions": [
+      {
+        "type": "deal_damage",
+        "target": "enemy",
+        "rangeMode": "custom",
+        "rangeValue": 4,
+        "area": 4,
+        "areaCenter": "self",
+        "maxTargets": 0,
+        "damageType": "magic",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "atk",
+            "calc": "percent",
+            "value": 40
+          }
+        ]
+      },
+      {
+        "type": "add_buff",
+        "target": "enemy",
+        "rangeMode": "custom",
+        "rangeValue": 4,
+        "area": 4,
+        "areaCenter": "self",
+        "maxTargets": 0,
+        "duration": 3,
+        "effect": {
+          "id": "paladin_blind",
+          "name": "실명",
+          "stat": "atk",
+          "mode": "next_attack_miss",
+          "value": 0,
+          "category": "magic",
+          "polarity": "harmful",
+          "dispellable": true,
+          "maxStacks": 1,
+          "stackMode": "refresh",
+          "uses": 1
+        }
+      }
+    ]
+  },
+  {
+    "icon": "assets/images/skills/성기사_신의 가호.png",
+    "id": "skill_class_paladin_divine_protection_ultimate",
+    "name": "성기사 · 신의 가호",
+    "className": "성기사",
+    "slot": "active",
+    "castTime": 1,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "add_buff",
+        "target": "ally",
+        "rangeMode": "custom",
+        "rangeValue": 8,
+        "area": 8,
+        "areaCenter": "self",
+        "maxTargets": 0,
+        "duration": 10,
+        "effect": {
+          "id": "paladin_divine_defense",
+          "name": "신의 가호",
+          "stat": "defense",
+          "mode": "flat",
+          "value": 30,
+          "category": "magic",
+          "polarity": "beneficial",
+          "dispellable": true,
+          "maxStacks": 1,
+          "stackMode": "refresh"
+        }
+      },
+      {
+        "type": "add_buff",
+        "target": "ally",
+        "rangeMode": "custom",
+        "rangeValue": 8,
+        "area": 8,
+        "areaCenter": "self",
+        "maxTargets": 0,
+        "duration": 10,
+        "effect": {
+          "id": "paladin_divine_resistance",
+          "name": "신의 가호",
+          "stat": "resistance",
+          "mode": "flat",
+          "value": 30,
+          "category": "magic",
+          "polarity": "beneficial",
+          "dispellable": true,
+          "maxStacks": 1,
+          "stackMode": "refresh"
+        }
+      }
+    ],
+    "maxUses": 1
+  },
+  {
+    "icon": "assets/images/skills/성기사_나홀로 외로이.png",
+    "id": "skill_class_paladin_alone",
+    "name": "성기사 · 나홀로 외로이",
+    "className": "성기사",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_paladin_stigmata"
+      ],
+      "markHealingLinkPercent": 20
+    }
+  },
+  {
+    "icon": "assets/images/skills/성기사_신앙심.png",
+    "id": "skill_class_paladin_faith",
+    "name": "성기사 · 신앙심",
+    "className": "성기사",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "statEffects": [
+        {
+          "id": "paladin_faith_defense",
+          "name": "신앙심",
+          "stat": "defense",
+          "mode": "percent",
+          "value": -5,
+          "category": "magic",
+          "polarity": "beneficial",
+          "dispellable": true,
+          "maxStacks": 1,
+          "stackMode": "refresh"
+        },
+        {
+          "id": "paladin_faith_resistance",
+          "name": "신앙심",
+          "stat": "resistance",
+          "mode": "percent",
+          "value": 15,
+          "category": "magic",
+          "polarity": "beneficial",
+          "dispellable": true,
+          "maxStacks": 1,
+          "stackMode": "refresh"
+        }
+      ]
+    }
+  },
+  {
+    "icon": "assets/images/skills/성기사_성경구독.png",
+    "id": "skill_class_paladin_scripture",
+    "name": "성기사 · 성경구독",
+    "className": "성기사",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_paladin_punishment"
+      ],
+      "basicAttackMpGain": 1
+    }
+  },
+  {
+    "icon": "assets/images/skills/성기사_희미한 빛.png",
+    "id": "skill_class_paladin_dim_light",
+    "name": "성기사 · 희미한 빛",
+    "className": "성기사",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_paladin_flash"
+      ],
+      "areaAdd": 3,
+      "coefficientPercent": 50
+    }
+  },
+  {
+    "icon": "assets/images/skills/성기사_신성한 심판.png",
+    "id": "skill_class_paladin_holy_judgement",
+    "name": "성기사 · 신성한 심판",
+    "className": "성기사",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_paladin_punishment"
+      ],
+      "markMagicDamagePercent": 120
+    }
+  },
+  {
+    "icon": "assets/images/skills/성기사_반사광.png",
+    "id": "skill_class_paladin_reflected_light",
+    "name": "성기사 · 반사광",
+    "className": "성기사",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_paladin_magic_guardian"
+      ],
+      "reflectBlockedMagic": true
+    }
+  },
+  {
+    "icon": "assets/images/skills/해병_방패대포.png",
+    "id": "skill_class_marine_cannon_passive",
+    "name": "방패대포",
+    "className": "해병",
+    "slot": "passive",
+    "cooldown": 0,
+    "castTime": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "basicAttackSkillId": "skill_class_marine_cannon",
+    "description": "기본 공격을 방패대포로 교체한다. 방패대포는 자원을 소모하지 않으며 고정 주기 3초로 발사한다."
+  },
+  {
+    "icon": "assets/images/skills/해병_방패대포.png",
+    "id": "skill_class_marine_cannon",
+    "name": "방패대포",
+    "className": "해병",
+    "slot": "basic",
+    "cooldown": 0,
+    "castTime": 1,
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "deal_damage",
+        "target": "enemy",
+        "rangeMode": "custom",
+        "damageType": "physical",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "atk",
+            "calc": "percent",
+            "value": 300
+          }
+        ],
+        "rangeValue": 5,
+        "area": 3,
+        "areaCenter": "target"
+      }
+    ],
+    "fixedAttackInterval": 3,
+    "internal": true,
+    "description": "사거리 5m, 반경 3m에 공격력 300% 물리 피해. 시전 1초, 고정 공격 주기 3초, 소모 없음."
+  },
+  {
+    "icon": "assets/images/skills/해병_방패확장.png",
+    "id": "skill_class_marine_expansion",
+    "name": "방패확장",
+    "className": "해병",
+    "slot": "active",
+    "cooldown": 20,
+    "castTime": 0,
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 10
+      }
+    ],
+    "actions": [
+      {
+        "type": "add_buff",
+        "target": "self",
+        "effect": {
+          "id": "marine_expansion",
+          "name": "expansion",
+          "category": "physical",
+          "polarity": "beneficial",
+          "dispellable": true,
+          "maxStacks": 1,
+          "stackMode": "refresh",
+          "stat": "shieldDefense",
+          "mode": "percent",
+          "value": 25,
+          "skillModifiers": [
+            {
+              "targetSkillIds": [
+                "skill_class_marine_bash",
+                "skill_class_marine_boomerang"
+              ],
+              "coefficientPercent": 120
+            },
+            {
+              "targetSkillIds": [
+                "skill_class_marine_guard"
+              ],
+              "immunityUsesAdd": 1
+            }
+          ]
+        },
+        "duration": 5
+      }
+    ],
+    "description": "5초간 장착한 방패 방어력 +25%, 쉴드배쉬·쉴드부메랑 피해 +20%, 새로 시전하는 가드의 방어 횟수 +1. MP 10, 재사용 20초."
+  },
+  {
+    "icon": "assets/images/skills/해병_포격.png",
+    "id": "skill_class_marine_barrage",
+    "name": "포격",
+    "className": "해병",
+    "slot": "ultimate",
+    "cooldown": 0,
+    "castTime": 0.5,
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "deal_damage",
+        "target": "enemy",
+        "rangeMode": "custom",
+        "damageType": "physical",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "atk",
+            "calc": "percent",
+            "value": 100
+          }
+        ],
+        "rangeValue": 100000
+      }
+    ],
+    "maxUses": 1,
+    "barrageSkillId": "skill_class_marine_cannon",
+    "description": "모든 적에게 방패대포를 한 발씩 발사한다. 각 적을 중심으로 범위 피해가 발생하며 범위가 겹치면 중복 피해를 받는다. 시전 0.5초, 전투당 1회."
+  },
+  {
+    "icon": "assets/images/skills/해병_대포의 굉음.png",
+    "id": "skill_class_marine_roar",
+    "name": "대포의 굉음",
+    "className": "해병",
+    "slot": "optional",
+    "cooldown": 0,
+    "castTime": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_marine_cannon"
+      ],
+      "areaAdd": 1,
+      "additionalActions": [
+        {
+          "type": "add_state",
+          "target": "enemy",
+          "rangeMode": "custom",
+          "damageType": "physical",
+          "coefficients": [
+            {
+              "type": "calculated",
+              "field": "atk",
+              "calc": "percent",
+              "value": 100
+            }
+          ],
+          "duration": 2,
+          "area": 0,
+          "areaCenter": "target",
+          "effect": {
+            "id": "marine_cannon_stun",
+            "name": "cannon_stun",
+            "category": "physical",
+            "polarity": "harmful",
+            "dispellable": true,
+            "maxStacks": 1,
+            "stackMode": "refresh",
+            "mode": "flat",
+            "state": "stun"
+          },
+          "rangeValue": 5,
+          "targetPreviousDamage": true,
+          "requirePreviousDamage": true
+        }
+      ]
+    },
+    "description": "장착 시 방패대포의 반경 +1m, 피해를 받은 적은 2초 기절. 포격으로 발사하는 방패대포에도 적용."
+  },
+  {
+    "icon": "assets/images/skills/해병_아지랑이.png",
+    "id": "skill_class_marine_haze",
+    "name": "아지랑이",
+    "className": "해병",
+    "slot": "optional",
+    "cooldown": 0,
+    "castTime": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_marine_boomerang"
+      ],
+      "maxTargetsAdd": 2
+    },
+    "description": "장착 시 쉴드부메랑의 최대 피격 대상이 2명 증가한다."
+  },
+  {
+    "icon": "assets/images/skills/해병_공습경보.png",
+    "id": "skill_class_marine_air_raid",
+    "name": "공습경보",
+    "className": "해병",
+    "slot": "optional",
+    "cooldown": 0,
+    "castTime": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_marine_barrage"
+      ],
+      "coefficientPercent": 130
+    },
+    "description": "장착 시 포격으로 발사하는 방패대포 피해 +30%."
+  },
+  {
+    "icon": "assets/images/skills/해병_소라껍데기.png",
+    "id": "skill_class_marine_shell",
+    "name": "소라껍데기",
+    "className": "해병",
+    "slot": "optional",
+    "cooldown": 0,
+    "castTime": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_marine_guard"
+      ],
+      "additionalActions": [
+        {
+          "type": "add_buff",
+          "target": "self",
+          "effect": {
+            "id": "marine_guard_barrier",
+            "name": "guard_barrier",
+            "category": "physical",
+            "polarity": "beneficial",
+            "dispellable": true,
+            "maxStacks": 1,
+            "stackMode": "refresh",
+            "mode": "barrier",
+            "value": 5,
+            "linkedEffectId": "marine_guard"
+          }
+        }
+      ]
+    },
+    "description": "장착 시 가드를 사용할 때 최대 HP 5% 보호막을 생성한다. 가드가 종료되면 남은 보호막도 사라진다."
+  },
+  {
+    "icon": "assets/images/skills/해병_재장전.png",
+    "id": "skill_class_marine_reload",
+    "name": "재장전",
+    "className": "해병",
+    "slot": "optional",
+    "cooldown": 0,
+    "castTime": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_marine_cannon"
+      ],
+      "attackIntervalAdd": -0.5
+    },
+    "description": "장착 시 방패대포의 고정 공격 주기를 3초에서 2.5초로 줄인다."
+  },
+  {
+    "icon": "assets/images/skills/해병_한번의 기회.png",
+    "id": "skill_class_marine_one_chance",
+    "name": "한번의 기회",
+    "className": "해병",
+    "slot": "optional",
+    "cooldown": 0,
+    "castTime": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_marine_expansion"
+      ],
+      "effectDurationAdd": 3
+    },
+    "description": "장착 시 방패확장의 지속시간 +3초."
+  },
+  {
+    "icon": "assets/images/skills/검의무희_검의지배자.png",
+    "id": "skill_class_dancer_sovereign",
+    "name": "검의지배자",
+    "className": "검의무희",
+    "slot": "passive",
+    "cooldown": 0,
+    "castTime": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "weaponControl": {
+      "maxWeapons": 6,
+      "category": "oneHandSword",
+      "basicPercent": 25,
+      "attackMpCost": 1
+    },
+    "description": "한손검 6자루를 독립적으로 다룬다. 각 검의 원래 공격력 25%, 일반 공격 시 검마다 MP 1. 버프·흩뿌리기에 배정한 검은 일반 공격에서 제외하며 아이콘에 공격 가능한 검 수를 표시한다."
+  },
+  {
+    "icon": "assets/images/skills/검의무희_검의 결계.png",
+    "id": "skill_class_dancer_ward",
+    "name": "검의 결계",
+    "className": "검의무희",
+    "slot": "active",
+    "cooldown": 10,
+    "castTime": 0,
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "add_buff",
+        "target": "self",
+        "duration": 5,
+        "effect": {
+          "id": "dancer_ward",
+          "name": "ward",
+          "category": "magic",
+          "polarity": "beneficial",
+          "dispellable": true,
+          "maxStacks": 1,
+          "stackMode": "refresh",
+          "mode": "damage_immunity",
+          "uses": 2,
+          "consumeOn": "damaged",
+          "consumePeriodic": false,
+          "damageTypeFilter": "physical",
+          "weaponReserveCount": 2
+        }
+      }
+    ],
+    "description": "검 2자루를 배정해 5초간 다음 물리 직접 공격 2회를 완전히 방어한다. 소진·만료·해제 시 검이 돌아온다. 즉시 시전, 재사용 10초."
+  },
+  {
+    "icon": "assets/images/skills/검의무희_체술.png",
+    "id": "skill_class_dancer_body",
+    "name": "체술",
+    "className": "검의무희",
+    "slot": "active",
+    "cooldown": 20,
+    "castTime": 1,
+    "resourceCosts": [
+      {
+        "resource": "ST",
+        "mode": "fixed",
+        "value": 30
+      }
+    ],
+    "actions": [
+      {
+        "type": "add_buff",
+        "target": "self",
+        "duration": 5,
+        "effect": {
+          "id": "dancer_body",
+          "name": "body",
+          "category": "magic",
+          "polarity": "beneficial",
+          "dispellable": true,
+          "maxStacks": 1,
+          "stackMode": "refresh",
+          "mode": "periodic",
+          "weaponReserveCount": 3,
+          "periodic": {
+            "type": "heal",
+            "resource": "MP",
+            "interval": 1,
+            "coefficient": {
+              "type": "fixed",
+              "value": 8
+            }
+          }
+        }
+      }
+    ],
+    "description": "시전 시작 시 ST 30을 소모한다. 시전 1초 동안 검을 묶지 않으며, 발동 후 검 3자루를 배정해 5초간 매초 MP 8을 회복한다. 재사용 20초."
+  },
+  {
+    "icon": "assets/images/skills/검의무희_검의 꽃.png",
+    "id": "skill_class_dancer_flower",
+    "name": "검의 꽃",
+    "className": "검의무희",
+    "slot": "ultimate",
+    "cooldown": 0,
+    "castTime": 1.5,
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "deal_damage",
+        "target": "enemy",
+        "rangeMode": "custom",
+        "rangeValue": 5,
+        "damageType": "physical",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "atk",
+            "calc": "percent",
+            "value": 100
+          }
+        ]
+      }
+    ],
+    "weaponCommand": {
+      "mode": "flower",
+      "percent": 100,
+      "duration": 12
+    },
+    "maxUses": 1,
+    "description": "모든 검을 회수하고 5m 안의 가까운 적 순서대로 검을 한 자루씩 분배한다. 적이 적으면 순서대로 추가 배정한다. 결계·체술의 버프는 남은 시간 유지한다. 12초간 검마다 원래 공격력 100%로 고유 공격 주기에 따라 적을 공격하며 일반 공격·다른 스킬은 금지한다. 시전 1.5초, 전투당 1회."
+  },
+  {
+    "icon": "assets/images/skills/검의무희_회복의 검.png",
+    "id": "skill_class_dancer_healing_sword",
+    "name": "회복의 검",
+    "className": "검의무희",
+    "slot": "optional",
+    "cooldown": 0,
+    "castTime": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_dancer_sovereign"
+      ],
+      "weaponHitHeal": 5
+    },
+    "description": "장착 시 검 공격 적중마다 자신의 HP 5를 회복한다."
+  },
+  {
+    "icon": "assets/images/skills/검의무희_날카로운 검.png",
+    "id": "skill_class_dancer_sharp_sword",
+    "name": "날카로운 검",
+    "className": "검의무희",
+    "slot": "optional",
+    "cooldown": 0,
+    "castTime": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_dancer_sovereign"
+      ],
+      "weaponHitFixedDamage": 2
+    },
+    "description": "장착 시 검 공격 적중마다 피해 점감을 받지 않는 고정 피해 2를 추가한다."
+  },
+  {
+    "icon": "assets/images/skills/검의무희_아름다운 검의 꽃.png",
+    "id": "skill_class_dancer_beautiful_flower",
+    "name": "아름다운 검의 꽃",
+    "className": "검의무희",
+    "slot": "optional",
+    "cooldown": 0,
+    "castTime": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_dancer_flower"
+      ],
+      "effectDurationAdd": 3
+    },
+    "description": "장착 시 검의 꽃 지속시간 +3초."
+  },
+  {
+    "icon": "assets/images/skills/검의무희_선한 정신력.png",
+    "id": "skill_class_dancer_good_mind",
+    "name": "선한 정신력",
+    "className": "검의무희",
+    "slot": "optional",
+    "cooldown": 0,
+    "castTime": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "statEffects": [
+        {
+          "id": "dancer_good_mind",
+          "name": "good_mind",
+          "category": "magic",
+          "polarity": "beneficial",
+          "dispellable": true,
+          "maxStacks": 1,
+          "stackMode": "refresh",
+          "stat": "maxMp",
+          "mode": "flat",
+          "value": 30
+        }
+      ]
+    },
+    "description": "장착 시 최대 MP +30."
+  },
+  {
+    "icon": "assets/images/skills/검의무희_유령검.png",
+    "id": "skill_class_dancer_ghost_sword",
+    "name": "유령검",
+    "className": "검의무희",
+    "slot": "optional",
+    "cooldown": 0,
+    "castTime": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_dancer_sovereign"
+      ],
+      "extraControlledWeapons": 1
+    },
+    "description": "장착 시 장비 슬롯 없이 유령검 1자루를 추가한다. 검 공격력은 장착한 검들의 평균이다."
+  },
+  {
+    "icon": "assets/images/skills/검의무희_비검.png",
+    "id": "skill_class_dancer_flying_sword",
+    "name": "비검",
+    "className": "검의무희",
+    "slot": "optional",
+    "cooldown": 0,
+    "castTime": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_dancer_focus"
+      ],
+      "castRangeAdd": 5
+    },
+    "description": "장착 시 검의 집중 사거리를 근접 접촉에서 5m로 변경한다."
+  },
+  {
+    "icon": "assets/images/skills/광전사_갑옷문신.png",
+    "id": "skill_class_berserker_armor_tattoo",
+    "name": "갑옷문신",
+    "className": "광전사",
+    "slot": "passive",
+    "cooldown": 0,
+    "castTime": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {},
+    "description": "갑옷문신은 무게 패널티를 받지 않는 설계다. 현재 엔진에는 무게 패널티 자체가 없어 별도 능력치 효과가 없으며, 장비 탈착 제한은 내구도 구현 전까지 적용하지 않는다."
+  },
+  {
+    "icon": "assets/images/skills/광전사_피냄새.png",
+    "id": "skill_class_berserker_blood_scent",
+    "name": "피냄새",
+    "className": "광전사",
+    "slot": "active",
+    "cooldown": 20,
+    "castTime": 0,
+    "resourceCosts": [
+      {
+        "resource": "HP",
+        "mode": "currentPercent",
+        "value": 5
+      }
+    ],
+    "actions": [
+      {
+        "type": "add_buff",
+        "target": "self",
+        "duration": 6,
+        "effect": {
+          "id": "berserker_blood_scent",
+          "name": "blood_scent",
+          "category": "physical",
+          "polarity": "beneficial",
+          "dispellable": true,
+          "maxStacks": 1,
+          "stackMode": "refresh",
+          "stat": "attackSpeed",
+          "mode": "attack_rate_percent",
+          "value": 20
+        }
+      }
+    ],
+    "description": "현재 HP 5%를 소모하고 자신에게 6초간 공격속도 +20%를 부여한다. 즉시 시전, 재사용 20초."
+  },
+  {
+    "icon": "assets/images/skills/광전사_고통극복.png",
+    "id": "skill_class_berserker_pain_recovery",
+    "name": "고통극복",
+    "className": "광전사",
+    "slot": "active",
+    "cooldown": 10,
+    "castTime": 0,
+    "resourceCosts": [
+      {
+        "resource": "ST",
+        "mode": "fixed",
+        "value": 15
+      }
+    ],
+    "actions": [
+      {
+        "type": "add_buff",
+        "target": "self",
+        "duration": 3,
+        "effect": {
+          "id": "berserker_pain_recovery",
+          "name": "pain_recovery",
+          "category": "physical",
+          "polarity": "beneficial",
+          "dispellable": true,
+          "maxStacks": 1,
+          "stackMode": "refresh",
+          "mode": "damage_recovery",
+          "value": 20
+        }
+      }
+    ],
+    "description": "3초 동안 실제 받은 피해를 저장하고 자연 종료 시 누적 피해의 20%를 HP로 회복한다. 피해를 감소시키지 않으며 사망 시 회복하거나 부활하지 않는다. 즉시 시전, ST 15, 재사용 10초."
+  },
+  {
+    "icon": "assets/images/skills/광전사_화염베기.png",
+    "id": "skill_class_berserker_flame_slash",
+    "name": "화염베기",
+    "className": "광전사",
+    "slot": "active",
+    "cooldown": 7,
+    "castTime": 0.5,
+    "resourceCosts": [
+      {
+        "resource": "ST",
+        "mode": "fixed",
+        "value": 8
+      }
+    ],
+    "actions": [
+      {
+        "type": "deal_damage",
+        "target": "enemy",
+        "rangeMode": "mainWeapon",
+        "damageType": "physical",
+        "area": 4,
+        "areaCenter": "self",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "atk",
+            "calc": "percent",
+            "value": 100
+          }
+        ]
+      },
+      {
+        "type": "deal_damage",
+        "target": "enemy",
+        "rangeMode": "mainWeapon",
+        "damageType": "magic",
+        "area": 4,
+        "areaCenter": "self",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "atk",
+            "calc": "percent",
+            "value": 20
+          }
+        ]
+      }
+    ],
+    "description": "자신 주변 반경 4m의 적에게 공격력 100% 물리 피해와 공격력 20% 마법 피해를 준다. 시전 0.5초, ST 8, 재사용 7초."
+  },
+  {
+    "icon": "assets/images/skills/광전사_광전사 해방.png",
+    "id": "skill_class_berserker_liberation",
+    "name": "광전사 해방",
+    "className": "광전사",
+    "slot": "ultimate",
+    "cooldown": 0,
+    "castTime": 0,
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "add_buff",
+        "target": "self",
+        "duration": 6,
+        "effect": {
+          "id": "berserker_liberation",
+          "name": "광전사 해방",
+          "category": "physical",
+          "polarity": "beneficial",
+          "dispellable": false,
+          "maxStacks": 1,
+          "stackMode": "refresh",
+          "mode": "hp_floor",
+          "value": 1
+        }
+      },
+      {
+        "type": "add_buff",
+        "target": "self",
+        "duration": 6,
+        "effect": {
+          "id": "berserker_liberation_attack_speed",
+          "name": "광전사 해방",
+          "category": "physical",
+          "polarity": "beneficial",
+          "dispellable": false,
+          "maxStacks": 1,
+          "stackMode": "refresh",
+          "stat": "attackSpeed",
+          "mode": "attack_rate_percent",
+          "value": 50
+        }
+      },
+      {
+        "type": "add_buff",
+        "target": "self",
+        "duration": 6,
+        "effect": {
+          "id": "berserker_liberation_speed",
+          "name": "광전사 해방",
+          "category": "physical",
+          "polarity": "beneficial",
+          "dispellable": false,
+          "maxStacks": 1,
+          "stackMode": "refresh",
+          "stat": "speed",
+          "mode": "percent",
+          "value": 20
+        }
+      },
+      {
+        "type": "add_buff",
+        "target": "self",
+        "duration": 6,
+        "effect": {
+          "id": "berserker_liberation_attack",
+          "name": "광전사 해방",
+          "category": "physical",
+          "polarity": "beneficial",
+          "dispellable": false,
+          "maxStacks": 1,
+          "stackMode": "refresh",
+          "stat": "atk",
+          "mode": "percent",
+          "value": 30
+        }
+      }
+    ],
+    "lethalActivation": true,
+    "maxUses": 1,
+    "description": "전투 30초 이후 치명 피해를 받을 때 자동 시전하는 궁극기. 전투당 1회, HP 1로 생존하고 6초간 HP가 1 아래로 내려가지 않는다. 회복은 가능하며 종료 후 현재 HP를 유지한다. 동안 공격속도 +50%, 이동속도 +20%, 공격력 +30%."
+  },
+  {
+    "icon": "assets/images/skills/광전사_피의 열기.png",
+    "id": "skill_class_berserker_blood_heat",
+    "name": "피의 열기",
+    "className": "광전사",
+    "slot": "optional",
+    "cooldown": 0,
+    "castTime": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_berserker_blood_scent"
+      ],
+      "resourceTypes": [
+        "HP"
+      ],
+      "resourceCostPercent": 200,
+      "additionalActions": [
+        {
+          "type": "delete_buff",
+          "target": "self",
+          "effect": {
+            "id": "berserker_cleanse",
+            "name": "cleanse",
+            "category": "physical",
+            "polarity": "beneficial",
+            "dispellable": true,
+            "maxStacks": 1,
+            "stackMode": "refresh",
+            "mode": "flat",
+            "dispelMode": "all",
+            "dispelKinds": [
+              "buff",
+              "state"
+            ],
+            "dispelPolarity": "harmful"
+          }
+        }
+      ]
+    },
+    "description": "장착 시 피냄새의 현재 HP 소모를 5%에서 10%로 늘리고 자신에게 걸린 해제 가능한 모든 디버프를 제거한다."
+  },
+  {
+    "icon": "assets/images/skills/광전사_고통이 곧 기회.png",
+    "id": "skill_class_berserker_pain_opportunity",
+    "name": "고통이 곧 기회",
+    "className": "광전사",
+    "slot": "optional",
+    "cooldown": 0,
+    "castTime": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_berserker_pain_recovery"
+      ],
+      "effectValuePercent": 150
+    },
+    "description": "장착 시 고통극복의 누적 피해 회복 비율을 20%에서 30%로 증가시킨다."
+  },
+  {
+    "icon": "assets/images/skills/광전사_홍염.png",
+    "id": "skill_class_berserker_afterglow",
+    "name": "홍염",
+    "className": "광전사",
+    "slot": "optional",
+    "cooldown": 0,
+    "castTime": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_berserker_liberation"
+      ],
+      "delayedRepeatDelay": 5,
+      "delayedRepeatDuration": 3
+    },
+    "description": "장착 시 광전사 해방이 끝난 5초 후 같은 생존 효과와 능력치 버프를 3초간 한 번 재적용한다. 궁극기 사용 횟수를 추가로 소비하지 않으며 반복 재발동하지 않는다."
+  },
+  {
+    "icon": "assets/images/skills/광전사_광전사의 자격.png",
+    "id": "skill_class_berserker_qualification",
+    "name": "광전사의 자격",
+    "className": "광전사",
+    "slot": "optional",
+    "cooldown": 0,
+    "castTime": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "statEffects": [
+        {
+          "id": "berserker_qualification",
+          "name": "qualification",
+          "category": "physical",
+          "polarity": "beneficial",
+          "dispellable": true,
+          "maxStacks": 1,
+          "stackMode": "refresh",
+          "stat": "attackSpeed",
+          "mode": "attack_rate_percent",
+          "value": 15,
+          "requiredWeaponCount": 2
+        }
+      ]
+    },
+    "description": "장착 시 쌍수 무기로 공격하는 동안에만 공격속도 +15%. 양손 무기 한 자루는 해당하지 않는다."
+  },
+  {
+    "icon": "assets/images/skills/광전사_화염잔상.png",
+    "id": "skill_class_berserker_flame_afterimage",
+    "name": "화염잔상",
+    "className": "광전사",
+    "slot": "optional",
+    "cooldown": 0,
+    "castTime": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_berserker_flame_slash"
+      ],
+      "coefficientDamageType": "magic",
+      "coefficientPercent": 200
+    },
+    "description": "장착 시 화염베기의 마법 피해만 공격력 20%에서 40%로 증가시킨다."
+  },
+  {
+    "icon": "assets/images/skills/광전사_끊어치기.png",
+    "id": "skill_class_berserker_interrupting_strikes",
+    "name": "끊어치기",
+    "className": "광전사",
+    "slot": "optional",
+    "cooldown": 0,
+    "castTime": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_berserker_fire_strike"
+      ],
+      "interruptOnHit": true
+    },
+    "description": "장착 시 불의일격의 각 타격이 적중하면 대상의 진행 중인 시전을 즉시 차단한다. 별도 기절은 부여하지 않는다."
   }
 ]

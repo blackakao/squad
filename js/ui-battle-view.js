@@ -9,8 +9,14 @@ function renderBattleSkillRow(unit) {
   ].filter(skill => !isDefaultSkill(skill.id));
   if (!skills.length) return "";
   return `<div class="battle-skill-row" aria-label="${escapeHtml(unit.name)} 장착 스킬">${skills.map(skill => {
-    const remaining = Math.max(0, Number(unit.skillCooldowns?.[skill.id]) || 0);
-    const total = Math.max(remaining, Number(unit.skillCooldownTotals?.[skill.id]) || 0);
+    let remaining = Math.max(0, Number(unit.skillCooldowns?.[skill.id]) || 0);
+    let total = Math.max(remaining, Number(unit.skillCooldownTotals?.[skill.id]) || 0);
+    if (skill.basicAttackSkillId && getBasicAttackReplacement(unit)?.id === skill.basicAttackSkillId) {
+      total = getAttackCooldown(unit);
+      const casting = unit.pendingAction?.type === "attack" && unit.pendingAction.skill?.id === skill.basicAttackSkillId && unit.castTimer > 0;
+      remaining = Math.max(0, casting ? total - ((unit.castDuration || 0) - unit.castTimer) : Number(unit.attackCooldown) || 0);
+      total = Math.max(total, remaining);
+    }
     const angle = total > 0 ? Math.max(0, Math.min(360, remaining / total * 360)) : 0;
     const seconds = remaining > 0 ? Math.ceil(remaining / BASE_ATTACK_COOLDOWN * 10) / 10 : 0;
     const icon = recordImagePath(skill.icon);
@@ -24,11 +30,15 @@ function renderBattleSkillRow(unit) {
     const convertedAttack=conversion?.target === "atk" && conversionState?.source === conversion.source && conversionState?.target === conversion.target
       ? Math.max(0,(Number(conversionState.sourceValue) || 0)*(Number(conversion.percent) || 0)/100) : null;
     const conversionText=convertedAttack == null ? "" : `\n추가된 공격력: ${Math.round(convertedAttack*10)/10}`;
-    const tooltip = `${skill.name}${conversionText}${comboText}${effortText}${remaining > 0 ? ` · ${seconds}초` : ""}`;
+    const weaponCount=skill.weaponControl ? getAvailableControlledWeapons(unit).length : null;
+    const weaponText=weaponCount == null ? "" : ` · 공격 가능한 검 ${weaponCount}자루`;
+    const activationText=skill.lethalActivation ? ` · 전투 ${ULTIMATE_UNLOCK_SECONDS}초 이후 치명 피해 시 자동 시전` : "";
+    const tooltip = `${skill.name}${conversionText}${comboText}${effortText}${weaponText}${activationText}${remaining > 0 ? ` · ${seconds}초` : ""}`;
     return `<span class="battle-skill-tooltip" data-tooltip="${escapeHtml(tooltip)}" tabindex="0" aria-label="${escapeHtml(tooltip)}">
       <span class="battle-skill-icon" aria-hidden="true">
         ${icon ? `<img src="${escapeHtml(icon)}" alt="" onerror="this.hidden=true">` : `<span class="battle-skill-placeholder">${escapeHtml(String(skill.name).slice(0, 1))}</span>`}
         ${remaining > 0 ? `<span class="battle-skill-cooldown" style="--cooldown-angle:${angle}deg"></span><span class="battle-skill-time">${seconds}</span>` : ""}
+        ${weaponCount == null ? "" : `<span class="battle-skill-count">${weaponCount}</span>`}
       </span>
     </span>`;
   }).join("")}</div>`;

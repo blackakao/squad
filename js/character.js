@@ -243,7 +243,7 @@ function renderCharacterSkillPicker(selectedSkillIds = null) {
   document.getElementById('characterChoicePanel').hidden = true;
   const passive = skills.filter(skill => skill.slot === 'passive' || isChoiceSkill(skill));
   const active = skills.filter(skill => skill.slot === 'active' || skill.slot === 'basic');
-  const ultimate = active.find(skill => /궁극|ultimate/i.test(skill.name + ' ' + skill.id));
+  const ultimate = skills.find(skill => skill.slot === 'ultimate') ?? active.find(isUltimateSkill);
   const basics = active.filter(skill => skill !== ultimate);
   characterSkillsEl.innerHTML = `<div class="character-passive-slot">${passive.length ? passive.map(skill => renderCharacterSkillBox(skill, '패시브')).join('') : renderCharacterSkillBox(null,'패시브')}</div>`
     + Array.from({length:4}, (_,i) => renderCharacterSkillBox(basics[i], `기본 ${i+1}`)).join('')
@@ -392,12 +392,12 @@ function createCharacter(characterData, index, side = "player", synergyModifiers
     const weapon = getEquippedWeaponItemForCombat(equipped);
     return {name:set.name,attributes:getCharacterEffectiveAttributes(equipped),itemSkillModifiers:getCharacterItemSkillModifiers(equipped),maxHp:equipped.hp,maxMp:equipped.mp,maxSt:equipped.st,baseBp:Math.max(0,Number(equipped.bp)||0),
       atk:equipped.atk,magic:equipped.magic,speed:equipped.speed,attackSpeed:equipped.attackSpeed,castSpeed:equipped.castSpeed,armorCategory:getCharacterArmorCategory(equipped),
-      defense:equipped.defense,resistance:equipped.resistance,attackRange:equipped.attackRange,attackType:equipped.attackType,
+      shieldDefense:getCharacterShieldDefense(equipped),defense:equipped.defense,resistance:equipped.resistance,attackRange:equipped.attackRange,attackType:equipped.attackType,
       attackSkillId:weapon?.attackSkillId ?? "",weaponAttacks:getCharacterWeaponAttacks(equipped),
       sameTargetWeaponPenaltyPercent:equipped.equipmentRules.sameTargetWeaponPenaltyPercent,
       withoutEquipment:{name:`${set.name} (장비 효과 무효)`,attributes:getCharacterEffectiveAttributes(unequippedCharacter),itemSkillModifiers:[],maxHp:unequippedCharacter.hp,maxMp:unequippedCharacter.mp,maxSt:unequippedCharacter.st,baseBp:Math.max(0,Number(unequippedCharacter.bp)||0),
         atk:unequippedCharacter.atk,magic:unequippedCharacter.magic,speed:unequippedCharacter.speed,attackSpeed:unequippedCharacter.attackSpeed,castSpeed:unequippedCharacter.castSpeed,
-        defense:unequippedCharacter.defense,resistance:unequippedCharacter.resistance,attackRange:unequippedCharacter.attackRange,attackType:unequippedCharacter.attackType,
+        shieldDefense:0,defense:unequippedCharacter.defense,resistance:unequippedCharacter.resistance,attackRange:unequippedCharacter.attackRange,attackType:unequippedCharacter.attackType,
         attackSkillId:"",weaponAttacks:[],sameTargetWeaponPenaltyPercent:0}};
   });
   if (synergyModifiers && Object.keys(synergyModifiers).length) {
@@ -444,6 +444,7 @@ function createCharacter(characterData, index, side = "player", synergyModifiers
     skillIds: Array.isArray(derivedCharacter.skillIds) ? derivedCharacter.skillIds : [],
     skillSelections: structuredClone(derivedCharacter.skillSelections ?? {}),
     skillCooldowns: {},
+    shieldDefense: getCharacterShieldDefense(derivedCharacter),
     defense: derivedCharacter.defense,
     resistance: derivedCharacter.resistance,
     attackRange: derivedCharacter.attackRange,

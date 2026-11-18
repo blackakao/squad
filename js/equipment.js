@@ -2,6 +2,7 @@
 
 function normalizeEquipmentRules(rules = {}) {
   return {
+    ...(Array.isArray(rules?.allowedWeaponCategories) && rules.allowedWeaponCategories?.length ? {allowedWeaponCategories:[...new Set(rules.allowedWeaponCategories.map(String))]} : {}),
     extraWeaponSlots: Math.max(0, Math.min(5, Math.floor(Number(rules?.extraWeaponSlots) || 0))),
     twoHandSingleSlot: rules?.twoHandSingleSlot === true,
     sameTargetWeaponPenaltyPercent: Math.max(0, Math.min(100, Number(rules?.sameTargetWeaponPenaltyPercent) || 0))
@@ -253,7 +254,7 @@ function getCharacterEquipmentBonus(character) {
 
   return getCharacterEquipmentSlots(character).reduce((bonus, slot) => {
     const item = getItemById(equipment[slot.key]);
-    if (!item) {
+    if (!item || (isWeaponItem(item) && normalizeEquipmentRules(character?.equipmentRules).allowedWeaponCategories?.length && !canEquipItemToSlot(item,slot.key,character))) {
       return bonus;
     }
 
@@ -281,11 +282,15 @@ function getCharacterBaseWithoutEquipment(character) {
   });
 }
 
+function getCharacterShieldDefense(character) {
+  return getCharacterModifierItems(character).filter(item=>["shield","방패"].includes(item.weaponCategory)).reduce((sum,item)=>sum+Math.max(0,Number(item.defense) || 0),0);
+}
+
 function getCharacterModifierItems(character) {
   const seen = new Set();
   return getCharacterEquipmentSlots(character).flatMap(slot => {
     const item = getItemById(character?.equipment?.[slot.key]);
-    if (!item) return [];
+    if (!item || (isWeaponItem(item) && normalizeEquipmentRules(character?.equipmentRules).allowedWeaponCategories?.length && !canEquipItemToSlot(item,slot.key,character))) return [];
     if (isWeaponItem(item) && item.handType === "twoHand") {
       if (seen.has(item.id)) return [];
       seen.add(item.id);
@@ -382,6 +387,7 @@ function canEquipItemToSlot(item, slotKey, character = null) {
     }
 
     const rules = normalizeEquipmentRules(character?.equipmentRules);
+    if (rules.allowedWeaponCategories?.length && !rules.allowedWeaponCategories.includes(item.weaponCategory)) return false;
     if (slotKey.startsWith("extraWeapon")) return category.handType === "oneHand" || rules.twoHandSingleSlot;
     if (category.handType === "twoHand" && rules.twoHandSingleSlot) return true;
 

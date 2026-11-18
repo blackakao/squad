@@ -1,5 +1,5 @@
 const TIMED_EFFECT_ACTIONS = ["add_buff", "delete_buff", "add_state", "delete_state"];
-const BUFF_STAT_LABELS = {str:"힘",int:"지능",atk:"공격력", magic:"마력", adaptiveOffense:"적응형 공격 능력치", maxMp:"최대 MP", maxHp:"최대 HP", defense:"방어력", resistance:"저항력", speed:"이동속도", attackRange:"사거리", attackSpeed:"공격 간격(초)", castSpeed:"기본 시전시간(초)"};
+const BUFF_STAT_LABELS = {shieldDefense:"방패 방어력",str:"힘",int:"지능",atk:"공격력", magic:"마력", adaptiveOffense:"적응형 공격 능력치", maxMp:"최대 MP", maxHp:"최대 HP", defense:"방어력", resistance:"저항력", speed:"이동속도", attackRange:"사거리", attackSpeed:"공격 간격(초)", castSpeed:"기본 시전시간(초)"};
 const STATE_LABELS = {stun:"기절", root:"이동 불가", silence:"침묵", disarm:"기본 공격 금지", flee:"도주", polymorph:"양 변이 (공격·스킬 금지·도주)", sleep:"수면", charm:"현혹 (시전자에게 접근)", periodic:"주기 효과만 적용"};
 const EFFECT_CATEGORY_LABELS = {general:"일반",physical:"물리",magic:"마법"};
 const EFFECT_CONSUME_LABELS = {hit:"자신이 적중",damaged:"자신이 피격",heal:"자신이 회복",cast_complete:"자신의 시전 완료"};
@@ -46,6 +46,8 @@ function isEffectActionConfigured(action) {
   if (action.type === "add_buff" && effect.mode === "cast_time_flat") return Number.isFinite(Number(effect.value));
   if (action.type === "add_buff" && effect.mode === "cast_time_percent") return effect.stat === "castSpeed" && Number.isFinite(Number(effect.value)) && Number(effect.value)>=-100;
   if (action.type === "add_buff" && effect.mode === "attack_rate_percent") return effect.stat === "attackSpeed" && Number.isFinite(Number(effect.value)) && Number(effect.value)>=-100;
+  if (action.type === "add_buff" && ["damage_recovery","hp_floor"].includes(effect.mode)) return Number(action.duration)>0 && Number.isFinite(Number(effect.value)) && Number(effect.value)>0;
+  if (action.type === "add_buff" && ["next_attack_miss","mark_damage_link"].includes(effect.mode)) return true;
   if (action.type === "add_buff" && effect.mode === "damage_link") return Number.isFinite(Number(effect.value)) && Number(effect.value)>0;
   if (action.type === "add_buff" && effect.mode === "basic_cycle_repeat") return Number(effect.value)>=1;
   if (action.type === "add_buff" && effect.mode === "attached_guard") return Number(effect.value)>0;
@@ -89,6 +91,13 @@ function normalizeSkillEffect(effect,type = "add_buff") {
     stackBonuses:(Array.isArray(effect.stackBonuses) ? effect.stackBonuses : []).map(bonus=>({
       stat:bonus.stat,mode:bonus.mode,value:Number(bonus.value) || 0,minStacks:Math.max(1,Math.min(100,Math.floor(Number(bonus.minStacks) || 1))),perStack:bonus.perStack === true,...(Number(bonus.perNStacks)>0 ? {perNStacks:Math.max(1,Math.min(100,Math.floor(Number(bonus.perNStacks))))} : {})
     })),
+    requiredWeaponCount:Math.max(0,Math.floor(Number(effect.requiredWeaponCount) || 0)),
+    repeatDelay:Math.max(0,Number(effect.repeatDelay) || 0),repeatDuration:Math.max(0,Number(effect.repeatDuration) || 0),
+    weaponReserveCount:Math.max(0,Math.min(6,Math.floor(Number(effect.weaponReserveCount) || 0))),
+    linkedEffectId:String(effect.linkedEffectId ?? ""),
+    skillModifiers:(effect.skillModifiers ?? []).map(normalizeSelectionModifier),
+    damageTypeFilter:["physical","magic","fixed"].includes(effect.damageTypeFilter) ? effect.damageTypeFilter : "",
+    reflectBlockedMagic:effect.reflectBlockedMagic === true,markHealingLinkPercent:Math.max(0,Number(effect.markHealingLinkPercent) || 0),
     receivedDamagePercent:Math.max(0,Number(effect.receivedDamagePercent ?? 100)),
     breakRecreatePercent:Math.max(0,Number(effect.breakRecreatePercent) || 0),
     refundMpOnExpire:effect.refundMpOnExpire === true,
@@ -192,7 +201,7 @@ function renderTimedEffectFields(action) {
           <small>능력치 버프에서 기준 중첩에 도달하면 적용하며, 이 효과가 만료·해제되면 보정도 함께 사라집니다.</small>
         </div>
         <label>능력치<select class="skill-effect-stat">${options(BUFF_STAT_LABELS,effect.stat)}</select></label>
-        <label>계산<select class="skill-effect-mode" onchange="updateSkillEffectModeVisibility(this)"><option value="flat" ${effect.mode === "flat" ? "selected" : ""}>고정값 가산</option><option value="percent" ${effect.mode === "percent" ? "selected" : ""}>기본 능력치의 % 가산</option><option value="override" ${effect.mode === "override" ? "selected" : ""}>최종값 고정 (0: 삭제)</option><option value="attribute" ${effect.mode === "attribute" ? "selected" : ""}>기본 능력치 가산 (힘·지능)</option><option value="cast_time_flat" ${effect.mode === "cast_time_flat" ? "selected" : ""}>모든 시전시간 증감 (초)</option><option value="cast_time_percent" ${effect.mode === "cast_time_percent" ? "selected" : ""}>모든 시전시간 증감 (%) · 음수: 단축</option><option value="attack_rate_percent" ${effect.mode === "attack_rate_percent" ? "selected" : ""}>공격속도 증감 (%) · 음수: 감속</option><option value="convert" ${effect.mode === "convert" ? "selected" : ""}>다른 능력치의 % 전환</option><option value="next_skill_modifier" ${effect.mode === "next_skill_modifier" ? "selected" : ""}>다음 1회 스킬 보정</option><option value="damage_link" ${effect.mode === "damage_link" ? "selected" : ""}>시전자가 받은 실제 피해를 대상에 전달 (%)</option><option value="attached_guard" ${effect.mode === "attached_guard" ? "selected" : ""}>부착 방벽 · 직접 공격 방어</option><option value="basic_cycle_repeat" ${effect.mode === "basic_cycle_repeat" ? "selected" : ""}>주기 강화 일반 공격 반복</option><option value="barrier" ${effect.mode === "barrier" ? "selected" : ""}>시간제 보호막 · 공격으로 소진 시 반응</option><option value="damage_reflect" ${effect.mode === "damage_reflect" ? "selected" : ""}>받은 피해 반사</option><option value="heal_absorb" ${effect.mode === "heal_absorb" ? "selected" : ""}>다른 시전자 HP 치유 흡수 (수치: 흡수량)</option><option value="basic_echo" ${effect.mode === "basic_echo" ? "selected" : ""}>기본 공격 추가타 (수치: 피해 %)</option><option value="damage_pool" ${effect.mode === "damage_pool" ? "selected" : ""}>스킬 피해 누적 · 최대 중첩 폭발 (수치: 피해 %)</option><option value="periodic" ${effect.mode === "periodic" ? "selected" : ""}>주기 효과만 적용</option><option value="immunity" ${effect.mode === "immunity" ? "selected" : ""}>능력치 변경 없이 면역 적용</option><option value="received_healing_percent" ${effect.mode === "received_healing_percent" ? "selected" : ""}>받는 회복량 (%)</option><option value="priority_attack_damage" ${effect.mode === "priority_attack_damage" ? "selected" : ""}>최우선 공격력 고정 피해</option><option value="damage_immunity" ${effect.mode === "damage_immunity" ? "selected" : ""}>피해 무시</option><option value="damage_proxy" ${effect.mode === "damage_proxy" ? "selected" : ""}>피해 대리 수신</option><option value="stealth" ${effect.mode === "stealth" ? "selected" : ""}>은신 · 직접 타겟 제외</option><option value="disguise" ${effect.mode === "disguise" ? "selected" : ""}>적 외형 위장·직접 타겟 제외</option><option value="melee_reaction" ${effect.mode === "melee_reaction" ? "selected" : ""}>근접 피격 반응 스킬</option></select></label>
+        <label>계산<select class="skill-effect-mode" onchange="updateSkillEffectModeVisibility(this)"><option value="flat" ${effect.mode === "flat" ? "selected" : ""}>고정값 가산</option><option value="percent" ${effect.mode === "percent" ? "selected" : ""}>기본 능력치의 % 가산</option><option value="override" ${effect.mode === "override" ? "selected" : ""}>최종값 고정 (0: 삭제)</option><option value="attribute" ${effect.mode === "attribute" ? "selected" : ""}>기본 능력치 가산 (힘·지능)</option><option value="cast_time_flat" ${effect.mode === "cast_time_flat" ? "selected" : ""}>모든 시전시간 증감 (초)</option><option value="cast_time_percent" ${effect.mode === "cast_time_percent" ? "selected" : ""}>모든 시전시간 증감 (%) · 음수: 단축</option><option value="attack_rate_percent" ${effect.mode === "attack_rate_percent" ? "selected" : ""}>공격속도 증감 (%) · 음수: 감속</option><option value="convert" ${effect.mode === "convert" ? "selected" : ""}>다른 능력치의 % 전환</option><option value="next_skill_modifier" ${effect.mode === "next_skill_modifier" ? "selected" : ""}>다음 1회 스킬 보정</option><option value="damage_recovery" ${effect.mode === "damage_recovery" ? "selected" : ""}>받은 피해 저장 후 만료 시 회복 (%)</option><option value="hp_floor" ${effect.mode === "hp_floor" ? "selected" : ""}>죽음 방지 · 최소 HP</option><option value="mark_damage_link" ${effect.mode === "mark_damage_link" ? "selected" : ""}>받은 피해를 현재 징벌대상에 전달</option><option value="next_attack_miss" ${effect.mode === "next_attack_miss" ? "selected" : ""}>다음 공격 1회 빗나감</option><option value="damage_link" ${effect.mode === "damage_link" ? "selected" : ""}>시전자가 받은 실제 피해를 대상에 전달 (%)</option><option value="attached_guard" ${effect.mode === "attached_guard" ? "selected" : ""}>부착 방벽 · 직접 공격 방어</option><option value="basic_cycle_repeat" ${effect.mode === "basic_cycle_repeat" ? "selected" : ""}>주기 강화 일반 공격 반복</option><option value="barrier" ${effect.mode === "barrier" ? "selected" : ""}>시간제 보호막 · 공격으로 소진 시 반응</option><option value="damage_reflect" ${effect.mode === "damage_reflect" ? "selected" : ""}>받은 피해 반사</option><option value="heal_absorb" ${effect.mode === "heal_absorb" ? "selected" : ""}>다른 시전자 HP 치유 흡수 (수치: 흡수량)</option><option value="basic_echo" ${effect.mode === "basic_echo" ? "selected" : ""}>기본 공격 추가타 (수치: 피해 %)</option><option value="damage_pool" ${effect.mode === "damage_pool" ? "selected" : ""}>스킬 피해 누적 · 최대 중첩 폭발 (수치: 피해 %)</option><option value="periodic" ${effect.mode === "periodic" ? "selected" : ""}>주기 효과만 적용</option><option value="immunity" ${effect.mode === "immunity" ? "selected" : ""}>능력치 변경 없이 면역 적용</option><option value="received_healing_percent" ${effect.mode === "received_healing_percent" ? "selected" : ""}>받는 회복량 (%)</option><option value="priority_attack_damage" ${effect.mode === "priority_attack_damage" ? "selected" : ""}>최우선 공격력 고정 피해</option><option value="damage_immunity" ${effect.mode === "damage_immunity" ? "selected" : ""}>피해 무시</option><option value="damage_proxy" ${effect.mode === "damage_proxy" ? "selected" : ""}>피해 대리 수신</option><option value="stealth" ${effect.mode === "stealth" ? "selected" : ""}>은신 · 직접 타겟 제외</option><option value="disguise" ${effect.mode === "disguise" ? "selected" : ""}>적 외형 위장·직접 타겟 제외</option><option value="melee_reaction" ${effect.mode === "melee_reaction" ? "selected" : ""}>근접 피격 반응 스킬</option></select></label>
         <div class="skill-effect-barrier-settings ${effect.mode === "barrier" ? "" : "hidden"}">
           <label>보호막 유지 중 받는 피해 (%)<input class="skill-effect-barrier-received" type="number" min="0" value="${effect.receivedDamagePercent ?? 100}"></label>
           <label>공격 소진 시 1회 재생성 (%)<input class="skill-effect-barrier-recreate" type="number" min="0" value="${effect.breakRecreatePercent ?? 0}"></label>
@@ -222,6 +231,8 @@ function renderTimedEffectFields(action) {
           <small>이 버프를 부여한 살아 있는 아군이 피해를 대신 받습니다. 우선순위 숫자가 낮을수록 먼저 분배하며 대리 피해는 다시 전달하지 않습니다.</small>
         </div>
         <div class="skill-effect-counter-settings ${effect.mode === "damage_immunity" ? "" : "hidden"}">
+          <label>피해 무시 타입<select class="skill-effect-damage-type-filter">${options({"":"모든 피해",physical:"물리",magic:"마법",fixed:"고정"},effect.damageTypeFilter ?? "")}</select></label>
+          <label><input class="skill-effect-reflect-blocked-magic" type="checkbox" ${effect.reflectBlockedMagic ? "checked" : ""}>차단한 마법 공격 반사</label>
           <label><input class="skill-effect-counter-on-melee" type="checkbox" ${effect.counterOnMelee ? "checked" : ""}>1m 이하 직접 공격을 무시하면 즉시 기본 공격으로 반격</label>
           <small>DOT와 필드 주기 피해는 피해 무시 횟수와 반격을 소모하지 않습니다. 반사 피해와 반격으로 발생한 공격에는 연쇄 반격하지 않습니다.</small>
         </div>
@@ -256,7 +267,7 @@ function renderTimedEffectFields(action) {
 
 function readSkillEffectFromRow(row) {
   const value = name => row.querySelector(`.skill-effect-${name}`)?.value;
-  return {receivedDamagePercent:Number(value("barrier-received") ?? row.dataset.barrierReceived ?? 100),breakRecreatePercent:Number(value("barrier-recreate") ?? row.dataset.barrierRecreate) || 0,refundMpOnExpire:row.querySelector(".skill-effect-refund-mp")?.checked ?? (row.dataset.refundMp === "true"),guardHits:Number(row.dataset.guardHits) || 3,countChoiceSkillId:row.dataset.countChoice ?? "",evadeDirect:row.dataset.evadeDirect === "true",holdAttacks:row.dataset.holdAttacks === "true",requiredOwnedSummonAbsent:row.querySelector('.skill-effect-required-summon-absent')?.checked === true,id:value("id"),name:value("name"),stat:value("stat"),sourceStat:value("source-stat"),state:value("state"),mode:value("mode"),requiredOwnedSummonEntityId:value("required-summon") ?? "",tags:String(value("tags") ?? "").split(",").map(tag=>tag.trim()).filter(Boolean),
+  return {requiredWeaponCount:Number(row.dataset.requiredWeaponCount) || 0,repeatDelay:Number(row.dataset.repeatDelay) || 0,repeatDuration:Number(row.dataset.repeatDuration) || 0,weaponReserveCount:Number(row.dataset.weaponReserveCount) || 0,linkedEffectId:row.dataset.linkedEffectId ?? "",skillModifiers:JSON.parse(row.dataset.skillModifiers || "[]"),damageTypeFilter:value("damage-type-filter") ?? row.dataset.damageTypeFilter ?? "",reflectBlockedMagic:row.querySelector(".skill-effect-reflect-blocked-magic")?.checked ?? (row.dataset.reflectBlockedMagic === "true"),markHealingLinkPercent:Number(row.dataset.markHealingLink) || 0,receivedDamagePercent:Number(value("barrier-received") ?? row.dataset.barrierReceived ?? 100),breakRecreatePercent:Number(value("barrier-recreate") ?? row.dataset.barrierRecreate) || 0,refundMpOnExpire:row.querySelector(".skill-effect-refund-mp")?.checked ?? (row.dataset.refundMp === "true"),guardHits:Number(row.dataset.guardHits) || 3,countChoiceSkillId:row.dataset.countChoice ?? "",evadeDirect:row.dataset.evadeDirect === "true",holdAttacks:row.dataset.holdAttacks === "true",requiredOwnedSummonAbsent:row.querySelector('.skill-effect-required-summon-absent')?.checked === true,id:value("id"),name:value("name"),stat:value("stat"),sourceStat:value("source-stat"),state:value("state"),mode:value("mode"),requiredOwnedSummonEntityId:value("required-summon") ?? "",tags:String(value("tags") ?? "").split(",").map(tag=>tag.trim()).filter(Boolean),
     stackBonuses:[...row.querySelectorAll('.skill-effect-stack-bonus')].map(bonus=>({
       stat:bonus.querySelector('.skill-bonus-stat').value,mode:bonus.querySelector('.skill-bonus-mode').value,
       value:Number(bonus.querySelector('.skill-bonus-value').value),minStacks:Number(bonus.querySelector('.skill-bonus-min-stacks').value),perNStacks:Number(bonus.querySelector('.skill-bonus-per-n-stacks')?.value || 0),perStack:bonus.querySelector('.skill-bonus-per-stack').checked
@@ -322,6 +333,75 @@ function hasBattleState(unit, state) {
     || (effect.state === "polymorph" && ["disarm","silence","flee"].includes(state))
     || (effect.state === "sleep" && state === "stun")
     || (effect.state === "charm" && ["disarm","silence"].includes(state))));
+}
+
+function getSingleTargetMarkPassive(unit) {
+  const base=resolveSelectedSkillIds(unit?.skillIds,unit?.skillSelections).map(getSkillById)
+    .find(skill=>skill?.slot === "passive" && skill.singleTargetMark && !isUnitSkillDisabled(unit,skill));
+  return base ? getRuntimeSelectionSkill(unit,getRuntimeItemSkill(unit,base)) : null;
+}
+
+function getSingleMarkedTarget(unit) {
+  const passive=getSingleTargetMarkPassive(unit);
+  if (!passive || unit.effectCasterId == null) return null;
+  return [...playerSquad,...enemySquad].find(target=>target.alive && target.side!==unit.side && (target.activeEffects ?? []).some(effect=>effect.id===passive.singleTargetMark.effectId && effect.casterId===unit.effectCasterId)) ?? null;
+}
+
+function initializeMarkExecution(source,target,execution) {
+  if (!Object.hasOwn(execution,"primaryTarget")) execution.primaryTarget=target;
+  if (!Object.hasOwn(execution,"priorMarkTarget")) execution.priorMarkTarget=getSingleMarkedTarget(source);
+}
+
+function getMarkedMagicDamageMultiplier(source,target,action) {
+  if (action.damageType!=="magic" || getSingleMarkedTarget(source)!==target) return 1;
+  return (getSingleTargetMarkPassive(source)?.markMagicDamagePercent || 100)/100;
+}
+
+function applySingleMarkDamageBonus(source,target,action,skill,actual,execution) {
+  if (!source.alive || !(actual>0) || source.side===target.side || action.periodic || action.reflected || action.countered || action.damageLinked || skill?.triggered) return;
+  const passive=getSingleTargetMarkPassive(source);
+  if (!passive) return;
+  if (execution.primaryTarget===target) {
+    for (const unit of [...playerSquad,...enemySquad]) {
+      const previous=unit.activeEffects?.length;
+      unit.activeEffects=(unit.activeEffects ?? []).filter(effect=>!(effect.id===passive.singleTargetMark.effectId && effect.casterId===source.effectCasterId));
+      if (previous!==unit.activeEffects.length) recalculateBattleBuffs(unit);
+    }
+    if (target.alive) applyTimedEffectAction(source,target,{type:"add_buff",duration:0,effect:{id:passive.singleTargetMark.effectId,name:"징벌대상",stat:"atk",mode:"flat",value:0,category:"magic",polarity:"harmful",dispellable:true}},passive);
+  }
+  const marked=getSingleMarkedTarget(source);
+  if (marked) applyActionDamage(source,marked,{type:"deal_damage",damageType:"magic",markProc:true,settledDamage:true,
+    coefficients:[{type:"fixed",value:actual*passive.singleTargetMark.bonusPercent/100*getMarkedMagicDamageMultiplier(source,marked,{damageType:"magic"})}]},
+    {id:passive.id,name:passive.name,slot:"passive",triggered:true});
+}
+
+function prepareAttackOutcome(unit,target,skill) {
+  if (!unit?.alive || !skill || skill.triggered || skill._attackOutcomeChecked || !skill.actions?.some(action=>action.type==="deal_damage")) return skill;
+  const result={...skill,_attackOutcomeChecked:true};
+  const passive=getSingleTargetMarkPassive(unit);
+  if (skill.slot==="basic" && passive?.basicAttackMpGain>0) {
+    const before=unit.mp;unit.mp=Math.min(unit.maxMp,unit.mp+passive.basicAttackMpGain);
+    if (unit.mp>before) publishBattleEvents([{type:"heal",source:unit,target:unit,skill:{...passive,triggered:true},resource:"MP",amount:unit.mp-before}]);
+  }
+  const miss=(unit.activeEffects ?? []).find(effect=>effect.mode==="next_attack_miss");
+  if (miss) {
+    consumeBattleEffectUse(unit,miss,"실명 공격 실패");result._attackMissed=true;
+    publishBattleEvents([{type:"attack_miss",source:unit,target,skill,reason:miss.name}]);
+  }
+  return result;
+}
+
+function applyMarkedLinkDamage(unit,amount,healing=false) {
+  if (!(amount>0) || !unit.alive) return;
+  const marked=getSingleMarkedTarget(unit);
+  if (!marked) return;
+  for (const effect of unit.activeEffects ?? []) {
+    if (effect.mode!=="mark_damage_link") continue;
+    const percent=healing ? effect.markHealingLinkPercent : effect.value;
+    if (!(percent>0) || !marked.alive) continue;
+    applyActionDamage(unit,marked,{type:"deal_damage",damageType:"fixed",settledDamage:true,damageLinked:true,coefficients:[{type:"fixed",value:amount*percent/100}]},
+      {id:effect.skillId,name:effect.name,triggered:true});
+  }
 }
 
 function getCombatCyclePassive(unit) {
@@ -504,7 +584,9 @@ function getEffectStackBonuses(effect) {
 }
 
 function applyIncomingDamageLinks(unit,amount,action) {
+  if (amount>0) for (const effect of unit.activeEffects ?? []) if (effect.mode === "damage_recovery") effect.storedDamage=(effect.storedDamage || 0)+amount;
   if (!(amount>0) || action.damageLinked || unit.effectCasterId == null) return;
+  applyMarkedLinkDamage(unit,amount);
   for (const target of [...playerSquad,...enemySquad]) {
     if (!target.alive || target.side === unit.side) continue;
     for(const effect of (target.activeEffects ?? []).filter(effect=>effect.mode === "damage_link" && effect.casterId === unit.effectCasterId)) {
@@ -574,12 +656,13 @@ function updateAttributeBuffs(unit,restoreOnly=false) {
 
 function getSelectedOptionalStatEffects(unit) {
   return limitOptionalSkillIds(unit?.skillIds).map(getSkillById).filter(skill=>skill?.slot === "optional" && !isUnitSkillDisabled(unit,skill))
-    .flatMap(skill=>(skill.selectionModifier?.statEffects ?? []).filter(effect=>!effect.requiredWeaponCategory ||
-      (unit.weaponAttacks ?? []).some(weapon=>weapon.weaponCategory === effect.requiredWeaponCategory))
+    .flatMap(skill=>(skill.selectionModifier?.statEffects ?? []).filter(effect=>(!effect.requiredWeaponCount || (unit.weaponAttacks ?? []).length>=effect.requiredWeaponCount) && (!effect.requiredWeaponCategory ||
+      (unit.weaponAttacks ?? []).some(weapon=>weapon.weaponCategory === effect.requiredWeaponCategory)))
       .map(effect=>({...effect,kind:"buff",stacks:effect.countChoiceSkillId ? getSelectedSummonCount(unit,effect.countChoiceSkillId) : 1})));
 }
 
 function recalculateBattleBuffs(unit) {
+  unit.activeEffects=(unit.activeEffects ?? []).filter(effect=>!effect.linkedEffectId || unit.activeEffects.some(parent=>parent.id === effect.linkedEffectId && parent.casterId === effect.casterId));
   restorePassiveStatConversion(unit);
   updateAttributeBuffs(unit);
   const previousMaxHp=Math.max(0,Number(unit.maxHp) || 0);
@@ -592,6 +675,10 @@ function recalculateBattleBuffs(unit) {
       if (effect.requiredOwnedSummonEntityId) {
         const caster=[...playerSquad,...enemySquad].find(candidate=>candidate.effectCasterId === effect.casterId);
         if (!caster || Boolean(getLivingOwnedSummons(caster,effect.requiredOwnedSummonEntityId).length) === effect.requiredOwnedSummonAbsent) return [];
+      }
+      if (effect.stat === "shieldDefense" && effect.mode === "percent") {
+        const base=unit.effectBaseStats?.shieldDefense?.value ?? (Number(unit.shieldDefense) || 0);
+        return [effect,{...effect,stat:"defense",mode:"flat",value:base*effect.value/100},...getEffectStackBonuses(effect)];
       }
       return [effect,...getEffectStackBonuses(effect)];
     }
@@ -638,8 +725,17 @@ function recalculateBattleBuffs(unit) {
 
 function clearBattleEffects(unit) {
   clearBattleChannel(unit);
+  unit.weaponFlower=null;unit.weaponDeployment=null;unit.delayedEffectRepeats=[];
   unit.activeEffects = [];
   recalculateBattleBuffs(unit);
+}
+
+function interruptCombatCasting(unit,reason) {
+  interruptBattleCast(unit,reason);
+  for (const state of unit.weaponAttackStates ?? []) if (state.castTimer>0) {
+    state.castTimer=0;state.target=null;state.preparedAttackSkill=null;
+    publishBattleEvents([{type:"cast_interrupt",source:unit,target:unit,reason}]);
+  }
 }
 
 function interruptBattleCast(unit, reason = "상태 효과") {
@@ -744,6 +840,8 @@ function applyTimedEffectAction(source,target,action,skill,execution=null) {
     target.effectHitCounts[key]=Math.min(config.hitThreshold,(target.effectHitCounts[key] ?? 0)+1);
     if (target.effectHitCounts[key]<config.hitThreshold) return;
   }
+  const reservedWeapons=config.weaponReserveCount>0 ? getAvailableControlledWeapons(target).slice(0,config.weaponReserveCount) : [];
+  if (config.weaponReserveCount>reservedWeapons.length) return;
   const existingAny = target.activeEffects.find(effect => effect.kind === kind && effect.id === config.id);
   if (config.stackMode === "reject" && existingAny) return;
   const existing = target.activeEffects.find(effect => effect.kind === kind && effect.id === config.id && effect.casterId === source.effectCasterId);
@@ -752,6 +850,8 @@ function applyTimedEffectAction(source,target,action,skill,execution=null) {
   const periodicCoefficient=config.periodic?.coefficient;
   const periodicSourceBase=periodicCoefficient?.type === "calculated" ? getCoefficientBaseValue(periodicCoefficient,source,target) : 0;
   const instance = {...config,periodic:config.periodic,periodicSourceBase,periodicElapsedTicks:0,immunity:config.immunity,kind,stacks,casterId:source.effectCasterId,casterName:source.name,
+    reservedWeaponSlots:reservedWeapons.map(state=>state.weapon.slot),weaponsReleased:false,
+    storedDamage:0,
     damageTaken:0,breakDamageThreshold:Math.max(0,Number(target.maxHp) || 0)*config.breakDamagePercent/100,
     ...(config.mode === "convert" ? {conversionBase:sourceBase} : {}),
     refundMp:config.refundMpOnExpire ? Math.max(0,Number(execution?.resourceSpent?.MP) || 0) : 0,
@@ -761,6 +861,7 @@ function applyTimedEffectAction(source,target,action,skill,execution=null) {
     nextPeriodicTick:config.periodic ? (existing?.periodic?.interval === config.periodic.interval ? existing.nextPeriodicTick : null) ?? Math.max(1,Math.ceil(config.periodic.interval * BASE_ATTACK_COOLDOWN)) : null};
   if (config.mode === "heal_absorb") instance.absorbRemaining=(existing?.absorbRemaining ?? 0)+config.value;
   if (config.mode === "attached_guard") {instance.guardInitial=config.value;instance.guardRemaining=config.value;instance.guardRemainingHits=config.guardHits;}
+  if (config.mode === "barrier" && config.linkedEffectId && !target.activeEffects.some(effect=>effect.id === config.linkedEffectId && effect.casterId === source.effectCasterId)) return;
   if (config.mode === "barrier") {
     instance.shieldInitial=config.barrierMode === "coefficient" ? Math.max(0,getActionCoefficientValue(action,source,target,execution)) : config.barrierMode === "fixed" ? config.value : Math.max(0,Number(target.maxHp) || 0)*config.value/100;
     instance.shieldRemaining=instance.shieldInitial;
@@ -772,6 +873,7 @@ function applyTimedEffectAction(source,target,action,skill,execution=null) {
     instance.disguisePortrait=enemies.sort((a,b)=>distance(target,a)-distance(target,b))[0]?.portrait ?? "";
     if (existing) existing.disguisePortrait=instance.disguisePortrait;
   }
+  for (const state of reservedWeapons) {state.castTimer=0;state.target=null;state.preparedAttackSkill=null;}
   recalculateBattleBuffs(target);
   if (config.periodic?.type === "damage" && !action._suppressDamagePool && !skill?.triggered && skill?.slot === "active") {
     recordSkillDamagePool(source,target,action,skill,getProjectedPeriodicDamage(source,target,action,config,stacks));
@@ -945,12 +1047,26 @@ function applyBasicEcho(attacker,target,action,skill,actual) {
   }
 }
 
+function updateDelayedEffectRepeats(unit,previousEntries=null) {
+  const ready=[];
+  unit.delayedEffectRepeats=(unit.delayedEffectRepeats ?? []).filter(entry=>{if (previousEntries && !previousEntries.includes(entry)) return true;if (--entry.remainingTicks<=0) {ready.push(entry);return false;}return true;});
+  for (const entry of ready) {
+    const base=getSkillById(entry.skillId);
+    if (!unit.alive || !base || isUnitSkillDisabled(unit,base)) continue;
+    const skill=getRuntimeSelectionSkill(unit,getRuntimeItemSkill(unit,base));
+    const repeated={...skill,name:"홍염",triggered:true,actions:skill.actions.map(action=>({...action,duration:entry.duration,effect:action.effect ? {...action.effect,repeatDelay:0,repeatDuration:0} : action.effect}))};
+    applySkill(unit,unit,repeated);
+    showSkillBubble(unit,repeated.name,repeated.icon);
+    publishBattleEvents([{type:"effect_repeat",source:unit,target:unit,skill:repeated,reason:"종료 후 지연 재적용"}]);
+  }
+}
+
 function updateBattleEffects() {
   [...playerSquad,...enemySquad].forEach(unit => {
     if (unit.alive && !unit.isWaiting && !unit.isReserve) unit.undamagedTicks=(unit.undamagedTicks || 0)+1;
     updateRepeatingPassives(unit);
     updateProximityPassives(unit);
-    if (!unit.activeEffects?.length) return;
+    if (!unit.activeEffects?.length) {if (unit.alive) updateDelayedEffectRepeats(unit);else unit.delayedEffectRepeats=[];return;}
     const linkedState=unit.activeEffects.filter(effect=>effect.requiredOwnedSummonEntityId).map(effect=>{
       const caster=[...playerSquad,...enemySquad].find(candidate=>candidate.effectCasterId === effect.casterId);
       return `${effect.id}:${caster && getLivingOwnedSummons(caster,effect.requiredOwnedSummonEntityId).length ? 1 : 0}`;
@@ -960,6 +1076,7 @@ function updateBattleEffects() {
       recalculateBattleBuffs(unit);
     }
     if (!unit.alive) {clearBattleEffects(unit);return;}
+    const previousRepeats=[...(unit.delayedEffectRepeats ?? [])];
     const previousLength = unit.activeEffects.length;
     unit.activeEffects = unit.activeEffects.filter(effect => {
       if (!unit.alive) return false;
@@ -987,6 +1104,13 @@ function updateBattleEffects() {
       }
       if (!unit.alive) return false;
       if (effect.remainingTicks === null || --effect.remainingTicks > 0) return true;
+      if (effect.mode === "damage_recovery" && effect.storedDamage>0) {
+        applyActionHeal(unit,unit,{healResource:"HP",coefficients:[{type:"fixed",value:effect.storedDamage*effect.value/100}]},{id:effect.skillId,name:effect.name,triggered:true});
+      }
+      if (effect.mode === "hp_floor" && effect.repeatDuration>0) {
+        unit.delayedEffectRepeats ??= [];
+        unit.delayedEffectRepeats.push({remainingTicks:Math.ceil(effect.repeatDelay*BASE_ATTACK_COOLDOWN),duration:effect.repeatDuration,skillId:effect.skillId});
+      }
       if (effect.refundMpOnExpire && effect.refundMp>0) {
         const caster=[...playerSquad,...enemySquad].find(candidate=>candidate.alive && candidate.effectCasterId === effect.casterId);
         if (caster) {
@@ -1004,7 +1128,10 @@ function updateBattleEffects() {
       return false;
     });
     if (!unit.alive) clearBattleEffects(unit);
-    else if (unit.activeEffects.length !== previousLength) recalculateBattleBuffs(unit);
+    else {
+      if (unit.activeEffects.length !== previousLength) recalculateBattleBuffs(unit);
+      updateDelayedEffectRepeats(unit,previousRepeats);
+    }
   });
 }
 
@@ -1053,8 +1180,9 @@ function consumeNextSkillModifier(unit,modifier) {
   }
 }
 
-function consumeDamageImmunity(unit,periodic=false) {
+function consumeDamageImmunity(unit,periodic=false,damageType="") {
   const effect=(unit.activeEffects ?? []).find(candidate => candidate.kind === "buff" && candidate.mode === "damage_immunity"
+    && (!candidate.damageTypeFilter || candidate.damageTypeFilter === damageType)
     && (candidate.usesRemaining == null || candidate.usesRemaining > 0) && (!periodic || candidate.consumePeriodic));
   if (!effect) return null;
   consumeBattleEffectUse(unit,effect,"피해 무시");
@@ -1066,7 +1194,7 @@ function consumeEffectsForBattleEvent(event,context) {
   if (!owner?.alive || !Object.hasOwn(EFFECT_CONSUME_LABELS,event.type)) return;
   const effects=[...(owner.activeEffects ?? [])];
   for (const effect of effects) {
-    if (["damage_immunity","next_skill_modifier"].includes(effect.mode) || effect.usesRemaining == null || effect.consumeOn !== event.type) continue;
+    if (["damage_immunity","next_skill_modifier","next_attack_miss"].includes(effect.mode) || effect.usesRemaining == null || effect.consumeOn !== event.type) continue;
     if (event.periodic && !effect.consumePeriodic) continue;
     if (["hit","damaged","heal"].includes(event.type) && event.amount <= 0) continue;
     consumeBattleEffectUse(owner,effect,EFFECT_CONSUME_LABELS[event.type]);

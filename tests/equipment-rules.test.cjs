@@ -87,3 +87,9 @@ test('legacy equipment becomes set one and active equipment sets stay independen
   character.equipment.mainWeapon='two_b';e.syncActiveEquipmentSet(character);
   assert.equal(character.equipmentSets[1].equipment.mainWeapon,'two_b');assert.equal(character.equipmentSets[0].equipment.mainWeapon,'one');
 });
+
+test('weapon category restrictions reject other weapons in every weapon slot and exclude invalid saved gear from bonuses',()=>{
+ const e=equipmentEngine();const c={equipmentRules:{extraWeaponSlots:4,allowedWeaponCategories:['sword']},equipment:{mainWeapon:'one',subWeapon:'two',extraWeapon1:'two_b'}};
+ for(const slot of ['mainWeapon','subWeapon','extraWeapon1']){assert.equal(e.canEquipItemToSlot(e.itemsJson[0],slot,c),true);assert.equal(e.canEquipItemToSlot(e.itemsJson[1],slot,c),false);}
+ assert.equal(e.getCharacterEquipmentBonus(c).atk,5);assert.equal(e.getCharacterModifierItems(c).length,1);assert.equal(e.getCharacterEquipmentSlots(c).filter(slot=>e.isCharacterWeaponSlot(c,slot.key)).length,6);
+});

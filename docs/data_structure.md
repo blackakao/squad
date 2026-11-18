@@ -1,5 +1,44 @@
 # 데이터 구조
 
+## 광전사 조건부 자동 시전·저장 필드 (2026-11-18)
+
+- 스킬 실행 규칙 `lethalActivation: true`: 치명 피해 조건 자동 시전. 슬롯은 ultimate를 유지하며 기존 30초 해금/사용 횟수 필드를 재사용한다.
+- 효과 mode `hp_floor`, `damage_recovery`: 각각 HP 하한(value), 만료 회복 비율(value). 모두 양의 값·양의 지속시간을 요구한다. 런타임 `storedDamage`는 누적 피해이며 저장 API 필드가 아니다.
+- 효과 `repeatDelay`, `repeatDuration`: 자연 만료 후 지연 재적용 시간(초). 유닛 `delayedEffectRepeats`는 런타임 예약 목록이며 사망/초기화 시 비운다.
+- 선택 modifier `coefficientDamageType`, `effectValuePercent`, `interruptOnHit`, `delayedRepeatDelay`, `delayedRepeatDuration`; 효과 `requiredWeaponCount`를 정규화하고 편집 왕복에서 보존한다. 적중 차단은 액션 `interruptOnHit`으로 합성한다.
+- 피해 사망 처리 문맥 `damageTaken`은 치명 피해와 자원 비용을 구분하는 런타임 플래그다. `effect_repeat`는 기존 상세 이벤트 형식에 지연 재적용 종류를 추가한다. 기존 데이터 배열/API/전투 기록 객체 형식은 유지한다.
+
+
+## 검의무희 무기 관리 필드 (2026-11-18)
+
+- 패시브 `weaponControl: {maxWeapons, category, basicPercent, attackMpCost}`: 실제 장착 검 수 제한·무기 종류·일반 공격 비율·자루당 MP 비용. 액션 없는 실행 메타데이터 패시브다.
+- 스킬 `weaponCommand: {mode, percent, duration}`: `focus`/`scatter`/`flower` 명령. scatter의 단계는 기존 combo를 사용한다. 선택 `effectDurationAdd`는 꽃의 duration에도 적용한다.
+- 선택 modifier `extraControlledWeapons`, `weaponHitHeal`, `weaponHitFixedDamage`: 유령검/검 적중 HP 회복/점감 없는 고정 추가 피해. 장착 최대 3개에서만 합성한다.
+- 효과 `weaponReserveCount`: 적용 시 배정할 검 수. 런타임 `reservedWeaponSlots`, `weaponsReleased`는 효과 수명에 종속되며 영구 저장하지 않는다. 편집 폼은 예약 수를 보존한다.
+- 전투 유닛 `weaponDeployment`, `weaponFlower`: 흩뿌리기 검과 궁의 자율 공격 상태. 기존 무기 공격 상태를 참조하며 별도 Entity/주소환수를 생성하지 않는다. 전투 무기 정의 `atk`는 개별 장착 무기 공격력이다.
+- `equipmentRules.allowedWeaponCategories`: 허용 무기 종류 배열. 미기재 시 기존 제한을 유지한다. 검의무희는 oneHandSword만 허용하며 extraWeaponSlots 4로 총 6자루다. 저장된 잘못된 무기도 능력치와 공격 목록에서 제외한다.
+- 검 공격 내부 플래그 `controlledWeaponAttack`, 점감 없는 추가 피해 `unmitigatedFixed`는 런타임 전용이다. 전투 기록 형식과 API 배열 저장 계약은 바꾸지 않는다.
+
+
+## 해병 기본 공격·방패 연동 필드 (2026-11-18)
+
+- 스킬 실행 규칙 `basicAttackSkillId`: 패시브의 기본 공격 교체 대상. `fixedAttackInterval`: 지정 기본 공격의 고정 주기(초). `barrageSkillId`: 모든 적에게 발사할 공격 정의 참조. 관리 편집에서 보존하며 참조 중인 공격 삭제를 차단한다.
+- 선택 modifier `attackIntervalAdd`(초), `immunityUsesAdd`(정수): 각각 고정 기본 공격 주기와 새 방어 횟수 가산.
+- 효과 `skillModifiers`: 해당 효과 유지 중 적용하는 기존 선택 modifier 배열. `linkedEffectId`: 동일 시전자의 부모 효과 ID. 부모 소진/해제/만료 시 자식 효과를 제거한다. 두 필드는 편집 왕복에서도 보존한다.
+- 계산계수/버프 능력치 `shieldDefense`: 장착 방패 방어력 전용 수치. 캐릭터 원본에 영구 저장하지 않고 전투 유닛·장비 loadout에서 계산한다. 장비 효과 무효 loadout 값은 0이다.
+- 포격 실행 문맥 `barrageProjectiles`는 전투 디스패처에서만 사용하는 임시 값이다. 기존 전투 결과 저장 스키마는 변경하지 않는다.
+
+
+## 성기사 표식·선택 확장 (2026-11-18)
+
+- 스킬 `singleTargetMark: { effectId, bonusPercent }`: 단일 표식 패시브 정의. 액션 없는 패시브도 실행 가능한 정의로 인정한다.
+- 액션 `requiredPriorMark`: 해당 실행 전에 시전자의 표식이 있던 대상만 적용한다.
+- 선택 modifier `markMagicDamagePercent`, `basicAttackMpGain`, `markHealingLinkPercent`, `reflectBlockedMagic`: 각각 표식 대상 마법 피해 배율, 기본 공격 MP 획득, 실제 HP 치유 전달 비율, 방어한 마법 반사다. 장착 선택 최대 3개에서만 합성한다.
+- 효과 mode `mark_damage_link`, `next_attack_miss`; 효과 필드 `damageTypeFilter`, `reflectBlockedMagic`, `markHealingLinkPercent`를 정규화·편집 저장에서 보존한다.
+- 전투 실행 문맥은 최초 주 대상/기존 표식과 `_attackOutcomeChecked`·`_attackMissed`를 임시 보관한다. 영구 캐릭터 스키마는 바꾸지 않는다. 공격 실패 이벤트 타입은 `attack_miss`다.
+- 기존 성전사 캐릭터를 성기사로 정정하고 스킬 ID를 연결했다. 과거 전투 기록은 변경하지 않았다.
+
+
 
 ## 의무병 조건·임시 부활 필드 (2026-11-15)
 

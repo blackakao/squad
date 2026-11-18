@@ -6,18 +6,25 @@
     "mp": 100,
     "st": 100,
     "bp": 0,
-    "atk": 1110,
+    "atk": 960,
     "magic": 10,
     "speed": 1.2,
     "attackSpeed": 2,
     "castSpeed": 0.5,
     "defense": 30,
     "resistance": 8,
-    "attackRange": 8,
+    "attackRange": 7,
     "role": "tank",
     "skillIds": [
+      "skill_class_dancer_sovereign",
+      "skill_class_dancer_flower",
+      "skill_class_dancer_ward",
+      "skill_class_dancer_body",
+      "skill_class_dancer_focus",
       "skill_class_dancer_scatter",
-      "skill_class_dancer_focus"
+      "skill_class_dancer_healing_sword",
+      "skill_class_dancer_sharp_sword",
+      "skill_class_dancer_ghost_sword"
     ],
     "skillSelections": {},
     "portrait": "assets/images/portraits/character-001.png",
@@ -30,7 +37,10 @@
       "wis": 0
     },
     "equipmentRules": {
-      "extraWeaponSlots": 5,
+      "allowedWeaponCategories": [
+        "oneHandSword"
+      ],
+      "extraWeaponSlots": 4,
       "twoHandSingleSlot": false,
       "sameTargetWeaponPenaltyPercent": 0
     },
@@ -54,8 +64,7 @@
       "extraWeapon1": "item_basic_oneHandSword_mainWeapon",
       "extraWeapon2": "item_basic_oneHandSword_mainWeapon",
       "extraWeapon3": "item_basic_oneHandSword_mainWeapon",
-      "extraWeapon4": "item_basic_oneHandSword_mainWeapon",
-      "extraWeapon5": "item_basic_oneHandSword_mainWeapon"
+      "extraWeapon4": "item_basic_oneHandSword_mainWeapon"
     },
     "equipmentSets": [
       {
@@ -70,14 +79,14 @@
           "extraWeapon1": "item_basic_oneHandSword_mainWeapon",
           "extraWeapon2": "item_basic_oneHandSword_mainWeapon",
           "extraWeapon3": "item_basic_oneHandSword_mainWeapon",
-          "extraWeapon4": "item_basic_oneHandSword_mainWeapon",
-          "extraWeapon5": "item_basic_oneHandSword_mainWeapon"
+          "extraWeapon4": "item_basic_oneHandSword_mainWeapon"
         }
       }
     ],
     "activeEquipmentSet": 0,
     "faction": "쥬신",
-    "attackType": "physical"
+    "attackType": "physical",
+    "customResources": []
   },
   {
     "name": "기사",
@@ -228,6 +237,7 @@
   },
   {
     "name": "성직자",
+    "entityGrade": 2,
     "hp": 2000,
     "mp": 200,
     "st": 100,
@@ -247,7 +257,10 @@
       "skill_class_priest_barrier",
       "skill_class_priest_blessing",
       "skill_class_priest_explosion",
-      "skill_class_priest_smite"
+      "skill_class_priest_smite",
+      "skill_class_priest_quick_blessing",
+      "skill_class_priest_quick_smite",
+      "skill_class_priest_return"
     ],
     "skillSelections": {},
     "portrait": "assets/images/portraits/character-004.png",
@@ -382,6 +395,7 @@
   },
   {
     "name": "궁사",
+    "entityGrade": 2,
     "hp": 2000,
     "mp": 100,
     "st": 150,
@@ -454,9 +468,7 @@
     ],
     "activeEquipmentSet": 0,
     "faction": "프라가",
-    "attackType": "physical",
-    "entityGrade": 2,
-    "customResources": []
+    "attackType": "physical"
   },
   {
     "name": "갑사",
@@ -600,6 +612,7 @@
   },
   {
     "name": "흑마법사",
+    "entityGrade": 2,
     "hp": 4500,
     "mp": 200,
     "st": 100,
@@ -673,9 +686,7 @@
     ],
     "activeEquipmentSet": 0,
     "faction": "철엘프",
-    "attackType": "magic",
-    "entityGrade": 2,
-    "customResources": []
+    "attackType": "magic"
   },
   {
     "name": "해병",
@@ -693,9 +704,12 @@
     "attackRange": 6,
     "role": "tank",
     "skillIds": [
+      "skill_class_marine_cannon_passive",
+      "skill_class_marine_barrage",
+      "skill_class_marine_expansion",
+      "skill_class_marine_guard",
       "skill_class_marine_bash",
-      "skill_class_marine_boomerang",
-      "skill_class_marine_guard"
+      "skill_class_marine_boomerang"
     ],
     "skillSelections": {},
     "portrait": "assets/images/portraits/image-20261018142752687048.png",
@@ -749,6 +763,7 @@
   },
   {
     "name": "의무병",
+    "entityGrade": 2,
     "hp": 4500,
     "mp": 100,
     "st": 150,
@@ -821,9 +836,7 @@
     ],
     "activeEquipmentSet": 0,
     "faction": "릴마리온",
-    "attackType": "physical",
-    "entityGrade": 2,
-    "customResources": []
+    "attackType": "physical"
   },
   {
     "name": "제독",
@@ -897,6 +910,7 @@
   },
   {
     "name": "화염술사",
+    "entityGrade": 2,
     "hp": 2000,
     "mp": 200,
     "st": 100,
@@ -968,9 +982,7 @@
     ],
     "activeEquipmentSet": 0,
     "faction": "슈련",
-    "attackType": "magic",
-    "entityGrade": 2,
-    "customResources": []
+    "attackType": "magic"
   },
   {
     "name": "광전사",
@@ -988,7 +1000,12 @@
     "attackRange": 3,
     "role": "tank",
     "skillIds": [
-      "skill_class_berserker_fire_strike"
+      "skill_class_berserker_armor_tattoo",
+      "skill_class_berserker_liberation",
+      "skill_class_berserker_pain_recovery",
+      "skill_class_berserker_blood_scent",
+      "skill_class_berserker_fire_strike",
+      "skill_class_berserker_flame_slash"
     ],
     "skillSelections": {},
     "portrait": "assets/images/portraits/image-20261018143144779692.png",
@@ -1042,6 +1059,7 @@
   },
   {
     "name": "저격수",
+    "entityGrade": 2,
     "hp": 4500,
     "mp": 150,
     "st": 100,
@@ -1113,9 +1131,7 @@
     ],
     "activeEquipmentSet": 0,
     "faction": "슈련",
-    "attackType": "physical",
-    "entityGrade": 2,
-    "customResources": []
+    "attackType": "physical"
   },
   {
     "name": "수도승",
@@ -1187,7 +1203,7 @@
     "attackType": "physical"
   },
   {
-    "name": "성전사",
+    "name": "성기사",
     "hp": 4500,
     "mp": 150,
     "st": 100,
@@ -1201,7 +1217,17 @@
     "resistance": 10,
     "attackRange": 1,
     "role": "tank",
-    "skillIds": [],
+    "skillIds": [
+      "skill_class_paladin_punishment",
+      "skill_class_paladin_divine_protection_ultimate",
+      "skill_class_paladin_stigmata",
+      "skill_class_paladin_magic_guardian",
+      "skill_class_paladin_judgement_sword",
+      "skill_class_paladin_flash",
+      "skill_class_paladin_alone",
+      "skill_class_paladin_faith",
+      "skill_class_paladin_reflected_light"
+    ],
     "skillSelections": {},
     "portrait": "assets/images/portraits/image-20261018143037514085.png",
     "attributes": {
@@ -1250,7 +1276,9 @@
     ],
     "activeEquipmentSet": 0,
     "faction": "신성교단",
-    "attackType": "physical"
+    "attackType": "physical",
+    "entityGrade": 2,
+    "customResources": []
   },
   {
     "name": "수호자",
@@ -2449,6 +2477,7 @@
   },
   {
     "name": "암살자",
+    "entityGrade": 2,
     "hp": 2000,
     "mp": 100,
     "st": 150,
@@ -2521,9 +2550,7 @@
     ],
     "activeEquipmentSet": 0,
     "faction": "달빛교단",
-    "attackType": "physical",
-    "entityGrade": 2,
-    "customResources": []
+    "attackType": "physical"
   },
   {
     "name": "룬술사",

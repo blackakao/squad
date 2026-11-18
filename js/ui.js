@@ -458,14 +458,14 @@ function getCharacterWeaponAttacks(character) {
   return getCharacterEquipmentSlots(character).flatMap(slot=>{
     if (!isCharacterWeaponSlot(character,slot.key)) return [];
     const item=getItemById(equipment[slot.key]);
-    if (!isWeaponItem(item)) return [];
+    if (!isWeaponItem(item) || (rules.allowedWeaponCategories?.length && !canEquipItemToSlot(item,slot.key,character))) return [];
     if (item.handType === "twoHand" && !rules.twoHandSingleSlot) {
       if (countedStandardTwoHand.has(item.id)) return [];
       countedStandardTwoHand.add(item.id);
     }
     const category=getWeaponCategory(item.weaponCategory);
     if (!category) return [];
-    return [{slot:slot.key,itemId:item.id,name:item.name,attackSkillId:item.attackSkillId ?? "",
+    return [{slot:slot.key,itemId:item.id,name:item.name,atk:Math.max(0,Number(item.atk) || 0),attackSkillId:item.attackSkillId ?? "",
       weaponCategory:category.key,attackType:category.attackType,attackRange:Math.max(1,Number(category.attackRange)||1),
       attackSpeed:Math.max(0.1,Number(category.attackSpeed)||BARE_HAND_ATTACK_SPEED),
       castSpeed:Math.max(0,Number(category.castSpeed)||0)}];
@@ -549,10 +549,12 @@ function getRoleColor(role) {
 }
 
 function getUnitRange(unit) {
+  const replacement=getBasicAttackReplacement(unit),action=replacement?.actions.find(action=>action.type === "deal_damage");if (action?.rangeMode === "custom") return getActionRangePixels(unit,action);
   return Math.max(1, Number(unit.attackRange ?? getDefaultAbility(unit.role, "attackRange"))) * ATTACK_RANGE_UNIT;
 }
 
 function getAttackCooldown(unit) {
+  const replacement=getBasicAttackReplacement(unit);if (replacement?.fixedAttackInterval>0) return Math.max(1,Math.round(BASE_ATTACK_COOLDOWN*replacement.fixedAttackInterval));
   const attackSpeed = Math.max(0.1, Number(unit.attackSpeed ?? getDefaultAbility(unit.role, "attackSpeed")));
   const exhaustedMultiplier = unit.exhausted ? EXHAUSTED_ATTACK_SPEED_MULTIPLIER : 1;
   return Math.max(1, Math.round(BASE_ATTACK_COOLDOWN * (attackSpeed / exhaustedMultiplier)));
