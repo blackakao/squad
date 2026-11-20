@@ -1,24 +1,32 @@
 {
   "entityId": "legacy_4ac380c5973655c4",
-  "name": "야수",
+  "name": "늑대",
   "role": "melee",
-  "description": "",
+  "ai": "melee",
+  "description": "조련사의 선택형 동반 야수. 기본 이동속도 1.2.",
   "icon": "assets/images/entities/조련사_야수_늑대.png",
   "tags": [
-    "summon"
+    "summon",
+    "tamer_beast"
   ],
-  "ai": "melee",
+  "summonType": "persistent",
+  "mainSummon": true,
+  "attackType": "physical",
+  "skillIds": [
+    "skill_class_tamer_wolf_rend",
+    "skill_class_tamer_wolf_bite"
+  ],
   "stats": {
-    "hp": 100,
+    "hp": 800,
     "mp": 100,
     "st": 100,
-    "atk": 10,
-    "magic": 10,
-    "defense": 0,
+    "atk": 80,
+    "magic": 0,
+    "defense": 10,
     "resistance": 0,
-    "speed": 1,
+    "speed": 1.2,
     "attackSpeed": 1,
-    "castTime": 0,
+    "castTime": 0.1,
     "attackRange": 1
   }
 }

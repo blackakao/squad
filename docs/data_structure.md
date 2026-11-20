@@ -1,5 +1,28 @@
 # 데이터 구조
 
+## 스킬별 장전·반응 수명·장판 오라 (2026-11-21)
+
+- 패시브 실행 규칙 `reload: {step}`는 액티브별 감축 초를 저장한다. 선택 modifier `reloadExtraUse`는 무료 즉시시전 이후 유료 추가 즉시시전을 활성화한다. `reloadCharges`, `reloadExtra`, 시전 문맥 `reloadInfo`는 런타임 전용이며 저장하지 않는다. 기존 MP 지불/시전 완료/중단/궁 제한 경로에 연결한다.
+- `fieldAuras`의 mode에 `cast_time_percent`, `attack_rate_percent`, `received_damage_percent`를 추가했다. 앞의 두 값은 증감률이며 마지막은 받는 피해의 절대 백분율(115=15% 증가)이다. 선택 modifier `fieldAurasAdd`, `fieldAurasReplace`는 장판 오라 추가/교체를 지원하며 null 교체값은 원본 유지다.
+- 근접 반응 효과 `reactionOnce`, `reactionInheritRemaining`은 1회 소비와 반격의 시간제 액션에 남은 효과 시간을 전달한다. 기존 반응 스킬과 추가 액션을 재사용한다.
+- 액션 `radialKnockback`은 광역 피해 중심 기준 넉백 거리, `bowlingPercent`는 강제 이동 경로의 부가 피해 비율이다. 선택 modifier `bowlingPercent`는 이동 액션에 합성한다. 기존 실행 문맥의 직전 실제 피해와 충돌 이동 결과를 사용하며 편집 왕복에서 메타데이터를 보존한다.
+- 선택 modifier `naturalMpRegen: {multiplier, hpPerSecond}`는 자연 MP 재생에만 배율과 HP 비용을 부여한다. 기존 자원 감소·사망·상세 이벤트를 재사용하고 API/기록 저장 스키마는 바꾸지 않는다. [계약](SKILL_ENGINE.md#제독-장전반응-파도장판-강화-2026-11-21).
+
+## 주변 소환체·선택 소환 보정 필드 (2026-11-21)
+
+- 패시브 실행 규칙 `ownedSummonAura: {entityIds, radius, attackPercent, defense, resistance}`는 자신의 생존 소환체 반경 집계를 능력치 보정으로 연결한다.
+- 선택 `selectionModifier.summonModifiers[]`는 `entityIds`, `hpAdd`, `atkAdd`, `attackIntervalAdd`, `limitAdd`, `mobile`, `movementBasePercent`, `movementLocked`, `focusAttackPercent`를 정규화한다. 빈 Entity 목록은 자신의 모든 소환 종류에 적용한다. 기존 선택 강화 JSON 편집·저장 경로로 보존한다.
+- Entity 원본을 바꾸지 않고 `getSummonConfiguration`에서 능력치·한도·AI를 합성한다. 일반 설치와 궁이 동일한 종류별 한도와 선택 보정을 사용한다.
+- 유닛 `lockedMovementSpeed`, `summonFocusAttackPercent`, `combatFocusTarget`, `summonSynergySignature`는 런타임 전용이다. 공학자/집중포화의 버프는 현재 상태로부터 파생하며 영구 저장하지 않는다. 기존 API·기록 저장 스키마 변경은 없다. [동작](SKILL_ENGINE.md#갑사-공학자선택-강화-2026-11-21).
+
+## 동반 야수·합체 필드 (2026-11-20)
+
+- 패시브 실행 규칙 `companion: {choiceSkillId, entityIds}`는 기존 choice 선택과 영구 소환 Entity를 연결한다. 선택 modifier의 `companion`은 `all`, `permanentFusion`, `entityId`, `attackAdd`, `attackPercent`, `finalAttackPercent`를 보존한다. `exclusiveSkillIds`는 동시에 적용할 수 없는 선택 스킬 ID 목록이다.
+- `command_summon.summonCommand`에 `companion_spawn/attack/revive/fuse/heal/reset/unleash`를 추가했다. 기존 duration/coefficients/range와 명령 편집 UI를 재사용한다. `summonVariant.companion: true`는 동반 야수의 사망 여부로 내부 부활 스킬을 선택한다.
+- `legacy_4ac380c5973655c4`는 기존 참조를 보존한 늑대이며 `tamer_elephant`, `tamer_raptor`를 추가했다. 세 Entity 모두 기존 `summonType: persistent`, `mainSummon: true`, `skillIds`를 사용한다. 캐릭터는 기존 `skillIds`와 `skillSelections`로 선택을 저장한다.
+- 런타임 `companionFusion`/`fusedInto`와 합체 효과의 `companionFusion`, `companionSpeed`, `companionAttackSpeed`, 야수의 `companionBaseSpeed`, `companionAttackMultiplier`, `companionUnscaledAttack`은 저장 필드가 아니다. 기존 소환 객체·쿨다운 사전·변신 이벤트를 유지한다.
+- 상태 `taunt`는 기존 효과의 시전자 ID를 통해 공격할 대상을 강제한다. 별도 API 또는 기록 저장 형식 변경은 없다. [동작 계약](SKILL_ENGINE.md#조련사-선택-야수합체-2026-11-20).
+
 ## 광전사 조건부 자동 시전·저장 필드 (2026-11-18)
 
 - 스킬 실행 규칙 `lethalActivation: true`: 치명 피해 조건 자동 시전. 슬롯은 ultimate를 유지하며 기존 30초 해금/사용 횟수 필드를 재사용한다.
@@ -182,7 +205,7 @@ Entity의 선택 불리언 `mainSummon`은 전투 상태창의 주인 아래 표
 ### 별소환사 지원 필드 (2026-11-06)
 
 - Entity 선택 불리언 `commandOnly`(기본 false), `targetable`·`collidable`(기본 true). `star_companion`은 true/false/false다. 기존 Entity 파일은 일괄 변경하지 않는다. 서버는 해당 필드가 있으면 불리언만 허용한다.
-- 액션 `originEntityId`(기본 빈 문자열)는 시전자가 직접 소유한 해당 Entity들을 기준점으로 지정한다. 별 정의는 `data/entities/star_companion.json`, 스킬 ID 접두사는 `skill_class_star_`다. 새 캐릭터 별소환사를 추가했으며 궁극기 데이터는 추가하지 않았다.
+- 액션 `originEntityId`(기본 빈 문자열)는 시전자가 직접 소유한 해당 Entity들을 기준점으로 지정한다. 별 정의는 `data/entities/star_companion.json`, 스킬 ID 접두사는 `skill_class_star_`다. 최초 등록 당시 궁극기 데이터는 보류했으며, 2026-11-21 재개편에서 궁을 추가했다.
 - `summonCommand`에 `relocate`·`suspend`를 추가했다. 명령의 `target`은 기존 summon 외 enemy·self를 허용한다. `pathWidth`는 이동 경로 피해의 폭(m), `duration`은 숨김 초, `suspensionEffectId`는 숨김을 유지할 시전자 버프 ID다. 생략 시 독립 시간제를 사용한다.
 - 피해 액션 `battlefieldArea`(기본 false), `distanceFalloff: {step, percent, minimum}`(거리 간격 m·간격당 감소 %p·최소 계수 %)를 지원한다. step 0은 감쇠 없음이다.
 - `transferDrainedResource`(기본 false)는 실제 감소한 자원을 시전자의 최대치까지 회복한다. 추적 필드의 기준 객체 참조와 숨김 타이머·연결 버프는 전투 런타임 전용이다. 기존 API 경로와 JSON 최상위 형식은 유지한다.
@@ -492,3 +515,15 @@ Entity의 선택 불리언 `mainSummon`은 전투 상태창의 주인 아래 표
 - 선택 보정 `effectDurationAdd`, `channelDurationAdd`, `periodicCopies`와 액션 `periodicCopies`를 지원한다. 기본값은 각각 0초·0초·1개다.
 - `statEffects`의 지능/힘 `mode:attribute`, 상태 `immunity`도 선택한 최대 3개에 한해 적용한다. 도마뱀 복제 ID·타이머·예상 피해 합계는 런타임 상태이며 저장 캐릭터 스키마는 변경하지 않는다.
 - [동작·초기값](SKILL_ENGINE.md#화염술사-재개편-2026-11-14).
+
+### 승려 선택 보정 (2026-11-21)
+
+`selectionModifier`의 `copyAllyBuffToSelf`는 지정 스킬의 아군 버프를 다른 아군에게 적용한 경우 자신에게도 복사한다. `ultimateUsesAdd`는 지정 궁의 전투당 기본 1회에 추가할 횟수이며 `ultimateReuseSeconds`는 재사용 시간이다. 원본 `maxUses`만으로 궁의 기본 제한을 해제하지 않는다. `alternatingDamagePercent`는 해당 스킬의 완료 횟수가 홀수일 때 다음 피해 계수에 추가할 비율이다. 기존 `targetSkillIds`와 선택 최대 3개 제한을 따른다. `_copyAllyBuffToSelf`는 런타임 액션 표시만 사용하며 별도 저장 필드가 아니다.
+
+### 별소환사 재개편 확장 (2026-11-21)
+
+- 선택 보정 `rangeMultiplierPercent`(기본 100): 주무기 기준 시전 사거리 배율, `distanceFalloffMinimum`(기본 0): 거리 감쇠 최소값 하한, `fieldTimePercent`(기본 100): 피해 필드의 지속시간·틱 간격을 함께 보정한다. `targetSkillIds` 및 최대 3개 선택 제한을 따른다.
+- 실행 규칙 `resetSkillCooldowns`: 해당 스킬의 첫 시전 완료 때 쿨다운·콤보/연속 단계만 초기화하고 사용 횟수는 유지한다. `delayedActions: [{delay, actions}]`는 시전 완료 후 지연 초와 실행 액션을 저장하며 선택 보정으로도 추가할 수 있다. 런타임 `delayedSkillActions`는 전투 초기화/사망 시 제거한다.
+- 소환 액션 `initializeFieldsFromSkillId`: 새 개체와 일치하는 `originEntityId`를 가진 지정 패시브의 필드만 선택 보정 후 초기화한다. 기존 소환수 필드는 다시 만들지 않는다. `suspensionEffectId`를 지정하면 생성 시 소유자에 해당 버프가 존재하는 경우 그 남은 시간과 숨김을 연결한다.
+- 필드 액션 `fieldRequiredEffectId`: 시전자에게 해당 효과가 없으면 필드를 종료한다. `fieldSelfHpCostPercent`: 각 필드 틱에서 준 실제 피해 합계의 지정 비율을 시전자 HP에서 직접 소모하고 기존 자원 감소·사망 이벤트로 기록한다. 기본값은 빈 ID/0으로 기존 필드 동작을 유지한다. 위 액션 메타데이터는 편집 왕복에서 보존한다.
+- 또다른 별의 MP 면제는 새 자원 스키마 없이 기존 자기 버프의 `skillModifiers`에 `resourceTypes:["MP"]`, `resourceCostPercent:0`으로 구성한다.

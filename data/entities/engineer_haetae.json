@@ -1,0 +1,29 @@
+{
+  "entityId": "engineer_haetae",
+  "name": "해태",
+  "role": "melee",
+  "ai": "melee",
+  "summonType": "temporary",
+  "mainSummon": false,
+  "attackType": "physical",
+  "attackSkillId": "skill_entity_engineer_haetae_attack",
+  "description": "이동속도 1로 이동하며 접촉 거리에서 근접 공격하는 해태로봇.",
+  "icon": "",
+  "tags": [
+    "summon",
+    "engineer"
+  ],
+  "stats": {
+    "hp": 500,
+    "mp": 100,
+    "st": 100,
+    "atk": 50,
+    "magic": 0,
+    "defense": 0,
+    "resistance": 0,
+    "speed": 1,
+    "attackSpeed": 2,
+    "castTime": 0.5,
+    "attackRange": 1
+  }
+}

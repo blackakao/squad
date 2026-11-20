@@ -2,7 +2,7 @@
 function renderBattleSkillRow(unit) {
   if (typeof getSkillById !== "function") return "";
   const transform = (unit?.activeEffects ?? []).find(effect => effect.kind === "transform");
-  const ids = transform?.skillIds?.length ? transform.skillIds : unit?.skillIds;
+  const ids = [...(transform?.skillIds?.length ? transform.skillIds : unit?.skillIds ?? []),...(unit?.companionFusion?.beast.skillIds ?? [])];
   const skills = [
     ...(Array.isArray(ids) ? ids.map(getSkillById).filter(Boolean).map(skill=>getFormSkill(unit,skill)) : []),
     ...(Array.isArray(unit?.runtimeCopiedSkills) ? unit.runtimeCopiedSkills : [])
@@ -33,11 +33,17 @@ function renderBattleSkillRow(unit) {
     const weaponCount=skill.weaponControl ? getAvailableControlledWeapons(unit).length : null;
     const weaponText=weaponCount == null ? "" : ` · 공격 가능한 검 ${weaponCount}자루`;
     const activationText=skill.lethalActivation ? ` · 전투 ${ULTIMATE_UNLOCK_SECONDS}초 이후 치명 피해 시 자동 시전` : "";
-    const tooltip = `${skill.name}${conversionText}${comboText}${effortText}${weaponText}${activationText}${remaining > 0 ? ` · ${seconds}초` : ""}`;
+    const ultimateLimit=isUltimateSkill(skill) ? getUltimateUseLimit(unit,skill) : 1;
+    const ultimateRemaining=Math.max(0,ultimateLimit-(unit.skillUseCounts?.[skill.id] || 0));
+    const ultimateText=ultimateLimit>1 ? ` · 남은 사용 ${ultimateRemaining}/${ultimateLimit}` : "";
+    const reload=getReloadCastInfo(unit,skill);
+    const reloadText=reload ? ` · 장전 ${unit.reloadCharges?.[skill.id] ?? 0}초 · 다음 시전 ${reload.seconds.toFixed(1)}초${reload.free ? " · MP 무료" : reload.bonus ? " · 추가 즉시시전" : ""}` : "";
+    const tooltip = `${skill.name}${ultimateText}${reloadText}${conversionText}${comboText}${effortText}${weaponText}${activationText}${remaining > 0 ? ` · ${seconds}초` : ""}`;
     return `<span class="battle-skill-tooltip" data-tooltip="${escapeHtml(tooltip)}" tabindex="0" aria-label="${escapeHtml(tooltip)}">
       <span class="battle-skill-icon" aria-hidden="true">
         ${icon ? `<img src="${escapeHtml(icon)}" alt="" onerror="this.hidden=true">` : `<span class="battle-skill-placeholder">${escapeHtml(String(skill.name).slice(0, 1))}</span>`}
         ${remaining > 0 ? `<span class="battle-skill-cooldown" style="--cooldown-angle:${angle}deg"></span><span class="battle-skill-time">${seconds}</span>` : ""}
+        ${ultimateLimit>1 ? `<span class="battle-skill-count">${ultimateRemaining}</span>` : ""}
         ${weaponCount == null ? "" : `<span class="battle-skill-count">${weaponCount}</span>`}
       </span>
     </span>`;
@@ -92,7 +98,7 @@ const MAIN_SUMMON_STATUS_ENTITY_IDS = new Set([
 
 function renderStatus(units, colorResolver, summonRows = false) {
   return units.filter(unit => summonRows ? unit.isSummon : !unit.isSummon).map(unit => {
-    const companions = summonRows ? [] : units.filter(summon => summon.isSummon && !summon.removed
+    const companions = summonRows ? [] : units.filter(summon => summon.isSummon && !summon.removed && !summon.fusedInto
       && (summon.owner ?? summon.summoner) === unit && ((battleEntitySnapshot ?? entitiesJson).find(entity => entity.entityId === summon.entityId)?.mainSummon ?? MAIN_SUMMON_STATUS_ENTITY_IDS.has(summon.entityId)));
     const hpRatio = Math.max(0, (unit.hp / unit.maxHp) * 100);
     const hpText = `${Math.floor(unit.hp)} / ${unit.maxHp}`;

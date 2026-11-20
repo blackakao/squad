@@ -14,7 +14,7 @@
   ],
   "ai": "stationary",
   "stats": {
-    "hp": 100,
+    "hp": 300,
     "mp": 100,
     "st": 100,
     "atk": 100,
@@ -23,7 +23,7 @@
     "resistance": 0,
     "speed": 0,
     "attackSpeed": 3,
-    "castTime": 0,
-    "attackRange": 2
+    "castTime": 0.5,
+    "attackRange": 3
   }
 }

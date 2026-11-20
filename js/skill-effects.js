@@ -1,6 +1,6 @@
 const TIMED_EFFECT_ACTIONS = ["add_buff", "delete_buff", "add_state", "delete_state"];
 const BUFF_STAT_LABELS = {shieldDefense:"방패 방어력",str:"힘",int:"지능",atk:"공격력", magic:"마력", adaptiveOffense:"적응형 공격 능력치", maxMp:"최대 MP", maxHp:"최대 HP", defense:"방어력", resistance:"저항력", speed:"이동속도", attackRange:"사거리", attackSpeed:"공격 간격(초)", castSpeed:"기본 시전시간(초)"};
-const STATE_LABELS = {stun:"기절", root:"이동 불가", silence:"침묵", disarm:"기본 공격 금지", flee:"도주", polymorph:"양 변이 (공격·스킬 금지·도주)", sleep:"수면", charm:"현혹 (시전자에게 접근)", periodic:"주기 효과만 적용"};
+const STATE_LABELS = {stun:"기절", root:"이동 불가", silence:"침묵", disarm:"기본 공격 금지", flee:"도주", polymorph:"양 변이 (공격·스킬 금지·도주)", sleep:"수면", charm:"현혹 (시전자에게 접근)", taunt:"도발 (시전자 공격)", periodic:"주기 효과만 적용"};
 const EFFECT_CATEGORY_LABELS = {general:"일반",physical:"물리",magic:"마법"};
 const EFFECT_CONSUME_LABELS = {hit:"자신이 적중",damaged:"자신이 피격",heal:"자신이 회복",cast_complete:"자신의 시전 완료"};
 let nextEffectCasterId = 1;
@@ -116,6 +116,7 @@ function normalizeSkillEffect(effect,type = "add_buff") {
     proxyPriority:Number.isFinite(Number(effect.proxyPriority)) ? Math.max(0,Math.min(999,Math.floor(Number(effect.proxyPriority)))) : 100,
     proxyScope:["all","basic","skill"].includes(effect.proxyScope) ? effect.proxyScope : "all",
     counterOnMelee:effect.counterOnMelee === true,
+    reactionOnce:effect.reactionOnce === true,reactionInheritRemaining:effect.reactionInheritRemaining === true,
     reactionSkillId:String(effect.reactionSkillId ?? "").trim(),
     movementSpeedPercent:Number.isFinite(Number(effect.movementSpeedPercent)) ? Math.max(0,Number(effect.movementSpeedPercent)) : 100,
     breakDamagePercent:Math.max(0,Number(effect.breakDamagePercent) || 0),
@@ -267,7 +268,7 @@ function renderTimedEffectFields(action) {
 
 function readSkillEffectFromRow(row) {
   const value = name => row.querySelector(`.skill-effect-${name}`)?.value;
-  return {requiredWeaponCount:Number(row.dataset.requiredWeaponCount) || 0,repeatDelay:Number(row.dataset.repeatDelay) || 0,repeatDuration:Number(row.dataset.repeatDuration) || 0,weaponReserveCount:Number(row.dataset.weaponReserveCount) || 0,linkedEffectId:row.dataset.linkedEffectId ?? "",skillModifiers:JSON.parse(row.dataset.skillModifiers || "[]"),damageTypeFilter:value("damage-type-filter") ?? row.dataset.damageTypeFilter ?? "",reflectBlockedMagic:row.querySelector(".skill-effect-reflect-blocked-magic")?.checked ?? (row.dataset.reflectBlockedMagic === "true"),markHealingLinkPercent:Number(row.dataset.markHealingLink) || 0,receivedDamagePercent:Number(value("barrier-received") ?? row.dataset.barrierReceived ?? 100),breakRecreatePercent:Number(value("barrier-recreate") ?? row.dataset.barrierRecreate) || 0,refundMpOnExpire:row.querySelector(".skill-effect-refund-mp")?.checked ?? (row.dataset.refundMp === "true"),guardHits:Number(row.dataset.guardHits) || 3,countChoiceSkillId:row.dataset.countChoice ?? "",evadeDirect:row.dataset.evadeDirect === "true",holdAttacks:row.dataset.holdAttacks === "true",requiredOwnedSummonAbsent:row.querySelector('.skill-effect-required-summon-absent')?.checked === true,id:value("id"),name:value("name"),stat:value("stat"),sourceStat:value("source-stat"),state:value("state"),mode:value("mode"),requiredOwnedSummonEntityId:value("required-summon") ?? "",tags:String(value("tags") ?? "").split(",").map(tag=>tag.trim()).filter(Boolean),
+  return {reactionOnce:row.dataset.reactionOnce === "true",reactionInheritRemaining:row.dataset.reactionInherit === "true",requiredWeaponCount:Number(row.dataset.requiredWeaponCount) || 0,repeatDelay:Number(row.dataset.repeatDelay) || 0,repeatDuration:Number(row.dataset.repeatDuration) || 0,weaponReserveCount:Number(row.dataset.weaponReserveCount) || 0,linkedEffectId:row.dataset.linkedEffectId ?? "",skillModifiers:JSON.parse(row.dataset.skillModifiers || "[]"),damageTypeFilter:value("damage-type-filter") ?? row.dataset.damageTypeFilter ?? "",reflectBlockedMagic:row.querySelector(".skill-effect-reflect-blocked-magic")?.checked ?? (row.dataset.reflectBlockedMagic === "true"),markHealingLinkPercent:Number(row.dataset.markHealingLink) || 0,receivedDamagePercent:Number(value("barrier-received") ?? row.dataset.barrierReceived ?? 100),breakRecreatePercent:Number(value("barrier-recreate") ?? row.dataset.barrierRecreate) || 0,refundMpOnExpire:row.querySelector(".skill-effect-refund-mp")?.checked ?? (row.dataset.refundMp === "true"),guardHits:Number(row.dataset.guardHits) || 3,countChoiceSkillId:row.dataset.countChoice ?? "",evadeDirect:row.dataset.evadeDirect === "true",holdAttacks:row.dataset.holdAttacks === "true",requiredOwnedSummonAbsent:row.querySelector('.skill-effect-required-summon-absent')?.checked === true,id:value("id"),name:value("name"),stat:value("stat"),sourceStat:value("source-stat"),state:value("state"),mode:value("mode"),requiredOwnedSummonEntityId:value("required-summon") ?? "",tags:String(value("tags") ?? "").split(",").map(tag=>tag.trim()).filter(Boolean),
     stackBonuses:[...row.querySelectorAll('.skill-effect-stack-bonus')].map(bonus=>({
       stat:bonus.querySelector('.skill-bonus-stat').value,mode:bonus.querySelector('.skill-bonus-mode').value,
       value:Number(bonus.querySelector('.skill-bonus-value').value),minStacks:Number(bonus.querySelector('.skill-bonus-min-stacks').value),perNStacks:Number(bonus.querySelector('.skill-bonus-per-n-stacks')?.value || 0),perStack:bonus.querySelector('.skill-bonus-per-stack').checked
@@ -415,7 +416,8 @@ function getCombatCyclePhase(unit) {
 }
 
 function isOffensiveSkill(skill) {
-  return (skill?.actions ?? []).some(action=>action.target === "enemy" && ["deal_damage","add_state","add_buff","override_rule","move"].includes(action.type));
+  return (skill?.actions ?? []).some(action=>action.target === "enemy" && (["deal_damage","add_state","add_buff","override_rule","move"].includes(action.type)
+    || (action.type === "command_summon" && ["attack","companion_attack"].includes(action.summonCommand))));
 }
 
 function getCombatStMultiplier(unit,attackIntent=false) {
@@ -459,12 +461,207 @@ function getUnitBattleForm(unit) {
   return (unit?.activeEffects ?? []).find(effect=>effect.kind === "transform");
 }
 
+// A companion remains the same persistent summon while fused: skills and cooldowns
+// are borrowed by its owner, and its HP belongs to the owner's shared pool.
+function getCompanionPassive(unit) {
+  return limitOptionalSkillIds(unit?.skillIds).map(getSkillById).find(skill=>skill?.companion && !isUnitSkillDisabled(unit,skill));
+}
+
+function getCompanionModifiers(unit, entityId="") {
+  return limitOptionalSkillIds(unit?.skillIds).map(getSkillById).filter(skill=>skill?.slot === "optional" && !isUnitSkillDisabled(unit,skill))
+    .map(skill=>skill.selectionModifier?.companion).filter(value=>value && (!value.entityId || value.entityId === entityId));
+}
+
+function getCompanionEntityIds(unit) {
+  const config=getCompanionPassive(unit)?.companion;
+  if (!config) return [];
+  const selected=getChoiceSummonEntityId(unit,config.choiceSkillId,config.entityIds[0]);
+  return getCompanionModifiers(unit).some(value=>value.all) ? [selected,...config.entityIds.filter(id=>id!==selected)] : [selected];
+}
+
+function getOwnedCompanions(unit, aliveOnly=true) {
+  const ids=getCompanionEntityIds(unit);
+  return ids.flatMap(id=>(unit.summons ?? []).filter(beast=>beast.entityId === id && !beast.removed && (!aliveOnly || beast.alive)));
+}
+
+function hasDeadCompanion(unit) {
+  return getCompanionEntityIds(unit).some(id=>!(unit.summons ?? []).some(beast=>beast.entityId === id && beast.alive && !beast.removed));
+}
+
+function spawnCompanion(unit,entityId,skill) {
+  const action=normalizeSkillAction({type:"summon_entity",target:"self",entityId,count:1,limit:1,limitScope:"entity",duration:0});
+  const before=new Set(unit.summons ?? []);
+  summonBattleUnits(unit,action,skill);
+  const beast=(unit.summons ?? []).find(candidate=>!before.has(candidate) && candidate.entityId === entityId);
+  if (!beast) return null;
+  const modifiers=getCompanionModifiers(unit,entityId);
+  const add=modifiers.reduce((sum,value)=>sum+value.attackAdd,0);
+  const percent=1+modifiers.reduce((sum,value)=>sum+value.attackPercent-100,0)/100;
+  const final=modifiers.reduce((value,modifier)=>value*modifier.finalAttackPercent/100,1);
+  beast.atk=Math.max(0,(beast.atk+add)*percent);
+  beast.companionAttackMultiplier=final;
+  recalculateBattleBuffs(beast);
+  beast.companionBaseSpeed=beast.speed;
+  return beast;
+}
+
+function getCompanionCommandActor(unit,beast) {
+  return beast.fusedInto === unit ? unit : beast;
+}
+
+function resolveCompanionCommandTarget(source,action,preferredTarget,skill) {
+  if (!getCompanionPassive(source)) return null;
+  const mode=action.summonCommand,beasts=getOwnedCompanions(source);
+  if (mode === "companion_spawn") return getCompanionEntityIds(source).some(id=>!(source.summons ?? []).some(beast=>beast.entityId === id && !beast.removed)) ? source : null;
+  if (mode === "companion_revive") return !source.companionFusion && hasDeadCompanion(source) ? source : null;
+  if (mode === "companion_fuse") return !source.companionFusion && beasts.some(beast=>beast.entityId === getCompanionEntityIds(source)[0]) ? source : null;
+  if (mode === "companion_heal") return beasts.some(beast=>{const actor=getCompanionCommandActor(source,beast);return actor.hp<actor.maxHp && distance(source,actor)<=getActionRangePixels(source,action);}) ? source : null;
+  if (mode === "companion_reset") return beasts.some(beast=>beast.skillIds.some(id=>(getCompanionCommandActor(source,beast).skillCooldowns?.[id] ?? 0)>0)) ? source : null;
+  if (mode === "companion_unleash") return beasts.length ? source : null;
+  if (mode !== "companion_attack" || (!source.companionFusion && hasDeadCompanion(source))) return null;
+  const eligible=target=>target?.alive && beasts.some(beast=>{
+    const actor=getCompanionCommandActor(source,beast);
+    return canDirectlyTarget(actor,target) && distance(actor,target)<=getActionRangePixels(beast,action)
+      && !["stun","disarm","flee","charm"].some(state=>hasBattleState(actor,state));
+  });
+  const enemies=source.side === "enemy" ? playerSquad : enemySquad;
+  return eligible(preferredTarget) ? preferredTarget : enemies.filter(eligible).sort((a,b)=>distance(source,a)-distance(source,b))[0] ?? null;
+}
+
+function syncCompanionFusionStats(unit) {
+  const fusion=unit.companionFusion;
+  if (!fusion) return;
+  const beast=fusion.beast;
+  const next={maxHp:beast.maxHp,atk:beast.atk,defense:beast.defense || 0,resistance:beast.resistance || 0};
+  const signature=JSON.stringify([next,beast.companionBaseSpeed ?? beast.speed,beast.attackSpeed]);
+  if (fusion.signature === signature) return;
+  fusion.signature=signature;
+  fusion.effect.modifiers=next;
+  fusion.effect.companionSpeed=beast.companionBaseSpeed ?? beast.speed;
+  fusion.effect.companionAttackSpeed=beast.attackSpeed;
+  recalculateBattleBuffs(unit);
+}
+
+function syncCompanionSkillCooldowns(unit) {
+  const beast=unit?.companionFusion?.beast;
+  if (!beast) return;
+  for (const id of beast.skillIds) {
+    beast.skillCooldowns[id]=unit.skillCooldowns[id] ?? 0;
+    beast.skillCooldownTotals[id]=unit.skillCooldownTotals[id] ?? 0;
+  }
+}
+
+function beginCompanionFusion(unit,skill,duration=10) {
+  if (unit.companionFusion || !unit.alive) return false;
+  const beast=getOwnedCompanions(unit).find(candidate=>candidate.entityId === getCompanionEntityIds(unit)[0]);
+  if (!beast) return false;
+  interruptCombatCasting(beast,"합체");
+  for (const state of unit.weaponAttackStates ?? []) {state.castTimer=0;state.target=null;state.preparedAttackSkill=null;}
+  const hp=unit.hp+beast.hp;
+  const permanent=getCompanionModifiers(unit).some(value=>value.permanentFusion);
+  const effect={kind:"transform",id:"companion_fusion",name:`합체 · ${beast.summonTemplateName}`,mode:"flat",modifiers:{},companionFusion:true,
+    receivedDamagePercent:100,stacks:1,remainingTicks:permanent ? null : Math.ceil(duration*BASE_ATTACK_COOLDOWN),usesRemaining:null,skillId:skill?.id};
+  unit.companionFusion={beast,effect};
+  beast.fusedInto=unit;beast.suspendedTicks=1;
+  (unit.activeEffects ??= []).push(effect);
+  for (const id of beast.skillIds) {
+    unit.skillCooldowns[id]=beast.skillCooldowns[id] ?? 0;
+    unit.skillCooldownTotals[id]=beast.skillCooldownTotals[id] ?? 0;
+  }
+  syncCompanionFusionStats(unit);
+  unit.hp=Math.min(unit.maxHp,hp);
+  publishBattleEvents([{type:"transform_start",source:unit,target:unit,skill,reason:effect.name}]);
+  return true;
+}
+
+function endCompanionFusion(unit,{dead=false,reset=false}={}) {
+  const fusion=unit?.companionFusion;
+  if (!fusion) return;
+  const beast=fusion.beast,ratio=Math.max(0,Math.min(1,unit.hp/Math.max(1,unit.maxHp)));
+  if (beast.skillIds.includes(unit.pendingAction?.skill?.id)) interruptCombatCasting(unit,"합체 해제");
+  for (const id of beast.skillIds) {
+    beast.skillCooldowns[id]=unit.skillCooldowns[id] ?? 0;
+    beast.skillCooldownTotals[id]=unit.skillCooldownTotals[id] ?? 0;
+    delete unit.skillCooldowns[id];delete unit.skillCooldownTotals[id];
+  }
+  unit.companionFusion=null;
+  beast.fusedInto=null;beast.suspendedTicks=0;
+  unit.activeEffects=(unit.activeEffects ?? []).filter(effect=>effect!==fusion.effect);
+  recalculateBattleBuffs(unit);
+  if (!dead) {
+    unit.hp=unit.maxHp*ratio;beast.hp=beast.maxHp*ratio;
+    beast.x=unit.x+COLLISION_DISTANCE;beast.y=unit.y;clampPosition(beast);
+    moveUnitWithCollision(beast,beast.x,beast.y,{sweep:false});
+  } else {
+    unit.hp=0;beast.hp=0;
+    syncAliveState(beast,{source:unit,forceDeath:true,preventRevival:true,reason:"합체 사망"});
+  }
+  if (!reset) publishBattleEvents([{type:"transform_end",source:unit,target:unit,skill:getSkillById(fusion.effect.skillId),reason:dead ? "합체 사망" : "합체 해제"}]);
+}
+
+function executeCompanionCommand(source,target,action,skill) {
+  if (!resolveCompanionCommandTarget(source,action,target,skill)) return false;
+  const mode=action.summonCommand;
+  if (mode === "companion_spawn") {
+    for (const id of getCompanionEntityIds(source)) if (!(source.summons ?? []).some(beast=>beast.entityId === id && !beast.removed)) spawnCompanion(source,id,skill);
+    if (getCompanionModifiers(source).some(value=>value.permanentFusion)) beginCompanionFusion(source,skill,0);
+    return true;
+  }
+  if (mode === "companion_fuse") return beginCompanionFusion(source,skill,action.duration);
+  if (mode === "companion_revive") {
+    const id=getCompanionEntityIds(source).find(id=>!(source.summons ?? []).some(beast=>beast.entityId === id && beast.alive && !beast.removed));
+    let beast=getOwnedCompanions(source,false).find(beast=>beast.entityId === id);
+    if (beast) {
+      clearBattleEffects(beast);
+      if (!reactivatePersistentSummon(beast,beast.maxHp)) return false;
+      pendingSummonDeaths.delete(beast);
+      beast.runtimeRuleOverrides=[];beast.pendingAction=null;beast.castTimer=0;beast.castDuration=0;
+      beast.mp=beast.maxMp;beast.st=beast.maxSt;beast.exhausted=false;
+      beast.x=source.x+COLLISION_DISTANCE;beast.y=source.y;clampPosition(beast);
+    } else beast=spawnCompanion(source,id,skill);
+    if (beast) publishBattleEvents([{type:"revive",source,target:beast,skill}]);
+    return Boolean(beast);
+  }
+  const healed=new Set();
+  for (const beast of getOwnedCompanions(source)) {
+    const actor=getCompanionCommandActor(source,beast);
+    if (mode === "companion_attack") {
+      if (!canDirectlyTarget(actor,target) || distance(actor,target)>getActionRangePixels(beast,action)
+        || ["stun","disarm","flee","charm"].some(state=>hasBattleState(actor,state))) continue;
+      // Command damage always uses the beast's attack, even while fused.
+      const amount=getActionCoefficientValue(action,beast,target);
+      applyActionDamage(actor,target,{...action,type:"deal_damage",coefficients:[{type:"fixed",value:amount}]},skill);
+    }
+    if (mode === "companion_heal" && !healed.has(actor) && distance(source,actor)<=getActionRangePixels(source,action)) {
+      applyActionHeal(source,actor,{...action,type:"heal",healResource:"HP"},skill);healed.add(actor);
+    }
+    if (["companion_reset","companion_unleash"].includes(mode)) for (const id of beast.skillIds) {
+      beast.skillCooldowns[id]=actor.skillCooldowns[id]=0;
+      beast.skillCooldownTotals[id]=actor.skillCooldownTotals[id]=0;
+    }
+    if (mode === "companion_unleash") {
+      for (const effect of [{id:"companion_unleash_atk",name:"야수해방 · 공격력",stat:"atk",mode:"percent",value:100},
+        {id:"companion_unleash_speed",name:"야수해방 · 공격속도",stat:"attackSpeed",mode:"attack_rate_percent",value:30}])
+        applyTimedEffectAction(source,beast,normalizeSkillAction({type:"add_buff",target:"summon",duration:action.duration,effect}),skill);
+      if (source.companionFusion) syncCompanionFusionStats(source);
+    }
+  }
+  publishBattleEvents([{type:"summon_command",source,target,skill,reason:COMPANION_COMMAND_LABELS[mode]}]);
+  return true;
+}
+
+function getTauntTarget(unit) {
+  const effect=(unit?.activeEffects ?? []).find(effect=>effect.kind === "state" && effect.state === "taunt");
+  if (!effect) return null;
+  return [...playerSquad,...enemySquad].find(target=>target.effectCasterId === effect.casterId && target.alive && isUnitBattleTargetable(target) && !(target.suspendedTicks>0) && !(target.activeEffects ?? []).some(effect=>["stealth","disguise"].includes(effect.mode))) ?? null;
+}
+
 function getLifeCycleForm(unit) {
   return (unit?.activeEffects ?? []).find(effect=>effect.kind === "transform" && effect.lifeCycle);
 }
 
 function isUnitBattleTargetable(unit) {
-  return unit?.targetable !== false && !getUnitBattleForm(unit)?.untargetable;
+  return !unit?.fusedInto && unit?.targetable !== false && !getUnitBattleForm(unit)?.untargetable;
 }
 
 function getLethalTransformationPassive(unit) {
@@ -473,7 +670,7 @@ function getLethalTransformationPassive(unit) {
 }
 
 function getFormSkill(unit,skill) {
-  if (skill?.summonVariant && !getLivingOwnedSummons(unit,skill.summonVariant.entityId).length) {
+  if (skill?.summonVariant && (skill.summonVariant.companion ? !unit.companionFusion && hasDeadCompanion(unit) : !getLivingOwnedSummons(unit,skill.summonVariant.entityId).length)) {
     const replacement=getSkillById(skill.summonVariant.absentSkillId);
     if (replacement) return {...replacement,internal:false};
   }
@@ -483,6 +680,8 @@ function getFormSkill(unit,skill) {
 }
 
 function getLifeCycleFormLabel(unit) {
+  const fusion=unit?.companionFusion;
+  if (fusion) return `${fusion.effect.name} · ${fusion.effect.remainingTicks === null ? "상시 유지" : `${(fusion.effect.remainingTicks/BASE_ATTACK_COOLDOWN).toFixed(1)}초`}`;
   const form=getLifeCycleForm(unit);
   if (form) return `${form.name} · 육신 복귀 ${(Math.max(0,form.remainingTicks)/BASE_ATTACK_COOLDOWN).toFixed(1)}초`;
   return getLethalTransformationPassive(unit)?.passiveTrigger.lethalTransformation.bodyName || "";
@@ -504,6 +703,9 @@ function tryEnterLethalTransformation(unit,context={}) {
 }
 
 function canDirectlyTarget(source,target) {
+  if (target.fusedInto) return false;
+  const taunt=source.side !== target.side && getTauntTarget(source);
+  if (taunt && target!==taunt) return false;
   return source.side === target.side || (isUnitBattleTargetable(target) && !(target.suspendedTicks>0)
     && !(target.activeEffects ?? []).some(effect=>effect.kind === "buff" && ["disguise","stealth"].includes(effect.mode)));
 }
@@ -654,6 +856,41 @@ function updateAttributeBuffs(unit,restoreOnly=false) {
   unit.hp=Math.min(unit.hp,unit.maxHp);unit.mp=Math.min(unit.mp,unit.maxMp);unit.st=Math.min(unit.st,unit.maxSt);
 }
 
+function getSummonFocusTarget(unit) {
+  const pending=unit.pendingAction?.target;
+  const target=pending?.side !== unit.side && pending?.alive ? pending : unit.combatFocusTarget;
+  return target?.alive && canDirectlyTarget(unit,target) && distance(unit,target)<=getUnitRange(unit)
+    && !unit.removed && !(unit.suspendedTicks>0) && !["stun","disarm","flee","charm"].some(state=>hasBattleState(unit,state)) ? target : null;
+}
+
+function getSummonSynergyEffects(unit) {
+  if (!unit?.alive) return [];
+  const effects=[];
+  for (const skill of resolveSelectedSkillIds(unit.skillIds,unit.skillSelections).map(getSkillById).filter(skill=>skill?.ownedSummonAura && !isUnitSkillDisabled(unit,skill))) {
+    const config=skill.ownedSummonAura;
+    const count=getLivingOwnedSummons(unit).filter(summon=>(!config.entityIds.length || config.entityIds.includes(summon.entityId))
+      && !summon.removed && distance(unit,summon)<=config.radius*ATTACK_RANGE_UNIT).length;
+    for (const [stat,mode,value] of [["atk","percent",config.attackPercent],["defense","flat",config.defense],["resistance","flat",config.resistance]])
+      if (count && value) effects.push({kind:"buff",stat,mode,value:value*count,stacks:1});
+  }
+  if (unit.isSummon && unit.summonFocusAttackPercent>0) {
+    const target=getSummonFocusTarget(unit);
+    const count=target ? getLivingOwnedSummons(unit.owner ?? unit.summoner).filter(summon=>getSummonFocusTarget(summon)===target).length : 0;
+    if (count>=2) effects.push({kind:"buff",stat:"atk",mode:"percent",value:count*unit.summonFocusAttackPercent,stacks:1});
+  }
+  return effects;
+}
+
+function updateSummonSynergies() {
+  for (const unit of [...playerSquad,...enemySquad]) {
+    if (!unit.summonFocusAttackPercent && !(unit.skillIds ?? []).some(id=>getSkillById(id)?.ownedSummonAura) && !unit.summonSynergySignature) continue;
+    const signature=JSON.stringify(getSummonSynergyEffects(unit));
+    if (unit.summonSynergySignature===signature) continue;
+    unit.summonSynergySignature=signature;
+    recalculateBattleBuffs(unit);
+  }
+}
+
 function getSelectedOptionalStatEffects(unit) {
   return limitOptionalSkillIds(unit?.skillIds).map(getSkillById).filter(skill=>skill?.slot === "optional" && !isUnitSkillDisabled(unit,skill))
     .flatMap(skill=>(skill.selectionModifier?.statEffects ?? []).filter(effect=>(!effect.requiredWeaponCount || (unit.weaponAttacks ?? []).length>=effect.requiredWeaponCount) && (!effect.requiredWeaponCategory ||
@@ -662,13 +899,14 @@ function getSelectedOptionalStatEffects(unit) {
 }
 
 function recalculateBattleBuffs(unit) {
+  if (unit.companionUnscaledAttack != null) unit.atk=unit.companionUnscaledAttack;
   unit.activeEffects=(unit.activeEffects ?? []).filter(effect=>!effect.linkedEffectId || unit.activeEffects.some(parent=>parent.id === effect.linkedEffectId && parent.casterId === effect.casterId));
   restorePassiveStatConversion(unit);
   updateAttributeBuffs(unit);
   const previousMaxHp=Math.max(0,Number(unit.maxHp) || 0);
   const previousMaxMp=Math.max(0,Number(unit.maxMp) || 0);
   unit.effectBaseStats ??= {};
-  const buffs = [...(unit.activeEffects ?? []), ...getSelectedOptionalStatEffects(unit), ...getBattleFieldAuraEffects(unit)].flatMap(effect => {
+  const buffs = [...(unit.activeEffects ?? []), ...getSelectedOptionalStatEffects(unit), ...getSummonSynergyEffects(unit), ...getBattleFieldAuraEffects(unit)].flatMap(effect => {
     if (effect.kind === "state" && effect.movementSpeedPercent != null && effect.movementSpeedPercent !== 100)
       return [{stat:"speed",value:effect.movementSpeedPercent-100,mode:"percent",stacks:effect.stacks ?? 1}];
     if(effect.kind === "buff" && ["flat","percent","override","convert","attack_rate_percent","cast_time_percent","attribute"].includes(effect.mode)) {
@@ -682,8 +920,9 @@ function recalculateBattleBuffs(unit) {
       }
       return [effect,...getEffectStackBonuses(effect)];
     }
-    if(effect.kind === "transform") return Object.entries(effect.modifiers ?? {}).filter(([,value])=>Number(value)!==0)
-      .map(([stat,value])=>({stat,value:Number(value),mode:effect.mode,stacks:1}));
+    if(effect.kind === "transform") return [
+      ...Object.entries(effect.modifiers ?? {}).filter(([,value])=>Number(value)!==0).map(([stat,value])=>({stat,value:Number(value),mode:effect.mode,stacks:1})),
+      ...(effect.companionFusion ? [{stat:"speed",mode:"override",value:effect.companionSpeed,stacks:1},{stat:"attackSpeed",mode:"override",value:effect.companionAttackSpeed,stacks:1}] : [])];
     return [];
   });
   unit.effectAttackRateMultiplier=Math.max(.1,1+buffs.filter(effect=>effect.stat === "attackSpeed" && effect.mode === "attack_rate_percent")
@@ -720,10 +959,16 @@ function recalculateBattleBuffs(unit) {
     : Math.min(Math.max(0,Number(unit.hp) || 0),unit.maxHp);
   if (unit.maxMp !== previousMaxMp) unit.mp=Math.min(unit.maxMp,Math.max(0,Number(unit.mp) || 0)+Math.max(0,unit.maxMp-previousMaxMp));
   applyPassiveStatConversion(unit);
+  if (unit.companionAttackMultiplier != null) {
+    unit.companionUnscaledAttack=unit.atk;
+    unit.atk*=unit.companionAttackMultiplier;
+  }
+  if (unit.lockedMovementSpeed != null) unit.speed=Math.min(Number(unit.speed) || 0,unit.lockedMovementSpeed);
   if (getLifeCycleForm(unit)) unit.hp=0;
 }
 
 function clearBattleEffects(unit) {
+  endCompanionFusion(unit,{dead:!unit.alive,reset:true});
   clearBattleChannel(unit);
   unit.weaponFlower=null;unit.weaponDeployment=null;unit.delayedEffectRepeats=[];
   unit.activeEffects = [];
@@ -895,7 +1140,10 @@ function applyMeleeReaction(defender, attacker, action, skill, effects) {
     if (!defender.alive || !attacker.alive || !defender.activeEffects?.includes(effect)) continue;
     const reaction=getSkillById(effect.reactionSkillId);
     if (!reaction || !isSkillExecutable(reaction) || isUnitSkillDisabled(defender,reaction)) continue;
-    applySkill(defender,attacker,{...reaction,triggered:true});
+    const remaining=(effect.remainingTicks ?? 0)/BASE_ATTACK_COOLDOWN;
+    if (effect.reactionOnce) {defender.activeEffects=defender.activeEffects.filter(candidate=>candidate!==effect);recalculateBattleBuffs(defender);}
+    const runtime=getRuntimeSelectionSkill(defender,getRuntimeItemSkill(defender,reaction));
+    applySkill(defender,attacker,{...runtime,triggered:true,actions:runtime.actions.map(action=>effect.reactionInheritRemaining && action.duration>0 ? {...action,duration:remaining} : action)});
   }
 }
 
@@ -1062,7 +1310,9 @@ function updateDelayedEffectRepeats(unit,previousEntries=null) {
 }
 
 function updateBattleEffects() {
+  updateSummonSynergies();
   [...playerSquad,...enemySquad].forEach(unit => {
+    if (unit.companionFusion) syncCompanionFusionStats(unit);
     if (unit.alive && !unit.isWaiting && !unit.isReserve) unit.undamagedTicks=(unit.undamagedTicks || 0)+1;
     updateRepeatingPassives(unit);
     updateProximityPassives(unit);
@@ -1124,9 +1374,10 @@ function updateBattleEffects() {
         for (const state of unit.weaponAttackStates ?? []) {state.castTimer=0;state.target=null;}
         unit.hp=Math.max(1,unit.maxHp*effect.returnHpPercent/100);
       }
-      if(effect.kind === "transform") publishBattleEvents([{type:"transform_end",source:unit,target:unit,skill:{id:effect.skillId,name:effect.name},reason:"만료"}]);
+      if(effect.kind === "transform" && !effect.companionFusion) publishBattleEvents([{type:"transform_end",source:unit,target:unit,skill:{id:effect.skillId,name:effect.name},reason:"만료"}]);
       return false;
     });
+    if (unit.companionFusion && !unit.activeEffects.includes(unit.companionFusion.effect)) endCompanionFusion(unit);
     if (!unit.alive) clearBattleEffects(unit);
     else {
       if (unit.activeEffects.length !== previousLength) recalculateBattleBuffs(unit);

@@ -23,7 +23,7 @@
     "resistance": 0,
     "speed": 0,
     "attackSpeed": 5,
-    "castTime": 0,
+    "castTime": 1,
     "attackRange": 10
   }
 }

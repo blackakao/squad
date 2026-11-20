@@ -4,6 +4,315 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const path = require('node:path');
 
+function monkEngine(options=[]) {
+ const e=engine();e.skillsJson=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'../data/skills.json'),'utf8')));
+ e.monk=id=>e.getSkillById('skill_class_monk_'+id);const s=e.owner=unit(e),t=e.target=unit(e,'enemy',130);
+ s.skillIds=['cycle','spring_energy','area_heal','combo','down_strike','vajra_talisman_ultimate',...options].map(id=>e.monk(id).id);
+ t.x=105;t.hp=t.maxHp=10000;s.atk=100;s.st=s.maxSt=1000;
+ e.runtime=id=>e.getRuntimeSelectionSkill(s,e.monk(id));
+ e.cast=(id,target=t)=>{const skill=e.runtime(id),resourceSpent=e.spendSkillResourceCosts(s,skill);e.startCast(s,{type:'skill',skill,target,resourceSpent});for(let i=0;s.pendingAction && i<1000;i++)e.updateCast(s);return skill;};
+ return e;
+}
+
+test('monk spring sharing copies both buffs only for another ally in both dispatch paths',()=>{
+ for(const direct of [false,true]) {
+  const e=monkEngine(['spring_sharing']),s=e.owner,a=unit(e,'player',120);s.defense=a.defense=100;s.attackSpeed=a.attackSpeed=1;
+  const spring=e.runtime('spring_energy');
+  if(direct)e.applySkill(s,a,spring);else e.cast('spring_energy',a);
+  for(const target of [s,a]){assert.equal(target.defense,110);assert.equal(target.attackSpeed,1/1.2);assert.equal(target.activeEffects.length,2);}
+  e.clearBattleEffects(s);e.applySkill(s,s,spring);assert.equal(s.activeEffects.length,2);assert.equal(s.defense,110);
+ }
+ const e=monkEngine(),a=unit(e,'player',120);e.cast('spring_energy',a);assert.equal(e.owner.activeEffects.length,0);
+});
+
+test('monk forehead strike alternates completed casts and resets with the battle',()=>{
+ const e=monkEngine(['forehead_strike']),s=e.owner,values=[];
+ for(let i=0;i<4;i++){values.push(e.cast('down_strike').actions[0].coefficients[0].value);if(i===0)e.cast('spring_energy',s);}
+ assert.deepEqual(values,[180,234,180,234]);assert.equal(s.st,960);assert.equal(e.target.hp,10000-828);
+ assert.equal(e.target.activeEffects.find(x=>x.id==='monk_down_strike_defense').remainingTicks,300);
+ e.resetUnitForBattle(s);assert.equal(e.runtime('down_strike').actions[0].coefficients[0].value,180);
+ s.skillUseCounts[e.monk('down_strike').id]=1;s.skillIds=s.skillIds.filter(id=>id!==e.monk('forehead_strike').id);assert.equal(e.runtime('down_strike').actions[0].coefficients[0].value,180);
+});
+
+test('monk talisman merchant grants two ultimate uses after unlock with ten seconds between them',()=>{
+ const e=monkEngine(['talisman_merchant']),s=e.owner,id=e.monk('vajra_talisman_ultimate').id;
+ vm.runInContext('combatEventTick=1799',e);assert.equal(e.canActivateSkill(s,e.runtime('vajra_talisman_ultimate')),false);
+ vm.runInContext('combatEventTick=1800',e);assert.equal(e.canActivateSkill(s,e.runtime('vajra_talisman_ultimate')),true);
+ e.cast('vajra_talisman_ultimate',s);assert.equal(s.skillCooldowns[id],600);assert.equal(e.canActivateSkill(s,e.runtime('vajra_talisman_ultimate')),false);
+ for(let i=0;i<599;i++)e.tickSkillCooldowns(s);assert.equal(e.canActivateSkill(s,e.runtime('vajra_talisman_ultimate')),false);
+ e.tickSkillCooldowns(s);assert.equal(e.canActivateSkill(s,e.runtime('vajra_talisman_ultimate')),true);
+ e.cast('vajra_talisman_ultimate',s);s.skillCooldowns[id]=0;assert.equal(e.canActivateSkill(s,e.runtime('vajra_talisman_ultimate')),false);
+ e.resetUnitForBattle(s);assert.equal(e.getUltimateUseLimit(s,e.monk('vajra_talisman_ultimate')),2);assert.equal(s.skillUseCounts[id],undefined);
+ s.skillIds=s.skillIds.filter(x=>x!==e.monk('talisman_merchant').id);s.skillUseCounts[id]=1;assert.equal(e.canActivateSkill(s,{...e.monk('vajra_talisman_ultimate'),maxUses:2}),false);
+});
+
+test('monk warm season restores resources only to allies in the embrace area and respects optional limit',()=>{
+ const e=monkEngine(['warm_season']),s=e.owner,a=unit(e,'player',140),far=unit(e,'player',200);
+ for(const u of [s,a,far]){u.hp=10;u.mp=10;u.st=10;}e.cast('area_heal',s);
+ assert.equal(a.hp,100);assert.equal(a.mp,15);assert.equal(a.st,20);assert.equal(far.hp,10);assert.equal(far.mp,10);assert.equal(far.st,10);
+ s.skillIds.push(...['sincere_heart','swift_victory','forehead_strike'].map(x=>e.monk(x).id));s.skillUseCounts[e.monk('down_strike').id]=1;
+ assert.equal(e.runtime('down_strike').actions[0].coefficients[0].value,180);
+});
+
+test('monk cycle heals from physical actual damage within five meters with selected conversion',()=>{
+ for(const [options,amount] of [[[],6],[['sincere_heart'],10]]) {
+  const e=monkEngine(options),s=e.owner,a=unit(e,'player',140),far=unit(e,'player',160);s.hp=90;a.hp=20;far.hp=1;
+  const attack=type=>skill(e,{type:'deal_damage',target:'enemy',damageType:type,coefficients:[{type:'fixed',value:20}]});
+  e.applySkill(s,e.target,attack('magic'));assert.equal(a.hp,20);
+  e.applySkill(s,e.target,attack('physical'));assert.equal(a.hp,20+amount);assert.equal(far.hp,1);assert.equal(s.hp,90);
+ }
+});
+
+test('monk combo spends three stamina per stage and starts full cooldown after the fourth stage',()=>{
+ const e=monkEngine(),s=e.owner,values=[],cooldowns=[];
+ for(let i=0;i<4;i++) {
+  const skill=e.getRuntimeComboSkill(s,e.runtime('combo'));values.push(skill.actions[0].coefficients[0].value);
+  const resourceSpent=e.spendSkillResourceCosts(s,skill);e.startCast(s,{type:'skill',skill,target:e.target,resourceSpent});cooldowns.push(s.skillCooldowns[skill.id]);
+ }
+ assert.deepEqual(values,[120,120,120,150]);assert.deepEqual(cooldowns,[30,30,30,720]);assert.equal(s.st,988);
+});
+
+function admiralEngine(options=[]) {
+ const e=engine();e.skillsJson=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'../data/skills.json'),'utf8')));
+ e.admiral=id=>e.getSkillById('skill_class_admiral_'+id);const s=e.owner=unit(e),t=e.target=unit(e,'enemy',130);
+ s.magic=100;s.speed=s.attackSpeed=1;s.hp=s.maxHp=2000;s.mp=s.maxMp=1000;t.speed=t.attackSpeed=1;t.hp=t.maxHp=10000;
+ s.skillIds=['reload','tidal_wave','vortex','sea_road','wave','despair_ultimate',...options].map(id=>e.admiral(id).id);e.runtime=id=>e.getRuntimeSelectionSkill(s,e.admiral(id));
+ e.cast=(id,target=t)=>{const skill=e.runtime(id),reloadInfo=e.getReloadCastInfo(s,skill,e.getNextSkillModifier(s)),resourceSpent=e.spendSkillResourceCosts(s,skill);target.x=target===s ? 100 : 130;
+  e.startCast(s,{type:'skill',skill,target,reloadInfo,resourceSpent});const ticks=s.castDuration;for(let i=0;s.pendingAction && i<1000;i++)e.updateCast(s);return {ticks,resourceSpent};};
+ return e;
+}
+
+test('admiral reload accumulates separately and fifth tidal wave is free instantaneous with cooldown preserved',()=>{
+ const e=admiralEngine(),s=e.owner,times=[],costs=[];
+ for(let i=0;i<5;i++){const cast=e.cast('tidal_wave');times.push(cast.ticks);costs.push(cast.resourceSpent.MP);}
+ assert.deepEqual(times,[120,90,60,30,0]);assert.deepEqual(costs,[15,15,15,15,0]);assert.equal(s.reloadCharges[e.admiral('tidal_wave').id],0);assert.equal(s.skillCooldowns[e.admiral('tidal_wave').id],300);
+ assert.equal(e.getReloadCastInfo(s,e.runtime('vortex')).seconds,3);assert.equal(e.getReloadCastInfo(s,e.runtime('despair_ultimate')),null);
+ e.startCast(s,{type:'skill',skill:e.runtime('tidal_wave'),target:e.target});e.interruptBattleCast(s);assert.equal(s.reloadCharges[e.admiral('tidal_wave').id],0);
+ e.resetUnitForBattle(s);assert.equal(Object.keys(s.reloadCharges).length,0);
+});
+
+test('admiral reload again gives one additional instantaneous cast with normal MP cost and then resets',()=>{
+ const e=admiralEngine(['reload_again']),times=[],costs=[];
+ for(let i=0;i<7;i++){const cast=e.cast('tidal_wave');times.push(cast.ticks);costs.push(cast.resourceSpent.MP);}
+ assert.deepEqual(times,[120,90,60,30,0,0,120]);assert.deepEqual(costs,[15,15,15,15,0,15,15]);
+ const plain=admiralEngine();plain.owner.reloadCharges[plain.admiral('tidal_wave').id]=2;plain.owner.mp=0;assert(plain.canPaySkillResourceCosts(plain.owner,plain.runtime('tidal_wave')));
+});
+
+test('admiral reload threshold follows current cast buffs and never applies to ultimate',()=>{
+ const e=admiralEngine(),s=e.owner;e.applyTimedEffectAction(s,s,e.normalizeSkillAction({type:'add_buff',duration:10,effect:{id:'quick',stat:'castSpeed',mode:'cast_time_percent',value:-50}}));
+ assert.equal(e.cast('tidal_wave').ticks,60);assert.equal(e.cast('tidal_wave').ticks,30);const free=e.cast('tidal_wave');assert.equal(free.ticks,0);assert.equal(free.resourceSpent.MP,0);
+ s.reloadCharges[e.admiral('despair_ultimate').id]=100;assert.equal(e.cast('despair_ultimate').ticks,15);
+});
+
+test('admiral sea road applies real cast multipliers and black sea replaces ally aura and slows enemy casting',()=>{
+ for(const black of [false,true]) {
+  const e=admiralEngine(black ? ['black_sea'] : []),s=e.owner,t=e.target;e.applySkill(s,t,e.runtime('sea_road'));e.updateBattleFields();
+  assert.equal(s.effectCastTimeMultiplier,black ? 1 : .8);assert.equal(t.effectCastTimeMultiplier,black ? 1.25 : 1.15);assert.equal(t.speed,black ? .7 : .8);assert.equal(t.attackSpeed,black ? 1.25 : 1/.85);
+  e.startCast(t,{type:'skill',target:s,skill:e.admiral('tidal_wave')});assert.equal(t.castDuration,black ? 150 : 138);
+  t.y=300;e.refreshTrackedBattleFields();assert.equal(t.effectCastTimeMultiplier,1);assert.equal(t.speed,1);assert.equal(t.attackSpeed,1);
+ }
+});
+
+test('admiral deadly vortex increases received damage only while inside its field',()=>{
+ const e=admiralEngine(['deadly_vortex']),s=e.owner,t=e.target;e.applySkill(s,t,e.runtime('vortex'));assert(Math.abs(e.getUnitIncomingRulePercent(t,'receivedDamagePercent')-115)<1e-7);
+ const before=t.hp;e.applyActionDamage(s,t,{damageType:'magic',coefficients:[{type:'fixed',value:100}]});assert(Math.abs(t.hp-(before-115))<1e-7);
+ t.x=300;e.refreshTrackedBattleFields();assert.equal(e.getUnitIncomingRulePercent(t,'receivedDamagePercent'),100);assert.equal(e.getUnitIncomingRulePercent(s,'receivedDamagePercent'),100);
+});
+
+test('admiral wave consumes once on melee and transfers only remaining duration to slow with optional buff dispel',()=>{
+ const e=admiralEngine(['salt_water']),s=e.owner,t=e.target;t.x=110;e.applySkill(s,s,e.runtime('wave'));for(let i=0;i<180;i++)e.updateBattleEffects();
+ e.applyTimedEffectAction(t,t,e.normalizeSkillAction({type:'add_buff',duration:10,effect:{id:'enemy_buff',stat:'atk',mode:'flat',value:10}}));
+ const ranged={type:'deal_damage',rangeMode:'custom',rangeValue:5,damageType:'physical',coefficients:[{type:'fixed',value:10}]};e.applyActionDamage(t,s,ranged);assert(s.activeEffects.some(effect=>effect.id==='admiral_wave'));
+ const before=t.hp;e.applyActionDamage(t,s,{...ranged,rangeValue:1});assert.equal(t.hp,before-50);assert.equal(s.activeEffects.some(effect=>effect.id==='admiral_wave'),false);assert.equal(t.activeEffects.some(effect=>effect.id==='enemy_buff'),false);
+ const slow=t.activeEffects.find(effect=>effect.id==='admiral_wave_slow');assert.equal(slow.remainingTicks,120);assert.equal(t.speed,.6);
+ e.applyActionDamage(t,s,{...ranged,rangeValue:1});assert.equal(t.hp,before-50);
+});
+
+test('admiral despair wave knocks enemies radially from damage center and obeys ultimate limit',()=>{
+ const e=admiralEngine(),s=e.owner,t=e.target,second=unit(e,'enemy',130),outside=unit(e,'enemy',250);second.y=130;second.hp=second.maxHp=10000;outside.hp=outside.maxHp=10000;
+ e.cast('despair_ultimate');e.updateProjectiles();assert.equal(t.hp,9750);assert.equal(second.hp,9750);assert.equal(outside.hp,10000);assert(t.x>130);assert.equal(second.x,130);assert(second.y>130);assert.equal(e.canActivateSkill(s,e.runtime('despair_ultimate')),false);
+});
+
+test('admiral tidal bowling damages collisions on actual knockback path once and excludes distant enemies',()=>{
+ const e=admiralEngine(['tidal_bowling']),s=e.owner,t=e.target,hit=unit(e,'enemy',160),far=unit(e,'enemy',250);hit.hp=hit.maxHp=far.hp=far.maxHp=10000;
+ e.applySkill(s,t,e.runtime('tidal_wave'));assert.equal(t.hp,9820);assert.equal(hit.hp,9910);assert.equal(far.hp,10000);assert(t.x>130);assert(t.x<160);
+});
+
+test('admiral rotten wine only modifies natural regeneration and charges HP proportionally to actual recovery',()=>{
+ const e=admiralEngine(['rotten_wine']),s=e.owner;e.MP_REGEN_PER_SECOND=2;s.mp=0;s.hp=1000;e.applyNaturalMpRegeneration(s,1);assert.equal(s.mp,6);assert.equal(s.hp,920);
+ s.mp=s.maxMp;e.applyNaturalMpRegeneration(s,1);assert.equal(s.hp,920);
+ s.mp=s.maxMp-3;e.applyNaturalMpRegeneration(s,1);assert.equal(s.mp,s.maxMp);assert.equal(s.hp,880);
+ e.applyActionHeal(s,s,{healResource:'MP',coefficients:[{type:'fixed',value:10}]});assert.equal(s.hp,880);
+ const plain=admiralEngine();plain.MP_REGEN_PER_SECOND=2;plain.owner.mp=0;plain.applyNaturalMpRegeneration(plain.owner,1);assert.equal(plain.owner.mp,2);assert.equal(plain.owner.hp,2000);
+});
+
+function engineerEngine(options=[]) {
+ const e=engine();e.skillsJson=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'../data/skills.json'),'utf8')));
+ e.engineer=id=>e.getSkillById('skill_class_engineer_'+id);
+ e.definitions=['ballista','talisman_cannon','recoilless_cannon','haetae'].map(id=>JSON.parse(fs.readFileSync(path.join(__dirname,'../data/entities/engineer_'+id+'.json'),'utf8')));
+ vm.runInContext('entitiesJson.push(...definitions)',e);
+ const s=e.owner=unit(e),t=e.target=unit(e,'enemy',105);s.atk=100;s.defense=10;s.resistance=5;s.st=1000;t.hp=t.maxHp=100000;
+ s.skillIds=['engineering','ballista','talisman_cannon','recoilless_cannon','haetae','emergency_reinstall_ultimate',...options].map(id=>e.engineer(id).id);
+ e.runtime=id=>e.getRuntimeSelectionSkill(s,e.engineer(id));e.spawn=id=>{e.applySkill(s,s,e.runtime(id));return s.summons.at(-1);};
+ return e;
+}
+
+test('engineer aura counts only own living summons within five meters and updates after movement and death',()=>{
+ const e=engineerEngine(),s=e.owner,a=e.spawn('ballista'),b=e.spawn('talisman_cannon');
+ assert.equal(s.atk,110);assert.equal(s.defense,12);assert.equal(s.resistance,7);
+ a.x=s.x+51;a.y=s.y;e.updateBattleEffects();assert.equal(s.atk,105);assert.equal(s.defense,11);
+ a.x=s.x+50;e.updateBattleEffects();assert.equal(s.atk,110);
+ const other=unit(e);other.skillIds=s.skillIds;e.applySkill(other,other,e.engineer('haetae'));assert.equal(s.atk,110);
+ b.hp=0;e.syncAliveState(b);assert.equal(s.atk,105);a.hp=0;e.syncAliveState(a);assert.equal(s.atk,100);assert.equal(s.defense,10);assert.equal(s.resistance,5);
+});
+
+test('engineer emergency reinstall fills shared entity caps without replacing or healing existing summons',()=>{
+ const e=engineerEngine(['artillery_king','durable']),s=e.owner,b=e.spawn('ballista');b.hp=10;
+ const skill=e.runtime('emergency_reinstall_ultimate');e.resolveSkillCast(s,{skill,target:s});
+ assert.equal(s.summons.length,6);assert.equal(s.summons[0],b);assert.equal(b.hp,10);assert.equal(e.canActivateSkill(s,skill),false);
+ assert.deepEqual(Array.from(e.definitions,definition=>s.summons.filter(unit=>unit.entityId===definition.entityId).length),[2,1,2,1]);
+ const cannon=s.summons.find(unit=>unit.entityId==='engineer_recoilless_cannon');assert.equal(cannon.maxHp,300);
+ e.applySkill(s,s,e.runtime('recoilless_cannon'));assert.equal(s.summons.length,6);
+ cannon.hp=0;e.syncAliveState(cannon);e.finalizeSummonDeaths();e.spawn('recoilless_cannon');assert.equal(s.summons.filter(unit=>unit.entityId===cannon.entityId && unit.alive).length,2);
+});
+
+test('engineer selected summon enhancements are independent and fourth optional never applies',()=>{
+ const plain=engineerEngine(),p=plain.spawn('talisman_cannon');assert.equal(p.maxHp,200);assert.equal(p.atk,50);assert.equal(p.attackSpeed,1);assert.equal(p.speed,0);
+ const e=engineerEngine(['rapid_fire','durable','do_it_all','turtle_story']),s=e.owner;e.recalculateBattleBuffs(s);assert.equal(s.atk,70);
+ const cannon=e.spawn('talisman_cannon');assert.equal(cannon.maxHp,400);assert.equal(cannon.hp,400);assert.equal(cannon.atk,100);assert.equal(cannon.attackSpeed,.5);assert.equal(cannon.ai,'stationary');assert.equal(cannon.speed,0);
+ const robot=e.spawn('haetae');assert.equal(robot.maxHp,700);assert.equal(robot.atk,100);assert.equal(robot.speed,1);assert.equal(robot.attackSpeed,2);
+});
+
+test('engineer turtle story moves only artillery and caps buffs while allowing movement slows',()=>{
+ const e=engineerEngine(['turtle_story']);
+ for (const id of ['ballista','talisman_cannon','recoilless_cannon']) {
+  const unit=e.spawn(id);assert.equal(unit.ai,'ranged');assert.equal(unit.speed,.1);
+  unit.x=200;unit.y=100;e.target.x=500;const before=unit.x;e.moveUnit(unit,[e.target]);assert(unit.x>before);
+  e.applyTimedEffectAction(e.owner,unit,e.normalizeSkillAction({type:'add_buff',duration:5,effect:{id:'speed_up',stat:'speed',mode:'percent',value:100}}));assert.equal(unit.speed,.1);
+  e.clearBattleEffects(unit);e.applyTimedEffectAction(e.target,unit,e.normalizeSkillAction({type:'add_buff',duration:5,effect:{id:'slow',stat:'speed',mode:'percent',value:-50}}));assert.equal(unit.speed,.05);
+  e.clearBattleEffects(unit);assert.equal(unit.speed,.1);
+ }
+ const robot=e.spawn('haetae');assert.equal(robot.ai,'melee');assert.equal(robot.speed,1);assert.equal(robot.lockedMovementSpeed,null);
+});
+
+test('engineer focused fire tracks actual attack targets across changes stun deaths and other owners',()=>{
+ const e=engineerEngine(['focus_fire']),s=e.owner,t=e.target,a=e.spawn('ballista'),b=e.spawn('talisman_cannon'),c=e.spawn('recoilless_cannon');
+ for(const unit of [a,b,c]){unit.x=100;unit.y=100;}
+ const fire=(unit,target)=>e.startCast(unit,{type:'attack',target,skill:e.getBasicBattleSkill(unit)});
+ fire(a,t);assert.equal(a.atk,100);fire(b,t);assert.equal(a.atk,110);assert.equal(b.atk,55);fire(c,t);assert.equal(a.atk,115);assert.equal(b.atk,57.5);assert.equal(c.atk,230);
+ const other=unit(e,'enemy',105);other.hp=other.maxHp=100000;fire(c,other);assert.equal(a.atk,110);assert.equal(c.atk,200);
+ e.applyTimedEffectAction(t,b,e.normalizeSkillAction({type:'add_state',duration:1,effect:{id:'stun',state:'stun'}}));e.updateBattleEffects();assert.equal(a.atk,100);
+ e.clearBattleEffects(b);e.updateBattleEffects();assert.equal(a.atk,110);
+ const foreignOwner=unit(e);foreignOwner.skillIds=s.skillIds;e.applySkill(foreignOwner,foreignOwner,e.engineer('ballista'));const foreign=foreignOwner.summons[0];foreign.x=100;foreign.y=100;fire(foreign,t);assert.equal(a.atk,110);assert.equal(foreign.atk,100);
+ t.hp=0;e.syncAliveState(t);e.updateBattleEffects();assert.equal(a.atk,100);assert.equal(b.atk,50);
+});
+
+test('engineer ultimate obeys the opening lock and skills use their new stamina costs',()=>{
+ const e=engineerEngine(),s=e.owner,ultimate=e.runtime('emergency_reinstall_ultimate');
+ vm.runInContext('combatEventTick=1799',e);assert.equal(e.canActivateSkill(s,ultimate),false);vm.runInContext('combatEventTick=1800',e);assert.equal(e.canActivateSkill(s,ultimate),true);
+ for(const [id,cost] of [['ballista',5],['talisman_cannon',10],['recoilless_cannon',20],['haetae',20]]) {const before=s.st;e.spendSkillResourceCosts(s,e.runtime(id));assert.equal(before-s.st,cost);}
+});
+
+function tamerEngine(options=[],choice='wolf') {
+ const e=engine();e.skillsJson=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'../data/skills.json'),'utf8')));
+ e.tamer=id=>e.getSkillById('skill_class_tamer_'+id);
+ e.beasts=['legacy_4ac380c5973655c4','tamer_elephant','tamer_raptor'].map(id=>JSON.parse(fs.readFileSync(path.join(__dirname,'../data/entities',id+'.json'),'utf8')));
+ vm.runInContext('entitiesJson.push(...beasts)',e);
+ const s=e.owner=unit(e),t=e.target=unit(e,'enemy',105);s.hp=s.maxHp=2000;s.atk=100;s.defense=10;s.resistance=5;s.speed=2;s.attackSpeed=2;s.mp=s.maxMp=200;t.hp=t.maxHp=10000;
+ s.skillIds=['beast','choice','kill_command','fusion','heal','reset','unleash_ultimate',...options].map(id=>e.tamer(id).id);
+ s.skillSelections={[e.tamer('choice').id]:choice};e.runtime=id=>e.getRuntimeSelectionSkill(s,e.getFormSkill(s,e.tamer(id)));
+ e.applySkill(s,s,e.runtime('beast'));
+ for(const beast of s.summons ?? []) {beast.x=100;beast.y=100;}
+ return e;
+}
+
+test('tamer choices spawn exactly one persistent beast with two executable abilities',()=>{
+ for(const [choice,atk,hp] of [['wolf',80,800],['elephant',200,1500],['raptor',120,500]]) {
+  const e=tamerEngine([],choice),s=e.owner,beast=s.summons[0];assert.equal(s.summons.length,1);assert.equal(beast.atk,atk);assert.equal(beast.hp,hp);assert.equal(beast.speed,1.2);
+  assert.equal(beast.summonType,'persistent');assert.equal(e.getEquippedSkills(beast).length,2);e.applySkill(s,s,e.runtime('beast'));assert.equal(s.summons.length,1);
+ }
+});
+
+test('tamer real entry event summons the selected beast and selected enhancements respect three slots and exclusivity',()=>{
+ const e=tamerEngine(),s=unit(e);s.skillIds=e.owner.skillIds;s.skillSelections={[e.tamer('choice').id]:'raptor'};
+ e.publishBattleEvents([{type:'battle_entry',source:s,target:s}]);assert.equal(s.summons.length,1);assert.equal(s.summons[0].entityId,'tamer_raptor');
+ const ids=['legion','one_body','raptor_power','aggression','free_revive'].map(id=>e.tamer(id).id);
+ assert.deepEqual(Array.from(e.limitOptionalSkillIds(ids)),['legion','raptor_power','aggression'].map(id=>e.tamer(id).id));
+ const l=tamerEngine(['legion','raptor_power','aggression'],'raptor');assert.equal(l.owner.summons.length,3);assert.equal(l.owner.summons[0].atk,22.5);
+ assert.deepEqual(Array.from(l.owner.summons,beast=>beast.atk),[22.5,11,23]);
+ const wolf=l.owner.summons[1];l.applyTimedEffectAction(l.owner,wolf,l.normalizeSkillAction({type:'add_buff',duration:5,effect:{id:'external_atk',stat:'atk',mode:'flat',value:100}}));assert.equal(wolf.atk,21);l.recalculateBattleBuffs(wolf);assert.equal(wolf.atk,21);
+});
+
+test('tamer fusion pools current HP without free healing and separation preserves the remaining ratio',()=>{
+ const e=tamerEngine(),s=e.owner,b=s.summons[0];s.hp=1000;b.hp=400;b.skillCooldowns[b.skillIds[0]]=120;
+ e.applySkill(s,s,e.runtime('fusion'));assert.equal(s.maxHp,2800);assert.equal(s.hp,1400);assert.equal(s.atk,180);assert.equal(s.defense,20);assert.equal(s.resistance,5);assert.equal(s.speed,1.2);assert.equal(s.attackSpeed,1);
+ assert.equal(e.getActiveBattleEntities(e.playerSquad).length,1);assert.equal(e.canDirectlyTarget(e.target,b),false);assert.equal(e.getEquippedSkills(s).filter(skill=>b.skillIds.includes(skill.id)).length,2);
+ e.applyActionDamage(e.target,s,{damageType:'fixed',coefficients:[{type:'fixed',value:700}]});
+ e.tickSkillCooldowns(s);assert.equal(b.skillCooldowns[b.skillIds[0]],119);
+ for(let i=0;i<600;i++)e.updateBattleEffects();assert.equal(s.companionFusion,null);assert.equal(s.maxHp,2000);assert.equal(s.hp,500);assert.equal(b.hp,200);assert.equal(s.atk,100);assert.equal(s.speed,2);assert.equal(b.skillCooldowns[b.skillIds[0]],119);
+ assert.equal(e.getActiveBattleEntities(e.playerSquad).length,2);
+});
+
+test('tamer fusion receives area damage and healing only once and death kills both persistent actors',()=>{
+ const e=tamerEngine(),s=e.owner,b=s.summons[0];e.applySkill(s,s,e.runtime('fusion'));b.x=s.x;b.y=s.y;
+ const area=e.normalizeSkillJson([{id:'tamer_area_test',name:'area',actions:[{type:'deal_damage',target:'enemy',area:10,coefficients:[{type:'fixed',value:100}]}]}]).find(skill=>skill.id==='tamer_area_test');
+ e.applySkill(e.target,s,area);assert.equal(s.hp,2700);
+ e.applyActionDamage(e.target,b,{damageType:'fixed',coefficients:[{type:'fixed',value:2800}]});assert.equal(s.alive,false);assert.equal(b.alive,false);assert.equal(s.hp,0);assert.equal(b.hp,0);assert.equal(e.resolveSkillTarget(s,e.runtime('kill_command'),e.playerSquad,e.enemySquad),null);
+});
+
+test('tamer legion fuses only the selected beast and revives one dead beast at a time preserving identity',()=>{
+ const e=tamerEngine(['legion'],'elephant'),s=e.owner,selected=s.summons[0];
+ e.applySkill(s,s,e.runtime('fusion'));assert.equal(s.companionFusion.beast,selected);assert.equal(e.getActiveBattleEntities(e.playerSquad).length,3);e.endCompanionFusion(s);
+ const other=s.summons[1];selected.hp=0;e.syncAliveState(selected);other.hp=0;e.syncAliveState(other);e.finalizeSummonDeaths();
+ const revive=e.runtime('kill_command');assert.equal(revive.id,e.tamer('revive').id);assert.equal(revive.castTime,3);assert.equal(revive.resourceCosts[0].value,40);
+ e.spendSkillResourceCosts(s,revive);e.applySkill(s,s,revive);assert(selected.alive);assert.equal(selected.hp,1500);assert.equal(other.alive,false);assert.equal(s.mp,160);assert.equal(s.summons.length,3);
+ e.applySkill(s,s,e.runtime('kill_command'));assert(other.alive);assert.equal(e.runtime('kill_command').id,e.tamer('kill_command').id);
+});
+
+test('tamer kill command uses beast ATK and heal reset ultimate also operate during fusion',()=>{
+ const e=tamerEngine(['strong_heal','free_revive']),s=e.owner,b=s.summons[0],t=e.target;
+ e.applySkill(s,t,e.runtime('kill_command'));assert.equal(t.hp,9840);
+ e.applySkill(s,s,e.runtime('fusion'));e.applySkill(s,t,e.runtime('kill_command'));assert.equal(t.hp,9680);
+ s.hp=1000;e.applySkill(s,s,e.runtime('heal'));assert.equal(s.hp,1144);
+ s.skillCooldowns[b.skillIds[0]]=200;s.skillCooldowns[e.tamer('fusion').id]=900;e.applySkill(s,s,e.runtime('reset'));assert.equal(s.skillCooldowns[b.skillIds[0]],0);assert.equal(s.skillCooldowns[e.tamer('fusion').id],900);
+ e.applySkill(s,s,e.runtime('unleash_ultimate'));assert.equal(b.atk,160);assert.equal(s.atk,260);assert.equal(s.attackSpeed,1/1.3);
+ for(let i=0;i<600;i++)e.updateBattleEffects();assert.equal(s.companionFusion,null);assert.equal(b.atk,80);assert.equal(b.attackSpeed,1);
+ const free=tamerEngine(['free_revive']);free.owner.summons[0].hp=0;free.syncAliveState(free.owner.summons[0]);assert.equal(free.runtime('kill_command').resourceCosts[0].value,0);
+});
+
+test('tamer permanent fusion persists while wolf skills retain their shared cooldown on separation',()=>{
+ const e=tamerEngine(['one_body']),s=e.owner,b=s.summons[0];assert(s.companionFusion);assert.equal(s.companionFusion.effect.remainingTicks,null);
+ for(let i=0;i<610;i++)e.updateBattleEffects();assert(s.companionFusion);
+ const rend=e.getEquippedSkills(s).find(skill=>skill.id===b.skillIds[0]);e.resolveSkillCast(s,{skill:rend,target:e.target});assert.equal(s.skillCooldowns[rend.id],300);assert.equal(b.skillCooldowns[rend.id],300);
+ e.endCompanionFusion(s);assert.equal(b.skillCooldowns[rend.id],300);assert.equal(s.skillCooldowns[rend.id],undefined);
+});
+
+test('tamer wolf coefficients elephant mitigation taunt and raptor controls match the design',()=>{
+ const e=tamerEngine(),wolf=e.owner.summons[0],t=e.target;e.applySkill(wolf,t,e.tamer('wolf_rend'));assert.equal(t.hp,9840);e.applySkill(wolf,t,e.tamer('wolf_bite'));assert.equal(t.hp,9600);
+ const el=tamerEngine([],'elephant'),b=el.owner.summons[0];el.applySkill(b,b,el.tamer('elephant_inflate'));assert.equal(el.getUnitIncomingRulePercent(b,'receivedDamagePercent'),80);
+ el.applySkill(b,el.target,el.tamer('elephant_shout'));assert.equal(el.getTauntTarget(el.target),b);assert.equal(el.canDirectlyTarget(el.target,el.owner),false);assert.equal(el.findTarget(el.target,[el.owner,b]),b);
+ for(let i=0;i<120;i++)el.updateBattleEffects();assert.equal(el.getTauntTarget(el.target),null);
+ const r=tamerEngine([],'raptor'),bird=r.owner.summons[0];r.startCast(r.target,{type:'skill',target:r.owner,skill:r.tamer('wolf_bite')});assert(r.target.pendingAction);r.applySkill(bird,r.target,r.tamer('raptor_peck'));r.updateBattleEffects();assert.equal(r.target.pendingAction,null);
+ r.applySkill(bird,r.target,r.tamer('raptor_ram'));assert(r.hasBattleState(r.target,'stun'));
+});
+
+test('tamer fusion uses one beast-paced basic attack even when the owner equips two independent weapons',()=>{
+ const e=tamerEngine([],'elephant'),s=e.owner,b=s.summons[0];e.applySkill(s,s,e.runtime('fusion'));
+ s.skillIds=[e.tamer('beast').id,e.tamer('choice').id];s.castSpeed=0;s.weaponAttacks=[{attackSpeed:.2},{attackSpeed:.2}];s.weaponAttackStates=s.weaponAttacks.map(weapon=>({weapon,cooldown:0,castTimer:0}));
+ for(const id of b.skillIds)s.skillCooldowns[id]=500;
+ e.getAttackCooldown=actor=>Math.round(actor.attackSpeed*60);
+ e.isMagicAttackUnit=()=>false;
+ e.isPhysicalAttackUnit=()=>true;
+ const before=s.st;e.takeAction(s,e.playerSquad,e.enemySquad);assert.equal(before-s.st,10);assert.equal(s.attackCooldown,180);assert(s.weaponAttackStates.every(state=>state.cooldown===0));
+});
+
+test('tamer healing excludes injured owner outside fusion and respects the owner weapon range',()=>{
+ const e=tamerEngine(['legion']),s=e.owner,b=s.summons[0];s.hp=100;
+ assert.equal(e.resolveSkillTarget(s,e.runtime('heal'),e.playerSquad,e.enemySquad),null);
+ b.hp=100;b.x=900;assert.equal(e.resolveSkillTarget(s,e.runtime('heal'),e.playerSquad,e.enemySquad),null);
+ b.x=100;e.applySkill(s,s,e.runtime('heal'));assert.equal(b.hp,140);assert.equal(s.hp,100);assert.equal(s.summons[1].hp,s.summons[1].maxHp);
+});
+
 test('ultimate opening lock uses battle ticks, permits other skills, and resets each battle',()=>{
  const e=warlockEngine(),s=e.owner,t=e.target,skill=e.runtime('collapse_ultimate');
  e.resetBattleEvents();
@@ -1064,6 +1373,84 @@ function starEngine() {
   return e;
 }
 
+function starBuild(options=[]) {
+ const e=starEngine(),s=e.owner=unit(e),t=e.target=unit(e,'enemy',130);s.magic=100;s.hp=s.maxHp=2000;t.hp=t.maxHp=10000;t.resistance=40;
+ s.skillIds=['companion','relocate','interstellar','radiance','absorb','another_star_ultimate',...options].map(id=>e.star(id).id);
+ e.runtime=id=>e.getRuntimeSelectionSkill(s,e.star(id));
+ e.publishBattleEvents([{type:'battle_entry',source:s,target:s}]);s.summons[0].x=100;s.summons[0].y=100;
+ e.cast=(id,target=t)=>{const skill=e.runtime(id),resourceSpent=e.spendSkillResourceCosts(s,skill);e.startCast(s,{type:'skill',skill,target,resourceSpent});return skill;};
+ e.tick=()=>{e.updateBattleFields();e.updateBattleEffects();e.updateSummonLifetimes();e.tickSkillCooldowns(s);};
+ return e;
+}
+
+test('star gamma ray raises only radiance floor and light distance doubles weapon range without area expansion',()=>{
+ const e=starBuild(['gamma_ray','light_distance']),s=e.owner,t=e.target;t.x=900;
+ e.applySkill(s,t,e.runtime('radiance'));assert.equal(t.hp,9950);
+ for(const id of ['relocate','interstellar','radiance','absorb','another_star_ultimate'])for(const action of e.runtime(id).actions) assert.equal(e.getActionRangePixels(s,action),100);
+ assert.equal(e.runtime('radiance').actions[0].battlefieldArea,true);assert.equal(e.runtime('companion').actions[1].fieldRadius,3);
+ s.skillIds=s.skillIds.filter(id=>id!==e.star('gamma_ray').id);e.applySkill(s,t,e.runtime('radiance'));assert.equal(t.hp,9940);
+});
+
+test('star light speed compresses five tether ticks into one second and stops tracking hidden stars',()=>{
+ const e=starBuild(['light_speed']),s=e.owner,t=e.target;s.summons[0].x=160;t.x=130;
+ e.cast('interstellar');for(let i=0;i<11;i++)e.tick();assert.equal(t.hp,10000);e.tick();assert.equal(t.hp,9950);
+ for(let i=0;i<48;i++)e.tick();assert.equal(t.hp,9750);
+ assert.equal(vm.runInContext('battleFields.filter(f=>f.action.fieldShape==="line").length',e),0);
+});
+
+test('star neutron collapse follows summoner deals five pulses and pays actual damage despite starforce',()=>{
+ const e=starBuild(['neutron_star']),s=e.owner,t=e.target,a=unit(e,'enemy',140);a.hp=a.maxHp=1000;
+ e.cast('absorb',s);assert.equal(s.mp,70);assert.equal(e.getLivingOwnedSummons(s).length,0);
+ for(let i=0;i<60;i++)e.tick();assert.equal(t.hp,9950);assert.equal(a.hp,950);assert.equal(s.hp,1975);
+ s.x=t.x=a.x=500;for(let i=0;i<240;i++)e.tick();assert.equal(t.hp,9750);assert.equal(a.hp,750);assert.equal(s.hp,1875);assert.equal(e.getLivingOwnedSummons(s).length,1);
+});
+
+test('star neutron collapse stops on dispel has no cost on immune targets and can kill its caster',()=>{
+ const e=starBuild(['neutron_star']),s=e.owner,t=e.target;e.cast('absorb',s);
+ e.applyTimedEffectAction(t,t,e.normalizeSkillAction({type:'add_buff',duration:10,effect:{id:'immune',mode:'damage_immunity',uses:0,consumePeriodic:true}}));
+ for(let i=0;i<60;i++)e.tick();assert.equal(s.hp,2000);assert.equal(t.hp,10000);
+ e.clearBattleEffects(t);s.hp=1;for(let i=0;i<60;i++)e.tick();assert.equal(s.alive,false);assert.equal(e.getLivingOwnedSummons(s).length,0);
+ const f=starBuild(['neutron_star']);f.cast('absorb',f.owner);f.applyTimedEffectAction(f.target,f.owner,f.normalizeSkillAction({type:'delete_buff',effect:{id:'star_force',dispelMode:'id'}}));
+ for(let i=0;i<60;i++)f.tick();assert.equal(f.target.hp,10000);assert.equal(f.owner.hp,2000);
+});
+
+test('star ultimate resets skills creates one temporary star and waives only MP for six seconds',()=>{
+ const e=starBuild(['weak_gravity']),s=e.owner,t=e.target,id=e.star('another_star_ultimate').id;
+ vm.runInContext('combatEventTick=1799',e);assert.equal(e.canActivateSkill(s,e.runtime('another_star_ultimate')),false);vm.runInContext('combatEventTick=1800',e);
+ s.skillCooldowns[e.star('relocate').id]=180;s.skillComboStages.example=2;e.cast('another_star_ultimate',s);
+ assert.equal(e.getLivingOwnedSummons(s).length,2);assert.equal(s.skillCooldowns[e.star('relocate').id] ?? 0,0);assert.equal(Object.keys(s.skillComboStages).length,0);
+ assert.equal(e.canActivateSkill(s,e.runtime('another_star_ultimate')),false);
+ for(const star of s.summons){star.x=120;star.y=100;}e.refreshTrackedBattleFields();assert.equal(t.resistance,20);
+ s.mp=0;assert.equal(e.canPaySkillResourceCosts(s,e.runtime('absorb')),true);assert.equal(e.runtime('absorb').resourceCosts[0].value,0);
+ const mixed=e.getRuntimeSelectionSkill(s,e.normalizeSkillJson([{id:'mixed',name:'mixed',actions:[{type:'deal_damage',coefficients:[{type:'fixed',value:1}]}],resourceCosts:[{resource:'MP',value:10},{resource:'ST',value:3}]}]).find(x=>x.id==='mixed'));
+ assert.deepEqual(Array.from(mixed.resourceCosts,c=>[c.resource,c.value]),[['MP',0],['ST',3]]);
+ for(let i=0;i<360;i++)e.tick();assert.equal(e.getLivingOwnedSummons(s).length,1);assert.equal(e.runtime('absorb').resourceCosts[0].value,30);
+});
+
+test('star dust cloud completes thirty seconds after ultimate with one permanent aura and gravity per star',()=>{
+ const e=starBuild(['weak_gravity','dust_cloud']),s=e.owner,t=e.target;e.cast('another_star_ultimate',s);
+ for(let i=0;i<1799;i++)e.tick();assert.equal(e.getLivingOwnedSummons(s).length,1);e.tick();assert.equal(e.getLivingOwnedSummons(s).length,2);
+ assert.equal(s.summons.filter(x=>x.alive && !x.removed && x.summonTicks===null).length,2);
+ for(const star of e.getLivingOwnedSummons(s)){star.x=120;star.y=100;}e.refreshTrackedBattleFields();assert.equal(t.resistance,20);
+ const fields=vm.runInContext('battleFields.filter(f=>f.anchor?.alive && !f.anchor.removed)',e);assert.equal(fields.filter(f=>f.action.fieldEffect==='none').length,2);assert.equal(fields.filter(f=>f.action.fieldEffect==='drain_resource').length,2);
+ for(let i=0;i<360;i++)e.tick();assert.equal(e.getLivingOwnedSummons(s).length,2);
+});
+
+test('star dust schedule is cancelled by death or battle reset and fourth optional remains inactive',()=>{
+ for(const reset of [false,true]){const e=starBuild(['dust_cloud']);e.cast('another_star_ultimate',e.owner);if(reset)e.resetUnitForBattle(e.owner);else e.owner.alive=false;e.tick();assert.equal(e.owner.delayedSkillActions.length,0);}
+ const e=starBuild(['weak_gravity','gamma_ray','light_distance','dust_cloud']);e.cast('another_star_ultimate',e.owner);assert.equal(e.owner.delayedSkillActions.length,0);
+});
+
+test('star ultimate repeats damage per star and absorption hides both including newly created stars',()=>{
+ const e=starBuild(),s=e.owner,t=e.target;e.cast('another_star_ultimate',s);
+ for(const star of e.getLivingOwnedSummons(s)){star.x=100;star.y=100;}t.x=110;
+ e.applySkill(s,t,e.runtime('radiance'));assert.equal(t.hp,9800);
+ e.cast('absorb',s);assert.equal(e.getLivingOwnedSummons(s).length,0);
+ const periodic=e.normalizeSkillAction({type:'deal_damage',damageType:'magic',periodic:true,coefficients:[{type:'fixed',value:100}]});e.applyActionDamage(t,s,periodic);assert.equal(s.hp,2000);
+ const f=starBuild();f.cast('absorb',f.owner);f.cast('another_star_ultimate',f.owner);assert.equal(f.getLivingOwnedSummons(f.owner).length,0);
+ for(let i=0;i<300;i++)f.tick();assert.equal(f.getLivingOwnedSummons(f.owner).length,2);
+});
+
 test('star companion enters once, never moves or attacks, and follows its own aura position', () => {
   const e=starEngine(),source=unit(e),enemy=unit(e,'enemy',130);enemy.resistance=40;
   source.skillIds=[e.star('companion').id];e.publishBattleEvents([{type:'battle_entry',source,target:source}]);
@@ -1089,7 +1476,7 @@ test('star resistance reductions stack per star and suspension removes only that
 
 test('star relocation damages every enemy on the path once and updates aura without moving the summoner', () => {
   const e=starEngine(),source=unit(e),end=unit(e,'enemy',200),mid=unit(e,'enemy',150),off=unit(e,'enemy',150),ally=unit(e,'player',160);
-  off.y=110;source.magic=50;
+  off.y=110;source.magic=50;source.attackRange=20;
   e.applySkill(source,source,e.star('companion'));const star=source.summons[0];star.x=120;star.y=100;
   e.applySkill(source,end,e.star('relocate'));
   assert.equal(star.x,200);assert.equal(star.y,100);assert.equal(source.x,100);
@@ -1134,8 +1521,8 @@ test('star absorption suspends commands aura and gravity, grants damage immunity
 
 test('star weak gravity drains actual MP and transfers the same amount capped by owner maximum', () => {
   const e=starEngine(),source=unit(e),enemy=unit(e,'enemy',130);source.mp=0;enemy.mp=2;
-  e.applySkill(source,source,e.star('companion'));source.summons[0].x=120;source.summons[0].y=100;
-  e.applySkill(source,source,e.star('weak_gravity'));
+  source.skillIds=[e.star('companion').id,e.star('weak_gravity').id];
+  e.publishBattleEvents([{type:'battle_entry',source,target:source}]);source.summons[0].x=120;source.summons[0].y=100;
   for(let i=0;i<60;i++)e.updateBattleFields();assert.equal(enemy.mp,0);assert.equal(source.mp,2);
   enemy.mp=10;source.mp=99;for(let i=0;i<60;i++)e.updateBattleFields();assert.equal(enemy.mp,7);assert.equal(source.mp,100);
   enemy.x=500;for(let i=0;i<60;i++)e.updateBattleFields();assert.equal(enemy.mp,7);
@@ -1152,14 +1539,23 @@ test('star suspension follows the linked immunity buff duration and ends on disp
   e.updateSummonLifetimes();assert.equal(star.suspendedTicks,0);assert.equal(e.getLivingOwnedSummons(source)[0],star);
 });
 
-test('star skills and new character roundtrip and no ultimate is implemented', () => {
+test('star redesign base costs weapon ranges optional gravity and ultimate roundtrip', () => {
   const e=starEngine(),all=e.skillsJson.filter(s=>s.id.startsWith('skill_class_star_'));
-  assert.equal(all.length,6);all.forEach(s=>assert.ok(e.isSkillExecutable(s),s.name));
+  assert.equal(all.length,12);all.forEach(s=>assert.ok(e.isSkillExecutable(s),s.name));
   const character=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','characters.json'),'utf8')).find(c=>c.name==='별소환사');
-  assert.ok(character);assert.equal(character.skillIds.length,6);assert.ok(!all.some(s=>s.name.includes('또다른')));
+  assert.ok(character);assert.equal(character.skillIds.length,7);assert.ok(all.some(s=>s.slot==='ultimate' && s.name.includes('또다른')));
   const copy=e.normalizeSkillJson(JSON.parse(JSON.stringify(all)));
   assert.equal(copy.find(s=>s.id===e.star('radiance').id).actions[0].distanceFalloff.step,2);
   assert.equal(copy.find(s=>s.id===e.star('relocate').id).actions[0].summonCommand,'relocate');
+  const source=unit(e);source.attackRange=7;
+  for(const name of ['relocate','interstellar','radiance','absorb']) for(const action of e.star(name).actions) {
+    assert.equal(action.rangeMode,'mainWeapon');assert.equal(e.getActionRangePixels(source,action),70);
+  }
+  assert.deepEqual(Array.from(e.star('absorb').resourceCosts,c=>[c.resource,c.value]),[['MP',30]]);
+  assert.equal(e.star('interstellar').resourceCosts.reduce((sum,c)=>sum+c.value,0),0);assert.equal(e.star('radiance').resourceCosts.reduce((sum,c)=>sum+c.value,0),0);
+  assert.equal(e.star('weak_gravity').slot,'optional');
+  source.skillIds=[e.star('companion').id];assert.equal(e.getRuntimeSelectionSkill(source,e.star('companion')).actions.length,2);
+  source.skillIds.push(e.star('weak_gravity').id);assert.equal(e.getRuntimeSelectionSkill(source,e.star('companion')).actions.length,3);
 });
 
 function succubusEngine() {
@@ -4273,7 +4669,7 @@ test('monk four strike and berserker fire strike data match their combo rules',(
  const monk=skills.find(item=>item.id==='skill_class_monk_combo');
  const fire=skills.find(item=>item.id==='skill_class_berserker_fire_strike');
  const values=skill=>skill.combo.stages.map(stage=>stage.actions[0].coefficients[0].value);
- assert.deepEqual([monk.name,monk.castTime,monk.cooldown,monk.combo.stepCooldown,values(monk)],['승려 · 4연격',0,12,.5,[120,130,140,150]]);
+ assert.deepEqual([monk.name,monk.castTime,monk.cooldown,monk.combo.stepCooldown,values(monk)],['승려 · 4연격',0,12,.5,[120,120,120,150]]);
  assert.deepEqual([fire.castTime,fire.cooldown,fire.combo.stepCooldown,values(fire)],[0,10,.5,[125,150,175]]);
  assert.deepEqual(fire.combo.stages.map(stage=>stage.actions.length),[2,2,2]);
  assert.deepEqual([fire.combo.completionActions[0].effect.stat,fire.combo.completionActions[0].effect.mode,fire.combo.completionActions[0].effect.value,fire.combo.completionActions[0].duration],['attackSpeed','attack_rate_percent',20,3]);
@@ -4315,12 +4711,12 @@ test('monk cycle and spring energy data match their class rules',()=>{
  const characters=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','characters.json'),'utf8'));
  const cycle=skills.find(item=>item.id==='skill_class_monk_cycle'),spring=skills.find(item=>item.id==='skill_class_monk_spring_energy');
  assert.deepEqual(JSON.parse(JSON.stringify(cycle.passiveTrigger)),{event:'hit',chance:100,includePeriodic:false,damageType:'physical',allowMultiplePerTick:true});
- assert.deepEqual([cycle.actions[0].target,cycle.actions[0].rangeValue,cycle.actions[0].maxTargets,cycle.actions[0].coefficients[0].field,cycle.actions[0].coefficients[0].value],['ally',10,1,'triggerActualDamage',30]);
- assert.deepEqual([spring.castTime,spring.cooldown,spring.actions[0].duration,spring.actions[0].effect.stat,spring.actions[0].effect.value,spring.actions[1].effect.stat,spring.actions[1].effect.value],[.5,12,8,'defense',10,'attackSpeed',-20]);
+ assert.deepEqual([cycle.actions[0].target,cycle.actions[0].rangeValue,cycle.actions[0].maxTargets,cycle.actions[0].coefficients[0].field,cycle.actions[0].coefficients[0].value],['ally',5,1,'triggerActualDamage',30]);
+ assert.deepEqual([spring.castTime,spring.cooldown,spring.actions[0].duration,spring.actions[0].effect.stat,spring.actions[0].effect.value,spring.actions[1].effect.stat,spring.actions[1].effect.value],[.5,12,8,'defense',10,'attackSpeed',20]);
  const monk=characters.find(character=>character.skillIds?.includes('skill_class_monk_combo'));
- assert.deepEqual(monk.skillIds.slice(0,4),[cycle.id,spring.id,'skill_class_monk_combo','skill_class_monk_area_heal']);
+ assert.deepEqual(monk.skillIds.slice(0,4),[cycle.id,spring.id,'skill_class_monk_area_heal','skill_class_monk_combo']);
  const source=unit(e),ally=unit(e,'player',120);ally.defense=100;ally.attackSpeed=1;
- e.applySkill(source,ally,spring);assert.equal(ally.defense,110);assert.equal(ally.attackSpeed,.8);assert.equal(ally.activeEffects.length,2);
+ e.applySkill(source,ally,spring);assert.equal(ally.defense,110);assert.equal(ally.attackSpeed,1/1.2);assert.equal(ally.activeEffects.length,2);
  for(let tick=0;tick<480;tick++)e.updateBattleEffects();
  assert.equal(ally.defense,100);assert.equal(ally.attackSpeed,1);
 });
@@ -4494,21 +4890,21 @@ test('admiral skills keep approved damage fields auras and character assignment'
  const wave=skills.find(skill=>skill.id==='skill_class_admiral_tidal_wave');
  const vortex=skills.find(skill=>skill.id==='skill_class_admiral_vortex');
  const road=skills.find(skill=>skill.id==='skill_class_admiral_sea_road');
- assert.deepEqual([wave.castTime,wave.cooldown,wave.actions[0].coefficients[0].value,wave.actions[1].moveType,wave.actions[1].distance],[3,5,180,'Knockback',5]);
- assert.deepEqual([vortex.castTime,vortex.cooldown,vortex.actions[0].fieldRadius,vortex.actions[0].duration,vortex.actions[0].fieldMovementStCostCenter],[3,20,6,10,6]);
- assert.deepEqual([road.castTime,road.cooldown,road.actions[0].fieldShape,road.actions[0].fieldWidth,road.actions[0].duration,road.actions[0].fieldEffect],[.5,10,'line',2,5,'none']);
- assert.deepEqual(Array.from(road.actions[0].fieldAuras,aura=>[aura.target,aura.stat,aura.value]),[['ally','castSpeed',-20],['enemy','speed',-20],['enemy','attackSpeed',20],['enemy','castSpeed',20]]);
- assert.deepEqual(characters.find(character=>character.name==='제독').skillIds,[wave.id,vortex.id,road.id]);
+ assert.deepEqual([wave.castTime,wave.cooldown,wave.actions[0].coefficients[0].value,wave.actions[1].moveType,wave.actions[1].distance],[2,5,180,'Knockback',5]);
+ assert.deepEqual([vortex.castTime,vortex.cooldown,vortex.actions[0].fieldRadius,vortex.actions[0].duration,vortex.actions[0].fieldMovementStCostCenter],[3,20,4,10,6]);
+ assert.deepEqual([road.castTime,road.cooldown,road.actions[0].fieldShape,road.actions[0].fieldWidth,road.actions[0].duration,road.actions[0].fieldEffect],[1.5,12,'line',2,5,'none']);
+ assert.deepEqual(Array.from(road.actions[0].fieldAuras,aura=>[aura.target,aura.stat,aura.value]),[['ally','castSpeed',-20],['enemy','speed',-20],['enemy','attackSpeed',-15],['enemy','castSpeed',15]]);
+ assert.deepEqual(characters.find(character=>character.name==='제독').skillIds,['skill_class_admiral_reload',wave.id,vortex.id,road.id,'skill_class_admiral_wave','skill_class_admiral_despair_ultimate']);
 });
 
 test('admiral sea road executes through AI cast resource cooldown and field aura runtime',()=>{
  const e=engine();e.skillsJson=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8')));
- const source=unit(e),enemy=unit(e,'enemy',200);source.x=100;source.skillIds=['skill_class_admiral_sea_road'];
+ const source=unit(e),enemy=unit(e,'enemy',140);source.x=100;source.skillIds=['skill_class_admiral_sea_road'];
  assert.equal(e.tryUseReadySkill(source,e.playerSquad,e.enemySquad),true);
- assert.equal(source.mp,90);assert.equal(source.pendingAction.skill.id,'skill_class_admiral_sea_road');assert.equal(source.castTimer,30);
- for(let tick=0;tick<30;tick++)e.updateCast(source);
- assert.equal(vm.runInContext('battleFields.length',e),1);assert.equal(source.skillCooldowns.skill_class_admiral_sea_road,600);
- e.updateBattleFields();assert.deepEqual([source.castSpeed,enemy.speed,enemy.attackSpeed,enemy.castSpeed],[.8,.8,1.2,1.2]);
+ assert.equal(source.mp,95);assert.equal(source.pendingAction.skill.id,'skill_class_admiral_sea_road');assert.equal(source.castTimer,90);
+ for(let tick=0;tick<90;tick++)e.updateCast(source);
+ assert.equal(vm.runInContext('battleFields.length',e),1);assert.equal(source.skillCooldowns.skill_class_admiral_sea_road,720);
+ e.updateBattleFields();assert.deepEqual([source.effectCastTimeMultiplier,enemy.speed,enemy.attackSpeed,enemy.effectCastTimeMultiplier],[.8,.8,1/.85,1.15]);
 });
 
 test('engineer artillery summons enforce independent limits and recoilless cannon splash',()=>{
@@ -4538,9 +4934,9 @@ test('engineer artillery data matches class cast cooldown entity stats and assig
  assert.deepEqual([talisman.castTime,talisman.cooldown,talisman.actions[0].limit],[3,30,1]);
  assert.deepEqual([recoilless.castTime,recoilless.cooldown,recoilless.actions[0].limit],[3,30,1]);
  const entities=['engineer_ballista','engineer_talisman_cannon','engineer_recoilless_cannon'].map(id=>JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','entities',`${id}.json`),'utf8')));
- assert.deepEqual(entities.map(entity=>[entity.stats.atk,entity.stats.attackSpeed,entity.stats.attackRange]),[[100,3,2],[50,1,5],[200,5,10]]);
+ assert.deepEqual(entities.map(entity=>[entity.stats.atk,entity.stats.attackSpeed,entity.stats.attackRange]),[[100,3,3],[50,1,5],[200,5,10]]);
  assert.deepEqual([attack.slot,attack.actions[0].damageType,attack.actions[0].area,attack.actions[0].areaCenter],['basic','physical',2,'target']);
- assert.deepEqual(characters.find(character=>character.name==='갑사').skillIds,[ballista.id,talisman.id,recoilless.id]);
+ assert.deepEqual(characters.find(character=>character.name==='갑사').skillIds,['skill_class_engineer_engineering',ballista.id,talisman.id,recoilless.id,'skill_class_engineer_haetae','skill_class_engineer_emergency_reinstall_ultimate']);
 });
 
 test('tag dispel removes only matching harmful dispellable effects and publishes one event per effect',()=>{

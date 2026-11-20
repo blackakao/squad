@@ -808,11 +808,405 @@
     "icon": "assets/images/skills/검의무희_검의 집중.png"
   },
   {
+    "id": "skill_class_monk_cycle",
+    "name": "승려 · 순환",
+    "className": "승려",
+    "icon": "assets/images/skills/승려_순환.png",
+    "description": "물리 피해의 30%를 주변 5m 내 HP 비율이 가장 낮은 아군 1명에게 회복한다.",
+    "slot": "passive",
+    "cooldown": 0,
+    "castTime": 0,
+    "castReceivedDamagePercent": 100,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true,
+      "lockTarget": false,
+      "receivedDamagePercent": 100
+    },
+    "passiveTrigger": {
+      "event": "hit",
+      "chance": 100,
+      "includePeriodic": false,
+      "damageType": "physical",
+      "allowMultiplePerTick": true
+    },
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 0
+      }
+    ],
+    "actions": [
+      {
+        "type": "heal",
+        "target": "ally",
+        "rangeMode": "custom",
+        "rangeValue": 5,
+        "rangeMultiplier": 100,
+        "minRange": 0,
+        "allowSelfTarget": true,
+        "requiredTargetEffectId": "",
+        "requiredTargetEffectCaster": "any",
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
+        "chainCount": 0,
+        "chainRange": 3,
+        "chainOrigin": "previous",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "triggerActualDamage",
+            "calc": "percent",
+            "value": 30,
+            "effectId": ""
+          }
+        ],
+        "healResource": "HP",
+        "fullResourceAlternative": "",
+        "drainResource": "MP",
+        "damageType": "physical",
+        "area": 0,
+        "areaCenter": "target",
+        "maxTargets": 1,
+        "critical": 0,
+        "penetration": 0,
+        "moveType": "Walk",
+        "movePlacement": "target",
+        "moveSpeed": 1,
+        "distance": 0,
+        "duration": 0,
+        "fieldShape": "circle",
+        "fieldRadius": 0,
+        "fieldWidth": 2,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1,
+        "fieldMovementStCostCenter": 0,
+        "fieldMovementStCostFalloff": 0,
+        "fieldMovementStCostMinimum": 0,
+        "fieldAuras": []
+      }
+    ]
+  },
+  {
+    "id": "skill_class_monk_spring_energy",
+    "name": "승려 · 봄의 기운",
+    "className": "승려",
+    "icon": "assets/images/skills/승려_봄의 기운.png",
+    "description": "아군 1명에게 8초 동안 방어력 +10, 공격속도 +20%를 부여한다.",
+    "slot": "active",
+    "cooldown": 12,
+    "castTime": 0.5,
+    "castReceivedDamagePercent": 100,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true,
+      "lockTarget": false,
+      "receivedDamagePercent": 100
+    },
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 15
+      }
+    ],
+    "actions": [
+      {
+        "type": "add_buff",
+        "target": "ally",
+        "rangeMode": "mainWeapon",
+        "rangeValue": 1,
+        "rangeMultiplier": 100,
+        "minRange": 0,
+        "allowSelfTarget": true,
+        "requiredTargetEffectId": "",
+        "requiredTargetEffectCaster": "any",
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
+        "effect": {
+          "id": "monk_spring_defense",
+          "name": "봄의 기운 · 방어력",
+          "state": "buff",
+          "category": "physical",
+          "polarity": "beneficial",
+          "tags": [],
+          "dispellable": true,
+          "dispelMode": "id",
+          "dispelTags": [],
+          "dispelCategory": "general",
+          "dispelPolarity": "any",
+          "stat": "defense",
+          "sourceStat": "magic",
+          "mode": "flat",
+          "value": 10,
+          "requiredOwnedSummonEntityId": "",
+          "nextCastTimePercent": 100,
+          "nextResourceCostPercent": 100,
+          "nextCooldownPercent": 100,
+          "reflectPercent": 20,
+          "reflectScope": "all",
+          "reflectDamageType": "fixed",
+          "proxyPercent": 20,
+          "proxyPriority": 100,
+          "proxyScope": "all",
+          "counterOnMelee": false,
+          "movementStCostPercent": 100,
+          "movementTriggerDistance": 0,
+          "movementTriggerState": "stun",
+          "movementTriggerDuration": 0,
+          "uses": 0,
+          "consumeOn": "hit",
+          "consumePeriodic": false,
+          "maxStacks": 1,
+          "stackMode": "refresh"
+        },
+        "chainCount": 0,
+        "chainRange": 3,
+        "chainOrigin": "previous",
+        "coefficients": [
+          {
+            "type": "fixed",
+            "field": "atk",
+            "calc": "percent",
+            "value": 1,
+            "effectId": ""
+          }
+        ],
+        "healResource": "HP",
+        "fullResourceAlternative": "",
+        "drainResource": "MP",
+        "damageType": "physical",
+        "area": 0,
+        "areaCenter": "target",
+        "maxTargets": 0,
+        "critical": 0,
+        "penetration": 0,
+        "moveType": "Walk",
+        "movePlacement": "target",
+        "moveSpeed": 1,
+        "distance": 0,
+        "duration": 8,
+        "fieldShape": "circle",
+        "fieldRadius": 0,
+        "fieldWidth": 2,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1,
+        "fieldMovementStCostCenter": 0,
+        "fieldMovementStCostFalloff": 0,
+        "fieldMovementStCostMinimum": 0,
+        "fieldAuras": []
+      },
+      {
+        "type": "add_buff",
+        "target": "ally",
+        "rangeMode": "mainWeapon",
+        "rangeValue": 1,
+        "rangeMultiplier": 100,
+        "minRange": 0,
+        "allowSelfTarget": true,
+        "requiredTargetEffectId": "",
+        "requiredTargetEffectCaster": "any",
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
+        "effect": {
+          "id": "monk_spring_attack_speed",
+          "name": "봄의 기운 · 공격속도",
+          "state": "buff",
+          "category": "physical",
+          "polarity": "beneficial",
+          "tags": [],
+          "dispellable": true,
+          "dispelMode": "id",
+          "dispelTags": [],
+          "dispelCategory": "general",
+          "dispelPolarity": "any",
+          "stat": "attackSpeed",
+          "sourceStat": "magic",
+          "mode": "attack_rate_percent",
+          "value": 20,
+          "requiredOwnedSummonEntityId": "",
+          "nextCastTimePercent": 100,
+          "nextResourceCostPercent": 100,
+          "nextCooldownPercent": 100,
+          "reflectPercent": 20,
+          "reflectScope": "all",
+          "reflectDamageType": "fixed",
+          "proxyPercent": 20,
+          "proxyPriority": 100,
+          "proxyScope": "all",
+          "counterOnMelee": false,
+          "movementStCostPercent": 100,
+          "movementTriggerDistance": 0,
+          "movementTriggerState": "stun",
+          "movementTriggerDuration": 0,
+          "uses": 0,
+          "consumeOn": "hit",
+          "consumePeriodic": false,
+          "maxStacks": 1,
+          "stackMode": "refresh"
+        },
+        "chainCount": 0,
+        "chainRange": 3,
+        "chainOrigin": "previous",
+        "coefficients": [
+          {
+            "type": "fixed",
+            "field": "atk",
+            "calc": "percent",
+            "value": 1,
+            "effectId": ""
+          }
+        ],
+        "healResource": "HP",
+        "fullResourceAlternative": "",
+        "drainResource": "MP",
+        "damageType": "physical",
+        "area": 0,
+        "areaCenter": "target",
+        "maxTargets": 0,
+        "critical": 0,
+        "penetration": 0,
+        "moveType": "Walk",
+        "movePlacement": "target",
+        "moveSpeed": 1,
+        "distance": 0,
+        "duration": 8,
+        "fieldShape": "circle",
+        "fieldRadius": 0,
+        "fieldWidth": 2,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1,
+        "fieldMovementStCostCenter": 0,
+        "fieldMovementStCostFalloff": 0,
+        "fieldMovementStCostMinimum": 0,
+        "fieldAuras": []
+      }
+    ]
+  },
+  {
+    "id": "skill_class_monk_area_heal",
+    "name": "승려 · 따듯한 포옹",
+    "className": "승려",
+    "icon": "assets/images/skills/승려_치유의 파동.png",
+    "description": "주변 5m 아군에게 공격력 100% HP 회복.",
+    "slot": "active",
+    "cooldown": 12,
+    "castTime": 1,
+    "castReceivedDamagePercent": 100,
+    "channel": {
+      "duration": 0,
+      "interval": 1,
+      "interruptOnDamage": true,
+      "lockTarget": false,
+      "receivedDamagePercent": 100
+    },
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 20
+      }
+    ],
+    "actions": [
+      {
+        "type": "heal",
+        "target": "ally",
+        "rangeMode": "mainWeapon",
+        "rangeValue": 5,
+        "rangeMultiplier": 100,
+        "minRange": 0,
+        "allowSelfTarget": true,
+        "requiredTargetEffectId": "",
+        "requiredTargetEffectCaster": "any",
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
+        "chainCount": 0,
+        "chainRange": 3,
+        "chainOrigin": "previous",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "atk",
+            "calc": "percent",
+            "value": 100,
+            "effectId": ""
+          }
+        ],
+        "healResource": "HP",
+        "fullResourceAlternative": "",
+        "drainResource": "MP",
+        "damageType": "magic",
+        "area": 5,
+        "areaCenter": "self",
+        "maxTargets": 0,
+        "critical": 0,
+        "penetration": 0,
+        "moveType": "Walk",
+        "movePlacement": "target",
+        "moveSpeed": 1,
+        "distance": 0,
+        "duration": 0,
+        "fieldShape": "circle",
+        "fieldRadius": 0,
+        "fieldWidth": 2,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1,
+        "fieldMovementStCostCenter": 0,
+        "fieldMovementStCostFalloff": 0,
+        "fieldMovementStCostMinimum": 0,
+        "fieldAuras": []
+      }
+    ]
+  },
+  {
     "id": "skill_class_monk_combo",
     "name": "승려 · 4연격",
     "className": "승려",
     "icon": "assets/images/skills/승려_4연격.png",
-    "description": "0.5초 간격으로 120%·130%·140%·150% 근접 물리 피해를 이어가며, 4단계가 끝나면 12초 후 처음부터 다시 사용할 수 있습니다.",
+    "description": "0.5초 간격으로 공격력 120%·120%·120%·150% 물리 피해. 단계마다 ST 3 소모, 완주 후 재사용 12초.",
     "slot": "active",
     "cooldown": 12,
     "castTime": 0,
@@ -832,7 +1226,7 @@
             {
               "type": "deal_damage",
               "target": "enemy",
-              "rangeMode": "custom",
+              "rangeMode": "mainWeapon",
               "rangeValue": 1,
               "rangeMultiplier": 100,
               "minRange": 0,
@@ -895,7 +1289,7 @@
             {
               "type": "deal_damage",
               "target": "enemy",
-              "rangeMode": "custom",
+              "rangeMode": "mainWeapon",
               "rangeValue": 1,
               "rangeMultiplier": 100,
               "minRange": 0,
@@ -918,7 +1312,7 @@
                   "type": "calculated",
                   "field": "atk",
                   "calc": "percent",
-                  "value": 130,
+                  "value": 120,
                   "effectId": ""
                 }
               ],
@@ -958,7 +1352,7 @@
             {
               "type": "deal_damage",
               "target": "enemy",
-              "rangeMode": "custom",
+              "rangeMode": "mainWeapon",
               "rangeValue": 1,
               "rangeMultiplier": 100,
               "minRange": 0,
@@ -981,7 +1375,7 @@
                   "type": "calculated",
                   "field": "atk",
                   "calc": "percent",
-                  "value": 140,
+                  "value": 120,
                   "effectId": ""
                 }
               ],
@@ -1021,7 +1415,7 @@
             {
               "type": "deal_damage",
               "target": "enemy",
-              "rangeMode": "custom",
+              "rangeMode": "mainWeapon",
               "rangeValue": 1,
               "rangeMultiplier": 100,
               "minRange": 0,
@@ -1086,14 +1480,14 @@
       {
         "resource": "ST",
         "mode": "fixed",
-        "value": 10
+        "value": 3
       }
     ],
     "actions": [
       {
         "type": "deal_damage",
         "target": "enemy",
-        "rangeMode": "custom",
+        "rangeMode": "mainWeapon",
         "rangeValue": 1,
         "rangeMultiplier": 100,
         "minRange": 0,
@@ -1149,6 +1543,209 @@
         "fieldAuras": []
       }
     ]
+  },
+  {
+    "id": "skill_class_monk_down_strike",
+    "name": "승려 · 내려찍기",
+    "className": "승려",
+    "slot": "active",
+    "castTime": 0,
+    "cooldown": 10,
+    "resourceCosts": [
+      {
+        "resource": "ST",
+        "mode": "fixed",
+        "value": 10
+      }
+    ],
+    "actions": [
+      {
+        "type": "deal_damage",
+        "target": "enemy",
+        "rangeMode": "mainWeapon",
+        "damageType": "physical",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "atk",
+            "calc": "percent",
+            "value": 180
+          }
+        ]
+      },
+      {
+        "type": "add_buff",
+        "target": "enemy",
+        "rangeMode": "mainWeapon",
+        "duration": 5,
+        "effect": {
+          "id": "monk_down_strike_defense",
+          "name": "내려찍기",
+          "stat": "defense",
+          "mode": "flat",
+          "value": -15,
+          "polarity": "harmful"
+        }
+      }
+    ]
+  },
+  {
+    "id": "skill_class_monk_vajra_talisman_ultimate",
+    "name": "승려 · 금강역사의 부적",
+    "className": "승려",
+    "slot": "ultimate",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "override_rule",
+        "target": "ally",
+        "allowSelfTarget": true,
+        "rangeMode": "mainWeapon",
+        "duration": 6,
+        "ruleOverride": {
+          "id": "monk_vajra_talisman",
+          "receivedDamagePercent": 10
+        }
+      }
+    ]
+  },
+  {
+    "id": "skill_class_monk_sincere_heart",
+    "name": "승려 · 진심의 마음",
+    "className": "승려",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_monk_cycle"
+      ],
+      "coefficientPercent": 166.66666666666669
+    },
+    "description": "순환의 물리 피해 치유 전환율을 50%로 증가."
+  },
+  {
+    "id": "skill_class_monk_spring_sharing",
+    "name": "승려 · 봄의 나눔",
+    "className": "승려",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_monk_spring_energy"
+      ],
+      "copyAllyBuffToSelf": true
+    },
+    "description": "봄의 기운을 다른 아군에게 적용하면 자신도 같은 효과를 받는다."
+  },
+  {
+    "id": "skill_class_monk_talisman_merchant",
+    "name": "승려 · 부적장사",
+    "className": "승려",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_monk_vajra_talisman_ultimate"
+      ],
+      "ultimateUsesAdd": 1,
+      "ultimateReuseSeconds": 10
+    },
+    "description": "금강역사의 부적을 전투당 2회 사용하며 첫 사용 후 10초 뒤 다시 사용할 수 있다."
+  },
+  {
+    "id": "skill_class_monk_swift_victory",
+    "name": "승려 · 속전속결",
+    "className": "승려",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "statEffects": [
+        {
+          "id": "monk_swift_victory",
+          "name": "속전속결",
+          "stat": "attackSpeed",
+          "mode": "attack_rate_percent",
+          "value": 20
+        }
+      ]
+    }
+  },
+  {
+    "id": "skill_class_monk_forehead_strike",
+    "name": "승려 · 미간 강타",
+    "className": "승려",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_monk_down_strike"
+      ],
+      "alternatingDamagePercent": 30
+    },
+    "description": "내려찍기 시전 완료마다 다음 내려찍기 피해 30% 강화와 소모를 교대한다."
+  },
+  {
+    "id": "skill_class_monk_warm_season",
+    "name": "승려 · 따뜻한 계절",
+    "className": "승려",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_monk_area_heal"
+      ],
+      "additionalActions": [
+        {
+          "type": "heal",
+          "target": "ally",
+          "rangeMode": "mainWeapon",
+          "area": 5,
+          "areaCenter": "self",
+          "healResource": "MP",
+          "coefficients": [
+            {
+              "type": "fixed",
+              "value": 5
+            }
+          ]
+        },
+        {
+          "type": "heal",
+          "target": "ally",
+          "rangeMode": "mainWeapon",
+          "area": 5,
+          "areaCenter": "self",
+          "healResource": "ST",
+          "coefficients": [
+            {
+              "type": "fixed",
+              "value": 10
+            }
+          ]
+        }
+      ]
+    },
+    "description": "따듯한 포옹과 같은 5m 범위 아군에게 MP 5·ST 10 추가 회복."
   },
   {
     "id": "skill_class_fire_ignite",
@@ -2223,91 +2820,6 @@
     "icon": "assets/images/skills/마법사_마법폭발.png"
   },
   {
-    "id": "skill_class_monk_area_heal",
-    "name": "승려 · 치유의 파동",
-    "className": "승려",
-    "icon": "assets/images/skills/승려_치유의 파동.png",
-    "description": "",
-    "slot": "active",
-    "cooldown": 8,
-    "castTime": 0.5,
-    "castReceivedDamagePercent": 100,
-    "channel": {
-      "duration": 0,
-      "interval": 1,
-      "interruptOnDamage": true,
-      "lockTarget": false,
-      "receivedDamagePercent": 100
-    },
-    "resourceCosts": [
-      {
-        "resource": "MP",
-        "mode": "fixed",
-        "value": 10
-      }
-    ],
-    "actions": [
-      {
-        "type": "heal",
-        "target": "ally",
-        "rangeMode": "custom",
-        "rangeValue": 5,
-        "rangeMultiplier": 100,
-        "minRange": 0,
-        "allowSelfTarget": true,
-        "requiredTargetEffectId": "",
-        "requiredTargetEffectCaster": "any",
-        "targetHpBelow": 100,
-        "targetCooldown": 0,
-        "targetCooldownScope": "caster",
-        "targetCooldownEffectId": "",
-        "targetCooldownEffectName": "",
-        "ownedSummonCondition": "any",
-        "ownedSummonEntityId": "",
-        "targetSummonEntityId": "",
-        "chainCount": 0,
-        "chainRange": 3,
-        "chainOrigin": "previous",
-        "coefficients": [
-          {
-            "type": "calculated",
-            "field": "magic",
-            "calc": "percent",
-            "value": 100,
-            "effectId": ""
-          }
-        ],
-        "healResource": "HP",
-        "fullResourceAlternative": "",
-        "drainResource": "MP",
-        "damageType": "magic",
-        "area": 10,
-        "areaCenter": "self",
-        "maxTargets": 0,
-        "critical": 0,
-        "penetration": 0,
-        "moveType": "Walk",
-        "movePlacement": "target",
-        "moveSpeed": 1,
-        "distance": 0,
-        "duration": 0,
-        "fieldShape": "circle",
-        "fieldRadius": 0,
-        "fieldWidth": 2,
-        "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 5,
-        "fieldMoveType": "Push",
-        "fieldDistance": 1,
-        "fieldCenter": "target",
-        "fieldInterval": 1,
-        "fieldMovementStCostCenter": 0,
-        "fieldMovementStCostFalloff": 0,
-        "fieldMovementStCostMinimum": 0,
-        "fieldAuras": []
-      }
-    ]
-  },
-  {
     "id": "skill_class_guardian_whirl",
     "name": "수호자 · 회전베기",
     "className": "수호자",
@@ -2670,21 +3182,127 @@
     ]
   },
   {
+    "icon": "assets/images/skills/조련사_야수.png",
     "id": "skill_class_tamer_beast",
-    "name": "조련사 · 야수 소환 (기본형)",
+    "name": "조련사 · 야수",
     "className": "조련사",
-    "description": "",
-    "slot": "active",
-    "cooldown": 8,
-    "castTime": 0.5,
-    "castReceivedDamagePercent": 100,
-    "channel": {
-      "duration": 0,
-      "interval": 1,
-      "interruptOnDamage": true,
-      "lockTarget": false,
-      "receivedDamagePercent": 100
+    "slot": "passive",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "command_summon",
+        "target": "self",
+        "summonCommand": "companion_spawn",
+        "rangeMode": "mainWeapon"
+      }
+    ],
+    "passiveTrigger": {
+      "event": "battle_entry"
     },
+    "companion": {
+      "choiceSkillId": "skill_class_tamer_choice",
+      "entityIds": [
+        "legacy_4ac380c5973655c4",
+        "tamer_elephant",
+        "tamer_raptor"
+      ]
+    },
+    "description": "선택한 야수와 함께 전투에 진입한다."
+  },
+  {
+    "icon": "assets/images/skills/조련사_야수.png",
+    "id": "skill_class_tamer_choice",
+    "name": "조련사 · 야수 선택",
+    "className": "조련사",
+    "slot": "choice_prebattle",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "choice": {
+      "defaultOptionId": "wolf",
+      "options": [
+        {
+          "id": "wolf",
+          "label": "늑대",
+          "skillId": "skill_class_tamer_select_wolf"
+        },
+        {
+          "id": "elephant",
+          "label": "코끼리",
+          "skillId": "skill_class_tamer_select_elephant"
+        },
+        {
+          "id": "raptor",
+          "label": "맹금류",
+          "skillId": "skill_class_tamer_select_raptor"
+        }
+      ]
+    }
+  },
+  {
+    "icon": "assets/images/skills/조련사_살상명령.png",
+    "id": "skill_class_tamer_kill_command",
+    "name": "조련사 · 살상명령",
+    "className": "조련사",
+    "slot": "active",
+    "castTime": 0.5,
+    "cooldown": 5,
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "command_summon",
+        "target": "enemy",
+        "summonCommand": "companion_attack",
+        "rangeMode": "mainWeapon",
+        "damageType": "physical",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "atk",
+            "calc": "percent",
+            "value": 200
+          }
+        ]
+      }
+    ],
+    "summonVariant": {
+      "companion": true,
+      "entityId": "legacy_4ac380c5973655c4",
+      "absentSkillId": "skill_class_tamer_revive"
+    },
+    "description": "생존 시 야수 공격력 200% 명령. 사망한 야수가 있으면 야수부활로 전환한다."
+  },
+  {
+    "icon": "assets/images/skills/조련사_합체.png",
+    "id": "skill_class_tamer_fusion",
+    "name": "조련사 · 합체",
+    "className": "조련사",
+    "slot": "active",
+    "castTime": 0.5,
+    "cooldown": 30,
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "command_summon",
+        "target": "self",
+        "summonCommand": "companion_fuse",
+        "rangeMode": "mainWeapon",
+        "duration": 10
+      }
+    ],
+    "description": "선택한 야수와 10초 합체. 현재·최대 HP와 공격력·방어력·저항력 합산. 종료 시 남은 HP 비율로 분리한다."
+  },
+  {
+    "icon": "assets/images/skills/조련사_야수치유.png",
+    "id": "skill_class_tamer_heal",
+    "name": "조련사 · 야수치유",
+    "className": "조련사",
+    "slot": "active",
+    "castTime": 1,
+    "cooldown": 10,
     "resourceCosts": [
       {
         "resource": "MP",
@@ -2694,83 +3312,600 @@
     ],
     "actions": [
       {
-        "type": "summon_entity",
+        "type": "command_summon",
         "target": "self",
+        "summonCommand": "companion_heal",
         "rangeMode": "mainWeapon",
-        "rangeValue": 1,
-        "rangeMultiplier": 100,
-        "minRange": 0,
-        "allowSelfTarget": true,
-        "requiredTargetEffectId": "",
-        "requiredTargetEffectCaster": "any",
-        "targetHpBelow": 100,
-        "targetCooldown": 0,
-        "targetCooldownScope": "caster",
-        "targetCooldownEffectId": "",
-        "targetCooldownEffectName": "",
-        "ownedSummonCondition": "any",
-        "ownedSummonEntityId": "",
-        "targetSummonEntityId": "",
-        "chainCount": 0,
-        "chainRange": 3,
-        "chainOrigin": "previous",
         "coefficients": [
           {
-            "type": "fixed",
+            "type": "calculated",
             "field": "atk",
             "calc": "percent",
-            "value": 1,
-            "effectId": ""
+            "value": 40
           }
-        ],
-        "healResource": "HP",
-        "fullResourceAlternative": "",
-        "drainResource": "MP",
-        "damageType": "physical",
-        "area": 0,
-        "areaCenter": "target",
-        "maxTargets": 0,
-        "entityId": "legacy_4ac380c5973655c4",
-        "summonCenter": "self",
-        "inheritStats": {
-          "hp": 0,
-          "mp": 0,
-          "st": 0,
-          "atk": 0,
-          "magic": 0,
-          "defense": 0,
-          "resistance": 0,
-          "speed": 0
-        },
-        "count": 1,
-        "limit": 1,
-        "protectOwnerPercent": 0,
-        "protectOwnerScope": "all",
-        "protectOwnerPriority": 0,
-        "transferStateScope": "none",
-        "transferStatePriority": 0,
-        "critical": 0,
-        "penetration": 0,
-        "moveType": "Walk",
-        "movePlacement": "target",
-        "moveSpeed": 1,
-        "distance": 0,
-        "duration": 20,
-        "fieldShape": "circle",
-        "fieldRadius": 0,
-        "fieldWidth": 2,
-        "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 5,
-        "fieldMoveType": "Push",
-        "fieldDistance": 1,
-        "fieldCenter": "target",
-        "fieldInterval": 1,
-        "fieldMovementStCostCenter": 0,
-        "fieldMovementStCostFalloff": 0,
-        "fieldMovementStCostMinimum": 0,
-        "fieldAuras": []
+        ]
       }
-    ]
+    ],
+    "description": "동반 야수에게 조련사 공격력 40% 회복. 합체한 야수는 공유 HP를 한 번 회복한다."
+  },
+  {
+    "icon": "assets/images/skills/조련사_야수누리.png",
+    "id": "skill_class_tamer_reset",
+    "name": "조련사 · 야수누리",
+    "className": "조련사",
+    "slot": "active",
+    "castTime": 1,
+    "cooldown": 30,
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 10
+      }
+    ],
+    "actions": [
+      {
+        "type": "command_summon",
+        "target": "self",
+        "summonCommand": "companion_reset",
+        "rangeMode": "mainWeapon"
+      }
+    ],
+    "description": "동반 야수들의 스킬 재사용 대기시간을 0으로 초기화한다."
+  },
+  {
+    "icon": "assets/images/skills/조련사_야수해방.png",
+    "id": "skill_class_tamer_unleash_ultimate",
+    "name": "조련사 · 야수해방",
+    "className": "조련사",
+    "slot": "ultimate",
+    "castTime": null,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "command_summon",
+        "target": "self",
+        "summonCommand": "companion_unleash",
+        "rangeMode": "mainWeapon",
+        "duration": 10
+      }
+    ],
+    "description": "전투 30초 이후 1회. 동반 야수 스킬 초기화, 10초 공격력 +100%·공격속도 +30%."
+  },
+  {
+    "icon": "assets/images/skills/조련사_야수군단.png",
+    "id": "skill_class_tamer_legion",
+    "name": "조련사 · 야수군단",
+    "className": "조련사",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "companion": {
+        "all": true,
+        "finalAttackPercent": 10
+      }
+    },
+    "exclusiveSkillIds": [
+      "skill_class_tamer_one_body"
+    ],
+    "description": "세 야수 동반. 강화 후 공격력의 10% 적용. 선택 야수만 합체한다. 영원한 한몸과 동시 선택 불가."
+  },
+  {
+    "icon": "assets/images/skills/조련사_영원한 한몸.png",
+    "id": "skill_class_tamer_one_body",
+    "name": "조련사 · 영원한 한몸",
+    "className": "조련사",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "companion": {
+        "permanentFusion": true
+      }
+    },
+    "exclusiveSkillIds": [
+      "skill_class_tamer_legion"
+    ],
+    "description": "전투 시작부터 선택 야수와 지속시간 없이 합체한다. 야수군단과 동시 선택 불가."
+  },
+  {
+    "icon": "assets/images/skills/조련사_매강화.png",
+    "id": "skill_class_tamer_raptor_power",
+    "name": "조련사 · 매강화",
+    "className": "조련사",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "companion": {
+        "entityId": "tamer_raptor",
+        "attackPercent": 150
+      }
+    },
+    "description": "맹금류 공격력 +50%."
+  },
+  {
+    "icon": "assets/images/skills/조련사_강한 회복.png",
+    "id": "skill_class_tamer_strong_heal",
+    "name": "조련사 · 강한 회복",
+    "className": "조련사",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_tamer_heal"
+      ],
+      "coefficientPercent": 200
+    },
+    "description": "야수치유 회복량 2배."
+  },
+  {
+    "icon": "assets/images/skills/조련사_불로소득.png",
+    "id": "skill_class_tamer_free_revive",
+    "name": "조련사 · 불로소득",
+    "className": "조련사",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_tamer_revive"
+      ],
+      "resourceTypes": [
+        "MP"
+      ],
+      "resourceCostPercent": 0
+    },
+    "description": "야수부활 MP 비용 0."
+  },
+  {
+    "icon": "assets/images/skills/조련사_야수의 공격성.png",
+    "id": "skill_class_tamer_aggression",
+    "name": "조련사 · 야수의 공격성",
+    "className": "조련사",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "companion": {
+        "attackAdd": 30
+      }
+    },
+    "description": "동반 야수 공격력 +30."
+  },
+  {
+    "icon": "assets/images/skills/조련사_야수부활.png",
+    "id": "skill_class_tamer_revive",
+    "name": "조련사 · 야수부활",
+    "className": "조련사",
+    "slot": "active",
+    "castTime": 3,
+    "cooldown": 0,
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 40
+      }
+    ],
+    "actions": [
+      {
+        "type": "command_summon",
+        "target": "self",
+        "summonCommand": "companion_revive",
+        "rangeMode": "mainWeapon"
+      }
+    ],
+    "internal": true,
+    "description": "사망 야수 1체를 선택 야수 우선으로 부활시킨다. 합체 중 사용 불가."
+  },
+  {
+    "id": "skill_class_tamer_select_wolf",
+    "name": "조련사 · 늑대 선택 정의",
+    "className": "조련사",
+    "slot": "passive",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "summon_entity",
+        "target": "self",
+        "entityId": "legacy_4ac380c5973655c4",
+        "duration": 0,
+        "count": 1,
+        "limit": 1
+      }
+    ],
+    "internal": true
+  },
+  {
+    "id": "skill_class_tamer_select_elephant",
+    "name": "조련사 · 코끼리 선택 정의",
+    "className": "조련사",
+    "slot": "passive",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "summon_entity",
+        "target": "self",
+        "entityId": "tamer_elephant",
+        "duration": 0,
+        "count": 1,
+        "limit": 1
+      }
+    ],
+    "internal": true
+  },
+  {
+    "id": "skill_class_tamer_select_raptor",
+    "name": "조련사 · 맹금류 선택 정의",
+    "className": "조련사",
+    "slot": "passive",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "summon_entity",
+        "target": "self",
+        "entityId": "tamer_raptor",
+        "duration": 0,
+        "count": 1,
+        "limit": 1
+      }
+    ],
+    "internal": true
+  },
+  {
+    "icon": "assets/images/skills/조련사_찢어발기기.png",
+    "id": "skill_class_tamer_wolf_rend",
+    "name": "조련사 · 늑대 · 찢어발기기",
+    "className": "조련사",
+    "slot": "active",
+    "castTime": 0.5,
+    "cooldown": 5,
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "deal_damage",
+        "target": "enemy",
+        "rangeMode": "mainWeapon",
+        "damageType": "physical",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "atk",
+            "calc": "percent",
+            "value": 200
+          }
+        ]
+      }
+    ],
+    "internal": true
+  },
+  {
+    "icon": "assets/images/skills/조련사_물어뜯기.png",
+    "id": "skill_class_tamer_wolf_bite",
+    "name": "조련사 · 늑대 · 물어뜯기",
+    "className": "조련사",
+    "slot": "active",
+    "castTime": 1,
+    "cooldown": 10,
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "deal_damage",
+        "target": "enemy",
+        "rangeMode": "mainWeapon",
+        "damageType": "physical",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "atk",
+            "calc": "percent",
+            "value": 300
+          }
+        ]
+      }
+    ],
+    "internal": true
+  },
+  {
+    "icon": "assets/images/skills/조련사_몸부풀리기.png",
+    "id": "skill_class_tamer_elephant_inflate",
+    "name": "조련사 · 코끼리 · 몸부풀리기",
+    "className": "조련사",
+    "slot": "active",
+    "castTime": 1,
+    "cooldown": 6,
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "override_rule",
+        "target": "self",
+        "duration": 4,
+        "ruleOverride": {
+          "id": "tamer_inflate",
+          "receivedDamagePercent": 80
+        }
+      }
+    ],
+    "internal": true
+  },
+  {
+    "icon": "assets/images/skills/조련사_코끼리 함성.png",
+    "id": "skill_class_tamer_elephant_shout",
+    "name": "조련사 · 코끼리 · 코끼리 함성",
+    "className": "조련사",
+    "slot": "active",
+    "castTime": 0.5,
+    "cooldown": 8,
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "add_state",
+        "target": "enemy",
+        "rangeMode": "mainWeapon",
+        "duration": 2,
+        "effect": {
+          "id": "tamer_taunt",
+          "name": "코끼리 함성",
+          "state": "taunt",
+          "polarity": "harmful"
+        }
+      }
+    ],
+    "internal": true
+  },
+  {
+    "icon": "assets/images/skills/조련사_쪼기.png",
+    "id": "skill_class_tamer_raptor_peck",
+    "name": "조련사 · 맹금류 · 쪼기",
+    "className": "조련사",
+    "slot": "active",
+    "castTime": 0,
+    "cooldown": 8,
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "add_state",
+        "target": "enemy",
+        "rangeMode": "mainWeapon",
+        "duration": 0.016666666666666666,
+        "effect": {
+          "id": "tamer_peck",
+          "name": "쪼기",
+          "state": "periodic",
+          "polarity": "harmful",
+          "periodic": {
+            "type": "interrupt",
+            "interval": 0.016666666666666666
+          }
+        }
+      }
+    ],
+    "internal": true
+  },
+  {
+    "icon": "assets/images/skills/조련사_들이받기.png",
+    "id": "skill_class_tamer_raptor_ram",
+    "name": "조련사 · 맹금류 · 들이받기",
+    "className": "조련사",
+    "slot": "active",
+    "castTime": 0.5,
+    "cooldown": 8,
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "add_state",
+        "target": "enemy",
+        "rangeMode": "mainWeapon",
+        "duration": 3,
+        "effect": {
+          "id": "tamer_ram",
+          "name": "들이받기",
+          "state": "stun",
+          "polarity": "harmful"
+        }
+      }
+    ],
+    "internal": true
+  },
+  {
+    "icon": "assets/images/skills/갑사_공학자.png",
+    "id": "skill_class_engineer_engineering",
+    "name": "갑사 · 공학자",
+    "className": "갑사",
+    "slot": "passive",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "ownedSummonAura": {
+      "entityIds": [
+        "engineer_ballista",
+        "engineer_talisman_cannon",
+        "engineer_recoilless_cannon",
+        "engineer_haetae"
+      ],
+      "radius": 5,
+      "attackPercent": 5,
+      "defense": 1,
+      "resistance": 1
+    },
+    "description": "자신의 소환체가 5m 안에 있을 때 한 체당 공격력 +5%, 방어력·저항력 +1."
+  },
+  {
+    "icon": "assets/images/skills/갑사_포격왕.png",
+    "id": "skill_class_engineer_artillery_king",
+    "name": "갑사 · 포격왕",
+    "className": "갑사",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "summonModifiers": [
+        {
+          "entityIds": [
+            "engineer_recoilless_cannon"
+          ],
+          "limitAdd": 1
+        }
+      ]
+    },
+    "description": "무반동포 최대 소환 개수 +1. 긴급재설치에도 적용."
+  },
+  {
+    "icon": "assets/images/skills/갑사_진정한 연사.png",
+    "id": "skill_class_engineer_rapid_fire",
+    "name": "갑사 · 진정한 연사",
+    "className": "갑사",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "summonModifiers": [
+        {
+          "entityIds": [
+            "engineer_talisman_cannon"
+          ],
+          "attackIntervalAdd": -0.5
+        }
+      ]
+    },
+    "description": "부적포 공격 간격 0.5초 감소."
+  },
+  {
+    "icon": "assets/images/skills/갑사_든든한 내구성.png",
+    "id": "skill_class_engineer_durable",
+    "name": "갑사 · 든든한 내구성",
+    "className": "갑사",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "summonModifiers": [
+        {
+          "entityIds": [
+            "engineer_ballista",
+            "engineer_talisman_cannon",
+            "engineer_recoilless_cannon",
+            "engineer_haetae"
+          ],
+          "hpAdd": 200
+        }
+      ]
+    },
+    "description": "자신의 소환체 최대 HP +200."
+  },
+  {
+    "icon": "assets/images/skills/갑사_집중포화.png",
+    "id": "skill_class_engineer_focus_fire",
+    "name": "갑사 · 집중포화",
+    "className": "갑사",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "summonModifiers": [
+        {
+          "entityIds": [
+            "engineer_ballista",
+            "engineer_talisman_cannon",
+            "engineer_recoilless_cannon",
+            "engineer_haetae"
+          ],
+          "focusAttackPercent": 5
+        }
+      ]
+    },
+    "description": "자신의 소환체 2체 이상이 같은 적을 공격하면 각각 공격력 +5% × 참여 개체 수."
+  },
+  {
+    "icon": "assets/images/skills/갑사_별주부전.png",
+    "id": "skill_class_engineer_turtle_story",
+    "name": "갑사 · 별주부전",
+    "className": "갑사",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "summonModifiers": [
+        {
+          "entityIds": [
+            "engineer_ballista",
+            "engineer_talisman_cannon",
+            "engineer_recoilless_cannon"
+          ],
+          "mobile": true,
+          "movementBasePercent": 10,
+          "movementLocked": true
+        }
+      ]
+    },
+    "description": "고정식 소환체 3종이 기본 이동속도 10%로 이동. 이동속도 증가 불가."
+  },
+  {
+    "icon": "assets/images/skills/갑사_너네가 다해.png",
+    "id": "skill_class_engineer_do_it_all",
+    "name": "갑사 · 너네가 다해",
+    "className": "갑사",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "statEffects": [
+        {
+          "id": "engineer_do_it_all",
+          "name": "너네가 다해",
+          "stat": "atk",
+          "mode": "percent",
+          "value": -30
+        }
+      ],
+      "summonModifiers": [
+        {
+          "entityIds": [
+            "engineer_ballista",
+            "engineer_talisman_cannon",
+            "engineer_recoilless_cannon",
+            "engineer_haetae"
+          ],
+          "atkAdd": 50
+        }
+      ]
+    },
+    "description": "갑사의 공격력 -30%, 자신의 소환체 공격력 +50."
   },
   {
     "id": "skill_class_engineer_ballista",
@@ -2791,9 +3926,9 @@
     },
     "resourceCosts": [
       {
-        "resource": "MP",
+        "resource": "ST",
         "mode": "fixed",
-        "value": 10
+        "value": 5
       }
     ],
     "actions": [
@@ -2872,7 +4007,8 @@
         "fieldMovementStCostCenter": 0,
         "fieldMovementStCostFalloff": 0,
         "fieldMovementStCostMinimum": 0,
-        "fieldAuras": []
+        "fieldAuras": [],
+        "limitScope": "entity"
       }
     ]
   },
@@ -2895,7 +4031,7 @@
     },
     "resourceCosts": [
       {
-        "resource": "MP",
+        "resource": "ST",
         "mode": "fixed",
         "value": 10
       }
@@ -2976,7 +4112,8 @@
         "fieldMovementStCostCenter": 0,
         "fieldMovementStCostFalloff": 0,
         "fieldMovementStCostMinimum": 0,
-        "fieldAuras": []
+        "fieldAuras": [],
+        "limitScope": "entity"
       }
     ]
   },
@@ -2999,9 +4136,9 @@
     },
     "resourceCosts": [
       {
-        "resource": "MP",
+        "resource": "ST",
         "mode": "fixed",
-        "value": 10
+        "value": 20
       }
     ],
     "actions": [
@@ -3080,7 +4217,318 @@
         "fieldMovementStCostCenter": 0,
         "fieldMovementStCostFalloff": 0,
         "fieldMovementStCostMinimum": 0,
-        "fieldAuras": []
+        "fieldAuras": [],
+        "limitScope": "entity"
+      }
+    ]
+  },
+  {
+    "icon": "assets/images/skills/갑사_해태로봇 소환.png",
+    "id": "skill_class_engineer_haetae",
+    "name": "갑사 · 해태로봇 소환",
+    "className": "갑사",
+    "slot": "active",
+    "castTime": 2,
+    "cooldown": 30,
+    "resourceCosts": [
+      {
+        "resource": "ST",
+        "mode": "fixed",
+        "value": 20
+      }
+    ],
+    "actions": [
+      {
+        "type": "summon_entity",
+        "target": "self",
+        "entityId": "engineer_haetae",
+        "duration": 0,
+        "count": 1,
+        "limit": 1,
+        "limitScope": "entity"
+      }
+    ]
+  },
+  {
+    "icon": "assets/images/skills/갑사_긴급재설치.png",
+    "id": "skill_class_engineer_emergency_reinstall_ultimate",
+    "name": "갑사 · 긴급재설치",
+    "className": "갑사",
+    "slot": "ultimate",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "description": "전투 30초 이후 1회. 현재 소환수를 유지하고 종류별 최대 개수에서 부족한 만큼 즉시 설치한다.",
+    "actions": [
+      {
+        "type": "summon_entity",
+        "target": "self",
+        "rangeMode": "mainWeapon",
+        "rangeValue": 1,
+        "rangeMultiplier": 100,
+        "minRange": 0,
+        "allowSelfTarget": true,
+        "requiredTargetEffectId": "",
+        "requiredTargetEffectCaster": "any",
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
+        "chainCount": 0,
+        "chainRange": 3,
+        "chainOrigin": "previous",
+        "coefficients": [
+          {
+            "type": "fixed",
+            "field": "atk",
+            "calc": "percent",
+            "value": 1,
+            "effectId": ""
+          }
+        ],
+        "healResource": "HP",
+        "fullResourceAlternative": "",
+        "drainResource": "MP",
+        "damageType": "physical",
+        "area": 0,
+        "areaCenter": "target",
+        "maxTargets": 0,
+        "entityId": "engineer_ballista",
+        "summonCenter": "self",
+        "inheritStats": {
+          "hp": 0,
+          "mp": 0,
+          "st": 0,
+          "atk": 0,
+          "magic": 0,
+          "defense": 0,
+          "resistance": 0,
+          "speed": 0
+        },
+        "count": 40,
+        "limit": 2,
+        "protectOwnerPercent": 0,
+        "protectOwnerScope": "all",
+        "protectOwnerPriority": 0,
+        "transferStateScope": "none",
+        "transferStatePriority": 0,
+        "critical": 0,
+        "penetration": 0,
+        "moveType": "Dash",
+        "movePlacement": "target",
+        "moveSpeed": 1,
+        "distance": 0,
+        "duration": 0,
+        "fieldShape": "circle",
+        "fieldRadius": 0,
+        "fieldWidth": 2,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1,
+        "fieldMovementStCostCenter": 0,
+        "fieldMovementStCostFalloff": 0,
+        "fieldMovementStCostMinimum": 0,
+        "fieldAuras": [],
+        "limitScope": "entity"
+      },
+      {
+        "type": "summon_entity",
+        "target": "self",
+        "rangeMode": "mainWeapon",
+        "rangeValue": 1,
+        "rangeMultiplier": 100,
+        "minRange": 0,
+        "allowSelfTarget": true,
+        "requiredTargetEffectId": "",
+        "requiredTargetEffectCaster": "any",
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
+        "chainCount": 0,
+        "chainRange": 3,
+        "chainOrigin": "previous",
+        "coefficients": [
+          {
+            "type": "fixed",
+            "field": "atk",
+            "calc": "percent",
+            "value": 1,
+            "effectId": ""
+          }
+        ],
+        "healResource": "HP",
+        "fullResourceAlternative": "",
+        "drainResource": "MP",
+        "damageType": "physical",
+        "area": 0,
+        "areaCenter": "target",
+        "maxTargets": 0,
+        "entityId": "engineer_talisman_cannon",
+        "summonCenter": "self",
+        "inheritStats": {
+          "hp": 0,
+          "mp": 0,
+          "st": 0,
+          "atk": 0,
+          "magic": 0,
+          "defense": 0,
+          "resistance": 0,
+          "speed": 0
+        },
+        "count": 40,
+        "limit": 1,
+        "protectOwnerPercent": 0,
+        "protectOwnerScope": "all",
+        "protectOwnerPriority": 0,
+        "transferStateScope": "none",
+        "transferStatePriority": 0,
+        "critical": 0,
+        "penetration": 0,
+        "moveType": "Dash",
+        "movePlacement": "target",
+        "moveSpeed": 1,
+        "distance": 0,
+        "duration": 0,
+        "fieldShape": "circle",
+        "fieldRadius": 0,
+        "fieldWidth": 2,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1,
+        "fieldMovementStCostCenter": 0,
+        "fieldMovementStCostFalloff": 0,
+        "fieldMovementStCostMinimum": 0,
+        "fieldAuras": [],
+        "limitScope": "entity"
+      },
+      {
+        "type": "summon_entity",
+        "target": "self",
+        "rangeMode": "mainWeapon",
+        "rangeValue": 1,
+        "rangeMultiplier": 100,
+        "minRange": 0,
+        "allowSelfTarget": true,
+        "requiredTargetEffectId": "",
+        "requiredTargetEffectCaster": "any",
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
+        "ownedSummonCondition": "any",
+        "ownedSummonEntityId": "",
+        "targetSummonEntityId": "",
+        "chainCount": 0,
+        "chainRange": 3,
+        "chainOrigin": "previous",
+        "coefficients": [
+          {
+            "type": "fixed",
+            "field": "atk",
+            "calc": "percent",
+            "value": 1,
+            "effectId": ""
+          }
+        ],
+        "healResource": "HP",
+        "fullResourceAlternative": "",
+        "drainResource": "MP",
+        "damageType": "physical",
+        "area": 0,
+        "areaCenter": "target",
+        "maxTargets": 0,
+        "entityId": "engineer_recoilless_cannon",
+        "summonCenter": "self",
+        "inheritStats": {
+          "hp": 0,
+          "mp": 0,
+          "st": 0,
+          "atk": 0,
+          "magic": 0,
+          "defense": 0,
+          "resistance": 0,
+          "speed": 0
+        },
+        "count": 40,
+        "limit": 1,
+        "protectOwnerPercent": 0,
+        "protectOwnerScope": "all",
+        "protectOwnerPriority": 0,
+        "transferStateScope": "none",
+        "transferStatePriority": 0,
+        "critical": 0,
+        "penetration": 0,
+        "moveType": "Dash",
+        "movePlacement": "target",
+        "moveSpeed": 1,
+        "distance": 0,
+        "duration": 0,
+        "fieldShape": "circle",
+        "fieldRadius": 0,
+        "fieldWidth": 2,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 5,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1,
+        "fieldMovementStCostCenter": 0,
+        "fieldMovementStCostFalloff": 0,
+        "fieldMovementStCostMinimum": 0,
+        "fieldAuras": [],
+        "limitScope": "entity"
+      },
+      {
+        "type": "summon_entity",
+        "target": "self",
+        "entityId": "engineer_haetae",
+        "duration": 0,
+        "count": 40,
+        "limit": 1,
+        "limitScope": "entity"
+      }
+    ]
+  },
+  {
+    "id": "skill_entity_engineer_haetae_attack",
+    "name": "갑사 · 해태 근접 공격",
+    "className": "갑사",
+    "slot": "basic",
+    "internal": true,
+    "castTime": null,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "deal_damage",
+        "target": "enemy",
+        "rangeMode": "mainWeapon",
+        "contactRange": true,
+        "damageType": "physical",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "atk",
+            "calc": "percent",
+            "value": 100
+          }
+        ]
       }
     ]
   },
@@ -4838,315 +6286,6 @@
     ]
   },
   {
-    "id": "skill_class_monk_cycle",
-    "name": "승려 · 순환",
-    "className": "승려",
-    "icon": "assets/images/skills/승려_순환.png",
-    "description": "입힌 물리 피해의 30%를 10m 안에서 HP 비율이 가장 낮은 아군 1명의 HP로 전환합니다.",
-    "slot": "passive",
-    "cooldown": 0,
-    "castTime": 0,
-    "castReceivedDamagePercent": 100,
-    "channel": {
-      "duration": 0,
-      "interval": 1,
-      "interruptOnDamage": true,
-      "lockTarget": false,
-      "receivedDamagePercent": 100
-    },
-    "passiveTrigger": {
-      "event": "hit",
-      "chance": 100,
-      "includePeriodic": false,
-      "damageType": "physical",
-      "allowMultiplePerTick": true
-    },
-    "resourceCosts": [
-      {
-        "resource": "MP",
-        "mode": "fixed",
-        "value": 0
-      }
-    ],
-    "actions": [
-      {
-        "type": "heal",
-        "target": "ally",
-        "rangeMode": "custom",
-        "rangeValue": 10,
-        "rangeMultiplier": 100,
-        "minRange": 0,
-        "allowSelfTarget": true,
-        "requiredTargetEffectId": "",
-        "requiredTargetEffectCaster": "any",
-        "targetHpBelow": 100,
-        "targetCooldown": 0,
-        "targetCooldownScope": "caster",
-        "targetCooldownEffectId": "",
-        "targetCooldownEffectName": "",
-        "ownedSummonCondition": "any",
-        "ownedSummonEntityId": "",
-        "targetSummonEntityId": "",
-        "chainCount": 0,
-        "chainRange": 3,
-        "chainOrigin": "previous",
-        "coefficients": [
-          {
-            "type": "calculated",
-            "field": "triggerActualDamage",
-            "calc": "percent",
-            "value": 30,
-            "effectId": ""
-          }
-        ],
-        "healResource": "HP",
-        "fullResourceAlternative": "",
-        "drainResource": "MP",
-        "damageType": "physical",
-        "area": 0,
-        "areaCenter": "target",
-        "maxTargets": 1,
-        "critical": 0,
-        "penetration": 0,
-        "moveType": "Walk",
-        "movePlacement": "target",
-        "moveSpeed": 1,
-        "distance": 0,
-        "duration": 0,
-        "fieldShape": "circle",
-        "fieldRadius": 0,
-        "fieldWidth": 2,
-        "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 5,
-        "fieldMoveType": "Push",
-        "fieldDistance": 1,
-        "fieldCenter": "target",
-        "fieldInterval": 1,
-        "fieldMovementStCostCenter": 0,
-        "fieldMovementStCostFalloff": 0,
-        "fieldMovementStCostMinimum": 0,
-        "fieldAuras": []
-      }
-    ]
-  },
-  {
-    "id": "skill_class_monk_spring_energy",
-    "name": "승려 · 봄의 기운",
-    "className": "승려",
-    "icon": "assets/images/skills/승려_봄의 기운.png",
-    "description": "아군 1명에게 8초 동안 방어력 10% 증가와 공격 간격 20% 감소 효과를 부여합니다.",
-    "slot": "active",
-    "cooldown": 12,
-    "castTime": 0.5,
-    "castReceivedDamagePercent": 100,
-    "channel": {
-      "duration": 0,
-      "interval": 1,
-      "interruptOnDamage": true,
-      "lockTarget": false,
-      "receivedDamagePercent": 100
-    },
-    "resourceCosts": [
-      {
-        "resource": "MP",
-        "mode": "fixed",
-        "value": 10
-      }
-    ],
-    "actions": [
-      {
-        "type": "add_buff",
-        "target": "ally",
-        "rangeMode": "mainWeapon",
-        "rangeValue": 1,
-        "rangeMultiplier": 100,
-        "minRange": 0,
-        "allowSelfTarget": true,
-        "requiredTargetEffectId": "",
-        "requiredTargetEffectCaster": "any",
-        "targetHpBelow": 100,
-        "targetCooldown": 0,
-        "targetCooldownScope": "caster",
-        "targetCooldownEffectId": "",
-        "targetCooldownEffectName": "",
-        "ownedSummonCondition": "any",
-        "ownedSummonEntityId": "",
-        "targetSummonEntityId": "",
-        "effect": {
-          "id": "monk_spring_defense",
-          "name": "봄의 기운 · 방어력",
-          "state": "buff",
-          "category": "physical",
-          "polarity": "beneficial",
-          "tags": [],
-          "dispellable": true,
-          "dispelMode": "id",
-          "dispelTags": [],
-          "dispelCategory": "general",
-          "dispelPolarity": "any",
-          "stat": "defense",
-          "sourceStat": "magic",
-          "mode": "percent",
-          "value": 10,
-          "requiredOwnedSummonEntityId": "",
-          "nextCastTimePercent": 100,
-          "nextResourceCostPercent": 100,
-          "nextCooldownPercent": 100,
-          "reflectPercent": 20,
-          "reflectScope": "all",
-          "reflectDamageType": "fixed",
-          "proxyPercent": 20,
-          "proxyPriority": 100,
-          "proxyScope": "all",
-          "counterOnMelee": false,
-          "movementStCostPercent": 100,
-          "movementTriggerDistance": 0,
-          "movementTriggerState": "stun",
-          "movementTriggerDuration": 0,
-          "uses": 0,
-          "consumeOn": "hit",
-          "consumePeriodic": false,
-          "maxStacks": 1,
-          "stackMode": "refresh"
-        },
-        "chainCount": 0,
-        "chainRange": 3,
-        "chainOrigin": "previous",
-        "coefficients": [
-          {
-            "type": "fixed",
-            "field": "atk",
-            "calc": "percent",
-            "value": 1,
-            "effectId": ""
-          }
-        ],
-        "healResource": "HP",
-        "fullResourceAlternative": "",
-        "drainResource": "MP",
-        "damageType": "physical",
-        "area": 0,
-        "areaCenter": "target",
-        "maxTargets": 0,
-        "critical": 0,
-        "penetration": 0,
-        "moveType": "Walk",
-        "movePlacement": "target",
-        "moveSpeed": 1,
-        "distance": 0,
-        "duration": 8,
-        "fieldShape": "circle",
-        "fieldRadius": 0,
-        "fieldWidth": 2,
-        "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 5,
-        "fieldMoveType": "Push",
-        "fieldDistance": 1,
-        "fieldCenter": "target",
-        "fieldInterval": 1,
-        "fieldMovementStCostCenter": 0,
-        "fieldMovementStCostFalloff": 0,
-        "fieldMovementStCostMinimum": 0,
-        "fieldAuras": []
-      },
-      {
-        "type": "add_buff",
-        "target": "ally",
-        "rangeMode": "mainWeapon",
-        "rangeValue": 1,
-        "rangeMultiplier": 100,
-        "minRange": 0,
-        "allowSelfTarget": true,
-        "requiredTargetEffectId": "",
-        "requiredTargetEffectCaster": "any",
-        "targetHpBelow": 100,
-        "targetCooldown": 0,
-        "targetCooldownScope": "caster",
-        "targetCooldownEffectId": "",
-        "targetCooldownEffectName": "",
-        "ownedSummonCondition": "any",
-        "ownedSummonEntityId": "",
-        "targetSummonEntityId": "",
-        "effect": {
-          "id": "monk_spring_attack_speed",
-          "name": "봄의 기운 · 공격속도",
-          "state": "buff",
-          "category": "physical",
-          "polarity": "beneficial",
-          "tags": [],
-          "dispellable": true,
-          "dispelMode": "id",
-          "dispelTags": [],
-          "dispelCategory": "general",
-          "dispelPolarity": "any",
-          "stat": "attackSpeed",
-          "sourceStat": "magic",
-          "mode": "percent",
-          "value": -20,
-          "requiredOwnedSummonEntityId": "",
-          "nextCastTimePercent": 100,
-          "nextResourceCostPercent": 100,
-          "nextCooldownPercent": 100,
-          "reflectPercent": 20,
-          "reflectScope": "all",
-          "reflectDamageType": "fixed",
-          "proxyPercent": 20,
-          "proxyPriority": 100,
-          "proxyScope": "all",
-          "counterOnMelee": false,
-          "movementStCostPercent": 100,
-          "movementTriggerDistance": 0,
-          "movementTriggerState": "stun",
-          "movementTriggerDuration": 0,
-          "uses": 0,
-          "consumeOn": "hit",
-          "consumePeriodic": false,
-          "maxStacks": 1,
-          "stackMode": "refresh"
-        },
-        "chainCount": 0,
-        "chainRange": 3,
-        "chainOrigin": "previous",
-        "coefficients": [
-          {
-            "type": "fixed",
-            "field": "atk",
-            "calc": "percent",
-            "value": 1,
-            "effectId": ""
-          }
-        ],
-        "healResource": "HP",
-        "fullResourceAlternative": "",
-        "drainResource": "MP",
-        "damageType": "physical",
-        "area": 0,
-        "areaCenter": "target",
-        "maxTargets": 0,
-        "critical": 0,
-        "penetration": 0,
-        "moveType": "Walk",
-        "movePlacement": "target",
-        "moveSpeed": 1,
-        "distance": 0,
-        "duration": 8,
-        "fieldShape": "circle",
-        "fieldRadius": 0,
-        "fieldWidth": 2,
-        "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 5,
-        "fieldMoveType": "Push",
-        "fieldDistance": 1,
-        "fieldCenter": "target",
-        "fieldInterval": 1,
-        "fieldMovementStCostCenter": 0,
-        "fieldMovementStCostFalloff": 0,
-        "fieldMovementStCostMinimum": 0,
-        "fieldAuras": []
-      }
-    ]
-  },
-  {
     "id": "skill_class_priest_resonance",
     "name": "성직자 · 감응",
     "className": "성직자",
@@ -6838,6 +7977,280 @@
     ]
   },
   {
+    "icon": "assets/images/skills/제독_장전.png",
+    "id": "skill_class_admiral_reload",
+    "name": "제독 · 장전",
+    "className": "제독",
+    "slot": "passive",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "reload": {
+      "step": 0.5
+    },
+    "description": "일반 스킬별 시전 완료마다 시전시간 0.5초 감축 축적. 즉시시전 가능 시 MP 무료 사용 후 초기화. 궁 제외."
+  },
+  {
+    "icon": "assets/images/skills/제독_파도.png",
+    "id": "skill_class_admiral_wave",
+    "name": "제독 · 파도",
+    "className": "제독",
+    "slot": "active",
+    "castTime": 1,
+    "cooldown": 7,
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 5
+      }
+    ],
+    "actions": [
+      {
+        "type": "add_buff",
+        "target": "self",
+        "duration": 5,
+        "effect": {
+          "id": "admiral_wave",
+          "name": "파도",
+          "mode": "melee_reaction",
+          "reactionSkillId": "skill_class_admiral_wave_reaction",
+          "reactionOnce": true,
+          "reactionInheritRemaining": true
+        }
+      }
+    ]
+  },
+  {
+    "icon": "assets/images/skills/제독_절망의 파도.png",
+    "id": "skill_class_admiral_despair_ultimate",
+    "name": "제독 · 절망의 파도",
+    "className": "제독",
+    "slot": "ultimate",
+    "castTime": 0.5,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "deal_damage",
+        "target": "enemy",
+        "rangeMode": "mainWeapon",
+        "damageType": "magic",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "magic",
+            "calc": "percent",
+            "value": 250
+          }
+        ],
+        "area": 5,
+        "areaCenter": "target",
+        "radialKnockback": 7
+      }
+    ]
+  },
+  {
+    "icon": "assets/images/skills/제독_짠물.png",
+    "id": "skill_class_admiral_salt_water",
+    "name": "제독 · 짠물",
+    "className": "제독",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_admiral_wave_reaction"
+      ],
+      "additionalActions": [
+        {
+          "type": "delete_buff",
+          "target": "enemy",
+          "rangeMode": "mainWeapon",
+          "unlimitedRange": true,
+          "effect": {
+            "id": "admiral_salt",
+            "name": "짠물",
+            "dispelMode": "all",
+            "dispelKinds": [
+              "buff"
+            ],
+            "dispelPolarity": "beneficial",
+            "dispelLimit": 1
+          }
+        }
+      ]
+    }
+  },
+  {
+    "icon": "assets/images/skills/제독_죽음의 소용돌이.png",
+    "id": "skill_class_admiral_deadly_vortex",
+    "name": "제독 · 죽음의 소용돌이",
+    "className": "제독",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_admiral_vortex"
+      ],
+      "fieldAurasAdd": [
+        {
+          "target": "enemy",
+          "stat": "receivedDamage",
+          "mode": "received_damage_percent",
+          "value": 115
+        }
+      ]
+    }
+  },
+  {
+    "icon": "assets/images/skills/제독_검은바다.png",
+    "id": "skill_class_admiral_black_sea",
+    "name": "제독 · 검은바다",
+    "className": "제독",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_admiral_sea_road"
+      ],
+      "fieldAurasReplace": [
+        {
+          "target": "enemy",
+          "stat": "speed",
+          "mode": "percent",
+          "value": -30
+        },
+        {
+          "target": "enemy",
+          "stat": "attackSpeed",
+          "mode": "attack_rate_percent",
+          "value": -20
+        },
+        {
+          "target": "enemy",
+          "stat": "castSpeed",
+          "mode": "cast_time_percent",
+          "value": 25
+        }
+      ]
+    },
+    "description": "바닷길의 아군 효과 제거, 적 이동속도 -30%·공격속도 -20%·시전시간 +25%."
+  },
+  {
+    "icon": "assets/images/skills/제독_해일볼링.png",
+    "id": "skill_class_admiral_tidal_bowling",
+    "name": "제독 · 해일볼링",
+    "className": "제독",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_admiral_tidal_wave"
+      ],
+      "bowlingPercent": 50
+    }
+  },
+  {
+    "icon": "assets/images/skills/제독_재장전.png",
+    "id": "skill_class_admiral_reload_again",
+    "name": "제독 · 재장전",
+    "className": "제독",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_admiral_reload"
+      ],
+      "reloadExtraUse": true
+    },
+    "description": "장전 무료 즉시시전 후 다음 사용도 즉시시전. 두 번째는 MP 정상 소모, 재사용 대기 유지."
+  },
+  {
+    "icon": "assets/images/skills/제독_썩어가는 포도주.png",
+    "id": "skill_class_admiral_rotten_wine",
+    "name": "제독 · 썩어가는 포도주",
+    "className": "제독",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "naturalMpRegen": {
+        "multiplier": 3,
+        "hpPerSecond": 80
+      }
+    },
+    "description": "자연 MP 회복량 3배. 실제 자연 회복 시간에 비례해 초당 HP 80 소모. MP가 가득 차면 소모 없음."
+  },
+  {
+    "icon": "assets/images/skills/제독_파도.png",
+    "id": "skill_class_admiral_wave_reaction",
+    "name": "제독 · 파도 반격",
+    "className": "제독",
+    "slot": "active",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "deal_damage",
+        "target": "enemy",
+        "rangeMode": "mainWeapon",
+        "damageType": "magic",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "magic",
+            "calc": "percent",
+            "value": 50
+          }
+        ],
+        "unlimitedRange": true
+      },
+      {
+        "type": "move",
+        "target": "enemy",
+        "rangeMode": "mainWeapon",
+        "unlimitedRange": true,
+        "moveType": "Knockback",
+        "distance": 5
+      },
+      {
+        "type": "add_buff",
+        "target": "enemy",
+        "rangeMode": "mainWeapon",
+        "unlimitedRange": true,
+        "duration": 5,
+        "effect": {
+          "id": "admiral_wave_slow",
+          "name": "파도 둔화",
+          "stat": "speed",
+          "mode": "percent",
+          "value": -40,
+          "polarity": "harmful"
+        }
+      }
+    ],
+    "internal": true
+  },
+  {
     "id": "skill_class_admiral_tidal_wave",
     "name": "제독 · 해일",
     "className": "제독",
@@ -6845,7 +8258,7 @@
     "description": "해일로 마법 피해를 주고 대상을 5m 밀어냅니다.",
     "slot": "active",
     "cooldown": 5,
-    "castTime": 3,
+    "castTime": 2,
     "castReceivedDamagePercent": 100,
     "channel": {
       "duration": 0,
@@ -6858,14 +8271,14 @@
       {
         "resource": "MP",
         "mode": "fixed",
-        "value": 10
+        "value": 15
       }
     ],
     "actions": [
       {
         "type": "deal_damage",
         "target": "enemy",
-        "rangeMode": "custom",
+        "rangeMode": "mainWeapon",
         "rangeValue": 6,
         "rangeMultiplier": 100,
         "minRange": 0,
@@ -6923,7 +8336,7 @@
       {
         "type": "move",
         "target": "enemy",
-        "rangeMode": "custom",
+        "rangeMode": "mainWeapon",
         "rangeValue": 6,
         "rangeMultiplier": 100,
         "minRange": 0,
@@ -6993,14 +8406,14 @@
       {
         "resource": "MP",
         "mode": "fixed",
-        "value": 10
+        "value": 20
       }
     ],
     "actions": [
       {
         "type": "create_field",
         "target": "enemy",
-        "rangeMode": "custom",
+        "rangeMode": "mainWeapon",
         "rangeValue": 8,
         "rangeMultiplier": 100,
         "minRange": 0,
@@ -7042,7 +8455,7 @@
         "distance": 0,
         "duration": 10,
         "fieldShape": "circle",
-        "fieldRadius": 6,
+        "fieldRadius": 4,
         "fieldWidth": 2,
         "fieldEffect": "deal_damage",
         "fieldEffectDuration": 5,
@@ -7064,8 +8477,8 @@
     "icon": "assets/images/skills/제독_바닷길.png",
     "description": "자신과 대상 사이에 5초간 폭 2m의 바닷길을 만듭니다. 아군은 시전시간이 20% 감소하고 적은 이동·공격·시전이 느려집니다.",
     "slot": "active",
-    "cooldown": 10,
-    "castTime": 0.5,
+    "cooldown": 12,
+    "castTime": 1.5,
     "castReceivedDamagePercent": 100,
     "channel": {
       "duration": 0,
@@ -7078,14 +8491,14 @@
       {
         "resource": "MP",
         "mode": "fixed",
-        "value": 10
+        "value": 5
       }
     ],
     "actions": [
       {
         "type": "create_field",
         "target": "enemy",
-        "rangeMode": "custom",
+        "rangeMode": "mainWeapon",
         "rangeValue": 10,
         "rangeMultiplier": 100,
         "minRange": 0,
@@ -7142,7 +8555,7 @@
           {
             "target": "ally",
             "stat": "castSpeed",
-            "mode": "percent",
+            "mode": "cast_time_percent",
             "value": -20
           },
           {
@@ -7154,14 +8567,14 @@
           {
             "target": "enemy",
             "stat": "attackSpeed",
-            "mode": "percent",
-            "value": 20
+            "mode": "attack_rate_percent",
+            "value": -15
           },
           {
             "target": "enemy",
             "stat": "castSpeed",
-            "mode": "percent",
-            "value": 20
+            "mode": "cast_time_percent",
+            "value": 15
           }
         ]
       }
@@ -8593,8 +10006,7 @@
       {
         "type": "command_summon",
         "target": "enemy",
-        "rangeMode": "custom",
-        "rangeValue": 10000,
+        "rangeMode": "mainWeapon",
         "originEntityId": "star_companion",
         "summonCommand": "relocate",
         "pathWidth": 1,
@@ -8619,19 +10031,12 @@
     "castTime": 0,
     "cooldown": 15,
     "description": "5초간 소환사와 별 사이를 연결하는 폭 1m 광선을 생성한다. 양 끝점을 추적하며 매초 마력 50% 마법 피해를 준다.",
-    "resourceCosts": [
-      {
-        "resource": "MP",
-        "mode": "fixed",
-        "value": 10
-      }
-    ],
+    "resourceCosts": [],
     "actions": [
       {
         "type": "create_field",
         "target": "enemy",
-        "rangeMode": "custom",
-        "rangeValue": 10000,
+        "rangeMode": "mainWeapon",
         "originEntityId": "star_companion",
         "fieldShape": "line",
         "fieldWidth": 1,
@@ -8659,19 +10064,12 @@
     "castTime": 0,
     "cooldown": 10,
     "description": "별을 중심으로 전장 전체 적에게 마력 100% 마법 피해. 거리 2m마다 계수 10%p 감소, 최소 계수 10%.",
-    "resourceCosts": [
-      {
-        "resource": "MP",
-        "mode": "fixed",
-        "value": 10
-      }
-    ],
+    "resourceCosts": [],
     "actions": [
       {
         "type": "deal_damage",
         "target": "enemy",
-        "rangeMode": "custom",
-        "rangeValue": 10000,
+        "rangeMode": "mainWeapon",
         "originEntityId": "star_companion",
         "battlefieldArea": true,
         "damageType": "magic",
@@ -8704,15 +10102,14 @@
       {
         "resource": "MP",
         "mode": "fixed",
-        "value": 10
+        "value": 30
       }
     ],
     "actions": [
       {
         "type": "add_buff",
         "target": "self",
-        "rangeMode": "custom",
-        "rangeValue": 10000,
+        "rangeMode": "mainWeapon",
         "ownedSummonCondition": "alive",
         "ownedSummonEntityId": "star_companion",
         "duration": 5,
@@ -8723,6 +10120,7 @@
           "category": "magic",
           "polarity": "beneficial",
           "uses": 0,
+          "consumePeriodic": true,
           "maxStacks": 1,
           "stackMode": "refresh",
           "dispellable": true
@@ -8731,8 +10129,7 @@
       {
         "type": "command_summon",
         "target": "self",
-        "rangeMode": "custom",
-        "rangeValue": 10000,
+        "rangeMode": "mainWeapon",
         "originEntityId": "star_companion",
         "summonCommand": "suspend",
         "suspensionEffectId": "star_force",
@@ -8741,41 +10138,219 @@
     ]
   },
   {
-    "icon": "assets/images/skills/별소환사_약한 중력.png",
-    "id": "skill_class_star_weak_gravity",
-    "name": "별소환사 · 약한 중력",
+    "id": "skill_class_star_another_star_ultimate",
+    "name": "별소환사 · 또다른 별",
     "className": "별소환사",
-    "slot": "passive",
+    "slot": "ultimate",
     "castTime": 0,
     "cooldown": 0,
-    "description": "선택 패시브. 장착하면 별 주변 3m의 적마다 매초 MP를 최대 3 감소시키고 실제 감소량을 소환사가 흡수한다. 별마다 독립 적용.",
     "resourceCosts": [],
+    "resetSkillCooldowns": true,
+    "description": "30초 이후 전투당 1회. 6초간 별을 하나 더 소환하고 모든 스킬을 초기화하며 MP 소모를 0으로 한다. 별을 기준으로 하는 스킬은 각 별에서 실행한다.",
     "actions": [
       {
-        "type": "create_field",
-        "target": "enemy",
-        "rangeMode": "custom",
-        "rangeValue": 10000,
-        "originEntityId": "star_companion",
-        "fieldShape": "circle",
-        "fieldRadius": 3,
-        "fieldEffect": "drain_resource",
-        "fieldInterval": 1,
-        "drainResource": "MP",
-        "transferDrainedResource": true,
-        "coefficients": [
-          {
-            "type": "fixed",
-            "value": 3
-          }
-        ],
-        "duration": 0
+        "type": "summon_entity",
+        "target": "self",
+        "rangeMode": "mainWeapon",
+        "entityId": "star_companion",
+        "count": 1,
+        "limit": 3,
+        "duration": 6,
+        "initializeFieldsFromSkillId": "skill_class_star_companion",
+        "suspensionEffectId": "star_force"
+      },
+      {
+        "type": "add_buff",
+        "target": "self",
+        "rangeMode": "mainWeapon",
+        "duration": 6,
+        "effect": {
+          "id": "star_free_mana",
+          "name": "또다른 별",
+          "stat": "magic",
+          "mode": "flat",
+          "value": 0,
+          "skillModifiers": [
+            {
+              "resourceTypes": [
+                "MP"
+              ],
+              "resourceCostPercent": 0
+            }
+          ],
+          "polarity": "beneficial"
+        }
       }
-    ],
-    "passiveTrigger": {
-      "event": "battle_entry",
-      "chance": 100
+    ]
+  },
+  {
+    "icon": "assets/images/skills/별소환사_약한 중력.png",
+    "id": "skill_class_star_weak_gravity",
+    "name": "별소환사 · 중력",
+    "className": "별소환사",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "description": "선택 시 별 주변 3m 적의 MP를 매초 최대 3 흡수한다. 별마다 독립 적용하며 선택한 최대 3개 중 하나로 계산한다.",
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_star_companion"
+      ],
+      "additionalActions": [
+        {
+          "type": "create_field",
+          "target": "enemy",
+          "rangeMode": "custom",
+          "rangeValue": 10000,
+          "originEntityId": "star_companion",
+          "fieldShape": "circle",
+          "fieldRadius": 3,
+          "fieldEffect": "drain_resource",
+          "fieldInterval": 1,
+          "drainResource": "MP",
+          "transferDrainedResource": true,
+          "coefficients": [
+            {
+              "type": "fixed",
+              "value": 3
+            }
+          ],
+          "duration": 0
+        }
+      ]
     }
+  },
+  {
+    "id": "skill_class_star_gamma_ray",
+    "name": "별소환사 · 감마선",
+    "className": "별소환사",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_star_radiance"
+      ],
+      "distanceFalloffMinimum": 50
+    },
+    "description": "별빛방출의 거리 감쇠 최소 피해를 50%로 보정한다."
+  },
+  {
+    "id": "skill_class_star_light_distance",
+    "name": "별소환사 · 빛의 거리",
+    "className": "별소환사",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_star_relocate",
+        "skill_class_star_interstellar",
+        "skill_class_star_radiance",
+        "skill_class_star_absorb",
+        "skill_class_star_another_star_ultimate"
+      ],
+      "rangeMultiplierPercent": 200
+    },
+    "description": "별소환사 스킬의 시전 사정거리를 주무기의 2배로 한다. 광역 반경과 별 오라 크기는 유지한다."
+  },
+  {
+    "id": "skill_class_star_neutron_star",
+    "name": "별소환사 · 중성자별",
+    "className": "별소환사",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_star_absorb"
+      ],
+      "additionalActions": [
+        {
+          "type": "create_field",
+          "target": "enemy",
+          "rangeMode": "mainWeapon",
+          "fieldCenter": "self",
+          "fieldFollowSource": true,
+          "fieldShape": "circle",
+          "fieldRadius": 5,
+          "fieldEffect": "deal_damage",
+          "fieldInterval": 1,
+          "duration": 5,
+          "damageType": "magic",
+          "coefficients": [
+            {
+              "type": "calculated",
+              "field": "magic",
+              "calc": "percent",
+              "value": 50
+            }
+          ],
+          "fieldSelfHpCostPercent": 25,
+          "fieldRequiredEffectId": "star_force"
+        }
+      ]
+    },
+    "description": "별흡수 중 자신 중심 5m에 매초 마력 50% 마법 피해. 실제 피해 합계의 25%를 스타포스와 별개로 HP 소모한다."
+  },
+  {
+    "id": "skill_class_star_dust_cloud",
+    "name": "별소환사 · 먼지구름",
+    "className": "별소환사",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_star_another_star_ultimate"
+      ],
+      "delayedActions": [
+        {
+          "delay": 30,
+          "actions": [
+            {
+              "type": "summon_entity",
+              "target": "self",
+              "rangeMode": "mainWeapon",
+              "entityId": "star_companion",
+              "count": 1,
+              "limit": 3,
+              "duration": 0,
+              "initializeFieldsFromSkillId": "skill_class_star_companion",
+        "suspensionEffectId": "star_force"
+            }
+          ]
+        }
+      ]
+    },
+    "description": "또다른 별 시전 완료 30초 뒤 영구 별 1개를 생성한다. 소환사가 사망하면 예약을 취소한다."
+  },
+  {
+    "id": "skill_class_star_light_speed",
+    "name": "별소환사 · 광속",
+    "className": "별소환사",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_star_interstellar"
+      ],
+      "fieldTimePercent": 20
+    },
+    "description": "성간거리의 지속시간을 1초로 압축해 0.2초 간격으로 마력 50%씩 총 5회 적용한다."
   },
   {
     "icon": "assets/images/skills/수도승_연환.png",
@@ -9971,7 +11546,7 @@
       "count": 1
     }
   },
-{
+  {
   "id": "skill_class_serum_regeneration",
   "icon": "assets/images/skills/혈청형_재생성.png",
   "name": "혈청형 · 재생성",
@@ -10025,7 +11600,7 @@
     "repeatInterval": 1
   }
 },
-{
+  {
   "id": "skill_class_serum_barrier",
   "icon": "assets/images/skills/혈청형_피의 결계.png",
   "name": "혈청형 · 피의 결계",
@@ -10058,7 +11633,7 @@
     }
   ]
 },
-{
+  {
     "icon": "assets/images/skills/혈청형_혈액전환.png",
   "id": "skill_class_serum_conversion",
   "name": "혈청형 · 혈액전환",
@@ -10092,7 +11667,7 @@
     }
   ]
 },
-{
+  {
     "icon": "assets/images/skills/혈청형_성분혈.png",
   "id": "skill_class_serum_component",
   "name": "혈청형 · 성분혈",
@@ -10116,7 +11691,7 @@
     "coefficientPercent": 200
   }
 },
-{
+  {
     "icon": "assets/images/skills/혈청형_끝없는 피의 결계.png",
   "id": "skill_class_serum_endless_barrier",
   "name": "혈청형 · 끝없는 피의 결계",
@@ -10140,7 +11715,7 @@
     "fieldRadiusAdd": 3
   }
 },
-{
+  {
     "icon": "assets/images/skills/혈청형_혈액 효율성.png",
   "id": "skill_class_serum_efficiency",
   "name": "혈청형 · 혈액 효율성",
@@ -10167,7 +11742,7 @@
     "resourceCostPercent": 50
   }
 },
-{
+  {
     "icon": "assets/images/skills/혈청형_광속흡혈.png",
   "id": "skill_class_serum_fast_drain",
   "name": "혈청형 · 광속흡혈",
@@ -10191,7 +11766,7 @@
     "castTimeAdd": -0.7
   }
 },
-{
+  {
     "icon": "assets/images/skills/혈청형_흡혈광.png",
   "id": "skill_class_serum_drain_mania",
   "name": "혈청형 · 흡혈광",
@@ -10215,7 +11790,7 @@
     "cooldownAdd": -2
   }
 },
-{
+  {
     "icon": "assets/images/skills/혈청형_정신회복.png",
   "id": "skill_class_serum_mental_recovery",
   "name": "혈청형 · 정신회복",
@@ -10267,7 +11842,7 @@
     ]
   }
 },
-{
+  {
   "id": "skill_class_keratin_shell",
   "name": "각질형 · 돌연변이 껍질",
   "className": "각질형",
@@ -10339,7 +11914,7 @@
   },
   "icon": "assets/images/skills/각질형_돌연변이 껍질.png"
 },
-{
+  {
     "icon": "assets/images/skills/각질형_탈피.png",
   "id": "skill_class_keratin_molt",
   "name": "각질형 · 탈피",
@@ -10396,7 +11971,7 @@
   ],
   "description": "자신 주변 반경 3m에 공격력 80% 물리 피해를 주고 3초간 방어력·저항력 +5. 각질 스택을 소모하지 않는다."
 },
-{
+  {
     "icon": "assets/images/skills/각질형_역겨운 보호막.png",
   "id": "skill_class_keratin_repulsive_shield",
   "name": "각질형 · 역겨운 보호막",
@@ -10431,7 +12006,7 @@
   ],
   "description": "최대 HP 10% 보호막을 3초간 부여한다. 적의 공격으로 소진되면 반경 4m 적에게 최대 HP 5% 물리 피해와 끈적이는 껍질조각을 3초간 부여한다. 만료·해제 시 폭발하지 않는다."
 },
-{
+  {
     "icon": "assets/images/skills/각질형_역겨운 보호막.png",
   "id": "skill_class_keratin_shield_burst",
   "name": "각질형 · 역겨운 보호막 파열",
@@ -10492,7 +12067,7 @@
   "internal": true,
   "description": "역겨운 보호막이 적의 공격으로 소진될 때만 실행하는 내부 반응."
 },
-{
+  {
     "icon": "assets/images/skills/각질형_동정의 시선.png",
   "id": "skill_class_keratin_pity",
   "name": "각질형 · 동정의 시선",
@@ -10527,7 +12102,7 @@
   ],
   "description": "5m 적 하나에게 왠지 때리기 싫음을 5초 부여한다. 적용 시 공격력·마력 중 높은 능력치 하나가 100 감소한다."
 },
-{
+  {
     "icon": "assets/images/skills/영혼수확자_육신과 영혼.png",
   "id": "skill_class_soul_reaper_soul_and_body",
   "name": "영혼수확자 · 영혼과 육신",
@@ -10571,7 +12146,7 @@
     }
   }
 },
-{
+  {
     "icon": "assets/images/skills/영혼수확자_검은습격.png",
   "id": "skill_class_soul_reaper_black_assault",
   "name": "영혼수확자 · 검은습격",
@@ -10618,7 +12193,7 @@
   ],
   "description": "육신상태의 1스킬. 주무기 사거리 적에게 공격력 130% 물리 피해와 3초 기절. 영혼상태에서는 같은 쿨다운 슬롯의 영혼입김으로 바뀐다."
 },
-{
+  {
     "icon": "assets/images/skills/영혼수확자_영혼입김.png",
   "id": "skill_class_soul_reaper_soul_breath",
   "name": "영혼수확자 · 영혼입김",

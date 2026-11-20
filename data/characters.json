@@ -85,8 +85,7 @@
     ],
     "activeEquipmentSet": 0,
     "faction": "쥬신",
-    "attackType": "physical",
-    "customResources": []
+    "attackType": "physical"
   },
   {
     "name": "기사",
@@ -182,8 +181,10 @@
     "skillIds": [
       "skill_class_monk_cycle",
       "skill_class_monk_spring_energy",
+      "skill_class_monk_area_heal",
       "skill_class_monk_combo",
-      "skill_class_monk_area_heal"
+      "skill_class_monk_down_strike",
+      "skill_class_monk_vajra_talisman_ultimate"
     ],
     "skillSelections": {},
     "portrait": "assets/images/portraits/character-003.png",
@@ -486,9 +487,16 @@
     "attackRange": 6,
     "role": "melee",
     "skillIds": [
+      "skill_class_engineer_engineering",
       "skill_class_engineer_ballista",
       "skill_class_engineer_talisman_cannon",
-      "skill_class_engineer_recoilless_cannon"
+      "skill_class_engineer_recoilless_cannon",
+      "skill_class_engineer_haetae",
+      "skill_class_engineer_emergency_reinstall_ultimate",
+      "skill_entity_engineer_recoilless_attack",
+      "skill_class_engineer_artillery_king",
+      "skill_class_engineer_rapid_fire",
+      "skill_class_engineer_do_it_all"
     ],
     "skillSelections": {},
     "portrait": "assets/images/portraits/character-007.png",
@@ -538,7 +546,9 @@
     ],
     "activeEquipmentSet": 0,
     "faction": "쥬신",
-    "attackType": "physical"
+    "attackType": "physical",
+    "entityGrade": 2,
+    "customResources": []
   },
   {
     "name": "드루이드",
@@ -709,7 +719,10 @@
       "skill_class_marine_expansion",
       "skill_class_marine_guard",
       "skill_class_marine_bash",
-      "skill_class_marine_boomerang"
+      "skill_class_marine_boomerang",
+      "skill_class_marine_roar",
+      "skill_class_marine_one_chance",
+      "skill_class_marine_air_raid"
     ],
     "skillSelections": {},
     "portrait": "assets/images/portraits/image-20261018142752687048.png",
@@ -759,7 +772,9 @@
     ],
     "activeEquipmentSet": 0,
     "faction": "릴마리온",
-    "attackType": "physical"
+    "attackType": "physical",
+    "entityGrade": 2,
+    "customResources": []
   },
   {
     "name": "의무병",
@@ -854,9 +869,15 @@
     "attackRange": 4,
     "role": "ranged",
     "skillIds": [
+      "skill_class_admiral_reload",
       "skill_class_admiral_tidal_wave",
       "skill_class_admiral_vortex",
-      "skill_class_admiral_sea_road"
+      "skill_class_admiral_sea_road",
+      "skill_class_admiral_wave",
+      "skill_class_admiral_despair_ultimate",
+      "skill_class_admiral_salt_water",
+      "skill_class_admiral_rotten_wine",
+      "skill_class_admiral_reload_again"
     ],
     "skillSelections": {},
     "portrait": "assets/images/portraits/image-20261018142831313519.png",
@@ -906,7 +927,9 @@
     ],
     "activeEquipmentSet": 0,
     "faction": "릴마리온",
-    "attackType": "magic"
+    "attackType": "magic",
+    "entityGrade": 2,
+    "customResources": []
   },
   {
     "name": "화염술사",
@@ -1005,7 +1028,10 @@
       "skill_class_berserker_pain_recovery",
       "skill_class_berserker_blood_scent",
       "skill_class_berserker_fire_strike",
-      "skill_class_berserker_flame_slash"
+      "skill_class_berserker_flame_slash",
+      "skill_class_berserker_pain_opportunity",
+      "skill_class_berserker_qualification",
+      "skill_class_berserker_flame_afterimage"
     ],
     "skillSelections": {},
     "portrait": "assets/images/portraits/image-20261018143144779692.png",
@@ -1055,7 +1081,9 @@
     ],
     "activeEquipmentSet": 0,
     "faction": "슈련",
-    "attackType": "physical"
+    "attackType": "physical",
+    "entityGrade": 2,
+    "customResources": []
   },
   {
     "name": "저격수",
@@ -1204,6 +1232,7 @@
   },
   {
     "name": "성기사",
+    "entityGrade": 2,
     "hp": 4500,
     "mp": 150,
     "st": 100,
@@ -1276,9 +1305,7 @@
     ],
     "activeEquipmentSet": 0,
     "faction": "신성교단",
-    "attackType": "physical",
-    "entityGrade": 2,
-    "customResources": []
+    "attackType": "physical"
   },
   {
     "name": "수호자",
@@ -2355,9 +2382,17 @@
     "attackRange": 6,
     "role": "melee",
     "skillIds": [
-      "skill_class_tamer_beast"
+      "skill_class_tamer_beast",
+      "skill_class_tamer_choice",
+      "skill_class_tamer_kill_command",
+      "skill_class_tamer_fusion",
+      "skill_class_tamer_heal",
+      "skill_class_tamer_reset",
+      "skill_class_tamer_unleash_ultimate"
     ],
-    "skillSelections": {},
+    "skillSelections": {
+      "skill_class_tamer_choice": "wolf"
+    },
     "portrait": "assets/images/portraits/쀼랜드_조련사.png",
     "attributes": {
       "str": 0,
@@ -2790,6 +2825,7 @@
       "skill_class_star_interstellar",
       "skill_class_star_radiance",
       "skill_class_star_absorb",
+      "skill_class_star_another_star_ultimate",
       "skill_class_star_weak_gravity"
     ],
     "skillSelections": {},

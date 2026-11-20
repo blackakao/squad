@@ -1,4 +1,9 @@
 function resetUnitForBattle(unit) {
+  endCompanionFusion(unit,{reset:true});
+  unit.fusedInto=null;
+  unit.reloadCharges={};unit.reloadExtra={};
+  unit.delayedSkillActions=[];
+  unit.combatFocusTarget=null;unit.summonSynergySignature="";
   unit.proximityPassiveActive = {};
   unit.passiveRepeatTimers = {};
   unit.undamagedTicks=0;
@@ -202,10 +207,18 @@ function summonBattleUnits(source, action, skill, target = source) {
     const unit = createSummonedBattleUnit(source, {...config,spawnCenter:config.summonCenter === "target" ? target : source});
     unit.summonSkillId = skill?.id;
     unit.summonTicks = config.lifetime > 0 ? Math.max(1, Math.round(config.lifetime * BASE_ATTACK_COOLDOWN)) : null;
+    const suspension=action.suspensionEffectId && source.activeEffects?.find(effect=>effect.id === action.suspensionEffectId);
+    if (suspension) {unit.suspensionEffectId=action.suspensionEffectId;unit.suspendedTicks=Math.max(1,suspension.remainingTicks ?? 1);}
     (unit.owner.summons ??= []).push(unit);
     squad.push(unit);
     registerBattleContribution(unit);
     created.push(unit);
+    if (action.initializeFieldsFromSkillId) {
+      const passive=getSkillById(action.initializeFieldsFromSkillId);
+      const runtime=passive && getRuntimeSelectionSkill(source,passive);
+      for (const field of runtime?.actions ?? []) if (field.type === "create_field" && field.originEntityId === unit.entityId)
+        applySkillAction(source,unit,{...field,_origin:unit},runtime);
+    }
   }
   if (created.length) refreshSummonCountBuffs(getSummonOwner(source));
   if (action.retreatBehindSummons && created.length) {
@@ -236,7 +249,7 @@ function createSummonedBattleUnit(source, config) {
       entityGrade:config.entityGrade ?? 2,
       ownerDiesOnDeath:config.ownerDiesOnDeath === true,entityReceivedDamagePercent:config.receivedDamagePercent ?? 100,
       commandOnly:config.commandOnly === true,targetable:config.targetable !== false,collidable:config.collidable !== false,
-      summonBaseAi:config.ai,summonBaseSpeed:config.speed,
+      summonBaseAi:config.ai,summonBaseSpeed:config.speed,lockedMovementSpeed:config.lockedSpeed ?? null,summonFocusAttackPercent:config.focusAttackPercent ?? 0,
       isEntityPreview: Boolean(source.isEntityPreview),
       previewBounds: source.isEntityPreview ? source.previewBounds : undefined,
       name: `${config.name} (${source.name})`, faction: source.faction, portrait: config.copyAppearance ? source.portrait : safeEntityIcon(config.icon),
@@ -259,6 +272,7 @@ function updateSummonLifetimes() {
   for (const unit of [...playerSquad,...enemySquad]) {
     if (!unit.isSummon) continue;
     if (unit.commandOnly && !unit.owner?.alive) {removeSummonedBattleUnit(unit);continue;}
+    if (unit.fusedInto) {unit.x=unit.fusedInto.x;unit.y=unit.fusedInto.y;continue;}
     if (unit.suspendedTicks>0) {
       if (unit.suspensionEffectId) {
         const effect=unit.owner?.activeEffects?.find(effect=>effect.kind === "buff" && effect.id === unit.suspensionEffectId);
@@ -298,7 +312,8 @@ function updateResources() {
     const maxSt = Math.max(0, Number(unit.maxSt ?? DEFAULT_RESOURCE_VALUE));
     unit.maxMp = maxMp;
     unit.maxSt = maxSt;
-    unit.mp = Math.min(maxMp, (Number(unit.mp) || 0) + MP_REGEN_PER_SECOND * elapsedSeconds);
+    applyNaturalMpRegeneration(unit,elapsedSeconds);
+    if (!unit.alive) return;
 
     if (unit.exhausted) {
       const exhaustedRecoveryThreshold = maxSt * ST_EXHAUSTED_MIN_RECOVERY_RATIO;
@@ -429,6 +444,7 @@ function syncAliveState(unit, context = {}) {
   const events = [];
   if (unit.hp <= 0) {
     if (!context.forceDeath && (tryPreventLethalDamage(unit,context) || tryEnterLethalTransformation(unit,context))) return events;
+    if (unit.companionFusion) endCompanionFusion(unit,{dead:true});
     const wasAlive = unit.alive;
     unit.hp = 0;
     unit.alive = false;
@@ -876,6 +892,7 @@ window.showImmediateBattleResult = showImmediateBattleResult;
 function updateMovement() {
   playerSquad.forEach(unit => moveUnit(unit, enemySquad));
   enemySquad.forEach(unit => moveUnit(unit, playerSquad));
+  updateSummonSynergies();
 }
 
 function getContactSupportApproach(unit) {
@@ -908,6 +925,8 @@ function moveUnit(unit, targets) {
   const charm=(unit.activeEffects ?? []).find(effect=>effect.kind === "state" && effect.state === "charm");
   if (charm) targets=[...playerSquad,...enemySquad].filter(candidate=>candidate.alive && candidate.effectCasterId === charm.casterId);
   else targets=targets.filter(target=>canDirectlyTarget(unit,target));
+  const taunt=getTauntTarget(unit);
+  if (taunt && !charm) targets=[taunt];
   if (hasBattleState(unit,"flee")) targets=getActiveBattleEntities(unit.side === "enemy" ? playerSquad : enemySquad).sort((a,b)=>distance(unit,a)-distance(unit,b));
   const supportForm=transform?.movementTarget === "injured_ally";
   if (!charm && !hasBattleState(unit,"flee") && supportForm) {
@@ -920,6 +939,7 @@ function moveUnit(unit, targets) {
   const contactSupport=!charm && !hasBattleState(unit,"flee") && !supportForm ? getContactSupportApproach(unit) : null;
   if (contactSupport) targets=[contactSupport.target];
   const target = targets.find(candidate => candidate.alive || candidate === contactSupport?.target);
+  if (unit.isSummon) unit.combatFocusTarget=target ?? null;
   if (!target) {
     unit.vx=unit.vy=0;unit.isMoving=false;
     return;
@@ -1041,7 +1061,7 @@ function takeAction(unit, allies, enemies) {
   if (unit.retreatHpBelow > 0 && unit.maxHp > 0 && unit.hp/unit.maxHp*100 <= unit.retreatHpBelow) return;
   if (hasBattleState(unit,"stun")) return;
   if (hasBattleState(unit,"flee") || hasBattleState(unit,"charm")) return;
-  const hasIndependentWeapons=!getBasicAttackReplacement(unit) && (getWeaponControlPassive(unit) || (unit.weaponAttackStates?.length ?? 0)>1);
+  const hasIndependentWeapons=!unit.companionFusion && !getBasicAttackReplacement(unit) && (getWeaponControlPassive(unit) || (unit.weaponAttackStates?.length ?? 0)>1);
   if (getWeaponControlPassive(unit)) getControlledWeaponStates(unit);
   if (unit.attackCooldown > 0) unit.attackCooldown--;
   for (const state of unit.weaponAttackStates ?? []) {
@@ -1107,6 +1127,7 @@ function tickSkillCooldowns(unit) {
   Object.keys(unit.skillCooldowns ?? {}).forEach(skillId => {
     unit.skillCooldowns[skillId] = Math.max(0, (Number(unit.skillCooldowns[skillId]) || 0) - 1);
   });
+  syncCompanionSkillCooldowns(unit);
 }
 
 function tryUseReadySkill(unit, allies, enemies) {
@@ -1125,10 +1146,11 @@ function tryUseReadySkill(unit, allies, enemies) {
 
   const target = resolveSkillTarget(unit, skill, allies, enemies);
   beginOffensiveAction(unit,skill);
+  const reloadInfo=getReloadCastInfo(unit,skill,nextSkillModifier);
   const resourceSpent=spendSkillResourceCosts(unit, skill, nextSkillModifier.resourceCostPercent);
   consumeNextSkillModifier(unit,nextSkillModifier);
   showSkillBubble(unit, skill.runtimeCombo ? `${skill.name} · ${skill.runtimeCombo.stageName}` : skill.name, skill.icon);
-  startCast(unit, { type: "skill", target, skill, resourceSpent, skillModifier:nextSkillModifier, ranged: distance(unit, target) > ATTACK_RANGE_UNIT });
+  startCast(unit, { type: "skill", target, skill, reloadInfo, resourceSpent, skillModifier:nextSkillModifier, ranged: distance(unit, target) > ATTACK_RANGE_UNIT });
   return true;
 }
 
@@ -1147,6 +1169,39 @@ function resolveSkillTarget(unit, skill, allies, enemies) {
     if (target) return target;
   }
   return null;
+}
+
+function getReloadPassive(unit) {
+  return resolveSelectedSkillIds(unit?.skillIds,unit?.skillSelections).map(getSkillById).find(skill=>skill?.reload && !isUnitSkillDisabled(unit,skill));
+}
+
+function getReloadCastInfo(unit,skill,modifier=null) {
+  const passive=getReloadPassive(unit);
+  if (!passive || !skill || skill.slot !== "active" || skill.internal || skill.triggered || isUltimateSkill(skill)) return null;
+  const bonus=unit.reloadExtra?.[skill.id] === true;
+  const stored=unit.reloadCharges?.[skill.id] ?? 0;
+  const seconds=bonus ? 0 : Math.max(0,getPreInstantCastSeconds(unit,skill,modifier)-stored);
+  return {seconds,free:!bonus && stored>0 && seconds<=1e-8,bonus,step:passive.reload.step,passiveId:passive.id};
+}
+
+function completeReloadCast(unit,skill,info) {
+  if (!info) return;
+  unit.reloadCharges ??= {};unit.reloadExtra ??= {};
+  if (info.free || info.bonus) {
+    unit.reloadCharges[skill.id]=0;
+    unit.reloadExtra[skill.id]=info.free && getSelectedSkillModifiers(unit,getSkillById(info.passiveId)).some(modifier=>modifier.reloadExtraUse);
+  } else unit.reloadCharges[skill.id]=(unit.reloadCharges[skill.id] ?? 0)+info.step;
+}
+
+function applyNaturalMpRegeneration(unit,elapsedSeconds) {
+  const modifiers=limitOptionalSkillIds(unit.skillIds).map(getSkillById).filter(skill=>skill?.slot === "optional" && !isUnitSkillDisabled(unit,skill))
+    .map(skill=>skill.selectionModifier?.naturalMpRegen).filter(Boolean);
+  const multiplier=modifiers.reduce((value,modifier)=>value*modifier.multiplier,1);
+  const rate=MP_REGEN_PER_SECOND*multiplier;
+  const recovered=Math.min(Math.max(0,unit.maxMp-unit.mp),Math.max(0,elapsedSeconds*rate));
+  unit.mp+=recovered;
+  const cost=rate>0 ? recovered/rate*modifiers.reduce((sum,modifier)=>sum+modifier.hpPerSecond,0) : 0;
+  if (cost>0) applyActionResourceDrain(unit,unit,{drainResource:"HP",coefficients:[{type:"fixed",value:cost}]},{id:"natural_mp_regen",name:"썩어가는 포도주",triggered:true});
 }
 
 function getInstantCastPassive(unit) {
@@ -1191,7 +1246,9 @@ function startCast(unit, action) {
   if (action.type === "skill" && !canActivateSkill(unit,skill)) return;
   const castTime = normalizeSkillCastTime(unit.isSummon && action.type !== "skill" ? unit.castSpeed : skill?.castTime);
   const instant=getInstantCastPassive(unit);
-  const castDuration = instant ? 0 : Math.round(Math.max(0,(castTime == null ? getCastDuration(unit)/BASE_ATTACK_COOLDOWN : castTime)+(unit.effectCastTimeAdd || 0)) * BASE_ATTACK_COOLDOWN * (action.skillModifier?.castTimePercent ?? 100) / 100 * (unit.effectCastTimeMultiplier ?? 1));
+  const reloadInfo=action.reloadInfo ?? getReloadCastInfo(unit,skill,action.skillModifier);
+  action={...action,reloadInfo};
+  const castDuration = instant ? 0 : reloadInfo ? Math.round(reloadInfo.seconds*BASE_ATTACK_COOLDOWN) : Math.round(Math.max(0,(castTime == null ? getCastDuration(unit)/BASE_ATTACK_COOLDOWN : castTime)+(unit.effectCastTimeAdd || 0)) * BASE_ATTACK_COOLDOWN * (action.skillModifier?.castTimePercent ?? 100) / 100 * (unit.effectCastTimeMultiplier ?? 1));
   if (instant && !payInstantCastHp(unit,getInstantCastHpCost(unit,skill,action.skillModifier),action)) return;
 
   if (action.type === "attack" && getBasicAttackReplacement(unit)?.id === skill.id) showSkillBubble(unit,skill.name,skill.icon);
@@ -1202,6 +1259,7 @@ function startCast(unit, action) {
   const pendingAction = { ...action, skill,
     ...(skill.stationaryTargetBonusPercent>0 && action.target ? {castTargetPosition:{targetId:action.target.effectCasterId,x:action.target.x,y:action.target.y}} : {}) };
   unit.pendingAction = pendingAction;
+  if (unit.isSummon && action.target?.side !== unit.side) {unit.combatFocusTarget=action.target;updateSummonSynergies();}
   unit.castTimer = castDuration;
   unit.castDuration = castDuration;
   publishBattleEvents([{type:"cast_start",source:unit,target:action.target,skill}]);
@@ -1284,6 +1342,7 @@ function resolveSkillCast(unit, action) {
     return;
   }
 
+  completeReloadCast(unit,skill,action.reloadInfo);
   unit.skillUseCounts ??= {};unit.skillUseCounts[skill.id]=(unit.skillUseCounts[skill.id] || 0)+1;
   if (skill.resetCombat) resetCombatCycle(unit);
   const uses=Math.max(1,skill.consecutiveUses || 1);
@@ -1293,7 +1352,12 @@ function resolveSkillCast(unit, action) {
   unit.skillCooldowns[skill.id] = used<uses ? 0 : getResolvedSkillCooldownTicks(skill,unit,action.skillModifier);
   unit.skillCooldownTotals[skill.id] = unit.skillCooldowns[skill.id];
   dispatchSkillActions(unit, action.target, skill, !skill.selfDestruct && unit.hp>0, false, null, action.resourceSpent);
+  if (skill.resetSkillCooldowns && unit.skillUseCounts[skill.id] === 1) {
+    unit.skillCooldowns={};unit.skillCooldownTotals={};unit.skillComboStages={};unit.skillConsecutiveUses={};
+  }
+  for (const row of skill.delayedActions ?? []) (unit.delayedSkillActions ??= []).push({remainingTicks:Math.max(1,Math.ceil(row.delay*BASE_ATTACK_COOLDOWN)),actions:structuredClone(row.actions),skill});
   for(const reduction of skill.cooldownReductions ?? []) unit.skillCooldowns[reduction.skillId]=Math.max(0,(unit.skillCooldowns[reduction.skillId] ?? 0)-Math.round(reduction.seconds*BASE_ATTACK_COOLDOWN));
+  syncCompanionSkillCooldowns(unit);
   advanceSkillCombo(unit,skill);
   if (skill.selfDestruct || unit.hp<=0) {unit.hp=0;syncAliveState(unit,{source:unit,skill,forceDeath:skill.selfDestruct === true,reason:skill.selfDestruct ? "자폭" : "HP 자원 소진"});}
 }
@@ -1626,10 +1690,17 @@ function getBattleFieldMovementStCostFlat(unit) {
 }
 
 function updateBattleFields() {
+  for (const source of [...playerSquad,...enemySquad]) {
+    if (!source.alive || source.removed) {source.delayedSkillActions=[];continue;}
+    const ready=[];
+    source.delayedSkillActions=(source.delayedSkillActions ?? []).filter(row=>{if (--row.remainingTicks<=0) {ready.push(row);return false;}return true;});
+    for (const row of ready) dispatchSkillActions(source,source,{...row.skill,actions:row.actions},false);
+  }
   if (typeof updateBattleRunes === "function") updateBattleRunes();
   battleFields=battleFields.filter(field => {
     const {source,skill,action}=field;
     if (source.removed) return false;
+    if (action.fieldRequiredEffectId && !source.activeEffects?.some(effect=>effect.id === action.fieldRequiredEffectId)) return false;
     if (field.anchor && (field.anchor.removed || !field.anchor.alive || !source.alive)) return false;
     if (field.anchor && !refreshBattleFieldGeometry(field)) {
       if (--field.nextTick<=0) field.nextTick=Math.max(1,Math.ceil(action.fieldInterval*BASE_ATTACK_COOLDOWN));
@@ -1655,7 +1726,14 @@ function updateBattleFields() {
         ...(["add_buff","add_state"].includes(action.fieldEffect) ? {duration:action.fieldEffectDuration} : {}),
         ...(action.fieldEffect === "move" ? {moveType:action.fieldMoveType,distance:action.fieldDistance,_moveOrigin:{x:field.x,y:field.y}} : {})};
       if (action.fieldStoreHpPercent>0) field.storedHp+=targets.filter(unit=>isUnitBattleTargetable(unit) && !(unit.suspendedTicks>0)).length*source.maxHp*action.fieldStoreHpPercent/100;
-      if (action.fieldEffect !== "none") for(const target of targets) applySkillAction(source,target,applied,skill,createSkillExecutionContext());
+      const execution=createSkillExecutionContext();
+      if (action.fieldEffect !== "none") for(const target of targets) {if (!source.alive && action.fieldSelfHpCostPercent>0) break;applySkillAction(source,target,applied,skill,action.fieldSelfHpCostPercent>0 ? execution : createSkillExecutionContext());}
+      if (source.alive && action.fieldSelfHpCostPercent>0 && execution.actualDamage>0) {
+        const cost=Math.min(source.hp,execution.actualDamage*action.fieldSelfHpCostPercent/100);
+        source.hp-=cost;
+        publishBattleEvents([{type:"resource_drain",source,target:source,skill,resource:"HP",amount:cost,reason:"필드 피해 비례 HP 소모"}]);
+        syncAliveState(source,{source,skill,reason:"필드 피해 HP 소모"});
+      }
       publishBattleEvents([{type:"field_tick",source,skill}]);
     }
     if (source.removed) return false;

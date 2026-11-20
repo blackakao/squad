@@ -5,8 +5,8 @@ let entityEditorOriginalId = "";
 let entityPreviewFrame = null;
 const EXTERNAL_RESOURCE_GROUPS = {
   spirit: {label: '정령술사 · 정령', ids: ['spirit_destroy', 'spirit_enhance', 'spirit_heal']},
-  beast: {label: '조련사 · 야수', ids: ['legacy_4ac380c5973655c4']},
-  engineer: {label: '갑사 · 소환수', ids: ['engineer_ballista', 'engineer_recoilless_cannon', 'engineer_talisman_cannon', 'legacy_7485c24755d256a5']},
+  beast: {label: '조련사 · 야수', ids: ['legacy_4ac380c5973655c4', 'tamer_elephant', 'tamer_raptor']},
+  engineer: {label: '갑사 · 소환수', ids: ['engineer_ballista', 'engineer_recoilless_cannon', 'engineer_talisman_cannon', 'engineer_haetae', 'legacy_7485c24755d256a5']},
   puppet: {label: '인형술사 · 인형', ids: ['puppet_doll']},
   demon: {label: '악마 · 소환수', ids: ['demon_brute', 'demon_general', 'demon_minion']}
 };
@@ -66,6 +66,11 @@ function getEntityById(id) {
   return entitiesJson.find(entity => entity.entityId === id);
 }
 
+function getSelectedSummonModifiers(owner,entityId) {
+  return limitOptionalSkillIds(owner?.skillIds).map(getSkillById).filter(skill=>skill?.slot === "optional" && !isUnitSkillDisabled(owner,skill))
+    .flatMap(skill=>skill.selectionModifier?.summonModifiers ?? []).filter(value=>!value.entityIds.length || value.entityIds.includes(entityId));
+}
+
 function getSummonConfiguration(source, action) {
   const definitions = typeof isBattleRunning !== "undefined" && isBattleRunning && battleEntitySnapshot ? battleEntitySnapshot : entitiesJson;
   const entityId=action.entityChoiceSkillId ? getChoiceSummonEntityId(source,action.entityChoiceSkillId,action.entityId) : action.entityId;
@@ -74,12 +79,19 @@ function getSummonConfiguration(source, action) {
   const stats={...entity.stats};
   const sourceFields={hp:"maxHp",mp:"maxMp",st:"maxSt",atk:"atk",magic:"magic",defense:"defense",resistance:"resistance",speed:"speed"};
   for(const stat of SUMMON_INHERIT_STATS) stats[stat]=(action.inheritMode === "replace" ? 0 : Number(stats[stat]) || 0)+(Number(source?.[sourceFields[stat]]) || 0)*(Number(action.inheritStats?.[stat]) || 0)/100;
-  stats.hp=Math.max(1,stats.hp);
-  return {...stats, entityId:entity.entityId,name:entity.name,icon:entity.icon,role:entity.role,ai:entity.ai,attackType:entity.attackType === "magic" ? "magic" : "physical",attackSkillId:String(entity.attackSkillId ?? ""),
+  const modifiers=getSelectedSummonModifiers(getSummonOwner(source),entityId);
+  stats.hp=Math.max(1,stats.hp+modifiers.reduce((sum,value)=>sum+value.hpAdd,0));
+  stats.atk=Math.max(0,(Number(stats.atk) || 0)+modifiers.reduce((sum,value)=>sum+value.atkAdd,0));
+  stats.attackSpeed=Math.max(.1,(Number(stats.attackSpeed) || 1)+modifiers.reduce((sum,value)=>sum+value.attackIntervalAdd,0));
+  const mobile=entity.ai === "stationary" && modifiers.some(value=>value.mobile);
+  const movement=mobile ? modifiers.find(value=>value.mobile) : null;
+  const speed=mobile ? ((typeof ROLE_STATS !== "undefined" ? ROLE_STATS[entity.role]?.speedMultiplier : 1) ?? 1)*movement.movementBasePercent/100 : entity.ai === "stationary" ? 0 : stats.speed;
+  const lockedSpeed=mobile && modifiers.some(value=>value.movementLocked) ? speed : null;
+  return {...stats, entityId:entity.entityId,name:entity.name,icon:entity.icon,role:entity.role,ai:mobile ? entity.role : entity.ai,attackType:entity.attackType === "magic" ? "magic" : "physical",attackSkillId:String(entity.attackSkillId ?? ""),
     summonType:entity.summonType === "persistent" ? "persistent" : "temporary",
-    speed:entity.ai === "stationary" ? 0 : stats.speed,
+    speed,lockedSpeed,focusAttackPercent:Math.max(0,...modifiers.map(value=>value.focusAttackPercent)),
     skillIds:[...(entity.skillIds ?? [])],basicAttackDisabled:entity.basicAttackDisabled === true,
-    limitScope:action.limitScope ?? "skill",count:action.count ?? 1,limit:action.limit ?? 3,lifetime:action.duration ?? 20,summonCenter:action.summonCenter ?? "self",
+    limitScope:action.limitScope ?? "skill",count:action.count ?? 1,limit:Math.max(1,(action.limit ?? 3)+modifiers.reduce((sum,value)=>sum+value.limitAdd,0)),lifetime:action.duration ?? 20,summonCenter:action.summonCenter ?? "self",
     copyAppearance:action.copyAppearance === true,
     entityGrade:Math.max(1,Math.min(10,Math.floor(Number(entity.entityGrade) || 2))),
     ownerDiesOnDeath:entity.ownerDiesOnDeath === true,receivedDamagePercent:Math.max(0,Number(entity.receivedDamagePercent ?? 100)),

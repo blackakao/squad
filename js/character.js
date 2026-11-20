@@ -262,6 +262,9 @@ function toggleCharacterSkill(button) {
       alert('선택 강화는 최대 3개까지 선택할 수 있습니다.');
       return;
     }
+    if (getCharacterSelectedSkillIds().some(other=>(getSkillById(id)?.exclusiveSkillIds ?? []).includes(other) || (getSkillById(other)?.exclusiveSkillIds ?? []).includes(id))) {
+      alert('함께 선택할 수 없는 선택 스킬입니다. 기존 선택을 먼저 해제해 주세요.');return;
+    }
     characterSkillSelection.add(id);
   }
   for (const skill of getCharacterSelectedSkillIds().map(getSkillById).filter(isChoiceSkill)) {

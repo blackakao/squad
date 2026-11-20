@@ -1,0 +1,32 @@
+{
+  "entityId": "tamer_elephant",
+  "name": "코끼리",
+  "role": "melee",
+  "ai": "melee",
+  "description": "조련사의 선택형 동반 야수. 기본 이동속도 1.2.",
+  "icon": "",
+  "tags": [
+    "summon",
+    "tamer_beast"
+  ],
+  "summonType": "persistent",
+  "mainSummon": true,
+  "attackType": "physical",
+  "skillIds": [
+    "skill_class_tamer_elephant_inflate",
+    "skill_class_tamer_elephant_shout"
+  ],
+  "stats": {
+    "hp": 1500,
+    "mp": 100,
+    "st": 100,
+    "atk": 200,
+    "magic": 0,
+    "defense": 30,
+    "resistance": 10,
+    "speed": 1.2,
+    "attackSpeed": 3,
+    "castTime": 1,
+    "attackRange": 1
+  }
+}

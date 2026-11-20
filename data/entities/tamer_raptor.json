@@ -1,0 +1,32 @@
+{
+  "entityId": "tamer_raptor",
+  "name": "맹금류",
+  "role": "melee",
+  "ai": "melee",
+  "description": "조련사의 선택형 동반 야수. 기본 이동속도 1.2.",
+  "icon": "",
+  "tags": [
+    "summon",
+    "tamer_beast"
+  ],
+  "summonType": "persistent",
+  "mainSummon": true,
+  "attackType": "physical",
+  "skillIds": [
+    "skill_class_tamer_raptor_peck",
+    "skill_class_tamer_raptor_ram"
+  ],
+  "stats": {
+    "hp": 500,
+    "mp": 100,
+    "st": 100,
+    "atk": 120,
+    "magic": 0,
+    "defense": 5,
+    "resistance": 15,
+    "speed": 1.2,
+    "attackSpeed": 1.5,
+    "castTime": 0.5,
+    "attackRange": 1
+  }
+}
