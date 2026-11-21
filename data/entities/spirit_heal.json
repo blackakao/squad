@@ -2,7 +2,7 @@
   "entityId": "spirit_heal",
   "name": "회복정령",
   "description": "7초마다 생성되는 일반 정령. 스킬 재료로 소모된다.",
-  "icon": "",
+  "icon": "assets/images/entities/정령술사_회복정령.png",
   "role": "healer",
   "ai": "healer",
   "attackType": "magic",

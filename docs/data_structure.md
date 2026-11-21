@@ -543,3 +543,18 @@ Entity의 선택 불리언 `mainSummon`은 전투 상태창의 주인 아래 표
 - 소환 액션 `inheritOwnerRange`는 생성 시 소유자의 주무기 사거리를 상속한다. `disappearOnHit`는 HP와 별개로 막히지 않은 양수 피해의 첫 피격에 강제 퇴장하며 실제 피해 통계는 남은 HP 소거를 제외한다. `ownerReceivedDamagePercent`는 해당 소환수 생존 중 소유자 받는 피해 배율이다. 편집 왕복에서 보존한다.
 - 실행/선택 규칙 `triggerSkills: [{skillId, extendDuration}]`는 시전 완료 후 기존 스킬의 효과만 비용·추가 시전·쿨다운 없이 실행한다. 연장 옵션은 동일 시전자의 기존 버프 남은 시간에 새 지속시간을 더한다.
 - 런타임 `summonPaidMp`는 배치의 실제 MP 지출을 생성 개체 수로 나눈 몫, `expiryRewarded`는 만료 보상 중복 방지 플래그다. 수명 만료 경로에서만 보상하며 전투 사망·강제 제거는 제외한다. 무기한 보호막은 개체별 별도 효과로 합산하고 MP 반환은 기존 `resource_refund` 이벤트를 기록한다.
+
+### 수호자 저장·직접 공격자·사후 도발 (2026-11-21)
+
+- 실행 규칙 `directAttackerDefense: {window, threshold, defense}`는 직접 단일 공격자 이력으로 방어력을 계산한다. 런타임 `directAttackers`는 스킬별 공격자→최근 틱 맵이며 전투 초기화/사망 때 비운다. 선택 `attackerResistanceAdd`로 같은 집계의 저항력 가산을 설정한다.
+- 실행 규칙 `damageStorage: {duration, receivedDamagePercent, followupSkillId}`는 저장 단계다. 런타임 `damageStorage`에는 슬롯 ID/단계/남은 틱/실제 피해 합계를 보관한다. 준비 단계의 같은 슬롯은 내부 일격으로 변환하며 `damageStorageFollowup` 런타임 표시는 완료 후 초기화·쿨다운 시작을 구분한다. 선택 `storedDamagePercent`는 저장 피해 계수, 계수 필드 `storedDamage`는 준비 시 고정값으로 변환해 투사체에 스냅샷한다.
+- 선택 `shareCasterDefensePercent`는 피해 대리 버프와 연결된 방어력/저항력 전환 효과를 추가한다. 효과 `sourceCasterStat:true`는 전환 기준을 대상의 능력치 대신 생존한 시전자의 현재 능력치로 갱신한다. `linkedEffectId`로 부모 헌신이 해제되면 같이 해제한다.
+- 선택 `tauntAfterDeath`는 도발 효과의 동명 플래그로 전달된다. 남은 시간이 양수인 동안 해당 도발자만 시체를 표적으로 삼을 수 있다. 일반 타겟 가능성이나 생존 목록은 변경하지 않는다. `corpseTaunt` 공격 실행 표시는 0 피해 헛공격 처리에만 사용한다.
+- 규칙 보정 `disableActiveSkills`는 패시브·선택을 유지하고 액티브 사용만 금지한다. 기존 `disableAllSkills`는 전체 금지 의미를 유지한다. 효과 메타데이터와 규칙 옵션은 관리 편집 왕복에서 보존한다. `received_healing_percent` 선택 능력치 효과는 받는 회복량 계산에도 반영한다.
+
+### 집행가 연쇄 궁·채널 선택 확장 (2026-11-22)
+
+- 계수 필드 `missingHp`는 현재 최대 HP−현재 HP를 0 이상으로 계산한다. 선택 보정 `coefficientSelfHpBelow`는 0일 때 조건 없음, 양수일 때 시전자 현재 HP 비율이 엄격히 낮은 경우에만 해당 계수 배율을 적용한다. `channelStartActions`는 지정 채널의 시작 액션에 추가하고 기존 종료/중단 정리가 같은 시전자·스킬 ID의 시작 효과를 제거한다.
+- 실행 규칙 `killChain: {window, initialTargetHpBelow}`는 명시된 궁의 연쇄 사용권이다. 대상 액션의 엄격한 초기 HP 조건과 함께 저장한다. 선택 `killChainAssist`는 궁 실제 피해 표식 후 제한 시간 안의 다른 사망 원인도 인정한다.
+- 런타임 `killChainWindows`는 스킬 ID→사용권 만료 틱, `killChainMarks`는 대상→스킬별 피해 시점/선택 인정/설정이다. 완료 때 기존 창을 소모하고 사망 이벤트에서만 새 창을 연다. `_killChainAuthorized`는 창 안에서 시작한 시전의 완료 허가이며 저장하지 않는다. 사망/전투 초기화 때 두 맵을 비운다. `ultimate_rearm` 이벤트와 전투 툴팁으로 사용권을 표시한다.
+- 효과 모드 `received_damage_percent`는 받는 피해 배율이다. 기존 `linkedEffectId`를 같은 시전자의 속박 상태와 연결해 해제/만료를 따른다. 액션 `settledDamage`는 이전 실제 피해 등으로 이미 정산한 수치의 공방 배율 중복 적용을 막는다. 면역·보호막 처리는 유지하며 메타데이터는 관리 편집 왕복에서 보존한다.

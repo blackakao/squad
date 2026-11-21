@@ -2,7 +2,7 @@
   "entityId": "spirit_enhance",
   "name": "강화정령",
   "description": "7초마다 생성되는 일반 정령. 스킬 재료로 소모된다.",
-  "icon": "",
+  "icon": "assets/images/entities/정령술사_강화정령.png",
   "role": "healer",
   "ai": "healer",
   "attackType": "magic",

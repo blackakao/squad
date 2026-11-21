@@ -2,6 +2,8 @@ function resetUnitForBattle(unit) {
   endCompanionFusion(unit,{reset:true});
   unit.fusedInto=null;
   unit.reloadCharges={};unit.reloadExtra={};
+  unit.damageStorage=null;unit.directAttackers=new Map();unit.guardianRuntimeSignature="";
+  unit.killChainWindows=new Map();unit.killChainMarks=new Map();
   unit.delayedSkillActions=[];
   unit.combatFocusTarget=null;unit.summonSynergySignature="";
   unit.proximityPassiveActive = {};
@@ -467,6 +469,7 @@ function syncAliveState(unit, context = {}) {
     unit.hp = 0;
     unit.alive = false;
     if (wasAlive) {
+      unit.killChainWindows?.clear();unit.killChainMarks?.clear();
       unit.temporaryRevival=null;
       unit.battleDeathX=unit.x;unit.battleDeathY=unit.y;
       if (unit.pendingAction) events.push({type:"cast_interrupt",source:unit,target:unit.pendingAction.target,skill:unit.pendingAction.skill,reason:"사망"});
@@ -946,17 +949,17 @@ function moveUnit(unit, targets) {
   const taunt=getTauntTarget(unit);
   if (taunt && !charm) targets=[taunt];
   if (hasBattleState(unit,"flee")) targets=getActiveBattleEntities(unit.side === "enemy" ? playerSquad : enemySquad).sort((a,b)=>distance(unit,a)-distance(unit,b));
-  const supportForm=transform?.movementTarget === "injured_ally";
+  const supportForm=transform?.movementTarget === "injured_ally" && !(taunt && !taunt.alive);
   if (!charm && !hasBattleState(unit,"flee") && supportForm) {
     targets=(unit.side === "enemy" ? enemySquad : playerSquad).filter(candidate=>candidate !== unit && candidate.alive && candidate.hp>0 && candidate.hp<candidate.maxHp && !getUnitBattleForm(candidate)?.blockHealing)
       .sort((a,b)=>a.hp/a.maxHp-b.hp/b.maxHp || distance(unit,a)-distance(unit,b));
   }
-  if (!charm && !hasBattleState(unit,"flee") && unit.isSummon && unit.ai === "healer") {
+  if (!charm && !hasBattleState(unit,"flee") && !(taunt && !taunt.alive) && unit.isSummon && unit.ai === "healer") {
     targets = getSummonSquad(unit).filter(candidate => candidate !== unit && candidate.alive && candidate.hp < candidate.maxHp);
   }
-  const contactSupport=!charm && !hasBattleState(unit,"flee") && !supportForm ? getContactSupportApproach(unit) : null;
+  const contactSupport=!charm && !hasBattleState(unit,"flee") && !supportForm && !(taunt && !taunt.alive) ? getContactSupportApproach(unit) : null;
   if (contactSupport) targets=[contactSupport.target];
-  const target = targets.find(candidate => candidate.alive || candidate === contactSupport?.target);
+  const target = targets.find(candidate => candidate.alive || candidate === contactSupport?.target || candidate === taunt);
   if (unit.isSummon) unit.combatFocusTarget=target ?? null;
   if (!target) {
     unit.vx=unit.vy=0;unit.isMoving=false;
@@ -1084,6 +1087,18 @@ function takeAction(unit, allies, enemies) {
   if (unit.attackCooldown > 0) unit.attackCooldown--;
   for (const state of unit.weaponAttackStates ?? []) {
     if (state.cooldown > 0) state.cooldown--;
+  }
+  const corpse=getTauntTarget(unit);
+  if (corpse && !corpse.alive) {
+    if (unit.channelAction) finishBattleChannel(unit,"도발 대상 사망");
+    if (unit.pendingAction && unit.pendingAction.target !== corpse) interruptBattleCast(unit,"시체 도발");
+    for (const state of unit.weaponAttackStates ?? []) {state.castTimer=0;state.target=null;}
+    if (updateCast(unit)) return;
+    if (!hasBattleState(unit,"disarm") && unit.attackCooldown<=0 && distance(unit,corpse)<=Math.max(COLLISION_DISTANCE,getUnitRange(unit))) {
+      if (getUnitAttackType(unit) === "physical") spendStForPhysicalAttack(unit);
+      startCast(unit,{type:"attack",target:corpse,skill:getUnitSkill(unit,DEFAULT_ATTACK_SKILL_ID),corpseTaunt:true});
+    }
+    return;
   }
   if (updateBattleChannel(unit)) return;
   if (updateCast(unit)) {
@@ -1271,6 +1286,7 @@ function startCast(unit, action) {
 
   if (action.type === "attack" && getBasicAttackReplacement(unit)?.id === skill.id) showSkillBubble(unit,skill.name,skill.icon);
   skill=prepareAttackOutcome(unit,action.target,skill);
+  if (skill.killChain && isKillChainOpen(unit,skill)) skill={...skill,_killChainAuthorized:true};
   markAction(unit);
   if (skill.stationaryTargetBonusPercent>0 && action.target) action.target.effectCasterId ??= nextEffectCasterId++;
   beginOffensiveAction(unit,skill);
@@ -1326,6 +1342,10 @@ function resolveCastAction(unit, action) {
   if (hasBattleState(unit,"flee") || (action.type === "attack" && hasBattleState(unit,"disarm"))) return;
 
   const completedSkill = action.skill ?? getUnitSkill(unit,action.type === "heal" ? DEFAULT_HEAL_SKILL_ID : DEFAULT_ATTACK_SKILL_ID);
+  if (action.corpseTaunt) {
+    if (!action.target.alive && getTauntTarget(unit) === action.target) publishBattleEvents([{type:"hit",source:unit,target:action.target,skill:completedSkill,amount:0,reason:"시체 도발 헛공격"}]);
+    return;
+  }
   if (hasBattleState(unit,"stun") || (action.type === "skill" && hasBattleState(unit,"silence"))) return;
   if (action.type === "skill" && !canActivateSkill(unit,completedSkill)) {publishBattleEvents([{type:"cast_interrupt",source:unit,target:action.target,skill:completedSkill,reason:"사용 조건 미충족"}]);return;}
   if (action.type === "skill" && hasEvasiveConcealment(action.target) && isDirectHostileSkill(unit,action.target,completedSkill)) {unit.skillCooldowns[completedSkill.id]=getModifiedSkillCooldownTicks(completedSkill,unit,action.skillModifier);publishBattleEvents([{type:"cast_interrupt",source:unit,target:action.target,skill:completedSkill,reason:"대상 은신"}]);return;}
@@ -1361,6 +1381,7 @@ function resolveSkillCast(unit, action) {
   }
 
   completeReloadCast(unit,skill,action.reloadInfo);
+  if (skill.killChain) unit.killChainWindows?.delete(skill.id);
   unit.skillUseCounts ??= {};unit.skillUseCounts[skill.id]=(unit.skillUseCounts[skill.id] || 0)+1;
   if (skill.resetCombat) resetCombatCycle(unit);
   const uses=Math.max(1,skill.consecutiveUses || 1);
@@ -1369,7 +1390,12 @@ function resolveSkillCast(unit, action) {
   unit.skillConsecutiveUses[skill.id]=used<uses ? used : 0;
   unit.skillCooldowns[skill.id] = used<uses ? 0 : getResolvedSkillCooldownTicks(skill,unit,action.skillModifier);
   unit.skillCooldownTotals[skill.id] = unit.skillCooldowns[skill.id];
+  if (skill.damageStorage) {
+    unit.damageStorage={skillId:skill.id,phase:"storing",remainingTicks:Math.ceil(skill.damageStorage.duration*BASE_ATTACK_COOLDOWN),amount:0,receivedDamagePercent:skill.damageStorage.receivedDamagePercent};
+    unit.skillCooldowns[skill.id]=0;unit.skillCooldownTotals[skill.id]=0;
+  }
   dispatchSkillActions(unit, action.target, skill, !skill.selfDestruct && unit.hp>0, false, null, action.resourceSpent);
+  if (skill.damageStorageFollowup) unit.damageStorage=null;
   if (skill.resetSkillCooldowns && unit.skillUseCounts[skill.id] === 1) {
     unit.skillCooldowns={};unit.skillCooldownTotals={};unit.skillComboStages={};unit.skillConsecutiveUses={};
   }

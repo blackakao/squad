@@ -21,7 +21,8 @@ function renderBattleSkillRow(unit) {
     const seconds = remaining > 0 ? Math.ceil(remaining / BASE_ATTACK_COOLDOWN * 10) / 10 : 0;
     const icon = recordImagePath(skill.icon);
     const effortResource=skill.id === "skill_class_guardian_endurance" ? unit.customResources?.effort_magic : null;
-    const effortText=effortResource ? ` · 노력[마법] ${Math.round((Number(effortResource.current) || 0)*10)/10}` : "";
+    const storage=unit.damageStorage?.skillId === skill.id ? unit.damageStorage : null;
+    const effortText=storage ? ` · 저장 피해 ${Math.round(storage.amount*10)/10} · ${storage.phase === "ready" ? "일격 준비" : `${Math.ceil(storage.remainingTicks/BASE_ATTACK_COOLDOWN*10)/10}초`}` : effortResource ? ` · 노력[마법] ${Math.round((Number(effortResource.current) || 0)*10)/10}` : "";
     const combo=typeof normalizeSkillCombo === "function" ? normalizeSkillCombo(skill.combo) : null;
     const comboIndex=combo ? Math.max(0,Math.min(combo.stages.length-1,Math.floor(Number(unit.skillComboStages?.[skill.id]) || 0))) : 0;
     const comboText=combo ? ` · ${combo.stages[comboIndex].name} (${comboIndex+1}/${combo.stages.length})` : "";
@@ -38,7 +39,8 @@ function renderBattleSkillRow(unit) {
     const ultimateText=ultimateLimit>1 ? ` · 남은 사용 ${ultimateRemaining}/${ultimateLimit}` : "";
     const reload=getReloadCastInfo(unit,skill);
     const reloadText=reload ? ` · 장전 ${unit.reloadCharges?.[skill.id] ?? 0}초 · 다음 시전 ${reload.seconds.toFixed(1)}초${reload.free ? " · MP 무료" : reload.bonus ? " · 추가 즉시시전" : ""}` : "";
-    const tooltip = `${skill.name}${ultimateText}${reloadText}${conversionText}${comboText}${effortText}${weaponText}${activationText}${remaining > 0 ? ` · ${seconds}초` : ""}`;
+    const chainText=skill.killChain ? isKillChainOpen(unit,skill) ? ` · 재처형 ${Math.ceil((unit.killChainWindows.get(skill.id)-combatEventTick)/BASE_ATTACK_COOLDOWN*10)/10}초 · HP 제한 없음` : (unit.skillUseCounts?.[skill.id] || 0)>0 ? " · 재사용 종료" : ` · 대상 HP ${skill.killChain.initialTargetHpBelow}% 미만` : "";
+    const tooltip = `${skill.name}${chainText}${ultimateText}${reloadText}${conversionText}${comboText}${effortText}${weaponText}${activationText}${remaining > 0 ? ` · ${seconds}초` : ""}`;
     return `<span class="battle-skill-tooltip" data-tooltip="${escapeHtml(tooltip)}" tabindex="0" aria-label="${escapeHtml(tooltip)}">
       <span class="battle-skill-icon" aria-hidden="true">
         ${icon ? `<img src="${escapeHtml(icon)}" alt="" onerror="this.hidden=true">` : `<span class="battle-skill-placeholder">${escapeHtml(String(skill.name).slice(0, 1))}</span>`}

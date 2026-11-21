@@ -8,7 +8,7 @@
   "attackType": "physical",
   "attackSkillId": "skill_entity_engineer_haetae_attack",
   "description": "이동속도 1로 이동하며 접촉 거리에서 근접 공격하는 해태로봇.",
-  "icon": "",
+  "icon": "assets/images/entities/갑사_해태로봇.png",
   "tags": [
     "summon",
     "engineer"

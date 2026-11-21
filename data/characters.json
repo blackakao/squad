@@ -165,6 +165,7 @@
   },
   {
     "name": "승려",
+    "entityGrade": 2,
     "hp": 2000,
     "mp": 100,
     "st": 150,
@@ -237,9 +238,7 @@
     ],
     "activeEquipmentSet": 0,
     "faction": "쥬신",
-    "attackType": "physical",
-    "entityGrade": 2,
-    "customResources": []
+    "attackType": "physical"
   },
   {
     "name": "성직자",
@@ -499,7 +498,6 @@
       "skill_class_engineer_recoilless_cannon",
       "skill_class_engineer_haetae",
       "skill_class_engineer_emergency_reinstall_ultimate",
-      "skill_entity_engineer_recoilless_attack",
       "skill_class_engineer_artillery_king",
       "skill_class_engineer_rapid_fire",
       "skill_class_engineer_do_it_all"
@@ -1324,9 +1322,12 @@
     "attackRange": 3,
     "role": "tank",
     "skillIds": [
+      "skill_class_guardian_endurance",
       "skill_class_guardian_whirl",
       "skill_class_guardian_effort_strike",
-      "skill_class_guardian_endurance"
+      "skill_class_guardian_raise_shield",
+      "skill_class_guardian_devotion",
+      "skill_class_guardian_endless_sacrifice_ultimate"
     ],
     "skillSelections": {},
     "portrait": "assets/images/portraits/image-20261018143206679619.png",
@@ -1467,7 +1468,13 @@
     "skillIds": [
       "skill_class_executioner_excitement",
       "skill_class_executioner_execute",
-      "skill_class_executioner_bind"
+      "skill_class_executioner_bind",
+      "skill_class_executioner_blood_barrier",
+      "skill_class_executioner_smile",
+      "skill_class_executioner_execution_ultimate",
+      "skill_class_executioner_executioners_axe",
+      "skill_class_executioner_crime_city",
+      "skill_class_executioner_reprieve"
     ],
     "skillSelections": {},
     "portrait": "assets/images/portraits/철엘프_집행가.png",
@@ -1517,7 +1524,9 @@
     ],
     "activeEquipmentSet": 0,
     "faction": "철엘프",
-    "attackType": "physical"
+    "attackType": "physical",
+    "entityGrade": 2,
+    "customResources": []
   },
   {
     "name": "바이킹",
@@ -1608,7 +1617,11 @@
       "skill_class_demon_summon_minions",
       "skill_class_demon_summon_general",
       "skill_class_demon_legion",
-      "skill_class_demon_king_ultimate"
+      "skill_class_demon_king_ultimate",
+      "skill_entity_demon_general_attack",
+      "skill_class_demon_reliable_brute",
+      "skill_class_demon_great_general",
+      "skill_class_demon_minion_horde"
     ],
     "skillSelections": {},
     "portrait": "assets/images/portraits/소악마군단_악마.png",
@@ -1658,7 +1671,9 @@
     ],
     "activeEquipmentSet": 0,
     "faction": "소악마군단",
-    "attackType": "magic"
+    "attackType": "magic",
+    "entityGrade": 2,
+    "customResources": []
   },
   {
     "name": "요정 사냥꾼",
@@ -1892,9 +1907,21 @@
       "skill_class_spirit_purify",
       "skill_class_spirit_sacrifice",
       "skill_class_spirit_burst",
-      "skill_class_spirit_birth"
+      "skill_class_spirit_birth",
+      "skill_class_spirit_summon",
+      "skill_class_spirit_passive_enhance",
+      "skill_class_spirit_entity_enhance",
+      "skill_class_spirit_passive_heal",
+      "skill_class_spirit_entity_heal",
+      "skill_class_spirit_passive_destroy",
+      "skill_class_spirit_entity_destroy",
+      "skill_class_spirit_more_the_better",
+      "skill_class_spirit_spirit_cycle",
+      "skill_class_spirit_holy_sacrifice"
     ],
-    "skillSelections": {},
+    "skillSelections": {
+      "skill_class_spirit_choice": "heal"
+    },
     "portrait": "assets/images/portraits/image-20261018142930583045.png",
     "attributes": {
       "str": 0,
@@ -1942,7 +1969,9 @@
     ],
     "activeEquipmentSet": 0,
     "faction": "누레아",
-    "attackType": "magic"
+    "attackType": "magic",
+    "entityGrade": 2,
+    "customResources": []
   },
   {
     "name": "마법사냥꾼",
@@ -2372,6 +2401,7 @@
   },
   {
     "name": "조련사",
+    "entityGrade": 2,
     "hp": 2000,
     "mp": 150,
     "st": 150,
@@ -2447,9 +2477,7 @@
     ],
     "activeEquipmentSet": 0,
     "faction": "쀼랜드",
-    "attackType": "physical",
-    "entityGrade": 2,
-    "customResources": []
+    "attackType": "physical"
   },
   {
     "name": "마귀",
@@ -2815,6 +2843,7 @@
   },
   {
     "name": "별소환사",
+    "entityGrade": 2,
     "hp": 4500,
     "mp": 200,
     "st": 100,
@@ -2887,8 +2916,6 @@
     ],
     "activeEquipmentSet": 0,
     "faction": "달빛교단",
-    "attackType": "magic",
-    "entityGrade": 2,
-    "customResources": []
+    "attackType": "magic"
   }
 ]

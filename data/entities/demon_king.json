@@ -1,4 +1,5 @@
 {
+  "icon": "assets/images/entities/악마_악마의 왕.png",
   "entityId": "demon_king",
   "name": "악마의 왕",
   "role": "ranged",

@@ -16,7 +16,7 @@ const MOVE_ACTION_TYPES = ["Dash", "Teleport", "Knockback", "Pull", "Push"];
 const MOVE_PLACEMENTS = ["target", "behind"];
 const RANGE_MODES = ["mainWeapon", "custom"];
 const COEFFICIENT_TYPES = ["fixed", "calculated"];
-const COEFFICIENT_FIELDS = ["shieldDefense", "alliedEffectMagic", "sourceEffectIdStacks", "maxHp", "ownerMagic", "missingMp", "str", "vit", "agi", "focus", "int", "wis", "hp", "targetMaxHp", "mp", "st", "bp", "atk", "magic", "defense", "resistance", "actualDamageTotal", "moveDistanceTotal", "targetEffectStacks", "targetEffectIdStacks", "targetEffectTagStacks", "ownedSummonCount", "triggerActualDamage", "triggerActualAmount", "triggerMpSpent", "previousBarrierCreated", "previousMoveDistance", "magicPerMovedMeter", "customResourceCurrent", "previousActualDamage", "executionActualDamage", "previousActualHealing", "executionActualHealing", "previousResourceDrained", "executionResourceDrained", "resourceSpentTotal", "hpResourceSpent", "mpResourceSpent", "stResourceSpent", "bpResourceSpent"];
+const COEFFICIENT_FIELDS = ["missingHp","storedDamage","shieldDefense", "alliedEffectMagic", "sourceEffectIdStacks", "maxHp", "ownerMagic", "missingMp", "str", "vit", "agi", "focus", "int", "wis", "hp", "targetMaxHp", "mp", "st", "bp", "atk", "magic", "defense", "resistance", "actualDamageTotal", "moveDistanceTotal", "targetEffectStacks", "targetEffectIdStacks", "targetEffectTagStacks", "ownedSummonCount", "triggerActualDamage", "triggerActualAmount", "triggerMpSpent", "previousBarrierCreated", "previousMoveDistance", "magicPerMovedMeter", "customResourceCurrent", "previousActualDamage", "executionActualDamage", "previousActualHealing", "executionActualHealing", "previousResourceDrained", "executionResourceDrained", "resourceSpentTotal", "hpResourceSpent", "mpResourceSpent", "stResourceSpent", "bpResourceSpent"];
 const COEFFICIENT_CALCS = ["flat", "percent"];
 const RESOURCE_COST_MODES = ["fixed", "maxPercent", "currentPercent"];
 const TRANSFORM_STATS = ["atk","magic","defense","resistance","speed","attackRange","attackSpeed","castSpeed"];
@@ -79,7 +79,7 @@ const COEFFICIENT_TYPE_LABELS = {
   fixed: "고정계수",
   calculated: "계산계수"
 };
-const COEFFICIENT_FIELD_LABELS = {shieldDefense:"방패 방어력",
+const COEFFICIENT_FIELD_LABELS = {missingHp:"현재 잃은 HP",storedDamage:"저장한 실제 피해",shieldDefense:"방패 방어력",
   sourceEffectIdStacks:"자신의 특정 효과 ID 중첩 합계",
   maxHp: "자신의 최대 HP",
   targetMaxHp: "대상의 최대 HP",
@@ -297,7 +297,7 @@ function normalizeSummonModifier(value={}) {
 }
 
 function normalizeSkillExecutionRules(skill={}) {
-  return {...(skill.triggerSkills?.length ? {triggerSkills:skill.triggerSkills.map(row=>({skillId:String(row.skillId),extendDuration:row.extendDuration === true}))} : {}),...(skill.resetSkillCooldowns === true ? {resetSkillCooldowns:true} : {}),...(skill.delayedActions?.length ? {delayedActions:skill.delayedActions.map(row=>({delay:Math.max(0,Number(row.delay) || 0),actions:(row.actions ?? []).map(normalizeSkillAction)}))} : {}),...(skill.reload ? {reload:{step:Math.max(.01,Number(skill.reload.step) || .5)}} : {}),...(skill.ownedSummonAura ? {ownedSummonAura:{entityIds:[...new Set((Array.isArray(skill.ownedSummonAura.entityIds) ? skill.ownedSummonAura.entityIds : []).map(String))],radius:Math.max(0,Number(skill.ownedSummonAura.radius) || 0),attackPercent:Number(skill.ownedSummonAura.attackPercent) || 0,magicPercent:Number(skill.ownedSummonAura.magicPercent) || 0,damageReduction:Math.max(0,Number(skill.ownedSummonAura.damageReduction) || 0),expiryBarrierMagicPercent:Math.max(0,Number(skill.ownedSummonAura.expiryBarrierMagicPercent) || 0),defense:Number(skill.ownedSummonAura.defense) || 0,resistance:Number(skill.ownedSummonAura.resistance) || 0}} : {}),...(skill.companion ? {companion:{choiceSkillId:String(skill.companion.choiceSkillId ?? ""),entityIds:[...new Set((skill.companion.entityIds ?? []).map(String))]}} : {}),...(Array.isArray(skill.exclusiveSkillIds) ? {exclusiveSkillIds:skill.exclusiveSkillIds.map(String)} : {}),...(skill.lethalActivation === true ? {lethalActivation:true} : {}),...(skill.weaponControl ? {weaponControl:{maxWeapons:Math.max(1,Math.min(6,Number(skill.weaponControl.maxWeapons) || 6)),category:String(skill.weaponControl.category || "oneHandSword"),basicPercent:Math.max(0,Number(skill.weaponControl.basicPercent ?? 25)),attackMpCost:Math.max(0,Number(skill.weaponControl.attackMpCost ?? 1))}} : {}),...(skill.weaponCommand ? {weaponCommand:{mode:String(skill.weaponCommand.mode || "focus"),percent:Math.max(0,Number(skill.weaponCommand.percent ?? 100)),duration:Math.max(0,Number(skill.weaponCommand.duration) || 0)}} : {}),...(skill.basicAttackSkillId ? {basicAttackSkillId:String(skill.basicAttackSkillId)} : {}),...(skill.fixedAttackInterval>0 ? {fixedAttackInterval:Number(skill.fixedAttackInterval)} : {}),...(skill.barrageSkillId ? {barrageSkillId:String(skill.barrageSkillId)} : {}),...(skill.singleTargetMark ? {singleTargetMark:{effectId:String(skill.singleTargetMark.effectId || "single_mark"),bonusPercent:Math.max(0,Number(skill.singleTargetMark.bonusPercent) || 0)}} : {}),...(skill.basicAttackCycle ? {basicAttackCycle:{every:Math.max(1,Math.floor(Number(skill.basicAttackCycle.every) || 5)),coefficientPercent:Math.max(0,Number(skill.basicAttackCycle.coefficientPercent) || 200)}} : {}),...(Number(skill.instantCastHpPerTenth)>0 ? {instantCastHpPerTenth:Number(skill.instantCastHpPerTenth)} : {}),...(skill.summonCounterChoiceId ? {summonCounterChoiceId:String(skill.summonCounterChoiceId)} : {}),...(skill.combatActiveOnly === true ? {combatActiveOnly:true} : {}),...(skill.resetCombat === true ? {resetCombat:true} : {}),...(skill.combatSpentOnly === true ? {combatSpentOnly:true} : {}),
+  return {...(skill.killChain ? {killChain:{window:Math.max(.1,Number(skill.killChain.window) || 5),initialTargetHpBelow:Math.max(0,Math.min(100,Number(skill.killChain.initialTargetHpBelow) || 20))}} : {}),...(skill.directAttackerDefense ? {directAttackerDefense:{window:Math.max(.1,Number(skill.directAttackerDefense.window) || 3),threshold:Math.max(1,Number(skill.directAttackerDefense.threshold) || 2),defense:Number(skill.directAttackerDefense.defense) || 0}} : {}),...(skill.damageStorage ? {damageStorage:{duration:Math.max(.1,Number(skill.damageStorage.duration) || 5),receivedDamagePercent:Math.max(0,Number(skill.damageStorage.receivedDamagePercent ?? 90)),followupSkillId:String(skill.damageStorage.followupSkillId)}} : {}),...(skill.triggerSkills?.length ? {triggerSkills:skill.triggerSkills.map(row=>({skillId:String(row.skillId),extendDuration:row.extendDuration === true}))} : {}),...(skill.resetSkillCooldowns === true ? {resetSkillCooldowns:true} : {}),...(skill.delayedActions?.length ? {delayedActions:skill.delayedActions.map(row=>({delay:Math.max(0,Number(row.delay) || 0),actions:(row.actions ?? []).map(normalizeSkillAction)}))} : {}),...(skill.reload ? {reload:{step:Math.max(.01,Number(skill.reload.step) || .5)}} : {}),...(skill.ownedSummonAura ? {ownedSummonAura:{entityIds:[...new Set((Array.isArray(skill.ownedSummonAura.entityIds) ? skill.ownedSummonAura.entityIds : []).map(String))],radius:Math.max(0,Number(skill.ownedSummonAura.radius) || 0),attackPercent:Number(skill.ownedSummonAura.attackPercent) || 0,magicPercent:Number(skill.ownedSummonAura.magicPercent) || 0,damageReduction:Math.max(0,Number(skill.ownedSummonAura.damageReduction) || 0),expiryBarrierMagicPercent:Math.max(0,Number(skill.ownedSummonAura.expiryBarrierMagicPercent) || 0),defense:Number(skill.ownedSummonAura.defense) || 0,resistance:Number(skill.ownedSummonAura.resistance) || 0}} : {}),...(skill.companion ? {companion:{choiceSkillId:String(skill.companion.choiceSkillId ?? ""),entityIds:[...new Set((skill.companion.entityIds ?? []).map(String))]}} : {}),...(Array.isArray(skill.exclusiveSkillIds) ? {exclusiveSkillIds:skill.exclusiveSkillIds.map(String)} : {}),...(skill.lethalActivation === true ? {lethalActivation:true} : {}),...(skill.weaponControl ? {weaponControl:{maxWeapons:Math.max(1,Math.min(6,Number(skill.weaponControl.maxWeapons) || 6)),category:String(skill.weaponControl.category || "oneHandSword"),basicPercent:Math.max(0,Number(skill.weaponControl.basicPercent ?? 25)),attackMpCost:Math.max(0,Number(skill.weaponControl.attackMpCost ?? 1))}} : {}),...(skill.weaponCommand ? {weaponCommand:{mode:String(skill.weaponCommand.mode || "focus"),percent:Math.max(0,Number(skill.weaponCommand.percent ?? 100)),duration:Math.max(0,Number(skill.weaponCommand.duration) || 0)}} : {}),...(skill.basicAttackSkillId ? {basicAttackSkillId:String(skill.basicAttackSkillId)} : {}),...(skill.fixedAttackInterval>0 ? {fixedAttackInterval:Number(skill.fixedAttackInterval)} : {}),...(skill.barrageSkillId ? {barrageSkillId:String(skill.barrageSkillId)} : {}),...(skill.singleTargetMark ? {singleTargetMark:{effectId:String(skill.singleTargetMark.effectId || "single_mark"),bonusPercent:Math.max(0,Number(skill.singleTargetMark.bonusPercent) || 0)}} : {}),...(skill.basicAttackCycle ? {basicAttackCycle:{every:Math.max(1,Math.floor(Number(skill.basicAttackCycle.every) || 5)),coefficientPercent:Math.max(0,Number(skill.basicAttackCycle.coefficientPercent) || 200)}} : {}),...(Number(skill.instantCastHpPerTenth)>0 ? {instantCastHpPerTenth:Number(skill.instantCastHpPerTenth)} : {}),...(skill.summonCounterChoiceId ? {summonCounterChoiceId:String(skill.summonCounterChoiceId)} : {}),...(skill.combatActiveOnly === true ? {combatActiveOnly:true} : {}),...(skill.resetCombat === true ? {resetCombat:true} : {}),...(skill.combatSpentOnly === true ? {combatSpentOnly:true} : {}),
     ...(Number(skill.maxUses)>0 ? {maxUses:Math.max(1,Math.floor(Number(skill.maxUses)))} : {}),...(Number(skill.stationaryTargetBonusPercent)>0 ? {stationaryTargetBonusPercent:Math.max(0,Number(skill.stationaryTargetBonusPercent))} : {}),
     ...(Number(skill.consecutiveUses)>1 ? {consecutiveUses:Math.min(10,Math.floor(Number(skill.consecutiveUses)))} : {}),...(skill.summonVariant ? {summonVariant:{entityId:String(skill.summonVariant.entityId),absentSkillId:String(skill.summonVariant.absentSkillId),...(skill.summonVariant.companion ? {companion:true} : {})}} : {}),...(skill.activation ? {activation:{selfHpAtMost:Math.max(0,Math.min(100,Number(skill.activation.selfHpAtMost ?? 100))),nearbyEnemyRadius:Math.max(0,Number(skill.activation.nearbyEnemyRadius) || 0)}} : {}),
     ...(skill.summonRequirement ? {summonRequirement:{ownedSummonEntityId:String(skill.summonRequirement.ownedSummonEntityId),ownedSummonCondition:skill.summonRequirement.ownedSummonCondition === "alive" ? "alive" : "absent"}} : {}),
@@ -314,11 +314,39 @@ function isUltimateSkill(skill) {
   return skill?.slot === "ultimate" || /궁극|ultimate/i.test(`${skill?.name || ""} ${skill?.id || ""}`);
 }
 
+function isKillChainOpen(unit,skill) {
+  return Boolean(skill?.killChain && unit?.alive && (unit.killChainWindows?.get(skill.id) ?? -1)>combatEventTick);
+}
+
+function recordKillChainHit(source,target,skill) {
+  source.killChainMarks ??= new Map();
+  if (!source.killChainMarks.has(target)) source.killChainMarks.set(target,new Map());
+  source.killChainMarks.get(target).set(skill.id,{skill,untilTick:combatEventTick+Math.ceil(skill.killChain.window*BASE_ATTACK_COOLDOWN),assist:getSelectedSkillModifiers(source,skill).some(m=>m.killChainAssist)});
+}
+
+subscribeBattleEvent("death",(event,{source,target})=>{
+  for (const owner of [...playerSquad,...enemySquad]) {
+    const marks=owner.killChainMarks?.get(target);
+    if (!marks) continue;
+    owner.killChainMarks.delete(target);
+    if (!owner.alive || owner.side === target.side) continue;
+    for (const [id,mark] of marks) if (mark.untilTick>combatEventTick && (owner.skillUseCounts?.[id] || 0)>0
+      && (mark.assist || (source === owner && event.skillId === id))) {
+      owner.killChainWindows ??= new Map();
+      owner.killChainWindows.set(id,combatEventTick+Math.ceil(mark.skill.killChain.window*BASE_ATTACK_COOLDOWN));
+      owner.skillCooldowns[id]=0;
+      publishBattleEvents([{type:"ultimate_rearm",source:owner,target:owner,skill:mark.skill,reason:"처형 연쇄 5초"}]);
+    }
+  }
+});
+
 function getUltimateUseLimit(unit,skill) {
   return 1+getSelectedSkillModifiers(unit,skill).reduce((sum,m)=>sum+m.ultimateUsesAdd,0);
 }
 
 function canActivateSkill(unit,skill) {
+  if (skill?.damageStorage && unit.damageStorage?.skillId === skill.id) return false;
+  if (skill?.damageStorageFollowup && unit.damageStorage?.phase !== "ready") return false;
   if (skill?.lethalActivation && !(unit?.alive && unit.hp<=0)) return false;
   if (unit?.weaponFlower) return false;
   if (getWeaponControlPassive(unit)) {
@@ -327,7 +355,7 @@ function canActivateSkill(unit,skill) {
     if ((skill?.actions ?? []).some(action=>action.effect?.weaponReserveCount>0 && (available<action.effect.weaponReserveCount || (unit.activeEffects ?? []).some(effect=>effect.id === action.effect.id)))) return false;
   }
   if (skill?.revivalOnly) return false;
-  if (isUltimateSkill(skill) && (combatEventTick < ULTIMATE_UNLOCK_SECONDS * BASE_ATTACK_COOLDOWN || (unit?.skillUseCounts?.[skill.id] || 0) >= getUltimateUseLimit(unit,skill) || (unit?.skillCooldowns?.[skill.id] || 0)>0)) return false;
+  if (isUltimateSkill(skill) && (combatEventTick < ULTIMATE_UNLOCK_SECONDS * BASE_ATTACK_COOLDOWN || ((unit?.skillUseCounts?.[skill.id] || 0) >= getUltimateUseLimit(unit,skill) && !(skill.killChain && (skill._killChainAuthorized || isKillChainOpen(unit,skill)))) || (unit?.skillCooldowns?.[skill.id] || 0)>0)) return false;
   if (skill?.maxUses>0 && (unit?.skillUseCounts?.[skill.id] || 0)>=skill.maxUses) return false;
   if (skill?.combatActiveOnly && getCombatCyclePhase(unit)!=="active") return false;
   if (skill?.combatSpentOnly && getCombatCyclePhase(unit)!=="spent") return false;
@@ -352,6 +380,13 @@ function normalizeSelectionModifier(modifier = {}) {
     distanceFalloffMinimum:Math.max(0,Math.min(100,Number(modifier.distanceFalloffMinimum) || 0)),
     fieldTimePercent:percent("fieldTimePercent"),
     delayedActions:normalizeSkillExecutionRules(modifier).delayedActions ?? [],
+    killChainAssist:modifier.killChainAssist === true,
+    channelStartActions:(modifier.channelStartActions ?? []).map(normalizeSkillAction),
+    coefficientSelfHpBelow:Math.max(0,Math.min(100,Number(modifier.coefficientSelfHpBelow) || 0)),
+    attackerResistanceAdd:Number(modifier.attackerResistanceAdd) || 0,
+    storedDamagePercent:Math.max(0,Number(modifier.storedDamagePercent) || 0),
+    shareCasterDefensePercent:Math.max(0,Number(modifier.shareCasterDefensePercent) || 0),
+    tauntAfterDeath:modifier.tauntAfterDeath === true,
     summonExpiryRefundPercent:Math.max(0,Number(modifier.summonExpiryRefundPercent) || 0),
     triggerSkills:normalizeSkillExecutionRules(modifier).triggerSkills ?? [],
     ...(modifier.summonRequirement ? {summonRequirement:normalizeSkillExecutionRules(modifier).summonRequirement} : {}),
@@ -515,6 +550,7 @@ function getUnsupportedActionNames(skill) {
 }
 
 function isSkillExecutable(skill) {
+  if (skill?.slot === "passive" && skill.directAttackerDefense) return true;
   if (skill?.revivalOnly || (skill?.slot === "passive" && (skill.reload || skill.ownedSummonAura || skill.instantCastHpPerTenth>0 || skill.weaponControl || skill.basicAttackSkillId || skill.basicAttackCycle || skill.singleTargetMark))) return true;
   if (skill?.slot === "passive" && skill.selectionModifier && !skill.actions?.length) return true;
   if (skill?.slot === "passive" && skill.passiveTrigger?.revival) return isPassiveTriggerConfigured(skill);
@@ -768,6 +804,7 @@ function normalizeSkillAction(action = {}) {
     suspensionEffectId:String(action.suspensionEffectId ?? "").trim(),
     periodicCopies:Math.max(1,Math.min(10,Math.floor(Number(action.periodicCopies) || 1))),
     triggerEvent:String(action.triggerEvent ?? ""),
+    settledDamage:action.settledDamage === true,
     requirePreviousDamage:action.requirePreviousDamage === true,
     targetPreviousDamage:action.targetPreviousDamage === true,
     targetCooldown: normalizeSkillCooldown(action.targetCooldown),
@@ -838,6 +875,7 @@ function normalizeSkillAction(action = {}) {
       id:String(action.ruleOverride?.id ?? action.rule_override?.id ?? "skill_rule").trim() || "skill_rule",
       disableTeamSynergies:Boolean(action.ruleOverride?.disableTeamSynergies ?? action.rule_override?.disable_team_synergies),
       disableEquipmentEffects:Boolean(action.ruleOverride?.disableEquipmentEffects ?? action.rule_override?.disable_equipment_effects),
+      disableActiveSkills:Boolean(action.ruleOverride?.disableActiveSkills),
       disableAllSkills:Boolean(action.ruleOverride?.disableAllSkills ?? action.rule_override?.disable_all_skills),
       disabledSkillIds:[...new Set(Array.isArray(action.ruleOverride?.disabledSkillIds ?? action.rule_override?.disabled_skill_ids) ? (action.ruleOverride?.disabledSkillIds ?? action.rule_override?.disabled_skill_ids).map(String).filter(Boolean) : [])].slice(0,20),
       ...Object.fromEntries(["damagePercent","receivedDamagePercent","healingPercent","receivedHealingPercent","resourceCostPercent","cooldownPercent"].map(key=>{
@@ -936,7 +974,7 @@ function normalizeSkillJson(skills) {
       ...(normalizePassiveConversions(skill?.passiveConversions) ? {passiveConversions:normalizePassiveConversions(skill.passiveConversions)} : {}),
       ...(normalizeSkillCombo(skill?.combo) ? {combo:normalizeSkillCombo(skill.combo)} : {}),
       resourceCosts: normalizeSkillResourceCosts(skill),
-      actions: skill?.reload || skill?.ownedSummonAura || skill?.weaponControl || skill?.basicAttackSkillId || skill?.singleTargetMark || skill?.basicAttackCycle || skill?.instantCastHpPerTenth>0 || skill?.revivalOnly || skill?.passiveTrigger?.revival || isChoiceSkill(skill?.slot) || (skill?.selectionModifier && !skill?.actions?.length) || (skill?.slot === "passive" && (normalizePassiveTrigger(skill?.passiveTrigger)?.damageMultiplierPercent != null || skill?.passiveTrigger?.lethalTransformation))
+      actions: skill?.directAttackerDefense || skill?.reload || skill?.ownedSummonAura || skill?.weaponControl || skill?.basicAttackSkillId || skill?.singleTargetMark || skill?.basicAttackCycle || skill?.instantCastHpPerTenth>0 || skill?.revivalOnly || skill?.passiveTrigger?.revival || isChoiceSkill(skill?.slot) || (skill?.selectionModifier && !skill?.actions?.length) || (skill?.slot === "passive" && (normalizePassiveTrigger(skill?.passiveTrigger)?.damageMultiplierPercent != null || skill?.passiveTrigger?.lethalTransformation))
         ? [] : (Array.isArray(skill?.actions) && skill.actions.length ? skill.actions.map(normalizeSkillAction) : [createDefaultAction()])
     }))
     .filter(skill => skill.id && skill.name);
@@ -1066,8 +1104,10 @@ function getSelectedSkillModifiers(unit, skill) {
 
 function getRuntimeSelectionSkill(unit, skill) {
   const modifiers=getSelectedSkillModifiers(unit,skill);
-  if (!modifiers.length) return skill;
+  if (!modifiers.length && !skill?.killChain) return skill;
   const result=structuredClone(skill);
+  if (result.killChain && isKillChainOpen(unit,skill)) result.actions=(result.actions ?? []).map(action=>({...action,targetHpBelow:100,targetHpStrict:false}));
+  if (result.channel?.duration>0) result.channel.startActions=[...(result.channel.startActions ?? []),...modifiers.flatMap(m=>m.channelStartActions).map(action=>structuredClone(action))];
   result.markMagicDamagePercent=Math.max(result.markMagicDamagePercent || 100,...modifiers.map(m=>m.markMagicDamagePercent));
   result.basicAttackMpGain=Math.max(result.basicAttackMpGain || 0,...modifiers.map(m=>m.basicAttackMpGain));
   result.stationaryTargetBonusPercent=Math.max(result.stationaryTargetBonusPercent || 0,...modifiers.map(m=>m.stationaryTargetBonusPercent));
@@ -1098,6 +1138,7 @@ function getRuntimeSelectionSkill(unit, skill) {
     if (next.rangeMode === "mainWeapon") next.rangeMultiplier=(next.rangeMultiplier ?? 100)*multiply("rangeMultiplierPercent")/100;
     if (next.distanceFalloff?.step>0) next.distanceFalloff.minimum=Math.max(next.distanceFalloff.minimum,...modifiers.map(m=>m.distanceFalloffMinimum));
     if (next.type === "create_field" && next.fieldEffect === "deal_damage") {next.duration*=multiply("fieldTimePercent")/100;next.fieldInterval*=multiply("fieldTimePercent")/100;}
+    if (next.effect?.state === "taunt" && modifiers.some(m=>m.tauntAfterDeath)) next.effect.tauntAfterDeath=true;
     if (next.type === "add_buff" && next.target === "ally" && modifiers.some(m=>m.copyAllyBuffToSelf)) next._copyAllyBuffToSelf=true;
     if (next.type === "deal_damage" && modifiers.some(m=>m.interruptOnHit)) next.interruptOnHit=true;
     if (next.effect && Number.isFinite(Number(next.effect.value))) next.effect.value=Number(next.effect.value)*multiply("effectValuePercent")/100;
@@ -1135,7 +1176,7 @@ function getRuntimeSelectionSkill(unit, skill) {
         next.transform.distanceDamageMinRange=m.transformDamageMinRange;
       }
     }
-    const coefficientPercent=modifiers.filter(m=>!m.coefficientDamageType || (next.type === "deal_damage" && m.coefficientDamageType === next.damageType)).reduce((value,m)=>value*m.coefficientPercent/100,100);
+    const coefficientPercent=modifiers.filter(m=>(!m.coefficientSelfHpBelow || unit.hp/Math.max(1,unit.maxHp)*100<m.coefficientSelfHpBelow) && (!m.coefficientDamageType || (next.type === "deal_damage" && m.coefficientDamageType === next.damageType))).reduce((value,m)=>value*m.coefficientPercent/100,100);
     const alternatingPercent=next.type === "deal_damage" && (unit.skillUseCounts?.[skill.id] || 0)%2 === 1 ? 100+modifiers.reduce((sum,m)=>sum+m.alternatingDamagePercent,0) : 100;
     next.coefficients=(next.coefficients ?? []).map(coefficient=>({...coefficient,value:coefficient.value*coefficientPercent/100*alternatingPercent/100+(next.type === "heal" && coefficient.type === "calculated" && coefficient.field === "magic" ? modifiers.reduce((sum,m)=>sum+m.healCoefficientAdd,0) : 0)}));
     if (next.area > 0) next.area=next.area*multiply("areaPercent")/100+modifiers.reduce((sum,m)=>sum+m.areaAdd,0);
@@ -1161,6 +1202,10 @@ function getRuntimeSelectionSkill(unit, skill) {
   result.triggerSkills=[...(result.triggerSkills ?? []),...modifiers.flatMap(m=>m.triggerSkills)];
   for (const modifier of modifiers) if (modifier.summonRequirement) result.summonRequirement=modifier.summonRequirement;
   result.delayedActions=[...(result.delayedActions ?? []),...modifiers.flatMap(m=>m.delayedActions)];
+  for (const action of [...result.actions]) if (action.type === "add_buff" && action.effect?.mode === "damage_proxy") {
+    const percent=Math.max(0,...modifiers.map(m=>m.shareCasterDefensePercent));
+    if (percent>0) for (const stat of ["defense","resistance"]) result.actions.push({...structuredClone(action),effect:{id:`${action.effect.id}_${stat}`,name:action.effect.name,stat,sourceStat:stat,mode:"convert",sourceCasterStat:true,value:percent,linkedEffectId:action.effect.id,polarity:"beneficial"}});
+  }
   result.actions.push(...modifiers.flatMap(modifier=>modifier.additionalActions).map(action=>structuredClone(action)));
   return result;
 }
@@ -1191,6 +1236,7 @@ function getResolvedSkillCooldownTicks(skill,unit,modifier=null) {
 function isUnitSkillDisabled(unit, skillOrId) {
   const skill=typeof skillOrId === "string" ? (getSkillById(skillOrId) ?? {id:skillOrId}) : skillOrId;
   if ((unit?.runtimeRuleOverrides ?? []).some(rule=>rule.disableAllSkills)) return Boolean(skill);
+  if ((unit?.runtimeRuleOverrides ?? []).some(rule=>rule.disableActiveSkills) && skill && !["passive","optional"].includes(skill.slot)) return true;
   const ids=new Set((unit?.runtimeRuleOverrides ?? []).flatMap(rule=>rule.disabledSkillIds ?? []));
   return Boolean(skill && (ids.has(skill.id) || (skill.copiedFrom && ids.has(skill.copiedFrom))));
 }
@@ -1198,6 +1244,8 @@ function isUnitSkillDisabled(unit, skillOrId) {
 function getUnitIncomingRulePercent(unit,key) {
   let percent=(unit?.runtimeRuleOverrides ?? []).reduce((value,rule)=>value * (Number.isFinite(Number(rule[key])) ? Math.max(0,Number(rule[key])) : 100) / 100,100);
   if (key === "receivedDamagePercent") {
+    for (const effect of unit.activeEffects ?? []) if (effect.mode === "received_damage_percent") percent*=Math.max(0,effect.value)/100;
+    if (unit.damageStorage?.phase === "storing") percent*=unit.damageStorage.receivedDamagePercent/100;
     for (const skill of (unit.skillIds ?? []).map(getSkillById).filter(s=>s?.ownedSummonAura && !isUnitSkillDisabled(unit,s))) {
       const config=skill.ownedSummonAura;
       const count=getLivingOwnedSummons(unit).filter(s=>(!config.entityIds.length || config.entityIds.includes(s.entityId)) && distance(unit,s)<=config.radius*ATTACK_RANGE_UNIT).length;
@@ -1216,7 +1264,7 @@ function getUnitIncomingRulePercent(unit,key) {
     if (!getLifeCycleForm(unit) && lethal) percent*=lethal.bodyReceivedDamagePercent/100;
     if (transform) percent*=Math.max(0,Number(transform.receivedDamagePercent ?? 100) || 0)/100;
   }
-  if (key === "receivedHealingPercent") for (const effect of unit?.activeEffects ?? []) {
+  if (key === "receivedHealingPercent") for (const effect of [...(unit?.activeEffects ?? []),...getSelectedOptionalStatEffects(unit)]) {
     if (effect.mode === "received_healing_percent") percent*=Math.max(0,Number(effect.value ?? 100))/100;
   }
   return percent;
@@ -1227,9 +1275,9 @@ function getEquippedSkills(unit) {
   const equippedIds=[...(transform?.skillIds?.length ? transform.skillIds : unit?.skillIds ?? []),...(unit?.companionFusion?.beast.skillIds ?? [])];
   const equipped = resolveSelectedSkillIds(equippedIds, unit?.skillSelections)
     .map(getSkillById)
-    .filter(skill => skill && !isDefaultSkill(skill.id) && skill.slot !== "passive" && skill.slot !== "optional" && (!skill.internal || unit?.isSummon || unit?.companionFusion?.beast.skillIds.includes(skill.id)) && !skill.revivalOnly && !skill.lethalActivation && isSkillExecutable(skill) && !isUnitSkillDisabled(unit,skill));
+    .filter(skill => skill && !isDefaultSkill(skill.id) && skill.slot !== "basic" && skill.slot !== "passive" && skill.slot !== "optional" && (!skill.internal || unit?.isSummon || unit?.companionFusion?.beast.skillIds.includes(skill.id)) && !skill.revivalOnly && !skill.lethalActivation && isSkillExecutable(skill) && !isUnitSkillDisabled(unit,skill));
   const copied = (Array.isArray(unit?.runtimeCopiedSkills) ? unit.runtimeCopiedSkills : [])
-    .filter(skill => skill && isSkillExecutable(skill) && !isUnitSkillDisabled(unit,skill));
+    .filter(skill => skill && skill.slot !== "basic" && isSkillExecutable(skill) && !isUnitSkillDisabled(unit,skill));
   return [...equipped, ...copied].map(skill => getRuntimeSelectionSkill(unit,getRuntimeItemSkill(unit,getFormSkill(unit,skill))));
 }
 
@@ -1526,6 +1574,7 @@ function formatActionSummary(action) {
   if (!isSkillActionSupported(action)) return `${getUnsupportedActionNames({actions:[action]}).join(", ")} · 미지원`;
   if (TIMED_EFFECT_ACTIONS.includes(action.type)) {
     const effect = action.effect;
+    if (action.type === "add_buff" && effect.mode === "received_damage_percent") return `받는 피해 ${effect.value}% / ${action.duration || "연결 효과 종료까지"}`;
     if (action.type === "add_buff" && effect.mode === "received_healing_percent") return `받는 회복량 ${effect.value}% / ${action.duration}초`;
     if (action.type === "add_buff" && effect.mode === "priority_attack_damage") return `모든 직접 공격을 현재 공격력만큼 최우선 피해로 적용 / ${action.duration}초`;
     if (action.type === "add_buff" && effect.mode === "mark_damage_link") return `받은 실제 피해 ${effect.value}%를 현재 징벌대상에 전달 / ${action.duration}초`;
@@ -1856,6 +1905,7 @@ function meetsOwnedSummonCondition(source, action, ownedEntityIds = null) {
 
 function resolveSkillActionTarget(source, action, preferredTarget = null, skill = null, requirePreferred = false) {
   if (!source?.alive || !isSkillActionSupported(action) || !meetsOwnedSummonCondition(source,action)) return null;
+  if (skill?.killChain && preferredTarget) requirePreferred=true;
   if (action.type === "command_summon" && COMPANION_COMMAND_LABELS[action.summonCommand]) return resolveCompanionCommandTarget(source,action,preferredTarget,skill);
   if (["install_runes","advance_runes"].includes(action.type)) return source;
   if (action.originEntityId && !action._origin) {
@@ -1929,7 +1979,9 @@ function resolveSkillActionTarget(source, action, preferredTarget = null, skill 
 function getCoefficientBaseValue(coefficient, source, target = null, execution = null) {
   if (coefficient.field === "previousBarrierCreated") return execution?.previousBarrierCreated ?? 0;
   if (coefficient.field === "maxHp") return Number(source.maxHp) || 0;
+  if (coefficient.field === "missingHp") return Math.max(0,(Number(source.maxHp) || 0)-(Number(source.hp) || 0));
   if (coefficient.field === "shieldDefense") return getShieldDefense(source);
+  if (coefficient.field === "storedDamage") return source.damageStorage?.amount || 0;
   if (coefficient.field === "ownerMagic") return Number((source.summoner ?? source.owner)?.magic) || 0;
   if (coefficient.field === "missingMp") return Math.max(0,(Number(source.maxMp) || 0)-(Number(source.mp) || 0));
   if (coefficient.field === "triggerMpSpent") return execution?.triggerMpSpent ?? 0;
@@ -2312,6 +2364,7 @@ function applyActionDamage(source, target, action, skill = null, execution = nul
     publishBattleEvents([{...context,type:"hit"},{...context,type:"damaged"}]);
     return 0;
   }
+  recordDirectAttacker(source,target,action,skill);
   const falloff=action.distanceFalloff;
   const distanceFactor=falloff?.step>0 ? Math.max(falloff.minimum,100-Math.floor(distance(action._origin ?? source,target)/ATTACK_RANGE_UNIT/falloff.step)*falloff.percent)/100 : 1;
   const stationaryBonus=skill?._stationaryTargetBonus;
@@ -2343,6 +2396,7 @@ function applyActionDamage(source, target, action, skill = null, execution = nul
   const targetResult=results[results.length-1];
   const hitContext={source,target,skill,periodic:action.periodic,damageType:action.damageType,amount:actualTotal,
     hpDamage:results.reduce((sum,result)=>sum+result.hpDamage,0),barrierDamage:results.reduce((sum,result)=>sum+result.barrierDamage,0)};
+  if (skill?.killChain && targetResult.actual>0) recordKillChainHit(source,target,skill);
   const events=[{...hitContext,type:"hit"},{...targetResult.context,type:"damaged"},...targetResult.channelEvents,...targetResult.deathEvents];
   portions.slice(0,-1).forEach((portion,index)=>{
     const result=results[index];

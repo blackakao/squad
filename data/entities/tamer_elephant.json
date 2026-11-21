@@ -4,7 +4,7 @@
   "role": "melee",
   "ai": "melee",
   "description": "조련사의 선택형 동반 야수. 기본 이동속도 1.2.",
-  "icon": "",
+  "icon": "assets/images/entities/조련사_코끼리.png",
   "tags": [
     "summon",
     "tamer_beast"

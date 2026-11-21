@@ -2832,7 +2832,7 @@
     "name": "수호자 · 회전베기",
     "className": "수호자",
     "icon": "assets/images/skills/수호자_회전베기.png",
-    "description": "",
+    "description": "시전 0.5초/CD 8초/ST 5. 자신 중심 3m 적에게 공격력 70% 물리 피해.",
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
@@ -2846,16 +2846,16 @@
     },
     "resourceCosts": [
       {
-        "resource": "MP",
+        "resource": "ST",
         "mode": "fixed",
-        "value": 10
+        "value": 5
       }
     ],
     "actions": [
       {
         "type": "deal_damage",
         "target": "enemy",
-        "rangeMode": "custom",
+        "rangeMode": "mainWeapon",
         "rangeValue": 5,
         "rangeMultiplier": 100,
         "minRange": 0,
@@ -2878,7 +2878,7 @@
             "type": "calculated",
             "field": "atk",
             "calc": "percent",
-            "value": 100,
+            "value": 70,
             "effectId": ""
           }
         ],
@@ -2886,7 +2886,7 @@
         "fullResourceAlternative": "",
         "drainResource": "MP",
         "damageType": "physical",
-        "area": 2,
+        "area": 3,
         "areaCenter": "self",
         "maxTargets": 0,
         "critical": 0,
@@ -2914,10 +2914,10 @@
   },
   {
     "id": "skill_class_guardian_effort_strike",
-    "name": "수호자 · 노력의 일격",
+    "name": "수호자 · 노력",
     "className": "수호자",
-    "icon": "assets/images/skills/수호자_노력의 일격.png",
-    "description": "적 하나에게 공격력과 현재 누적된 노력[마법]만큼 물리 피해를 줍니다. 노력[마법]은 소모하지 않습니다.",
+    "icon": "assets/images/skills/수호자_노력.png",
+    "description": "MP 20/즉시. 5초간 받는 피해 10% 감소 및 실제 피해 저장. 종료 후 노력의 일격(공격력 100%+저장 피해 20%)을 사용한 뒤 CD 10초 시작.",
     "slot": "active",
     "cooldown": 10,
     "castTime": 0,
@@ -2932,85 +2932,36 @@
     "resourceCosts": [
       {
         "resource": "MP",
-        "mode": "fixed",
-        "value": 0
+        "value": 20
       }
     ],
     "actions": [
       {
-        "type": "deal_damage",
-        "target": "enemy",
+        "type": "add_buff",
+        "target": "self",
         "rangeMode": "mainWeapon",
-        "rangeValue": 1,
-        "rangeMultiplier": 100,
-        "minRange": 0,
-        "allowSelfTarget": true,
-        "requiredTargetEffectId": "",
-        "requiredTargetEffectCaster": "any",
-        "targetHpBelow": 100,
-        "targetCooldown": 0,
-        "targetCooldownScope": "caster",
-        "targetCooldownEffectId": "",
-        "targetCooldownEffectName": "",
-        "ownedSummonCondition": "any",
-        "ownedSummonEntityId": "",
-        "targetSummonEntityId": "",
-        "chainCount": 0,
-        "chainRange": 3,
-        "chainOrigin": "previous",
-        "coefficients": [
-          {
-            "type": "calculated",
-            "field": "atk",
-            "calc": "percent",
-            "value": 100,
-            "effectId": ""
-          },
-          {
-            "type": "calculated",
-            "field": "customResourceCurrent",
-            "calc": "percent",
-            "value": 100,
-            "effectId": "",
-            "resourceId": "effort_magic"
-          }
-        ],
-        "healResource": "HP",
-        "fullResourceAlternative": "",
-        "drainResource": "MP",
-        "damageType": "physical",
-        "area": 0,
-        "areaCenter": "target",
-        "maxTargets": 1,
-        "critical": 0,
-        "penetration": 0,
-        "moveType": "Walk",
-        "movePlacement": "target",
-        "moveSpeed": 1,
-        "distance": 0,
-        "duration": 0,
-        "fieldShape": "circle",
-        "fieldRadius": 0,
-        "fieldWidth": 2,
-        "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 5,
-        "fieldMoveType": "Push",
-        "fieldDistance": 1,
-        "fieldCenter": "target",
-        "fieldInterval": 1,
-        "fieldMovementStCostCenter": 0,
-        "fieldMovementStCostFalloff": 0,
-        "fieldMovementStCostMinimum": 0,
-        "fieldAuras": []
+        "duration": 5,
+        "effect": {
+          "id": "guardian_effort",
+          "name": "노력",
+          "stat": "magic",
+          "mode": "flat",
+          "value": 0
+        }
       }
-    ]
+    ],
+    "damageStorage": {
+      "duration": 5,
+      "receivedDamagePercent": 90,
+      "followupSkillId": "skill_class_guardian_effort_release"
+    }
   },
   {
     "id": "skill_class_guardian_endurance",
-    "name": "수호자 · 인내",
+    "name": "수호자 · 헌신의 수호자",
     "className": "수호자",
-    "icon": "assets/images/skills/수호자_인내.png",
-    "description": "피해를 받을 때마다 실제 받은 피해의 5%를 노력[마법]으로 영구 누적합니다. 최근 3초 안에 피해를 준 적이 2명 이상이면 받는 피해가 10% 감소하며, 추가 공격자마다 3%p씩 최대 25%까지 감소합니다.",
+    "icon": "assets/images/skills/수호자_헌신의 수호자.png",
+    "description": "최근 3초간 직접 단일 공격을 한 고유 적이 2명 이상이면 인원당 방어력 +5. 광역·연쇄·주기·반사·대리 피해는 집계하지 않는다.",
     "slot": "passive",
     "cooldown": 0,
     "castTime": 0,
@@ -3022,20 +2973,6 @@
       "lockTarget": false,
       "receivedDamagePercent": 100
     },
-    "passiveTrigger": {
-      "event": "damaged",
-      "chance": 100,
-      "includePeriodic": true,
-      "allowMultiplePerTick": true,
-      "recentAttackerMitigation": {
-        "enabled": true,
-        "window": 3,
-        "threshold": 2,
-        "initialReductionPercent": 10,
-        "additionalReductionPercent": 3,
-        "maxReductionPercent": 25
-      }
-    },
     "resourceCosts": [
       {
         "resource": "MP",
@@ -3043,66 +2980,281 @@
         "value": 0
       }
     ],
+    "actions": [],
+    "directAttackerDefense": {
+      "window": 3,
+      "threshold": 2,
+      "defense": 5
+    }
+  },
+  {
+    "icon": "assets/images/skills/수호자_방패올리기.png",
+    "id": "skill_class_guardian_raise_shield",
+    "name": "수호자 · 방패올리기",
+    "className": "수호자",
+    "slot": "active",
+    "castTime": 0,
+    "cooldown": 10,
+    "resourceCosts": [
+      {
+        "resource": "ST",
+        "value": 10
+      }
+    ],
+    "actions": [
+      {
+        "type": "override_rule",
+        "target": "self",
+        "rangeMode": "mainWeapon",
+        "duration": 3,
+        "ruleOverride": {
+          "id": "guardian_raise_shield",
+          "receivedDamagePercent": 70,
+          "disableActiveSkills": true
+        }
+      },
+      {
+        "type": "add_buff",
+        "target": "self",
+        "rangeMode": "mainWeapon",
+        "duration": 3,
+        "effect": {
+          "id": "guardian_shield_slow",
+          "name": "방패올리기",
+          "stat": "speed",
+          "mode": "percent",
+          "value": -30
+        }
+      },
+      {
+        "type": "add_state",
+        "target": "self",
+        "rangeMode": "mainWeapon",
+        "duration": 3,
+        "effect": {
+          "id": "guardian_shield_disarm",
+          "name": "방패올리기",
+          "state": "disarm",
+          "polarity": "beneficial"
+        }
+      }
+    ],
+    "description": "3초 받는 피해 30% 감소/이동속도 30% 감소/공격·스킬 사용 금지."
+  },
+  {
+    "icon": "assets/images/skills/수호자_헌신.png",
+    "id": "skill_class_guardian_devotion",
+    "name": "수호자 · 헌신",
+    "className": "수호자",
+    "slot": "active",
+    "castTime": 0.5,
+    "cooldown": 20,
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "value": 20
+      }
+    ],
+    "actions": [
+      {
+        "type": "add_buff",
+        "target": "ally",
+        "allowSelfTarget": false,
+        "rangeMode": "mainWeapon",
+        "duration": 5,
+        "effect": {
+          "id": "guardian_devotion",
+          "name": "헌신",
+          "mode": "damage_proxy",
+          "proxyPercent": 30,
+          "proxyPriority": 50,
+          "proxyScope": "all",
+          "polarity": "beneficial"
+        }
+      }
+    ],
+    "description": "다른 아군에게 5초간 피해 30%를 수호자가 대리하는 버프를 부여한다."
+  },
+  {
+    "icon": "assets/images/skills/수호자_끝없는 희생.png",
+    "id": "skill_class_guardian_endless_sacrifice_ultimate",
+    "name": "수호자 · 끝없는 희생",
+    "className": "수호자",
+    "slot": "ultimate",
+    "castTime": 0.5,
+    "cooldown": 0,
+    "resourceCosts": [],
     "actions": [
       {
         "type": "heal",
         "target": "self",
         "rangeMode": "mainWeapon",
-        "rangeValue": 1,
-        "rangeMultiplier": 100,
-        "minRange": 0,
-        "allowSelfTarget": true,
-        "requiredTargetEffectId": "",
-        "requiredTargetEffectCaster": "any",
-        "targetHpBelow": 100,
-        "targetCooldown": 0,
-        "targetCooldownScope": "caster",
-        "targetCooldownEffectId": "",
-        "targetCooldownEffectName": "",
-        "ownedSummonCondition": "any",
-        "ownedSummonEntityId": "",
-        "targetSummonEntityId": "",
-        "chainCount": 0,
-        "chainRange": 3,
-        "chainOrigin": "previous",
+        "healResource": "BP",
         "coefficients": [
           {
             "type": "calculated",
-            "field": "triggerActualDamage",
+            "field": "maxHp",
             "calc": "percent",
-            "value": 5,
-            "effectId": ""
+            "value": 30
           }
-        ],
-        "healResource": "custom:effort_magic",
-        "fullResourceAlternative": "",
-        "drainResource": "MP",
-        "damageType": "physical",
-        "area": 0,
-        "areaCenter": "target",
-        "maxTargets": 1,
-        "critical": 0,
-        "penetration": 0,
-        "moveType": "Walk",
-        "movePlacement": "target",
-        "moveSpeed": 1,
-        "distance": 0,
-        "duration": 0,
-        "fieldShape": "circle",
-        "fieldRadius": 0,
-        "fieldWidth": 2,
-        "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 5,
-        "fieldMoveType": "Push",
-        "fieldDistance": 1,
-        "fieldCenter": "target",
-        "fieldInterval": 1,
-        "fieldMovementStCostCenter": 0,
-        "fieldMovementStCostFalloff": 0,
-        "fieldMovementStCostMinimum": 0,
-        "fieldAuras": []
+        ]
+      },
+      {
+        "type": "add_state",
+        "target": "enemy",
+        "rangeMode": "mainWeapon",
+        "area": 6,
+        "areaCenter": "self",
+        "duration": 3,
+        "effect": {
+          "id": "guardian_endless_taunt",
+          "name": "끝없는 희생",
+          "state": "taunt",
+          "polarity": "harmful"
+        }
       }
-    ]
+    ],
+    "description": "30초 이후 전투당 1회. 자신의 최대 HP 30%만큼 보호막을 회복하고 자신 중심 6m 적을 3초 도발한다."
+  },
+  {
+    "icon": "assets/images/skills/수호자_무한베기.png",
+    "id": "skill_class_guardian_infinite_whirl",
+    "name": "수호자 · 무한베기",
+    "className": "수호자",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_guardian_whirl"
+      ],
+      "cooldownAdd": -2
+    },
+    "description": "회전베기 재사용 시간을 2초 줄인다."
+  },
+  {
+    "icon": "assets/images/skills/수호자_노력의 일격.png",
+    "id": "skill_class_guardian_effort_release",
+    "name": "수호자 · 노력의 일격",
+    "className": "수호자",
+    "slot": "active",
+    "castTime": 0,
+    "cooldown": 10,
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "deal_damage",
+        "target": "enemy",
+        "rangeMode": "mainWeapon",
+        "damageType": "physical",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "atk",
+            "calc": "percent",
+            "value": 100
+          },
+          {
+            "type": "calculated",
+            "field": "storedDamage",
+            "calc": "percent",
+            "value": 20
+          }
+        ]
+      }
+    ],
+    "internal": true
+  },
+  {
+    "icon": "assets/images/skills/수호자_마법수호.png",
+    "id": "skill_class_guardian_magic_protection",
+    "name": "수호자 · 마법수호",
+    "className": "수호자",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_guardian_endurance"
+      ],
+      "attackerResistanceAdd": 2
+    }
+  },
+  {
+    "icon": "assets/images/skills/수호자_노력의 진가.png",
+    "id": "skill_class_guardian_true_effort",
+    "name": "수호자 · 노력의 진가",
+    "className": "수호자",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_guardian_effort_strike"
+      ],
+      "storedDamagePercent": 50
+    }
+  },
+  {
+    "icon": "assets/images/skills/수호자_생명친화.png",
+    "id": "skill_class_guardian_life_affinity",
+    "name": "수호자 · 생명친화",
+    "className": "수호자",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "statEffects": [
+        {
+          "id": "guardian_life_affinity",
+          "mode": "received_healing_percent",
+          "value": 120
+        }
+      ]
+    }
+  },
+  {
+    "icon": "assets/images/skills/수호자_질긴생명.png",
+    "id": "skill_class_guardian_tenacious_life",
+    "name": "수호자 · 질긴생명",
+    "className": "수호자",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_guardian_devotion"
+      ],
+      "shareCasterDefensePercent": 50
+    }
+  },
+  {
+    "icon": "assets/images/skills/수호자_끝까지.png",
+    "id": "skill_class_guardian_to_the_end",
+    "name": "수호자 · 끝까지",
+    "className": "수호자",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_guardian_endless_sacrifice_ultimate"
+      ],
+      "effectDurationAdd": 2,
+      "tauntAfterDeath": true
+    }
   },
   {
     "id": "skill_class_fiend_armageddon",
@@ -5789,6 +5941,7 @@
     ]
   },
   {
+    "icon": "assets/images/skills/악마_악마군단.png",
     "id": "skill_class_demon_legion",
     "name": "악마 · 악마군단",
     "className": "악마",
@@ -5823,6 +5976,7 @@
     ]
   },
   {
+    "icon": "assets/images/skills/악마_기초체력.png",
     "id": "skill_class_demon_basic_fitness",
     "name": "악마 · 기초체력",
     "className": "악마",
@@ -5844,6 +5998,7 @@
     }
   },
   {
+    "icon": "assets/images/skills/악마_악마의 소임.png",
     "id": "skill_class_demon_duty",
     "name": "악마 · 악마의 소임",
     "className": "악마",
@@ -5866,6 +6021,7 @@
     "description": "살아 있는 자기 소환수마다 마력 +1%, 받는 피해 -1%. 수명 만료 시 해당 소환수 현재 마력만큼 보호막을 얻는다. 사망·강제 제거는 제외."
   },
   {
+    "icon": "assets/images/skills/악마_덩치소환.png",
     "id": "skill_class_demon_brute_spawn",
     "name": "악마 · 덩치소환",
     "className": "악마",
@@ -5955,6 +6111,7 @@
     }
   },
   {
+    "icon": "assets/images/skills/악마_악마의 왕.png",
     "id": "skill_class_demon_king_ultimate",
     "name": "악마 · 악마의 왕",
     "className": "악마",
@@ -5981,6 +6138,7 @@
     "description": "30초 이후 전투당 1회. 악마의 왕을 15초 소환한다. 왕 생존 중 소유자가 받는 피해 20% 감소."
   },
   {
+    "icon": "assets/images/skills/악마_언제나 든든한 덩치.png",
     "id": "skill_class_demon_reliable_brute",
     "name": "악마 · 언제나 든든한 덩치",
     "className": "악마",
@@ -6074,6 +6232,7 @@
     }
   },
   {
+    "icon": "assets/images/skills/악마_대장군님.png",
     "id": "skill_class_demon_great_general",
     "name": "악마 · 대장군님",
     "className": "악마",
@@ -6102,6 +6261,7 @@
     }
   },
   {
+    "icon": "assets/images/skills/악마_졸개무리.png",
     "id": "skill_class_demon_minion_horde",
     "name": "악마 · 졸개무리",
     "className": "악마",
@@ -6123,6 +6283,7 @@
     }
   },
   {
+    "icon": "assets/images/skills/악마_왕의 강림.png",
     "id": "skill_class_demon_kings_arrival",
     "name": "악마 · 왕의 강림",
     "className": "악마",
@@ -6144,6 +6305,7 @@
     }
   },
   {
+    "icon": "assets/images/skills/악마_주인님께 드리는 선물.png",
     "id": "skill_class_demon_gift_to_master",
     "name": "악마 · 주인님께 드리는 선물",
     "className": "악마",
@@ -7528,7 +7690,7 @@
     "name": "집행가 · 흥분",
     "className": "집행가",
     "icon": "assets/images/skills/집행가_흥분.png",
-    "description": "기본 공격으로 준 실제 피해의 15%를 HP로 회복합니다. 적중 직전 HP가 최대라면 같은 양의 BP를 회복합니다.",
+    "description": "기본 공격으로 준 실제 피해의 15%를 흡수한다. HP가 최대이면 같은 양을 BP로 회복한다.",
     "slot": "passive",
     "cooldown": 0,
     "castTime": 0,
@@ -7545,7 +7707,6 @@
       "chance": 100,
       "basicAttackOnly": true,
       "includePeriodic": false,
-      "damageType": "physical",
       "allowMultiplePerTick": true
     },
     "resourceCosts": [
@@ -7587,7 +7748,7 @@
           }
         ],
         "healResource": "HP",
-        "fullResourceAlternative": "",
+        "fullResourceAlternative": "BP",
         "drainResource": "MP",
         "damageType": "physical",
         "area": 0,
@@ -7621,7 +7782,7 @@
     "name": "집행가 · 사형집행",
     "className": "집행가",
     "icon": "assets/images/skills/집행가_사형집행.png",
-    "description": "공격력의 150% 물리 피해를 주고 실제 피해량의 50%만큼 HP를 회복합니다.",
+    "description": "공격력 100% 물리 피해 후 실제 피해 30%를 HP로 회복한다. 즉시/CD 7초, 미기재 사거리는 주무기.",
     "slot": "active",
     "cooldown": 7,
     "castTime": 0,
@@ -7633,13 +7794,7 @@
       "lockTarget": false,
       "receivedDamagePercent": 100
     },
-    "resourceCosts": [
-      {
-        "resource": "ST",
-        "mode": "fixed",
-        "value": 10
-      }
-    ],
+    "resourceCosts": [],
     "actions": [
       {
         "type": "deal_damage",
@@ -7667,7 +7822,7 @@
             "type": "calculated",
             "field": "atk",
             "calc": "percent",
-            "value": 150,
+            "value": 100,
             "effectId": ""
           }
         ],
@@ -7725,7 +7880,7 @@
             "type": "calculated",
             "field": "previousActualDamage",
             "calc": "percent",
-            "value": 50,
+            "value": 30,
             "effectId": ""
           }
         ],
@@ -7776,13 +7931,7 @@
       "lockTarget": false,
       "receivedDamagePercent": 100
     },
-    "resourceCosts": [
-      {
-        "resource": "ST",
-        "mode": "fixed",
-        "value": 10
-      }
-    ],
+    "resourceCosts": [],
     "actions": [
       {
         "type": "add_state",
@@ -7879,6 +8028,288 @@
       }
     ]
   },
+  {
+    "icon": "assets/images/skills/집행가_피의보호막.png",
+    "id": "skill_class_executioner_blood_barrier",
+    "name": "집행가 · 피의보호막",
+    "className": "집행가",
+    "slot": "active",
+    "castTime": 1,
+    "cooldown": 15,
+    "resourceCosts": [
+      {
+        "resource": "HP",
+        "mode": "maxPercent",
+        "value": 5
+      }
+    ],
+    "actions": [
+      {
+        "type": "add_buff",
+        "target": "self",
+        "rangeMode": "mainWeapon",
+        "duration": 5,
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "maxHp",
+            "calc": "percent",
+            "value": 15
+          }
+        ],
+        "effect": {
+          "id": "executioner_blood_barrier",
+          "name": "피의보호막",
+          "mode": "barrier",
+          "barrierMode": "maxPercent",
+          "value": 15,
+          "polarity": "beneficial"
+        }
+      }
+    ],
+    "description": "최대 HP 5%를 소모해 최대 HP 15%의 보호막을 5초간 얻는다. 시전 1초/CD 15초."
+  },
+  {
+    "icon": "assets/images/skills/집행가_처형인의 도끼.png",
+    "id": "skill_class_executioner_executioners_axe",
+    "name": "집행가 · 처형인의 도끼",
+    "className": "집행가",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "statEffects": [
+        {
+          "id": "executioner_one_hand_axe",
+          "stat": "atk",
+          "mode": "flat",
+          "value": 25,
+          "requiredWeaponCategory": "oneHandAxe"
+        },
+        {
+          "id": "executioner_two_hand_axe",
+          "stat": "atk",
+          "mode": "flat",
+          "value": 50,
+          "requiredWeaponCategory": "twoHandAxe"
+        }
+      ]
+    }
+  },
+  {
+    "icon": "assets/images/skills/집행가_범죄도시.png",
+    "id": "skill_class_executioner_crime_city",
+    "name": "집행가 · 범죄도시",
+    "className": "집행가",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_executioner_execute"
+      ],
+      "cooldownAdd": -2
+    }
+  },
+  {
+    "icon": "assets/images/skills/집행가_처형인의 미소.png",
+    "id": "skill_class_executioner_smile",
+    "name": "집행가 · 처형인의 미소",
+    "className": "집행가",
+    "slot": "active",
+    "castTime": 0,
+    "cooldown": 15,
+    "resourceCosts": [
+      {
+        "resource": "ST",
+        "mode": "fixed",
+        "value": 15
+      }
+    ],
+    "actions": [
+      {
+        "type": "heal",
+        "target": "self",
+        "rangeMode": "mainWeapon",
+        "healResource": "HP",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "missingHp",
+            "calc": "percent",
+            "value": 10
+          }
+        ]
+      }
+    ],
+    "channel": {
+      "duration": 3,
+      "interval": 1,
+      "interruptOnDamage": true
+    },
+    "description": "3초간 매초 현재 잃은 HP의 10% 회복. ST 15는 한 번 소모하며 기본 채널링 규칙에 따라 피해·기절·침묵·사망 시 중단한다."
+  },
+  {
+    "icon": "assets/images/skills/집행가_처형.png",
+    "id": "skill_class_executioner_execution_ultimate",
+    "name": "집행가 · 처형",
+    "className": "집행가",
+    "slot": "ultimate",
+    "castTime": 0.5,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "deal_damage",
+        "target": "enemy",
+        "rangeMode": "mainWeapon",
+        "targetHpBelow": 20,
+        "targetHpStrict": true,
+        "damageType": "physical",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "atk",
+            "calc": "percent",
+            "value": 300
+          }
+        ]
+      },
+      {
+        "type": "deal_damage",
+        "target": "enemy",
+        "rangeMode": "mainWeapon",
+        "damageType": "fixed",
+        "settledDamage": true,
+        "requirePreviousDamage": true,
+        "targetPreviousDamage": true,
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "previousActualDamage",
+            "calc": "percent",
+            "value": 30
+          }
+        ]
+      }
+    ],
+    "killChain": {
+      "window": 5,
+      "initialTargetHpBelow": 20
+    },
+    "description": "30초 이후 최초 HP 20% 미만 대상에게 공격력 300% 물리 피해+실제 물리 피해 30% 별도 고정 피해. 궁으로 처형하면 5초간 HP 조건 없이 한 번 재사용하며 연속 처형 시 창을 갱신한다."
+  },
+  {
+    "icon": "assets/images/skills/집행가_집행유예.png",
+    "id": "skill_class_executioner_reprieve",
+    "name": "집행가 · 집행유예",
+    "className": "집행가",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_executioner_execution_ultimate"
+      ],
+      "killChainAssist": true
+    },
+    "description": "궁으로 피해를 입힌 대상이 피격 후 5초 안에 다른 원인으로 사망해도 재처형 창을 연다."
+  },
+  {
+    "icon": "assets/images/skills/집행가_처형인의 저항.png",
+    "id": "skill_class_executioner_executioners_resistance",
+    "name": "집행가 · 처형인의 저항",
+    "className": "집행가",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_executioner_smile"
+      ],
+      "channelStartActions": [
+        {
+          "type": "add_buff",
+          "target": "self",
+          "rangeMode": "mainWeapon",
+          "duration": 0,
+          "effect": {
+            "id": "executioner_smile_resistance",
+            "name": "처형인의 저항",
+            "stat": "resistance",
+            "mode": "flat",
+            "value": 10
+          }
+        }
+      ]
+    },
+    "description": "처형인의 미소 채널링 중에만 저항력 +10. 종료·중단 즉시 제거."
+  },
+  {
+    "icon": "assets/images/skills/집행가_쫄깃함.png",
+    "id": "skill_class_executioner_chewiness",
+    "name": "집행가 · 쫄깃함",
+    "className": "집행가",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_executioner_excitement"
+      ],
+      "coefficientSelfHpBelow": 50,
+      "coefficientPercent": 200
+    },
+    "description": "회복 적용 전 HP가 최대 HP의 50% 미만이면 흥분의 회복 계수를 2배로 한다."
+  },
+  {
+    "icon": "assets/images/skills/집행가_취약한 사형인.png",
+    "id": "skill_class_executioner_vulnerable_prisoner",
+    "name": "집행가 · 취약한 사형인",
+    "className": "집행가",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_executioner_bind"
+      ],
+      "additionalActions": [
+        {
+          "type": "add_buff",
+          "target": "enemy",
+          "rangeMode": "custom",
+          "rangeValue": 5,
+          "duration": 0,
+          "requiredTargetEffectId": "executioner_bind",
+          "requiredTargetEffectCaster": "self",
+          "effect": {
+            "id": "executioner_bind_vulnerability",
+            "name": "취약한 사형인",
+            "mode": "received_damage_percent",
+            "value": 115,
+            "linkedEffectId": "executioner_bind",
+            "polarity": "harmful",
+            "dispellable": false
+          }
+        }
+      ]
+    },
+    "description": "본인의 속박이 남아 있는 동안 대상 받는 피해 +15%. 속박 해제·만료와 함께 종료."
+  },
+
   {
     "icon": "assets/images/skills/요정 사냥꾼_피와독.png",
     "id": "skill_class_fairy_hunter_blood_and_poison",

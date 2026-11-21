@@ -146,6 +146,28 @@ test('admiral rotten wine only modifies natural regeneration and charges HP prop
  const plain=admiralEngine();plain.MP_REGEN_PER_SECOND=2;plain.owner.mp=0;plain.applyNaturalMpRegeneration(plain.owner,1);assert.equal(plain.owner.mp,2);assert.equal(plain.owner.hp,2000);
 });
 
+test('engineer cannon basic skill cannot be spammed as an active but remains a summon weapon',()=>{
+ const e=engineerEngine(),s=e.owner,t=e.target;
+ const uiSource=fs.readFileSync(path.join(__dirname,'../js/ui.js'),'utf8');
+ const cooldownStart=uiSource.indexOf('function getAttackCooldown(unit) {');
+ vm.runInContext(uiSource.slice(cooldownStart,uiSource.indexOf('\n}',cooldownStart)+2),e);
+ const attack=e.getSkillById('skill_entity_engineer_recoilless_attack');
+ s.skillIds=[attack.id];
+ assert.equal(e.getEquippedSkills(s).length,0);
+ const before=t.hp;
+ for(let i=0;i<60;i++)assert.equal(e.tryUseReadySkill(s,e.playerSquad,e.enemySquad),false);
+ assert.equal(t.hp,before);
+ s.runtimeCopiedSkills=[attack];assert.equal(e.getEquippedSkills(s).length,0);
+ const cannon=e.spawn('recoilless_cannon');cannon.x=100;cannon.y=100;
+ assert.equal(e.getUnitSkill(cannon).id,attack.id);
+ e.startCast(cannon,{type:'attack',target:t,skill:e.getUnitSkill(cannon)});
+ for(let i=0;i<600 && cannon.pendingAction;i++)e.updateCast(cannon);
+ e.updateProjectiles();
+ assert(t.hp<before);assert(cannon.attackCooldown>0);
+ const characters=JSON.parse(fs.readFileSync(path.join(__dirname,'../data/characters.json'),'utf8'));
+ assert(!characters.find(c=>c.name==='갑사').skillIds.includes(attack.id));
+});
+
 function engineerEngine(options=[]) {
  const e=engine();e.skillsJson=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'../data/skills.json'),'utf8')));
  e.engineer=id=>e.getSkillById('skill_class_engineer_'+id);
@@ -4049,6 +4071,108 @@ test('demon optional fourth selection is inactive and forced removal never pays 
  e.removeSummonedBattleUnit(s.summons[0]);assert.equal(e.getUnitBarrierValue(s),0);assert.equal(e.getSelectedOptionalStatEffects(s).find(x=>x.stat==='maxHp').value,500);
 });
 
+function guardianBaseEngine() {
+ const e=engine();e.skillsJson=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'../data/skills.json'),'utf8')));
+ e.guardian=id=>e.getSkillById('skill_class_guardian_'+id);e.owner=unit(e);e.owner.hp=e.owner.maxHp=1000;e.owner.speed=1;e.target=unit(e,'enemy',120);return e;
+}
+
+test('guardian revised whirl uses stamina three meter area and optional six second cooldown',()=>{
+ const e=guardianBaseEngine(),s=e.owner,t=e.target,near=unit(e,'enemy',130),far=unit(e,'enemy',140);s.atk=100;for(const u of [t,near,far])u.hp=u.maxHp=500;
+ const skill=e.guardian('whirl');assert.equal(skill.actions[0].rangeMode,'mainWeapon');e.spendSkillResourceCosts(s,skill);e.applySkill(s,t,skill);
+ assert.equal(s.st,95);assert.equal(s.mp,100);assert.equal(t.hp,430);assert.equal(near.hp,430);assert.equal(far.hp,500);
+ s.skillIds=[e.guardian('infinite_whirl').id];assert.equal(e.getRuntimeSelectionSkill(s,skill).cooldown,6);
+});
+
+test('guardian raised shield reduces incoming damage and speed and blocks attacks and skills for three seconds',()=>{
+ const e=guardianBaseEngine(),s=e.owner;e.spendSkillResourceCosts(s,e.guardian('raise_shield'));e.applySkill(s,s,e.guardian('raise_shield'));
+ assert.equal(s.st,90);assert.equal(s.speed,.7);assert.equal(e.hasBattleState(s,'disarm'),true);assert.equal(e.isUnitSkillDisabled(s,e.guardian('whirl')),true);
+ e.applyActionDamage(e.target,s,e.normalizeSkillAction({type:'deal_damage',damageType:'fixed',coefficients:[{type:'fixed',value:100}]}));assert.equal(s.hp,930);
+ for(let i=0;i<180;i++){e.updateBattleEffects();e.updateRuntimeRuleOverrides();}
+ assert.equal(s.speed,1);assert.equal(e.hasBattleState(s,'disarm'),false);assert.equal(e.isUnitSkillDisabled(s,e.guardian('whirl')),false);
+});
+
+test('guardian devotion rejects self and transfers thirty percent of allied damage for five seconds',()=>{
+ const e=guardianBaseEngine(),s=e.owner,a=unit(e,'player',110);a.hp=a.maxHp=1000;const skill=e.guardian('devotion');
+ e.applySkill(s,s,skill);assert.equal(s.activeEffects.some(x=>x.id==='guardian_devotion'),false);
+ e.applySkill(s,a,skill);e.applyActionDamage(e.target,a,e.normalizeSkillAction({type:'deal_damage',damageType:'fixed',coefficients:[{type:'fixed',value:100}]}));
+ assert.equal(a.hp,930);assert.equal(s.hp,970);for(let i=0;i<300;i++)e.updateBattleEffects();assert.equal(a.activeEffects.some(x=>x.id==='guardian_devotion'),false);
+});
+
+test('guardian ultimate restores thirty percent maximum HP barrier and taunts enemies within six meters',()=>{
+ const e=guardianBaseEngine(),s=e.owner,t=e.target,far=unit(e,'enemy',170),skill=e.guardian('endless_sacrifice_ultimate');
+ vm.runInContext('combatEventTick=1799',e);assert.equal(e.canActivateSkill(s,skill),false);vm.runInContext('combatEventTick=1800',e);
+ e.startCast(s,{type:'skill',skill,target:t});for(let i=0;s.pendingAction && i<100;i++)e.updateCast(s);
+ assert.equal(e.getUnitBarrierValue(s),300);assert.equal(e.getTauntTarget(t),s);assert.equal(e.getTauntTarget(far),null);assert.equal(e.canActivateSkill(s,skill),false);
+});
+
+function guardianBuild(options=[]) {
+ const e=guardianBaseEngine(),s=e.owner;e.isPhysicalAttackUnit=u=>u.attackType!=="magic";s.defense=40;s.resistance=20;s.atk=100;e.target.hp=e.target.maxHp=10000;
+ s.skillIds=['endurance','whirl','effort_strike','raise_shield','devotion','endless_sacrifice_ultimate',...options].map(id=>e.guardian(id).id);
+ e.runtime=id=>e.getRuntimeSelectionSkill(s,e.getFormSkill(s,e.guardian(id)));
+ e.cast=(id,target=s)=>{const skill=e.runtime(id),resourceSpent=e.spendSkillResourceCosts(s,skill);e.startCast(s,{type:'skill',target,skill,resourceSpent});for(let i=0;s.pendingAction && i<100;i++)e.updateCast(s);return skill;};
+ e.tick=()=>{vm.runInContext('combatEventTick++',e);e.updateBattleEffects();e.updateRuntimeRuleOverrides();};
+ e.hit=(source=e.target,target=s,extra={})=>e.applyActionDamage(source,target,{...e.normalizeSkillAction({type:'deal_damage',damageType:'fixed',coefficients:[{type:'fixed',value:10}],...extra}),...extra});
+ return e;
+}
+
+test('guardian direct attacker defense counts unique single target attackers refreshes and expires at three seconds',()=>{
+ const e=guardianBuild(['magic_protection']),s=e.owner,b=unit(e,'enemy',130);e.hit();assert.equal(s.defense,40);e.hit();assert.equal(s.defense,40);
+ e.hit(b);assert.equal(s.defense,50);assert.equal(s.resistance,24);
+ for(let i=0;i<179;i++)e.tick();assert.equal(s.defense,50);e.tick();assert.equal(s.defense,40);assert.equal(s.resistance,20);
+ e.hit();e.hit(b);for(let i=0;i<120;i++)e.tick();e.hit();for(let i=0;i<60;i++)e.tick();assert.equal(s.defense,40);assert.equal(s.directAttackers.get(e.guardian('endurance').id).size,1);
+});
+
+test('guardian raised shield blocks actives while preserving the direct attacker passive',()=>{
+ const e=guardianBuild(['magic_protection']),s=e.owner;e.cast('raise_shield');e.hit();e.hit(unit(e,'enemy',130));
+ assert.equal(s.defense,50);assert.equal(s.resistance,24);assert.equal(e.isUnitSkillDisabled(s,e.guardian('endurance')),false);assert.equal(e.isUnitSkillDisabled(s,e.guardian('whirl')),true);
+});
+
+test('guardian attacker defense excludes area chain periodic reflected and redirected hits',()=>{
+ const e=guardianBuild(),s=e.owner;
+ for(const extra of [{area:3},{chainCount:1},{periodic:true},{reflected:true},{battlefieldArea:true},{splashRadius:3,splashPercent:30}])e.hit(unit(e,'enemy',130),s,extra);
+ assert.equal(s.directAttackers.size,0);const ally=unit(e,'player',110);e.cast('devotion',ally);e.hit(e.target,ally);assert.equal(s.directAttackers.size,0);
+ e.hit();e.hit(unit(e,'enemy',130));assert.equal(s.defense,50);
+});
+
+test('guardian effort stores actual reduced damage including barriers and starts cooldown only after release',()=>{
+ const e=guardianBuild(),s=e.owner,t=e.target;e.cast('effort_strike');assert.equal(s.mp,80);assert.equal(s.skillCooldowns[e.guardian('effort_strike').id],0);assert.equal(e.canActivateSkill(s,e.runtime('effort_strike')),false);
+ e.hit();assert.equal(s.hp,991);assert.equal(s.damageStorage.amount,9);s.bp=20;e.hit();assert.equal(s.bp,11);assert.equal(s.damageStorage.amount,18);
+ for(let i=0;i<300;i++)e.tick();assert.equal(s.damageStorage.phase,'ready');assert.equal(e.runtime('effort_strike').name,'수호자 · 노력의 일격');
+ t.x=105;e.cast('effort_strike',t);assert.equal(t.hp,10000-103.6);assert.equal(s.mp,80);assert.equal(s.damageStorage,null);assert.equal(s.skillCooldowns[e.guardian('effort_strike').id],600);
+});
+
+test('guardian true effort changes only stored component and snapshots projectile damage before clearing storage',()=>{
+ const e=guardianBuild(['true_effort']),s=e.owner,t=e.target;e.cast('effort_strike');e.hit();for(let i=0;i<300;i++)e.tick();
+ t.x=140;e.cast('effort_strike',t);assert.equal(s.damageStorage,null);assert.equal(t.hp,10000);e.updateProjectiles();assert.equal(t.hp,9895.5);
+});
+
+test('guardian life affinity is conditional and tenacious life follows caster defenses and ends with devotion',()=>{
+ const e=guardianBuild(['life_affinity','tenacious_life']),s=e.owner,a=unit(e,'player',110);a.defense=10;a.resistance=5;
+ s.hp=500;e.applyActionHeal(a,s,{healResource:'HP',coefficients:[{type:'fixed',value:100}]});assert.equal(s.hp,620);
+ e.cast('devotion',a);assert.equal(a.defense,30);assert.equal(a.resistance,15);
+ e.hit();e.hit(unit(e,'enemy',130));e.tick();assert.equal(s.defense,50);assert.equal(a.defense,35);
+ for(let i=0;i<300;i++)e.tick();assert.equal(a.defense,10);assert.equal(a.resistance,5);
+ s.skillIds=s.skillIds.filter(id=>id!==e.guardian('life_affinity').id);s.hp=500;e.applyActionHeal(a,s,{healResource:'HP',coefficients:[{type:'fixed',value:100}]});assert.equal(s.hp,600);
+});
+
+test('guardian to the end keeps corpse taunt whiffs without damage or living membership and releases at expiry',()=>{
+ const e=guardianBuild(['to_the_end']),s=e.owner,t=e.target,ally=unit(e,'player',105);ally.hp=ally.maxHp=1000;e.cast('endless_sacrifice_ultimate',t);
+ assert.equal(t.activeEffects.find(x=>x.state==='taunt').remainingTicks,300);s.hp=0;e.syncAliveState(s);e.updateBattleEffects();assert.equal(e.getTauntTarget(t),s);assert.equal(e.getActiveBattleEntities(e.playerSquad).includes(s),false);
+ t.attackRange=5;t.x=120;e.takeAction(t,[t],[ally]);for(let i=0;i<60;i++)e.takeAction(t,[t],[ally]);assert.equal(s.hp,0);assert.equal(ally.hp,1000);assert.equal(e.canDirectlyTarget(t,ally),false);
+ for(let i=0;i<299;i++)e.tick();assert.equal(e.getTauntTarget(t),null);assert.equal(e.canDirectlyTarget(t,ally),true);
+});
+
+test('guardian ordinary taunt ends when caster dies and fourth optional does not enable corpse targeting',()=>{
+ for(const options of [[],['infinite_whirl','magic_protection','life_affinity','to_the_end']]) {
+  const e=guardianBuild(options);e.cast('endless_sacrifice_ultimate',e.target);e.owner.hp=0;e.syncAliveState(e.owner);assert.equal(e.getTauntTarget(e.target),null);
+ }
+});
+
+test('guardian storage and attacker history reset on death or battle initialization',()=>{
+ const e=guardianBuild(),s=e.owner;e.cast('effort_strike');e.hit();e.hit(unit(e,'enemy',130));s.hp=0;e.syncAliveState(s);e.updateBattleEffects();assert.equal(s.damageStorage,null);assert.equal(s.directAttackers.size,0);
+ e.resetUnitForBattle(s);assert.equal(s.damageStorage,null);assert.equal(s.directAttackers.size,0);assert.equal(s.defense,40);
+});
+
 function basicActionEngine() {
   const e=engine();
   e.isMagicAttackUnit=u=>u.attackType==='magic';
@@ -4660,19 +4784,12 @@ test('damage-trigger and custom-resource coefficients preserve references and ca
  assert.equal(normalized.resourceId,'effortmagic');
 });
 
-test('guardian effort skills and custom resource match their class rules',()=>{
- const skills=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8'));
- const characters=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','characters.json'),'utf8'));
- const find=id=>skills.find(item=>item.id===id);
- const strike=find('skill_class_guardian_effort_strike'),endurance=find('skill_class_guardian_endurance');
- assert.equal(strike.castTime,0);assert.equal(strike.cooldown,10);assert.equal(strike.actions[0].rangeMode,'mainWeapon');
- assert.deepEqual(Array.from(strike.actions[0].coefficients,c=>[c.field,c.value]),[['atk',100],['customResourceCurrent',100]]);
- assert.equal(strike.actions[0].coefficients[1].resourceId,'effort_magic');
- assert.deepEqual(endurance.passiveTrigger,{event:'damaged',chance:100,includePeriodic:true,allowMultiplePerTick:true,recentAttackerMitigation:{enabled:true,window:3,threshold:2,initialReductionPercent:10,additionalReductionPercent:3,maxReductionPercent:25}});
- assert.equal(endurance.actions[0].healResource,'custom:effort_magic');assert.equal(endurance.actions[0].coefficients[0].field,'triggerActualDamage');
- const guardian=characters.find(character=>character.skillIds?.includes(strike.id));
- assert.deepEqual(guardian.skillIds,['skill_class_guardian_whirl',strike.id,endurance.id]);
- assert.deepEqual(guardian.customResources.find(resource=>resource.id==='effort_magic'),{id:'effort_magic',name:'노력[마법]',initial:0,max:999999});
+test('guardian redesigned effort and passive data preserve IDs and replace obsolete effort resource',()=>{
+ const e=guardianBaseEngine(),base=e.guardian('effort_strike'),passive=e.guardian('endurance');
+ assert.equal(base.name,'수호자 · 노력');assert.equal(base.damageStorage.duration,5);assert.equal(base.damageStorage.receivedDamagePercent,90);
+ assert.equal(base.resourceCosts[0].value,20);assert.equal(passive.directAttackerDefense.threshold,2);assert.equal(passive.directAttackerDefense.defense,5);assert.equal(passive.actions.length,0);
+ const character=JSON.parse(fs.readFileSync(path.join(__dirname,'../data/characters.json'),'utf8')).find(c=>c.name==='수호자');assert.equal(character.skillIds.length,6);assert.equal((character.customResources ?? []).some(r=>r.id==='effort_magic'),false);
+ const all=e.skillsJson.filter(s=>s.className==='수호자');assert.equal(all.filter(s=>s.slot==='optional').length,6);assert(all.every(s=>e.isSkillExecutable(s)));
 });
 
 test('guardian endurance reduces damage by recent unique attackers and expires them after three seconds',()=>{
@@ -4896,7 +5013,7 @@ test('executioner excitement triggers only on basic attacks and routes full HP r
  assert.equal(source.hp,100);assert.equal(source.bp,3);
  source.hp=50;e.applySkill(source,target,basic);assert.equal(source.hp,53);assert.equal(source.bp,3);
  const active=e.getSkillById('skill_class_executioner_execute');source.hp=50;e.applySkill(source,target,active);
- assert.equal(source.hp,65);assert.equal(source.bp,3);
+ assert.equal(source.hp,56);assert.equal(source.bp,3);
 });
 
 test('executioner skill data matches excitement execute and bind rules',()=>{
@@ -4906,9 +5023,87 @@ test('executioner skill data matches excitement execute and bind rules',()=>{
  const execute=skills.find(item=>item.id==='skill_class_executioner_execute');
  const bind=skills.find(item=>item.id==='skill_class_executioner_bind');
  assert.deepEqual([passive.passiveTrigger.basicAttackOnly,passive.actions[0].coefficients[0].value,passive.actions[0].fullResourceAlternative],[true,15,'BP']);
- assert.deepEqual([execute.castTime,execute.cooldown,execute.resourceCosts[0].value,execute.actions[0].coefficients[0].value,execute.actions[1].coefficients[0].value],[0,7,10,150,50]);
- assert.deepEqual([bind.castTime,bind.cooldown,bind.resourceCosts[0].value,bind.actions[0].rangeValue,bind.actions[0].duration,bind.actions[0].effect.state],[.5,10,10,5,4,'root']);
- const executioner=characters.find(character=>character.name==='집행가');assert.deepEqual(executioner.skillIds,[passive.id,execute.id,bind.id]);
+ assert.deepEqual([execute.castTime,execute.cooldown,execute.resourceCosts[0].value,execute.actions[0].coefficients[0].value,execute.actions[1].coefficients[0].value],[0,7,0,100,30]);
+ assert.deepEqual([bind.castTime,bind.cooldown,bind.resourceCosts[0].value,bind.actions[0].rangeValue,bind.actions[0].duration,bind.actions[0].effect.state],[.5,10,0,5,4,'root']);
+ const executioner=characters.find(character=>character.name==='집행가');assert.deepEqual(executioner.skillIds,[passive.id,execute.id,bind.id,'skill_class_executioner_blood_barrier','skill_class_executioner_smile','skill_class_executioner_execution_ultimate']);
+});
+
+test('executioner blood barrier spends five percent maximum HP lasts five seconds and uses weapon default range',()=>{
+ const e=engine();e.skillsJson=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'../data/skills.json'),'utf8')));const s=unit(e);s.hp=s.maxHp=1000;
+ const barrier=e.getSkillById('skill_class_executioner_blood_barrier');e.spendSkillResourceCosts(s,barrier);e.applySkill(s,s,barrier);
+ assert.equal(s.hp,950);assert.equal(e.getUnitBarrierValue(s),150);assert.equal(barrier.actions[0].rangeMode,'mainWeapon');assert.equal(barrier.castTime,1);assert.equal(barrier.cooldown,15);
+ for(let i=0;i<300;i++)e.updateBattleEffects();assert.equal(e.getUnitBarrierValue(s),0);
+});
+
+test('executioner optional axe bonus follows equipped category and crime city only reduces execute cooldown',()=>{
+ const e=engine();e.skillsJson=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'../data/skills.json'),'utf8')));const s=unit(e);s.skillIds=['skill_class_executioner_executioners_axe','skill_class_executioner_crime_city'];
+ for(const [category,expected] of [['oneHandAxe',35],['twoHandAxe',60],['oneHandSword',10]]){s.weaponAttacks=[{weaponCategory:category}];e.recalculateBattleBuffs(s);assert.equal(s.atk,expected);}
+ assert.equal(e.getRuntimeSelectionSkill(s,e.getSkillById('skill_class_executioner_execute')).cooldown,5);assert.equal(e.getRuntimeSelectionSkill(s,e.getSkillById('skill_class_executioner_bind')).cooldown,10);
+});
+
+function executionerBuild(options=[]) {
+ const e=engine();e.skillsJson=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'../data/skills.json'),'utf8')));e.exec=id=>e.getSkillById('skill_class_executioner_'+id);
+ const s=e.owner=unit(e),t=e.target=unit(e,'enemy',105);s.atk=50;s.resistance=20;s.hp=s.maxHp=1000;t.hp=190;t.maxHp=1000;
+ s.skillIds=['excitement','execute','bind','blood_barrier','smile','execution_ultimate',...options].map(id=>e.exec(id).id);e.runtime=id=>e.getRuntimeSelectionSkill(s,e.exec(id));
+ e.cast=(id,target=t)=>{const skill=e.runtime(id),resourceSpent=e.spendSkillResourceCosts(s,skill);e.startCast(s,{type:'skill',skill,target,resourceSpent});for(let i=0;s.pendingAction && i<500;i++){vm.runInContext('combatEventTick++',e);e.updateCast(s);}return skill;};
+ e.tick=(count=1)=>{for(let i=0;i<count;i++){vm.runInContext('combatEventTick++',e);e.updateBattleEffects();}};
+ return e;
+}
+
+test('executioner smile heals current missing HP each second and resistance exists only during channel',()=>{
+ const e=executionerBuild(['executioners_resistance']),s=e.owner;s.hp=500;e.cast('smile',s);assert.equal(s.st,85);assert.equal(s.resistance,30);
+ for(let i=0;i<180;i++)e.updateBattleChannel(s);assert(Math.abs(s.hp-635.5)<1e-8);assert.equal(s.resistance,20);assert.equal(s.channelAction,null);assert.equal(s.skillCooldowns[e.exec('smile').id],900);
+ s.hp=500;e.cast('smile',s);assert.equal(s.resistance,30);e.applyActionDamage(e.target,s,e.normalizeSkillAction({type:'deal_damage',damageType:'fixed',coefficients:[{type:'fixed',value:10}]}));assert.equal(s.channelAction,null);assert.equal(s.resistance,20);
+});
+
+test('executioner chewiness checks strict half HP before healing and affects only excitement',()=>{
+ const e=executionerBuild(['chewiness']),s=e.owner,t=e.target;const basic=e.getSkillById('skill_basic_weapon_attack');t.hp=t.maxHp=10000;
+ s.hp=499;e.applySkill(s,t,basic);assert.equal(s.hp,514);
+ s.hp=500;e.applySkill(s,t,basic);assert.equal(s.hp,507.5);
+ s.hp=1000;e.applySkill(s,t,basic);assert.equal(s.bp,7.5);
+ s.hp=400;e.applySkill(s,t,e.runtime('execute'));assert.equal(s.hp,415);
+});
+
+test('executioner vulnerable prisoner follows same caster root through dispel refresh and expiry',()=>{
+ const e=executionerBuild(['vulnerable_prisoner']),s=e.owner,t=e.target;e.cast('bind');assert(Math.abs(e.getUnitIncomingRulePercent(t,'receivedDamagePercent')-115)<1e-9);
+ e.applyTimedEffectAction(s,t,e.normalizeSkillAction({type:'delete_state',effect:{id:'executioner_bind',dispelMode:'id'}}));assert.equal(e.getUnitIncomingRulePercent(t,'receivedDamagePercent'),100);
+ e.cast('bind');e.tick(200);e.cast('bind');e.tick(239);assert(Math.abs(e.getUnitIncomingRulePercent(t,'receivedDamagePercent')-115)<1e-9);e.tick();assert.equal(e.getUnitIncomingRulePercent(t,'receivedDamagePercent'),100);
+});
+
+test('executioner ultimate unlocks at thirty seconds requires strict twenty percent and fixed bonus equals actual physical damage',()=>{
+ const e=executionerBuild(),s=e.owner,t=e.target;vm.runInContext('combatEventTick=1799',e);assert.equal(e.canActivateSkill(s,e.runtime('execution_ultimate')),false);vm.runInContext('combatEventTick=1800',e);
+ t.hp=200;assert.equal(e.resolveSkillTarget(s,e.runtime('execution_ultimate'),[s],[t]),null);t.hp=190;
+ t.runtimeRuleOverrides=[{id:'mitigation',receivedDamagePercent:50}];s.atk=100;e.cast('execution_ultimate');assert.equal(t.alive,false);assert.equal(e.isKillChainOpen(s,e.exec('execution_ultimate')),true);
+ const hits=vm.runInContext('combatEventHistory.filter(e=>e.type==="hit" && e.skillId==="skill_class_executioner_execution_ultimate")',e);assert.deepEqual(Array.from(hits,h=>[h.damageType,h.amount]),[['physical',150],['fixed',40]]);
+});
+
+test('executioner kill chain permits unrestricted HP kills repeatedly but expires after five seconds',()=>{
+ const e=executionerBuild(),s=e.owner;e.cast('execution_ultimate');assert.equal(e.target.alive,false);assert.equal(e.isKillChainOpen(s,e.exec('execution_ultimate')),true);
+ const second=unit(e,'enemy',105);second.hp=second.maxHp=150;e.cast('execution_ultimate',second);assert.equal(second.alive,false);assert.equal(s.skillUseCounts[e.exec('execution_ultimate').id],2);
+ e.tick(300);assert.equal(e.canActivateSkill(s,e.runtime('execution_ultimate')),false);
+ const ordinary={...e.exec('blood_barrier'),id:'ordinary_ultimate',slot:'ultimate',maxUses:99};s.skillUseCounts[ordinary.id]=1;assert.equal(e.canActivateSkill(s,ordinary),false);
+});
+
+test('executioner chain permission is consumed by a nonlethal reuse and an admitted cast may finish after deadline',()=>{
+ const e=executionerBuild(),s=e.owner;e.cast('execution_ultimate');const second=unit(e,'enemy',105);second.hp=second.maxHp=1000;
+ e.tick(299);assert.equal(e.canActivateSkill(s,e.runtime('execution_ultimate')),true);e.cast('execution_ultimate',second);assert.equal(second.hp,805);assert.equal(e.canActivateSkill(s,e.runtime('execution_ultimate')),false);
+});
+
+test('executioner physical lethal hit never spills its fixed bonus into another target',()=>{
+ const e=executionerBuild(),s=e.owner,other=unit(e,'enemy',105);s.atk=100;other.hp=190;other.maxHp=1000;e.cast('execution_ultimate');assert.equal(other.hp,190);assert.equal(e.isKillChainOpen(s,e.exec('execution_ultimate')),true);
+});
+
+test('executioner reprieve accepts allied or other death only within five seconds after real ultimate damage',()=>{
+ for(const [options,delay,allowed] of [[[],1,false],[['reprieve'],299,true],[['reprieve'],300,false]]) {
+  const e=executionerBuild(options),s=e.owner,t=e.target;s.atk=10;e.cast('execution_ultimate');assert.equal(t.hp,151);assert.equal(e.isKillChainOpen(s,e.exec('execution_ultimate')),false);
+  e.tick(delay);const ally=unit(e,'player',110);e.applyActionDamage(ally,t,e.normalizeSkillAction({type:'deal_damage',damageType:'fixed',coefficients:[{type:'fixed',value:200}]}),{id:'ally_hit',slot:'basic'});
+  assert.equal(e.isKillChainOpen(s,e.exec('execution_ultimate')),allowed);
+ }
+});
+
+test('executioner selections remain limited to three and death or battle reset clears chain eligibility',()=>{
+ const e=executionerBuild(['executioners_axe','crime_city','chewiness','reprieve']),s=e.owner;s.atk=10;e.cast('execution_ultimate');e.applyActionDamage(unit(e,'player'),e.target,e.normalizeSkillAction({type:'deal_damage',damageType:'fixed',coefficients:[{type:'fixed',value:500}]}));assert.equal(e.isKillChainOpen(s,e.exec('execution_ultimate')),false);
+ const f=executionerBuild();f.cast('execution_ultimate');f.owner.hp=0;f.syncAliveState(f.owner);assert.equal(f.owner.killChainWindows.size,0);assert.equal(f.owner.killChainMarks.size,0);f.resetUnitForBattle(f.owner);assert.equal(f.owner.killChainWindows.size,0);assert.equal(f.owner.skillUseCounts[f.exec('execution_ultimate').id],undefined);
 });
 
 test('fairy hunter blood and poison multiplies damage only when both dot tags are present',()=>{
@@ -5012,7 +5207,7 @@ test('engineer artillery data matches class cast cooldown entity stats and assig
  const entities=['engineer_ballista','engineer_talisman_cannon','engineer_recoilless_cannon'].map(id=>JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','entities',`${id}.json`),'utf8')));
  assert.deepEqual(entities.map(entity=>[entity.stats.atk,entity.stats.attackSpeed,entity.stats.attackRange]),[[100,3,3],[50,1,5],[200,5,10]]);
  assert.deepEqual([attack.slot,attack.actions[0].damageType,attack.actions[0].area,attack.actions[0].areaCenter],['basic','physical',2,'target']);
- assert.deepEqual(characters.find(character=>character.name==='갑사').skillIds,['skill_class_engineer_engineering',ballista.id,talisman.id,recoilless.id,'skill_class_engineer_haetae','skill_class_engineer_emergency_reinstall_ultimate']);
+ assert.deepEqual(characters.find(character=>character.name==='갑사').skillIds.filter(id=>find(id)?.slot!=='optional'),['skill_class_engineer_engineering',ballista.id,talisman.id,recoilless.id,'skill_class_engineer_haetae','skill_class_engineer_emergency_reinstall_ultimate']);
 });
 
 test('tag dispel removes only matching harmful dispellable effects and publishes one event per effect',()=>{
