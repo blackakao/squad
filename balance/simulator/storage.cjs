@@ -54,7 +54,7 @@ function saveRun(directory,run,results=run.results) {
     yield ']}\n';
   }
   atomicParts(path.join(directory,'result.json'),raw());
-  atomicParts(path.join(directory,'report.md'),[makeReport(run,parseTargets(run.targetMarkdown),'./result.json')]);
+  atomicParts(path.join(directory,'report.md'),[run.focusPlan?require('./focus.cjs').focusMarkdown(run):makeReport(run,parseTargets(run.targetMarkdown),'./result.json')]);
   // Commit small dashboard data last, after the raw result and report exist.
   atomicParts(path.join(directory,'summary.json'),jsonParts(summary));
 }

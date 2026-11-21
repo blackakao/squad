@@ -95,6 +95,37 @@ function createEngine(data = loadData(), {width = 400, height = 300} = {}) {
     globalThis.simState = () => ({running:isBattleRunning,tick:combatEventTick,
       units:[...playerSquad,...enemySquad]});
     globalThis.simRunning = () => isBattleRunning;
+    globalThis.focusCatalog = id => {
+      const character=characterJson[id];
+      if(!character)throw new Error('분석할 캐릭터를 찾을 수 없습니다.');
+      const skills=getSkillsForClass(character.name);
+      return {characterId:id,name:character.name,character:structuredClone(character),
+        stats:CHARACTER_STAT_DEFS,statMax:CHARACTER_STAT_MAX,statTotal:CHARACTER_STAT_TOTAL,
+        fixedSkillIds:[...new Set([...character.skillIds.filter(key=>getSkillById(key)?.slot!=='optional'),...skills.filter(s=>s.slot!=='optional').map(s=>s.id)])],
+        optionalSkills:skills.filter(s=>s.slot==='optional').map(s=>({id:s.id,name:s.name,exclusiveSkillIds:s.exclusiveSkillIds || []})),
+        skills:skills.map(s=>({id:s.id,name:s.name})),
+        slots:getCharacterEquipmentSlots(character).map(slot=>({...slot,items:itemsJson.filter(item=>canEquipItemToSlot(item,slot.key,character)).map(item=>({id:item.id,name:item.name}))}))};
+    };
+    globalThis.focusNormalize = (id,variant) => {
+      const base=characterJson[id],equipment=createEquipmentSlots({},base);
+      const skillIds=limitOptionalSkillIds(variant.skillIds);
+      if(skillIds.length!==variant.skillIds.length)throw new Error('함께 사용할 수 없는 선택 스킬입니다.');
+      for(const slot of getCharacterEquipmentSlots(base)) {
+        const item=getItemById(variant.equipment[slot.key]);
+        if(item) {
+          if(!canEquipItemToSlot(item,slot.key,base))throw new Error('착용할 수 없는 장비입니다.');
+          if(equipment[slot.key]!==item.id)equipItemToSlot(equipment,item,slot.key,base);
+        }
+      }
+      return {attributes:createCharacterAttributes(variant.attributes),skillIds,equipment,skillSelections:structuredClone(base.skillSelections)};
+    };
+    globalThis.focusApply = (id,variant) => {
+      const previous=characterJson[id];
+      characterJson[id]=applyCharacterStatAbilities({...previous,...variant,
+        equipmentSets:[{name:'분석 세팅',equipment:variant.equipment}],activeEquipmentSet:0});
+      return previous;
+    };
+    globalThis.focusRestore = (id,previous) => {characterJson[id]=previous;};
     battleResultSink = result => { globalThis.simWinner = result; };
     globalThis.prepareSimulation = (teamA,teamB) => {
       nextSummonId = 1;
@@ -112,7 +143,7 @@ function createEngine(data = loadData(), {width = 400, height = 300} = {}) {
   if (!context.roster.length) throw new Error('No registered characters');
   delete context.inputData;
 
-  function runBattle({teamA, teamB, seed = 12345, maxSeconds = 600, battleId = 'battle-1', trace = false, drive = 'tick'}) {
+  function runBattle({teamA, teamB, seed = 12345, maxSeconds = 600, battleId = 'battle-1', trace = false, drive = 'tick', focus}) {
     for (const team of [teamA, teamB]) {
       if (!Array.isArray(team) || team.length < 1 || team.length > 10 || new Set(team).size !== team.length
         || team.some(id => !Number.isInteger(id) || !context.roster[id])) throw new Error('Each team needs 1–10 distinct valid character indexes');
@@ -123,7 +154,9 @@ function createEngine(data = loadData(), {width = 400, height = 300} = {}) {
     time = 1700000000000;
     random = seededRandom(seed);
     context.simWinner = null;
-    context.prepareSimulation(teamA, teamB);
+    let previous;
+    if(focus)previous=context.focusApply(focus.characterId,structuredClone(focus.variant));
+    try {context.prepareSimulation(teamA, teamB);} catch(error) {if(focus)context.focusRestore(focus.characterId,previous);throw error;}
     const rows = new Map();
     for (const unit of context.simState().units.filter(unit => !unit.isSummon)) rows.set(unit, {characterId:unit.id,name:unit.name,role:unit.role,
       team:unit.side === 'player' ? 'A' : 'B',damageDealt:0,healingDone:0,damageTaken:0,
@@ -160,15 +193,19 @@ function createEngine(data = loadData(), {width = 400, height = 300} = {}) {
           return {...row,...contribution.total,contribution,
             outcome:timedOut ? 'timeout' : !winner ? 'draw' : row.team === winner ? 'win' : 'loss'};
         }),summonTotals}; // Diagnostic subset already included in characters; never add twice.
+      if(focus)result.focus={characterId:focus.characterId,variantId:focus.variantId,teamSize:teamA.length,round:focus.round};
       if (trace) result.events = events;
       return result;
     } finally {
       unsubscribe();
       context.clearBattleSummons();
       vm.runInContext('isBattleRunning=false;', context);
+      if(focus)context.focusRestore(focus.characterId,previous);
     }
   }
   return {runBattle,roster:structuredClone(context.roster),
+    focusCatalog:id=>structuredClone(context.focusCatalog(id)),
+    normalizeFocus:(id,variant)=>structuredClone(context.focusNormalize(id,structuredClone(variant))),
     engineHash:fingerprint(SOURCES.map(name => fs.readFileSync(path.join(ROOT,'js',name+'.js'),'utf8')).join('\n'))};
 }
 module.exports = {createEngine,loadData,seededRandom,fingerprint,ROOT,SOURCES};

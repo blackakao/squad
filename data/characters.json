@@ -184,7 +184,10 @@
       "skill_class_monk_area_heal",
       "skill_class_monk_combo",
       "skill_class_monk_down_strike",
-      "skill_class_monk_vajra_talisman_ultimate"
+      "skill_class_monk_vajra_talisman_ultimate",
+      "skill_class_monk_sincere_heart",
+      "skill_class_monk_spring_sharing",
+      "skill_class_monk_swift_victory"
     ],
     "skillSelections": {},
     "portrait": "assets/images/portraits/character-003.png",
@@ -234,7 +237,9 @@
     ],
     "activeEquipmentSet": 0,
     "faction": "쥬신",
-    "attackType": "physical"
+    "attackType": "physical",
+    "entityGrade": 2,
+    "customResources": []
   },
   {
     "name": "성직자",
@@ -473,6 +478,7 @@
   },
   {
     "name": "갑사",
+    "entityGrade": 2,
     "hp": 2000,
     "mp": 100,
     "st": 150,
@@ -546,9 +552,7 @@
     ],
     "activeEquipmentSet": 0,
     "faction": "쥬신",
-    "attackType": "physical",
-    "entityGrade": 2,
-    "customResources": []
+    "attackType": "physical"
   },
   {
     "name": "드루이드",
@@ -700,6 +704,7 @@
   },
   {
     "name": "해병",
+    "entityGrade": 2,
     "hp": 4500,
     "mp": 100,
     "st": 100,
@@ -772,9 +777,7 @@
     ],
     "activeEquipmentSet": 0,
     "faction": "릴마리온",
-    "attackType": "physical",
-    "entityGrade": 2,
-    "customResources": []
+    "attackType": "physical"
   },
   {
     "name": "의무병",
@@ -855,6 +858,7 @@
   },
   {
     "name": "제독",
+    "entityGrade": 2,
     "hp": 2000,
     "mp": 200,
     "st": 100,
@@ -927,9 +931,7 @@
     ],
     "activeEquipmentSet": 0,
     "faction": "릴마리온",
-    "attackType": "magic",
-    "entityGrade": 2,
-    "customResources": []
+    "attackType": "magic"
   },
   {
     "name": "화염술사",
@@ -1009,6 +1011,7 @@
   },
   {
     "name": "광전사",
+    "entityGrade": 2,
     "hp": 2000,
     "mp": 100,
     "st": 150,
@@ -1081,9 +1084,7 @@
     ],
     "activeEquipmentSet": 0,
     "faction": "슈련",
-    "attackType": "physical",
-    "entityGrade": 2,
-    "customResources": []
+    "attackType": "physical"
   },
   {
     "name": "저격수",
@@ -1602,9 +1603,12 @@
     "attackRange": 4,
     "role": "tank",
     "skillIds": [
+      "skill_class_demon_duty",
       "skill_class_demon_brute",
       "skill_class_demon_summon_minions",
-      "skill_class_demon_summon_general"
+      "skill_class_demon_summon_general",
+      "skill_class_demon_legion",
+      "skill_class_demon_king_ultimate"
     ],
     "skillSelections": {},
     "portrait": "assets/images/portraits/소악마군단_악마.png",
@@ -2388,10 +2392,13 @@
       "skill_class_tamer_fusion",
       "skill_class_tamer_heal",
       "skill_class_tamer_reset",
-      "skill_class_tamer_unleash_ultimate"
+      "skill_class_tamer_unleash_ultimate",
+      "skill_class_tamer_raptor_power",
+      "skill_class_tamer_strong_heal",
+      "skill_class_tamer_aggression"
     ],
     "skillSelections": {
-      "skill_class_tamer_choice": "wolf"
+      "skill_class_tamer_choice": "raptor"
     },
     "portrait": "assets/images/portraits/쀼랜드_조련사.png",
     "attributes": {
@@ -2440,7 +2447,9 @@
     ],
     "activeEquipmentSet": 0,
     "faction": "쀼랜드",
-    "attackType": "physical"
+    "attackType": "physical",
+    "entityGrade": 2,
+    "customResources": []
   },
   {
     "name": "마귀",
@@ -2826,7 +2835,9 @@
       "skill_class_star_radiance",
       "skill_class_star_absorb",
       "skill_class_star_another_star_ultimate",
-      "skill_class_star_weak_gravity"
+      "skill_class_star_weak_gravity",
+      "skill_class_star_gamma_ray",
+      "skill_class_star_dust_cloud"
     ],
     "skillSelections": {},
     "portrait": "",
@@ -2876,6 +2887,8 @@
     ],
     "activeEquipmentSet": 0,
     "faction": "달빛교단",
-    "attackType": "magic"
+    "attackType": "magic",
+    "entityGrade": 2,
+    "customResources": []
   }
 ]

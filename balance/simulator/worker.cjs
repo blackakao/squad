@@ -2,7 +2,7 @@
 const fs=require('node:fs');
 const path=require('node:path');
 const {runSimulation}=require('./service.cjs');
-const {saveRun}=require('./storage.cjs');
+const {saveRun,atomicParts,jsonParts}=require('./storage.cjs');
 async function main(){
   const dir=path.resolve(process.argv[2]);
   const input=JSON.parse(fs.readFileSync(path.join(dir,'request.json'),'utf8'));
@@ -19,6 +19,7 @@ async function main(){
   let run;
   try {
     run=await runSimulation({...input,
+      onPlan:plan=>atomicParts(path.join(dir,'focus-plan.json'),jsonParts(plan)),
       shouldCancel:()=>parentGone || fs.existsSync(path.join(dir,'cancel')),
       onBattle:result=>fs.writeSync(journal,JSON.stringify(result)+'\n'),
       onProgress:progress=>{

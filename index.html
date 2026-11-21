@@ -36,8 +36,9 @@
 <div id="simulationPage" class="page hidden">
   <header class="simulation-heading"><div><h3>전투 테스트</h3><p>현재 캐릭터와 장비로 반복 전투를 실행하고 승률·DPS·HPS를 비교합니다.</p></div><span class="simulation-tag">균형 무작위 편성</span></header>
   <p id="simulationError" class="simulation-error" role="alert"></p>
+  <div role="tablist" aria-label="전투 분석 방식"><button type="button" id="simulationGeneralTab" role="tab" aria-selected="true" aria-controls="simulationGeneralPanel" onclick="SimulationPage.tab('general')">일반 전투 테스트</button><button type="button" id="simulationFocusTab" role="tab" aria-selected="false" aria-controls="simulationFocusPanel" onclick="SimulationPage.tab('focus')">캐릭터 집중 분석</button></div>
   <div class="simulation-top">
-    <section class="panel"><h4>실행 설정</h4>
+    <section class="panel" id="simulationGeneralPanel" role="tabpanel" aria-labelledby="simulationGeneralTab"><h4>실행 설정</h4>
       <form id="simulationForm" onsubmit="SimulationPage.start(event)">
         <fieldset id="simulationSettings">
           <label for="simulationPreset">전투 횟수</label>
@@ -49,6 +50,18 @@
         </fieldset>
       </form>
       <p class="simulation-note">저장된 캐릭터의 현재 장비·스킬과 공용 스탯 시너지를 사용합니다. 저장 팀의 배율·기존 배율 시너지·예비대는 적용하지 않습니다. 한 번에 하나만 실행합니다.</p>
+    </section>
+    <section class="panel hidden" id="simulationFocusPanel" role="tabpanel" aria-labelledby="simulationFocusTab"><h4>캐릭터 집중 분석</h4>
+      <form onsubmit="SimulationPage.startFocus(event)"><fieldset id="simulationFocusSettings">
+        <label>분석 캐릭터<select id="simulationFocusCharacter" required></select></label>
+        <div class="simulation-fields"><label>총 전투 예산<input id="simulationFocusCount" type="number" min="1" max="10000" value="1000" required></label><label>비교 세팅 후보 수 (최대 200)<input id="simulationFocusCandidates" type="number" min="1" max="200" value="100" required></label><label>규모별 세팅당 반복 횟수<input id="simulationFocusRepeats" type="number" min="1" max="1000" value="3" required></label></div>
+        <p class="simulation-note">스탯은 6종 중 3종에 50씩 투자하는 총 150점, 20가지 배분입니다. 후보를 무작위 선정하여 1:1 → 3:3 → 10:10 순서로 검증합니다. 앞 단계에서 총 예산을 모두 쓰면 이후 단계는 실행하지 않습니다. 마지막 가능한 규모에서는 남은 예산으로 반복합니다.</p>
+        <label><input id="simulationFocusSkills" type="checkbox" checked>선택 스킬 0~3개 조합 변경</label><label><input id="simulationFocusEquipment" type="checkbox" checked>착용 가능한 등록 장비와 미착용 조합 변경</label>
+        <p class="simulation-note">체크 해제한 항목은 현재 세팅을 유지합니다. 선택 분기·룬은 고정하고 분석 캐릭터의 장비 세트는 후보 1개로 고정합니다. 원본 캐릭터는 변경하지 않습니다.</p>
+        <div class="simulation-fields"><label>Seed<input id="simulationFocusSeed" type="number" min="0" max="4294967295" value="12345" required></label><label>전투 제한시간(초)<input id="simulationFocusMaxSeconds" type="number" min="1" max="3600" value="600" required></label><label>추천 최소 표본<input id="simulationFocusMinSamples" type="number" min="1" max="10000" value="30" required></label><label>동시 계산<select id="simulationFocusWorkers"><option value="0">자동</option><option value="1">1개</option><option value="2">2개</option><option value="4">4개</option><option value="8">8개</option></select></label></div>
+        <button type="button" onclick="SimulationPage.previewFocus()">후보·단계 미리보기</button><button type="submit">집중 분석 시작</button>
+        <div id="simulationFocusPreview" role="status"></div>
+      </fieldset></form>
     </section>
     <section class="panel"><h4>진행 상태</h4><div id="simulationProgress" aria-live="polite">실행 대기 중</div><progress id="simulationProgressBar" max="100" value="0" aria-label="완료 전투 비율"></progress><p id="simulationTiming">경과 — · 예상 잔여 —</p><button id="simulationCancel" type="button" disabled onclick="SimulationPage.cancel()">중단</button><p class="simulation-note">다른 메뉴로 이동하거나 새로고침해도 서버에서 계속 실행됩니다. 중단 시 현재 전투가 끝난 뒤 결과를 보존합니다.</p></section>
   </div>
@@ -1089,7 +1102,8 @@
 <script src="js/expected-dps.js?20261118-dancer"></script>
 <script src="js/main.js?v=20261107-rune-mount-ui"></script>
 <script src="js/simulation-analysis.js?v=20261107-combinations"></script>
-<script src="js/simulation.js?v=20261114-storage"></script>
+<script src="js/simulation-focus.js?v=20261121"></script>
+<script src="js/simulation.js?v=20261121-focus"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="js/bootstrap-ui.js?v=20261011-simulation"></script>
 

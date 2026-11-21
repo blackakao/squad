@@ -2,7 +2,7 @@
   "entityId": "demon_minion",
   "name": "악마 졸개",
   "role": "ranged",
-  "description": "원거리 마법 공격을 하며 주인을 향한 피해를 100% 대신 받고 한 번 피격되면 사라지는 임시 소환수.",
+  "description": "원거리 마법 공격을 하며 주인을 향한 피해를 100% 대신 받고 피격 횟수 퇴장은 엔진 확장 대기 중인 임시 소환수.",
   "icon": "assets/images/entities/악마_졸개.png",
   "summonType": "temporary",
   "attackType": "magic",
@@ -14,16 +14,16 @@
   ],
   "ai": "ranged",
   "stats": {
-    "hp": 1,
+    "hp": 10,
     "mp": 100,
     "st": 100,
     "atk": 0,
-    "magic": 30,
+    "magic": 0,
     "defense": 0,
     "resistance": 0,
     "speed": 1.5,
     "attackSpeed": 1,
-    "castTime": 0,
+    "castTime": 1.5,
     "attackRange": 4
   }
 }

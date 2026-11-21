@@ -71,6 +71,7 @@
 - **저장:** 화면 이벤트 → 도메인 모듈의 저장 함수 → `js/api.js` → `server.py` → `data/*.json`; Entity는 `js/entity.js` → `/api/entities` → `entity_store.py` 및 `data/entities/*.json` 경로입니다. API 조회 시 Entity 자동 이전 가능성을 고려하세요.
 - **전투:** 팀/캐릭터 선택 → `createSquadFromCharacterIds`·`createCharacter` → `js/battle.js`의 전투 틱·스킬 처리 → `js/battle-events.js` 집계 → `js/record.js` 기록 저장. 스킬·장비·시너지 변경은 유닛 생성 시점과 전투 중 보정 양쪽을 확인하세요.
 - **시뮬레이션:** 브라우저 `js/simulation.js` → 서버 Job API → `simulation_jobs.py` → Node 공통 서비스/Worker → 실제 전투 모듈을 로드하는 `engine.cjs` → 결과 저장·조회. 브라우저 화면 자체에서 반복 전투를 계산하지 않습니다.
+- **캐릭터 집중 분석:** `focus.cjs`가 실제 엔진의 스킬/장비 정규화 함수로 후보를 만들고 동일 회차 비교용 편성·Seed를 계획합니다. 기존 `service.cjs`/`pool.cjs`를 재사용하며 `engine.cjs`는 해당 전투 동안 분석 캐릭터 복사본에만 후보를 적용하고 복원합니다. `focus-preview.cjs`는 미리보기 API, `js/simulation-focus.js`는 저장된 계획/통계의 보고서 렌더링을 담당합니다.
 - **3D 분리:** `character-viewer.html`의 GLB 조립기와 `character-viewer-legacy.html`의 절차형 JS 뷰어는 별개입니다. Legacy 의존 코드가 현재 GLB 경로에서도 쓰이는지는 제거 전 [감사 보고서](GLB_LEGACY_AUDIT.md)와 실제 호출부를 대조하세요.
 
 ### 검증 경로 및 주의
@@ -218,3 +219,5 @@
 - 승려 선택 확장(2026-11-21): 기존 선택 보정과 시전 완료 횟수·쿨다운·지속 효과 경로로 조건부 버프 복사, 궁 추가 사용, 교대 피해를 처리한다. [현행 계약](SKILL_ENGINE.md#승려-개편-기본궁선택-6종-2026-11-21).
 
 - 별소환사 재개편(2026-11-21): 선택 보정은 사거리/감쇠/필드 시간과 지연 액션을 구성한다. 시전 완료에서 쿨다운 초기화·지연 예약을 처리하며 필드 틱에서 지연 실행과 실제 피해 비례 HP 비용을 처리한다. 소환 생성은 새 개체에만 패시브 필드를 초기화한다. [계약](SKILL_ENGINE.md#별소환사-재개편-기본궁선택-6종-2026-11-21).
+
+- 악마 재개편(2026-11-21): 소환수 수 기반 마력·피해 감소, 수명 만료 보호막/실제 MP 반환, 1회 피격 퇴장과 왕 생존 보정, 선택 수명·개체 수·군단 연장을 기존 소환/효과/시전 경로에 연결했다. [현행 계약](SKILL_ENGINE.md#악마-재개편-패시브기본궁선택-6종-2026-11-21).

@@ -51,6 +51,33 @@ class StorageApiTest(unittest.TestCase):
                             break
                         except OSError:
                             time.sleep(.1)
+                    focus_settings = {'count': 3, 'maxSeconds': 1, 'minSamples': 1, 'workers': 2,
+                        'focus': {'characterId': 0, 'candidateLimit': 1, 'repeats': 1,
+                                  'varySkills': True, 'varyEquipment': True}}
+                    preview_request = urllib.request.Request(f'http://127.0.0.1:{port}/api/simulation-focus-plan',
+                        data=json.dumps(focus_settings).encode(), headers={'Content-Type': 'application/json'})
+                    with urllib.request.urlopen(preview_request, timeout=30) as response:
+                        preview = json.load(response)
+                    self.assertEqual([s['planned'] for s in preview['stages']], [1, 1, 1])
+                    focus_job = request(method='POST', body=focus_settings)
+                    self.assertEqual(finish(focus_job)['status'], 'COMPLETED')
+                    focus_result = request('/' + focus_job['simulationId'] + '/result')
+                    self.assertEqual(focus_result['focusPlan'], preview)
+                    self.assertEqual([s['completed'] for s in focus_result['focusSummary']['stages']], [1, 1, 1])
+                    self.assertNotIn('results', focus_result)
+                    self.assertTrue((root / 'balance/jobs' / focus_job['simulationId'] / 'focus-plan.json').exists())
+                    focus_directory = root / 'balance/jobs' / focus_job['simulationId']
+                    for name in ('result.json', 'summary.json', 'report.md'):
+                        (focus_directory / name).unlink()
+                    focus_meta = json.loads((focus_directory / 'job.json').read_text(encoding='utf-8'))
+                    focus_meta.update(status='FAILED', error='simulated focus storage failure')
+                    (focus_directory / 'job.json').write_text(json.dumps(focus_meta), encoding='utf-8')
+                    subprocess.run(['node', str(root / 'balance/simulator/recover.cjs'), str(focus_directory)],
+                        cwd=root, check=True, capture_output=True, timeout=30)
+                    recovered_focus = request('/' + focus_job['simulationId'] + '/result')
+                    self.assertEqual(recovered_focus['focusSummary'], focus_result['focusSummary'])
+                    self.assertEqual(recovered_focus['focusPlan'], focus_result['focusPlan'])
+                    request('/' + focus_job['simulationId'], 'DELETE')
                     job = request(method='POST', body={'count': 2, 'teamSize': 10, 'maxSeconds': 1})
                     self.assertEqual(finish(job)['status'], 'COMPLETED')
                     job_id = job['simulationId']

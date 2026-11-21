@@ -83,6 +83,9 @@ function getSummonConfiguration(source, action) {
   stats.hp=Math.max(1,stats.hp+modifiers.reduce((sum,value)=>sum+value.hpAdd,0));
   stats.atk=Math.max(0,(Number(stats.atk) || 0)+modifiers.reduce((sum,value)=>sum+value.atkAdd,0));
   stats.attackSpeed=Math.max(.1,(Number(stats.attackSpeed) || 1)+modifiers.reduce((sum,value)=>sum+value.attackIntervalAdd,0));
+  stats.magic=Math.max(0,(Number(stats.magic) || 0)*modifiers.reduce((value,m)=>value*m.magicPercent/100,1));
+  if (action.inheritOwnerRange) stats.attackRange=Math.max(0,Number(source.attackRange) || 0);
+  const durationModifier=[...modifiers].reverse().find(m=>m.durationOverride != null);
   const mobile=entity.ai === "stationary" && modifiers.some(value=>value.mobile);
   const movement=mobile ? modifiers.find(value=>value.mobile) : null;
   const speed=mobile ? ((typeof ROLE_STATS !== "undefined" ? ROLE_STATS[entity.role]?.speedMultiplier : 1) ?? 1)*movement.movementBasePercent/100 : entity.ai === "stationary" ? 0 : stats.speed;
@@ -91,7 +94,7 @@ function getSummonConfiguration(source, action) {
     summonType:entity.summonType === "persistent" ? "persistent" : "temporary",
     speed,lockedSpeed,focusAttackPercent:Math.max(0,...modifiers.map(value=>value.focusAttackPercent)),
     skillIds:[...(entity.skillIds ?? [])],basicAttackDisabled:entity.basicAttackDisabled === true,
-    limitScope:action.limitScope ?? "skill",count:action.count ?? 1,limit:Math.max(1,(action.limit ?? 3)+modifiers.reduce((sum,value)=>sum+value.limitAdd,0)),lifetime:action.duration ?? 20,summonCenter:action.summonCenter ?? "self",
+    limitScope:action.limitScope ?? "skill",count:(action.count ?? 1)+modifiers.reduce((sum,m)=>sum+m.countAdd,0),limit:Math.max(1,(action.limit ?? 3)+modifiers.reduce((sum,value)=>sum+value.limitAdd,0)),lifetime:durationModifier ? durationModifier.durationOverride : action.duration ?? 20,summonCenter:action.summonCenter ?? "self",
     copyAppearance:action.copyAppearance === true,
     entityGrade:Math.max(1,Math.min(10,Math.floor(Number(entity.entityGrade) || 2))),
     ownerDiesOnDeath:entity.ownerDiesOnDeath === true,receivedDamagePercent:Math.max(0,Number(entity.receivedDamagePercent ?? 100)),

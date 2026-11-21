@@ -870,7 +870,7 @@ function getSummonSynergyEffects(unit) {
     const config=skill.ownedSummonAura;
     const count=getLivingOwnedSummons(unit).filter(summon=>(!config.entityIds.length || config.entityIds.includes(summon.entityId))
       && !summon.removed && distance(unit,summon)<=config.radius*ATTACK_RANGE_UNIT).length;
-    for (const [stat,mode,value] of [["atk","percent",config.attackPercent],["defense","flat",config.defense],["resistance","flat",config.resistance]])
+    for (const [stat,mode,value] of [["magic","percent",config.magicPercent],["atk","percent",config.attackPercent],["defense","flat",config.defense],["resistance","flat",config.resistance]])
       if (count && value) effects.push({kind:"buff",stat,mode,value:value*count,stacks:1});
   }
   if (unit.isSummon && unit.summonFocusAttackPercent>0) {

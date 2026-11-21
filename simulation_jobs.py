@@ -167,7 +167,44 @@ class SimulationJobs:
             if type(value) is not int or not low <= value <= high:
                 raise SimulationError(f"{key}: {low}~{high} 범위의 정수를 입력해 주세요.")
             result[key] = value
+        if "focus" in values:
+            focus = values["focus"]
+            if not isinstance(focus, dict):
+                raise SimulationError("집중 분석 설정이 필요합니다.")
+            checked = {}
+            for key, default, low, high in (("characterId", -1, 0, 100000), ("candidateLimit", 100, 1, 200), ("repeats", 3, 1, 1000)):
+                value = focus.get(key, default)
+                if type(value) is not int or not low <= value <= high:
+                    raise SimulationError(f"집중 분석 {key}: {low}~{high} 정수를 입력해 주세요.")
+                checked[key] = value
+            for key in ("varySkills", "varyEquipment"):
+                value = focus.get(key, True)
+                if type(value) is not bool:
+                    raise SimulationError("스킬/장비 변경 여부는 참/거짓이어야 합니다.")
+                checked[key] = value
+            result.update(focus=checked, teamSize=1)
         return result
+
+    def focus_preview(self, values):
+        settings = self.settings(values)
+        if "focus" not in settings:
+            raise SimulationError("집중 분석 설정이 필요합니다.")
+        node = shutil.which("node")
+        if not node:
+            raise SimulationError("Node.js 22.8 이상이 필요합니다.", 503)
+        data = self._snapshot()
+        if len(data["characters"]) < 2 or settings["focus"]["characterId"] >= len(data["characters"]):
+            raise SimulationError("분석 캐릭터와 상대 캐릭터가 필요합니다.")
+        try:
+            completed = subprocess.run([node, str(self.root / "balance/simulator/focus-preview.cjs")],
+                input=json.dumps({"settings": settings, "inputSnapshot": data}), capture_output=True,
+                text=True, encoding="utf-8", timeout=30, cwd=self.root,
+                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+        except subprocess.TimeoutExpired as exc:
+            raise SimulationError("후보 생성 시간이 초과되었습니다. 후보 수를 줄여 주세요.") from exc
+        if completed.returncode:
+            raise SimulationError(completed.stderr[:1000] or "후보 생성에 실패했습니다.")
+        return json.loads(completed.stdout)
 
     def start(self, values):
         settings = self.settings(values)
@@ -180,6 +217,8 @@ class SimulationJobs:
             if not node:
                 raise SimulationError("전투 테스트에는 Node.js 22.8 이상이 필요합니다. 설치 후 서버를 다시 시작해 주세요.", 503)
             data = self._snapshot()
+            if settings.get("focus") and settings["focus"]["characterId"] >= len(data["characters"]):
+                raise SimulationError("분석 캐릭터를 찾을 수 없습니다.")
             if len(data["characters"]) < 2 * settings["teamSize"]:
                 raise SimulationError("양 팀을 편성할 캐릭터 수가 부족합니다.")
             markdown = self.targets_path.read_text(encoding="utf-8")

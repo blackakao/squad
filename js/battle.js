@@ -206,6 +206,8 @@ function summonBattleUnits(source, action, skill, target = source) {
   for (let i = 0; i < config.count && canSummonBattleUnit(source, action, skill); i++) {
     const unit = createSummonedBattleUnit(source, {...config,spawnCenter:config.summonCenter === "target" ? target : source});
     unit.summonSkillId = skill?.id;
+    unit.ownerReceivedDamagePercent=action.ownerReceivedDamagePercent ?? 100;
+    unit.disappearOnHit=action.disappearOnHit === true;
     unit.summonTicks = config.lifetime > 0 ? Math.max(1, Math.round(config.lifetime * BASE_ATTACK_COOLDOWN)) : null;
     const suspension=action.suspensionEffectId && source.activeEffects?.find(effect=>effect.id === action.suspensionEffectId);
     if (suspension) {unit.suspensionEffectId=action.suspensionEffectId;unit.suspendedTicks=Math.max(1,suspension.remainingTicks ?? 1);}
@@ -220,6 +222,7 @@ function summonBattleUnits(source, action, skill, target = source) {
         applySkillAction(source,unit,{...field,_origin:unit},runtime);
     }
   }
+  for (const unit of created) unit.summonPaidMp=Math.max(0,Number(action._resourceSpent?.MP) || 0)/created.length;
   if (created.length) refreshSummonCountBuffs(getSummonOwner(source));
   if (action.retreatBehindSummons && created.length) {
     // The opposing side defines the front; search a collision-free position behind every clone.
@@ -268,6 +271,20 @@ function createSummonedBattleUnit(source, config) {
     return unit;
 }
 
+function rewardExpiredSummon(unit) {
+  const owner=unit.owner ?? unit.summoner;
+  if (!owner?.alive || unit.expiryRewarded) return;
+  unit.expiryRewarded=true;
+  for (const skill of (owner.skillIds ?? []).map(getSkillById).filter(s=>s?.ownedSummonAura?.expiryBarrierMagicPercent>0 && !isUnitSkillDisabled(owner,s))) {
+    if (skill.ownedSummonAura.entityIds.length && !skill.ownedSummonAura.entityIds.includes(unit.entityId)) continue;
+    const amount=Math.max(0,unit.magic)*skill.ownedSummonAura.expiryBarrierMagicPercent/100;
+    if (amount>0) applyTimedEffectAction(owner,owner,normalizeSkillAction({type:"add_buff",target:"self",duration:0,effect:{id:`summon_expiry_${unit.id}`,name:skill.name,mode:"barrier",barrierMode:"fixed",value:amount}}),skill);
+    const percent=getSelectedSkillModifiers(owner,skill).reduce((sum,m)=>sum+m.summonExpiryRefundPercent,0);
+    const refund=Math.min(owner.maxMp-owner.mp,(unit.summonPaidMp || 0)*percent/100);
+    if (refund>0) {owner.mp+=refund;publishBattleEvents([{type:"resource_refund",source:owner,target:owner,skill,resource:"MP",amount:refund}]);}
+  }
+}
+
 function updateSummonLifetimes() {
   for (const unit of [...playerSquad,...enemySquad]) {
     if (!unit.isSummon) continue;
@@ -285,6 +302,7 @@ function updateSummonLifetimes() {
     if (!unit.isSummon || !unit.alive || unit.summonTicks == null) return;
     unit.summonTicks--;
     if (unit.summonTicks <= 0) {
+      rewardExpiredSummon(unit);
       unit.hp = 0;
       syncAliveState(unit,{reason:"소환 수명 종료"});
       unit.pendingAction = null;
@@ -1356,6 +1374,17 @@ function resolveSkillCast(unit, action) {
     unit.skillCooldowns={};unit.skillCooldownTotals={};unit.skillComboStages={};unit.skillConsecutiveUses={};
   }
   for (const row of skill.delayedActions ?? []) (unit.delayedSkillActions ??= []).push({remainingTicks:Math.max(1,Math.ceil(row.delay*BASE_ATTACK_COOLDOWN)),actions:structuredClone(row.actions),skill});
+  for (const row of skill.triggerSkills ?? []) {
+    const definition=getSkillById(row.skillId);
+    if (!definition || !unit.alive) continue;
+    const triggered={...getRuntimeSelectionSkill(unit,definition),triggered:true};
+    const previous=new Map([...playerSquad,...enemySquad].map(target=>[target,(target.activeEffects ?? []).map(effect=>({id:effect.id,casterId:effect.casterId,ticks:effect.remainingTicks}))]));
+    dispatchSkillActions(unit,unit,triggered,false);
+    if (row.extendDuration) for (const [target,effects] of previous) for (const effect of target.activeEffects ?? []) {
+      const old=effects.find(e=>e.id === effect.id && e.casterId === effect.casterId);
+      if (effect.casterId === unit.effectCasterId && old?.ticks>0 && triggered.actions.some(action=>action.effect?.id === effect.id)) effect.remainingTicks+=old.ticks;
+    }
+  }
   for(const reduction of skill.cooldownReductions ?? []) unit.skillCooldowns[reduction.skillId]=Math.max(0,(unit.skillCooldowns[reduction.skillId] ?? 0)-Math.round(reduction.seconds*BASE_ATTACK_COOLDOWN));
   syncCompanionSkillCooldowns(unit);
   advanceSkillCombo(unit,skill);

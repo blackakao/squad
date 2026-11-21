@@ -181,7 +181,7 @@ def save_asset_image(asset_kind, image_bytes, name, ext):
 
 class BattleHandler(SimpleHTTPRequestHandler):
     def handle_simulation_request(self, path):
-        if not (path == "/api/simulation-targets" or path == "/api/simulations" or path.startswith("/api/simulations/")):
+        if not (path in ("/api/simulation-focus-plan", "/api/simulation-targets", "/api/simulations") or path.startswith("/api/simulations/")):
             return False
         try:
             jobs = get_simulation_jobs()
@@ -191,7 +191,9 @@ class BattleHandler(SimpleHTTPRequestHandler):
                 if size < 0 or size > 16384:
                     raise SimulationError("요청 크기가 너무 큽니다.")
                 body = json.loads(self.rfile.read(size) or b"{}")
-            if path == "/api/simulation-targets" and self.command in ("GET", "PUT"):
+            if path == "/api/simulation-focus-plan" and self.command == "POST":
+                result = jobs.focus_preview(body)
+            elif path == "/api/simulation-targets" and self.command in ("GET", "PUT"):
                 if self.command == "PUT" and (not isinstance(body, dict) or body.get("targets") is None):
                     raise SimulationError("목표 설정이 필요합니다.")
                 result = jobs.targets(body["targets"] if self.command == "PUT" else None)

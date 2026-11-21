@@ -4,16 +4,19 @@ const {createEngine,fingerprint,ROOT} = require('./engine.cjs');
 const {createSampler} = require('./runner.cjs');
 const {aggregate,parseTargets} = require('./report.cjs');
 const {runPool,workerCount}=require('./pool.cjs');
+const {createFocusPlan,createFocusSampler,summarizeFocus}=require('./focus.cjs');
 
 // Shared by the CLI and server worker. A yield between complete battles permits
 // cancellation/parent-disconnect handling without changing any combat ticks.
-async function runSimulation({settings,inputSnapshot,targetMarkdown,onProgress=()=>{},onBattle=()=>{},shouldCancel=()=>false}) {
+async function runSimulation({settings,inputSnapshot,targetMarkdown,onProgress=()=>{},onBattle=()=>{},onPlan=()=>{},shouldCancel=()=>false}) {
   const startedAt=new Date().toISOString(),start=performance.now();
   const engine=createEngine(inputSnapshot,settings);
   settings={...settings,teamSize:settings.teamSize ?? Math.min(3,Math.floor(engine.roster.length/2))};
   settings.workers=workerCount(settings);
   parseTargets(targetMarkdown);
-  const next=createSampler(engine.roster.length,settings.teamSize,settings.seed);
+  const focusPlan=settings.focus?createFocusPlan(engine,settings):null;
+  if(focusPlan)onPlan(focusPlan);
+  const next=focusPlan?createFocusSampler(focusPlan,settings,engine.roster.length):createSampler(engine.roster.length,settings.teamSize,settings.seed);
   const results=[];
   let status='COMPLETED',error=null;
   onProgress({completed:0,total:settings.count,elapsedSeconds:0,workers:settings.workers});
@@ -42,6 +45,7 @@ async function runSimulation({settings,inputSnapshot,targetMarkdown,onProgress=(
   return {schemaVersion:1,startedAt,finishedAt:new Date().toISOString(),status,error,
     completed:results.length,elapsedSeconds:(performance.now()-start)/1000,nodeVersion:process.version,gitRevision,
     engineHash:engine.engineHash,dataHash:fingerprint(inputSnapshot),settings,inputSnapshot,targetMarkdown,
-    summary:aggregate(results,engine.roster,settings.minSamples),results};
+    summary:aggregate(results,engine.roster,settings.minSamples),results,
+    ...(focusPlan?{focusPlan,focusSummary:summarizeFocus(results,focusPlan,settings.minSamples)}:{})};
 }
 module.exports={runSimulation};

@@ -1,0 +1,27 @@
+{
+  "entityId": "demon_king",
+  "name": "악마의 왕",
+  "role": "ranged",
+  "ai": "ranged",
+  "attackType": "magic",
+  "summonType": "temporary",
+  "tags": [
+    "summon",
+    "demon",
+    "external:demon"
+  ],
+  "description": "15초 유지, 소환 시 악마 마력 100%와 주무기 사거리 상속. 살아 있는 동안 소유자 받는 피해 20% 감소.",
+  "stats": {
+    "hp": 1500,
+    "mp": 100,
+    "st": 100,
+    "atk": 0,
+    "magic": 0,
+    "defense": 0,
+    "resistance": 0,
+    "speed": 1,
+    "attackSpeed": 2,
+    "castTime": 1,
+    "attackRange": 0
+  }
+}

@@ -2,7 +2,7 @@
   "entityId": "demon_general",
   "name": "악마장군",
   "role": "melee",
-  "description": "2초마다 자신 중심 3m에 광역 마법 공격을 하는 임시 소환수.",
+  "description": "1초 시전·1초 공격 간격으로 자신 중심 3m에 광역 마법 공격을 하는 임시 소환수.",
   "icon": "assets/images/entities/악마_악마장군.png",
   "summonType": "temporary",
   "attackType": "magic",
@@ -14,16 +14,16 @@
   ],
   "ai": "melee",
   "stats": {
-    "hp": 800,
+    "hp": 300,
     "mp": 100,
     "st": 100,
     "atk": 10,
-    "magic": 100,
+    "magic": 0,
     "defense": 15,
     "resistance": 15,
     "speed": 1,
-    "attackSpeed": 2,
-    "castTime": 0,
-    "attackRange": 3
+    "attackSpeed": 1,
+    "castTime": 1,
+    "attackRange": 0
   }
 }

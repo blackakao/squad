@@ -1,5 +1,13 @@
 # 데이터 구조
 
+### 캐릭터 집중 분석 저장 계약 (2026-11-21)
+
+- 기존 Job 설정에 선택적 `focus: {characterId, candidateLimit, repeats, varySkills, varyEquipment}`를 추가합니다. characterId는 실행 당시 캐릭터 배열 인덱스입니다. 집중 분석은 teamSize=1로 시작하지만 각 전투의 실제 규모는 별도로 기록합니다.
+- `POST /api/simulation-focus-plan`은 실행 설정으로 후보 계획을 미리 계산하며 게임 파일/Job을 쓰지 않습니다. 시작은 기존 `POST /api/simulations`를 사용합니다.
+- `focus-plan.json`과 결과의 `focusPlan`에 실행 당시 캐릭터 이름, 카탈로그, 정규화된 후보별 스탯/스킬/장비/선택 분기, 원시 조합 수 문자열, 단계별 계획을 저장합니다. BigInt 조합 수는 문자열로 직렬화합니다.
+- 전투 원본의 `focus`는 characterId/variantId/teamSize/round를 기록합니다. `focusSummary.stages`는 규모별 세팅 집계·최고 후보·표본 부족·동률 수를 담고 summary.json과 원본 JSON 양쪽에 보존됩니다. 일반 전투의 기존 필드는 유지합니다.
+- journal 복구는 보존된 focus-plan.json을 사용하여 집중 분석 집계를 복원합니다. 계획 파일이 없으면 추측해서 복구하지 않습니다. 삭제 시 계획도 Job 디렉터리와 함께 삭제합니다.
+
 ## 스킬별 장전·반응 수명·장판 오라 (2026-11-21)
 
 - 패시브 실행 규칙 `reload: {step}`는 액티브별 감축 초를 저장한다. 선택 modifier `reloadExtraUse`는 무료 즉시시전 이후 유료 추가 즉시시전을 활성화한다. `reloadCharges`, `reloadExtra`, 시전 문맥 `reloadInfo`는 런타임 전용이며 저장하지 않는다. 기존 MP 지불/시전 완료/중단/궁 제한 경로에 연결한다.
@@ -527,3 +535,11 @@ Entity의 선택 불리언 `mainSummon`은 전투 상태창의 주인 아래 표
 - 소환 액션 `initializeFieldsFromSkillId`: 새 개체와 일치하는 `originEntityId`를 가진 지정 패시브의 필드만 선택 보정 후 초기화한다. 기존 소환수 필드는 다시 만들지 않는다. `suspensionEffectId`를 지정하면 생성 시 소유자에 해당 버프가 존재하는 경우 그 남은 시간과 숨김을 연결한다.
 - 필드 액션 `fieldRequiredEffectId`: 시전자에게 해당 효과가 없으면 필드를 종료한다. `fieldSelfHpCostPercent`: 각 필드 틱에서 준 실제 피해 합계의 지정 비율을 시전자 HP에서 직접 소모하고 기존 자원 감소·사망 이벤트로 기록한다. 기본값은 빈 ID/0으로 기존 필드 동작을 유지한다. 위 액션 메타데이터는 편집 왕복에서 보존한다.
 - 또다른 별의 MP 면제는 새 자원 스키마 없이 기존 자기 버프의 `skillModifiers`에 `resourceTypes:["MP"]`, `resourceCostPercent:0`으로 구성한다.
+
+### 악마 소환 생명주기 확장 (2026-11-21)
+
+- `ownedSummonAura`에 `magicPercent`, `damageReduction`, `expiryBarrierMagicPercent`를 추가한다. 앞 두 필드는 살아 있는 자기 소환수 수에 대한 선형 보정이며 만료 보호막은 만료 시 현재 소환수 마력을 기준으로 한다.
+- `selectionModifier.summonModifiers`의 `countAdd`는 소환 수, `magicPercent`는 상속 후 마력 배율, nullable `durationOverride`는 수명 덮어쓰기(0=무기한)다. 선택 보정 `summonRequirement`는 생존/부재 활성화 조건을 지정하고 `summonExpiryRefundPercent`는 만료 때 실제 소모 MP 반환 비율이다.
+- 소환 액션 `inheritOwnerRange`는 생성 시 소유자의 주무기 사거리를 상속한다. `disappearOnHit`는 HP와 별개로 막히지 않은 양수 피해의 첫 피격에 강제 퇴장하며 실제 피해 통계는 남은 HP 소거를 제외한다. `ownerReceivedDamagePercent`는 해당 소환수 생존 중 소유자 받는 피해 배율이다. 편집 왕복에서 보존한다.
+- 실행/선택 규칙 `triggerSkills: [{skillId, extendDuration}]`는 시전 완료 후 기존 스킬의 효과만 비용·추가 시전·쿨다운 없이 실행한다. 연장 옵션은 동일 시전자의 기존 버프 남은 시간에 새 지속시간을 더한다.
+- 런타임 `summonPaidMp`는 배치의 실제 MP 지출을 생성 개체 수로 나눈 몫, `expiryRewarded`는 만료 보상 중복 방지 플래그다. 수명 만료 경로에서만 보상하며 전투 사망·강제 제거는 제외한다. 무기한 보호막은 개체별 별도 효과로 합산하고 MP 반환은 기존 `resource_refund` 이벤트를 기록한다.

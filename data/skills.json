@@ -1120,7 +1120,7 @@
     "id": "skill_class_monk_area_heal",
     "name": "승려 · 따듯한 포옹",
     "className": "승려",
-    "icon": "assets/images/skills/승려_치유의 파동.png",
+    "icon": "assets/images/skills/승려_따듯한 포옹.png",
     "description": "주변 5m 아군에게 공격력 100% HP 회복.",
     "slot": "active",
     "cooldown": 12,
@@ -1545,6 +1545,7 @@
     ]
   },
   {
+    "icon": "assets/images/skills/승려_내려찍기.png",
     "id": "skill_class_monk_down_strike",
     "name": "승려 · 내려찍기",
     "className": "승려",
@@ -1590,6 +1591,7 @@
     ]
   },
   {
+    "icon": "assets/images/skills/승려_금강역사의 부적.png",
     "id": "skill_class_monk_vajra_talisman_ultimate",
     "name": "승려 · 금강역사의 부적",
     "className": "승려",
@@ -1612,6 +1614,7 @@
     ]
   },
   {
+    "icon": "assets/images/skills/승려_진심의 마음.png",
     "id": "skill_class_monk_sincere_heart",
     "name": "승려 · 진심의 마음",
     "className": "승려",
@@ -1629,6 +1632,7 @@
     "description": "순환의 물리 피해 치유 전환율을 50%로 증가."
   },
   {
+    "icon": "assets/images/skills/승려_봄의 나눔.png",
     "id": "skill_class_monk_spring_sharing",
     "name": "승려 · 봄의 나눔",
     "className": "승려",
@@ -1646,6 +1650,7 @@
     "description": "봄의 기운을 다른 아군에게 적용하면 자신도 같은 효과를 받는다."
   },
   {
+    "icon": "assets/images/skills/승려_부적장사.png",
     "id": "skill_class_monk_talisman_merchant",
     "name": "승려 · 부적장사",
     "className": "승려",
@@ -1664,6 +1669,7 @@
     "description": "금강역사의 부적을 전투당 2회 사용하며 첫 사용 후 10초 뒤 다시 사용할 수 있다."
   },
   {
+    "icon": "assets/images/skills/승려_속전속결.png",
     "id": "skill_class_monk_swift_victory",
     "name": "승려 · 속전속결",
     "className": "승려",
@@ -1685,6 +1691,7 @@
     }
   },
   {
+    "icon": "assets/images/skills/승려_미간 강타.png",
     "id": "skill_class_monk_forehead_strike",
     "name": "승려 · 미간 강타",
     "className": "승려",
@@ -1702,6 +1709,7 @@
     "description": "내려찍기 시전 완료마다 다음 내려찍기 피해 30% 강화와 소모를 교대한다."
   },
   {
+    "icon": "assets/images/skills/승려_따뜻한 계절.png",
     "id": "skill_class_monk_warm_season",
     "name": "승려 · 따뜻한 계절",
     "className": "승려",
@@ -5302,10 +5310,10 @@
     "name": "악마 · 덩치소환/덩치공격",
     "className": "악마",
     "icon": "assets/images/skills/악마_덩치소환.png",
-    "description": "덩치가 없으면 소환합니다. 덩치는 악마가 받는 피해의 60%를 대신 받습니다. 덩치가 생존 중이면 5초 동안 덩치의 마력이 25% 증가합니다.",
+    "description": "덩치 부재 시 3초/MP 30/CD 0으로 무기한 덩치를 소환한다. 생존 시 1초/MP 10/CD 10으로 덩치 현재 마력 200% 타격을 명령한다.",
     "slot": "active",
     "cooldown": 10,
-    "castTime": 0,
+    "castTime": 1,
     "castReceivedDamagePercent": 100,
     "channel": {
       "duration": 0,
@@ -5317,194 +5325,42 @@
     "resourceCosts": [
       {
         "resource": "MP",
-        "mode": "fixed",
-        "value": 30
+        "value": 10
       }
     ],
     "actions": [
       {
-        "type": "summon_entity",
-        "target": "self",
-        "rangeMode": "custom",
-        "rangeValue": 0,
-        "rangeMultiplier": 100,
-        "minRange": 0,
-        "allowSelfTarget": true,
-        "requiredTargetEffectId": "",
-        "requiredTargetEffectCaster": "any",
-        "targetHpBelow": 100,
-        "targetCooldown": 0,
-        "targetCooldownScope": "caster",
-        "targetCooldownEffectId": "",
-        "targetCooldownEffectName": "",
-        "ownedSummonCondition": "absent",
-        "ownedSummonEntityId": "demon_brute",
-        "targetSummonEntityId": "",
-        "chainCount": 0,
-        "chainRange": 3,
-        "chainOrigin": "previous",
+        "type": "command_summon",
+        "target": "enemy",
+        "rangeMode": "mainWeapon",
+        "originEntityId": "demon_brute",
+        "summonCommand": "attack",
+        "contactRange": true,
+        "damageType": "magic",
         "coefficients": [
           {
-            "type": "fixed",
-            "field": "atk",
-            "calc": "percent",
-            "value": 1,
-            "effectId": ""
+            "type": "calculated",
+            "field": "magic",
+            "value": 200,
+            "calc": "percent"
           }
-        ],
-        "healResource": "HP",
-        "fullResourceAlternative": "",
-        "drainResource": "MP",
-        "damageType": "physical",
-        "area": 0,
-        "areaCenter": "target",
-        "maxTargets": 0,
-        "entityId": "demon_brute",
-        "summonCenter": "self",
-        "inheritStats": {
-          "hp": 0,
-          "mp": 0,
-          "st": 0,
-          "atk": 0,
-          "magic": 0,
-          "defense": 0,
-          "resistance": 0,
-          "speed": 0
-        },
-        "count": 1,
-        "limit": 1,
-        "protectOwnerPercent": 60,
-        "protectOwnerScope": "all",
-        "protectOwnerPriority": 60,
-        "transferStateScope": "none",
-        "transferStatePriority": 0,
-        "critical": 0,
-        "penetration": 0,
-        "moveType": "Dash",
-        "movePlacement": "target",
-        "moveSpeed": 1,
-        "distance": 0,
-        "duration": 0,
-        "fieldShape": "circle",
-        "fieldRadius": 0,
-        "fieldWidth": 2,
-        "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 0,
-        "fieldMoveType": "Push",
-        "fieldDistance": 1,
-        "fieldCenter": "target",
-        "fieldInterval": 1,
-        "fieldMovementStCostCenter": 0,
-        "fieldMovementStCostFalloff": 0,
-        "fieldMovementStCostMinimum": 0,
-        "fieldAuras": []
-      },
-      {
-        "type": "add_buff",
-        "target": "summon",
-        "rangeMode": "custom",
-        "rangeValue": 100,
-        "rangeMultiplier": 100,
-        "minRange": 0,
-        "allowSelfTarget": true,
-        "requiredTargetEffectId": "",
-        "requiredTargetEffectCaster": "any",
-        "targetHpBelow": 100,
-        "targetCooldown": 0,
-        "targetCooldownScope": "caster",
-        "targetCooldownEffectId": "",
-        "targetCooldownEffectName": "",
-        "ownedSummonCondition": "alive",
-        "ownedSummonEntityId": "demon_brute",
-        "targetSummonEntityId": "demon_brute",
-        "effect": {
-          "id": "demon_brute_magic",
-          "name": "덩치 공격명령",
-          "state": "stun",
-          "category": "magic",
-          "polarity": "beneficial",
-          "tags": [],
-          "dispellable": true,
-          "dispelMode": "id",
-          "dispelTags": [],
-          "dispelCategory": "general",
-          "dispelPolarity": "any",
-          "stat": "magic",
-          "sourceStat": "atk",
-          "mode": "percent",
-          "value": 25,
-          "requiredOwnedSummonEntityId": "demon_brute",
-          "nextCastTimePercent": 100,
-          "nextResourceCostPercent": 100,
-          "nextCooldownPercent": 100,
-          "reflectPercent": 20,
-          "reflectScope": "all",
-          "reflectDamageType": "fixed",
-          "proxyPercent": 20,
-          "proxyPriority": 100,
-          "proxyScope": "all",
-          "counterOnMelee": false,
-          "movementStCostPercent": 100,
-          "movementTriggerDistance": 0,
-          "movementTriggerState": "stun",
-          "movementTriggerDuration": 0,
-          "uses": 0,
-          "consumeOn": "hit",
-          "consumePeriodic": false,
-          "maxStacks": 1,
-          "stackMode": "refresh"
-        },
-        "chainCount": 0,
-        "chainRange": 3,
-        "chainOrigin": "previous",
-        "coefficients": [
-          {
-            "type": "fixed",
-            "field": "atk",
-            "calc": "percent",
-            "value": 1,
-            "effectId": ""
-          }
-        ],
-        "healResource": "HP",
-        "fullResourceAlternative": "",
-        "drainResource": "MP",
-        "damageType": "physical",
-        "area": 0,
-        "areaCenter": "target",
-        "maxTargets": 0,
-        "critical": 0,
-        "penetration": 0,
-        "moveType": "Dash",
-        "movePlacement": "target",
-        "moveSpeed": 1,
-        "distance": 0,
-        "duration": 5,
-        "fieldShape": "circle",
-        "fieldRadius": 0,
-        "fieldWidth": 2,
-        "fieldEffect": "deal_damage",
-        "fieldEffectDuration": 5,
-        "fieldMoveType": "Push",
-        "fieldDistance": 1,
-        "fieldCenter": "target",
-        "fieldInterval": 1,
-        "fieldMovementStCostCenter": 0,
-        "fieldMovementStCostFalloff": 0,
-        "fieldMovementStCostMinimum": 0,
-        "fieldAuras": []
+        ]
       }
-    ]
+    ],
+    "summonVariant": {
+      "entityId": "demon_brute",
+      "absentSkillId": "skill_class_demon_brute_spawn"
+    }
   },
   {
     "id": "skill_class_demon_summon_minions",
     "name": "악마 · 졸개소환",
     "className": "악마",
     "icon": "assets/images/skills/악마_졸개소환.png",
-    "description": "원거리 마법 공격을 하는 졸개 3마리를 5초간 소환합니다. 각 졸개는 주인을 향한 피해를 한 번 대신 받고 사라집니다.",
+    "description": "HP 10/악마 마력 5%/주무기 사거리의 졸개 3체를 5초 소환한다. 주인을 향한 피해를 대신 맞고 직접 피격도 1회면 퇴장한다.",
     "slot": "active",
     "cooldown": 10,
-    "castTime": 1.5,
+    "castTime": 2,
     "castReceivedDamagePercent": 100,
     "channel": {
       "duration": 0,
@@ -5513,13 +5369,7 @@
       "lockTarget": false,
       "receivedDamagePercent": 100
     },
-    "resourceCosts": [
-      {
-        "resource": "MP",
-        "mode": "fixed",
-        "value": 10
-      }
-    ],
+    "resourceCosts": [],
     "actions": [
       {
         "type": "summon_entity",
@@ -5565,7 +5415,7 @@
           "mp": 0,
           "st": 0,
           "atk": 0,
-          "magic": 0,
+          "magic": 5,
           "defense": 0,
           "resistance": 0,
           "speed": 0
@@ -5596,7 +5446,9 @@
         "fieldMovementStCostCenter": 0,
         "fieldMovementStCostFalloff": 0,
         "fieldMovementStCostMinimum": 0,
-        "fieldAuras": []
+        "fieldAuras": [],
+        "inheritOwnerRange": true,
+        "disappearOnHit": true
       }
     ]
   },
@@ -5605,7 +5457,7 @@
     "name": "악마 · 악마장군 소환",
     "className": "악마",
     "icon": "assets/images/skills/악마_악마장군 소환.png",
-    "description": "적 주변에 악마장군을 4초간 소환합니다. 소환 시 3m 내 적에게 마력 20% 마법 피해와 1초 기절을 적용하며, 장군은 2초마다 3m 광역 마법 공격을 합니다.",
+    "description": "악마장군을 8초간 소환한다. 소환 시 3m 마력 50% 마법 피해·1초 기절. 장군은 HP 300/마력 20% 상속/1초 시전·1초 공격 간격으로 자신 중심 3m 광역 공격.",
     "slot": "active",
     "cooldown": 15,
     "castTime": 2,
@@ -5617,13 +5469,7 @@
       "lockTarget": false,
       "receivedDamagePercent": 100
     },
-    "resourceCosts": [
-      {
-        "resource": "MP",
-        "mode": "fixed",
-        "value": 20
-      }
-    ],
+    "resourceCosts": [],
     "actions": [
       {
         "type": "summon_entity",
@@ -5669,7 +5515,7 @@
           "mp": 0,
           "st": 0,
           "atk": 0,
-          "magic": 0,
+          "magic": 20,
           "defense": 0,
           "resistance": 0,
           "speed": 0
@@ -5687,7 +5533,7 @@
         "movePlacement": "target",
         "moveSpeed": 1,
         "distance": 0,
-        "duration": 4,
+        "duration": 8,
         "fieldShape": "circle",
         "fieldRadius": 0,
         "fieldWidth": 2,
@@ -5728,7 +5574,7 @@
             "type": "calculated",
             "field": "magic",
             "calc": "percent",
-            "value": 20,
+            "value": 50,
             "effectId": ""
           }
         ],
@@ -5941,6 +5787,377 @@
         "fieldAuras": []
       }
     ]
+  },
+  {
+    "id": "skill_class_demon_legion",
+    "name": "악마 · 악마군단",
+    "className": "악마",
+    "slot": "active",
+    "castTime": 1,
+    "cooldown": 20,
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 10
+      }
+    ],
+    "description": "현재 자신의 소환수 전체에게 5초간 마력 +20%. 이후 생성된 소환수에 소급하지 않는다.",
+    "actions": [
+      {
+        "type": "add_buff",
+        "target": "summon",
+        "rangeMode": "mainWeapon",
+        "areaCenter": "self",
+        "duration": 5,
+        "effect": {
+          "id": "demon_legion",
+          "name": "악마군단",
+          "stat": "magic",
+          "mode": "percent",
+          "value": 20,
+          "polarity": "beneficial"
+        },
+        "battlefieldArea": true
+      }
+    ]
+  },
+  {
+    "id": "skill_class_demon_basic_fitness",
+    "name": "악마 · 기초체력",
+    "className": "악마",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "description": "선택 시 최대 HP 500 증가.",
+    "selectionModifier": {
+      "statEffects": [
+        {
+          "id": "demon_basic_fitness",
+          "stat": "maxHp",
+          "mode": "flat",
+          "value": 500
+        }
+      ]
+    }
+  },
+  {
+    "id": "skill_class_demon_duty",
+    "name": "악마 · 악마의 소임",
+    "className": "악마",
+    "slot": "passive",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "ownedSummonAura": {
+      "entityIds": [],
+      "radius": 10000,
+      "magicPercent": 1,
+      "damageReduction": 1,
+      "expiryBarrierMagicPercent": 100
+    },
+    "passiveTrigger": {
+      "event": "battle_entry",
+      "chance": 100
+    },
+    "description": "살아 있는 자기 소환수마다 마력 +1%, 받는 피해 -1%. 수명 만료 시 해당 소환수 현재 마력만큼 보호막을 얻는다. 사망·강제 제거는 제외."
+  },
+  {
+    "id": "skill_class_demon_brute_spawn",
+    "name": "악마 · 덩치소환",
+    "className": "악마",
+    "slot": "active",
+    "castTime": 3,
+    "cooldown": 0,
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "value": 30
+      }
+    ],
+    "actions": [
+      {
+        "type": "summon_entity",
+        "target": "self",
+        "rangeMode": "mainWeapon",
+        "rangeValue": 0,
+        "rangeMultiplier": 100,
+        "minRange": 0,
+        "allowSelfTarget": true,
+        "requiredTargetEffectId": "",
+        "requiredTargetEffectCaster": "any",
+        "targetHpBelow": 100,
+        "targetCooldown": 0,
+        "targetCooldownScope": "caster",
+        "targetCooldownEffectId": "",
+        "targetCooldownEffectName": "",
+        "targetSummonEntityId": "",
+        "chainCount": 0,
+        "chainRange": 3,
+        "chainOrigin": "previous",
+        "coefficients": [
+          {
+            "type": "fixed",
+            "field": "atk",
+            "calc": "percent",
+            "value": 1,
+            "effectId": ""
+          }
+        ],
+        "healResource": "HP",
+        "fullResourceAlternative": "",
+        "drainResource": "MP",
+        "damageType": "physical",
+        "area": 0,
+        "areaCenter": "target",
+        "maxTargets": 0,
+        "entityId": "demon_brute",
+        "summonCenter": "self",
+        "inheritStats": {
+          "magic": 50
+        },
+        "count": 1,
+        "limit": 1,
+        "protectOwnerPercent": 60,
+        "protectOwnerScope": "all",
+        "protectOwnerPriority": 60,
+        "transferStateScope": "none",
+        "transferStatePriority": 0,
+        "critical": 0,
+        "penetration": 0,
+        "moveType": "Dash",
+        "movePlacement": "target",
+        "moveSpeed": 1,
+        "distance": 0,
+        "duration": 0,
+        "fieldShape": "circle",
+        "fieldRadius": 0,
+        "fieldWidth": 2,
+        "fieldEffect": "deal_damage",
+        "fieldEffectDuration": 0,
+        "fieldMoveType": "Push",
+        "fieldDistance": 1,
+        "fieldCenter": "target",
+        "fieldInterval": 1,
+        "fieldMovementStCostCenter": 0,
+        "fieldMovementStCostFalloff": 0,
+        "fieldMovementStCostMinimum": 0,
+        "fieldAuras": []
+      }
+    ],
+    "internal": true,
+    "summonRequirement": {
+      "ownedSummonEntityId": "demon_brute",
+      "ownedSummonCondition": "absent"
+    }
+  },
+  {
+    "id": "skill_class_demon_king_ultimate",
+    "name": "악마 · 악마의 왕",
+    "className": "악마",
+    "slot": "ultimate",
+    "castTime": 2,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "summon_entity",
+        "target": "self",
+        "rangeMode": "mainWeapon",
+        "entityId": "demon_king",
+        "count": 1,
+        "limit": 1,
+        "duration": 15,
+        "inheritStats": {
+          "magic": 100
+        },
+        "inheritOwnerRange": true,
+        "ownerReceivedDamagePercent": 80
+      }
+    ],
+    "description": "30초 이후 전투당 1회. 악마의 왕을 15초 소환한다. 왕 생존 중 소유자가 받는 피해 20% 감소."
+  },
+  {
+    "id": "skill_class_demon_reliable_brute",
+    "name": "악마 · 언제나 든든한 덩치",
+    "className": "악마",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_demon_duty"
+      ],
+      "additionalActions": [
+        {
+          "type": "summon_entity",
+          "target": "self",
+          "rangeMode": "mainWeapon",
+          "rangeValue": 0,
+          "rangeMultiplier": 100,
+          "minRange": 0,
+          "allowSelfTarget": true,
+          "requiredTargetEffectId": "",
+          "requiredTargetEffectCaster": "any",
+          "targetHpBelow": 100,
+          "targetCooldown": 0,
+          "targetCooldownScope": "caster",
+          "targetCooldownEffectId": "",
+          "targetCooldownEffectName": "",
+          "targetSummonEntityId": "",
+          "chainCount": 0,
+          "chainRange": 3,
+          "chainOrigin": "previous",
+          "coefficients": [
+            {
+              "type": "fixed",
+              "field": "atk",
+              "calc": "percent",
+              "value": 1,
+              "effectId": ""
+            }
+          ],
+          "healResource": "HP",
+          "fullResourceAlternative": "",
+          "drainResource": "MP",
+          "damageType": "physical",
+          "area": 0,
+          "areaCenter": "target",
+          "maxTargets": 0,
+          "entityId": "demon_brute",
+          "summonCenter": "self",
+          "inheritStats": {
+            "magic": 50
+          },
+          "count": 1,
+          "limit": 1,
+          "protectOwnerPercent": 60,
+          "protectOwnerScope": "all",
+          "protectOwnerPriority": 60,
+          "transferStateScope": "none",
+          "transferStatePriority": 0,
+          "critical": 0,
+          "penetration": 0,
+          "moveType": "Dash",
+          "movePlacement": "target",
+          "moveSpeed": 1,
+          "distance": 0,
+          "duration": 0,
+          "fieldShape": "circle",
+          "fieldRadius": 0,
+          "fieldWidth": 2,
+          "fieldEffect": "deal_damage",
+          "fieldEffectDuration": 0,
+          "fieldMoveType": "Push",
+          "fieldDistance": 1,
+          "fieldCenter": "target",
+          "fieldInterval": 1,
+          "fieldMovementStCostCenter": 0,
+          "fieldMovementStCostFalloff": 0,
+          "fieldMovementStCostMinimum": 0,
+          "fieldAuras": []
+        }
+      ],
+      "skillModifiers": [
+        {
+          "targetSkillIds": [
+            "skill_class_demon_brute_spawn"
+          ],
+          "castTimeAdd": -1
+        }
+      ]
+    }
+  },
+  {
+    "id": "skill_class_demon_great_general",
+    "name": "악마 · 대장군님",
+    "className": "악마",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_demon_summon_general"
+      ],
+      "summonModifiers": [
+        {
+          "entityIds": [
+            "demon_general"
+          ],
+          "durationOverride": 0,
+          "magicPercent": 50
+        }
+      ],
+      "summonRequirement": {
+        "ownedSummonEntityId": "demon_general",
+        "ownedSummonCondition": "absent"
+      }
+    }
+  },
+  {
+    "id": "skill_class_demon_minion_horde",
+    "name": "악마 · 졸개무리",
+    "className": "악마",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "summonModifiers": [
+        {
+          "entityIds": [
+            "demon_minion"
+          ],
+          "countAdd": 1,
+          "limitAdd": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "skill_class_demon_kings_arrival",
+    "name": "악마 · 왕의 강림",
+    "className": "악마",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_demon_king_ultimate"
+      ],
+      "triggerSkills": [
+        {
+          "skillId": "skill_class_demon_legion",
+          "extendDuration": true
+        }
+      ]
+    }
+  },
+  {
+    "id": "skill_class_demon_gift_to_master",
+    "name": "악마 · 주인님께 드리는 선물",
+    "className": "악마",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_demon_duty"
+      ],
+      "summonExpiryRefundPercent": 50
+    }
   },
   {
     "id": "skill_class_berserker_fire_strike",
@@ -10138,6 +10355,7 @@
     ]
   },
   {
+    "icon": "assets/images/skills/별소환사_또다른 별.png",
     "id": "skill_class_star_another_star_ultimate",
     "name": "별소환사 · 또다른 별",
     "className": "별소환사",
@@ -10184,7 +10402,7 @@
     ]
   },
   {
-    "icon": "assets/images/skills/별소환사_약한 중력.png",
+    "icon": "assets/images/skills/별소환사_중력.png",
     "id": "skill_class_star_weak_gravity",
     "name": "별소환사 · 중력",
     "className": "별소환사",
@@ -10223,6 +10441,7 @@
     }
   },
   {
+    "icon": "assets/images/skills/별소환사_감마선.png",
     "id": "skill_class_star_gamma_ray",
     "name": "별소환사 · 감마선",
     "className": "별소환사",
@@ -10240,6 +10459,7 @@
     "description": "별빛방출의 거리 감쇠 최소 피해를 50%로 보정한다."
   },
   {
+    "icon": "assets/images/skills/별소환사_빛의 거리.png",
     "id": "skill_class_star_light_distance",
     "name": "별소환사 · 빛의 거리",
     "className": "별소환사",
@@ -10261,6 +10481,7 @@
     "description": "별소환사 스킬의 시전 사정거리를 주무기의 2배로 한다. 광역 반경과 별 오라 크기는 유지한다."
   },
   {
+    "icon": "assets/images/skills/별소환사_중성자별.png",
     "id": "skill_class_star_neutron_star",
     "name": "별소환사 · 중성자별",
     "className": "별소환사",
@@ -10302,6 +10523,7 @@
     "description": "별흡수 중 자신 중심 5m에 매초 마력 50% 마법 피해. 실제 피해 합계의 25%를 스타포스와 별개로 HP 소모한다."
   },
   {
+    "icon": "assets/images/skills/별소환사_먼지구름.png",
     "id": "skill_class_star_dust_cloud",
     "name": "별소환사 · 먼지구름",
     "className": "별소환사",
@@ -10336,6 +10558,7 @@
     "description": "또다른 별 시전 완료 30초 뒤 영구 별 1개를 생성한다. 소환사가 사망하면 예약을 취소한다."
   },
   {
+    "icon": "assets/images/skills/별소환사_광속.png",
     "id": "skill_class_star_light_speed",
     "name": "별소환사 · 광속",
     "className": "별소환사",

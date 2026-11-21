@@ -21,7 +21,22 @@ const SimulationPage = (() => {
     return body;
   }
   function error(cause) {el('Error').textContent=cause ? cause.message || String(cause) : ''; if(cause) logError('simulation',cause.message || String(cause));}
-  function controls() {el('Settings').disabled=submitting || Boolean(running);el('Cancel').disabled=!running || running.status==='CANCELLING';}
+  function controls() {el('Settings').disabled=submitting || Boolean(running);el('FocusSettings').disabled=submitting || Boolean(running);el('Cancel').disabled=!running || running.status==='CANCELLING';}
+  function tab(mode) {
+    for(const key of ['General','Focus']) {
+      const chosen=(key==='Focus')===(mode==='focus');
+      el(key+'Panel').classList.toggle('hidden',!chosen);el(key+'Tab').setAttribute('aria-selected',String(chosen));
+    }
+  }
+  function focusSettings() {
+    return {count:Number(el('FocusCount').value),teamSize:1,seed:Number(el('FocusSeed').value),maxSeconds:Number(el('FocusMaxSeconds').value),
+      minSamples:Number(el('FocusMinSamples').value),workers:Number(el('FocusWorkers').value),
+      focus:{characterId:Number(el('FocusCharacter').value),candidateLimit:Number(el('FocusCandidates').value),
+        repeats:Number(el('FocusRepeats').value),varySkills:el('FocusSkills').checked,varyEquipment:el('FocusEquipment').checked}};
+  }
+  function showFocusPlan(plan) {
+    el('FocusPreview').innerHTML=`<p>${html(plan.name)} · 원시 조합 공간 ${html(plan.rawSpace)}개 · 중복 제거한 선정 후보 ${plan.variants.length}개</p><p>${plan.stages.map(s=>`${s.teamSize}:${s.teamSize} ${number(s.planned)}회`).join(' → ')}</p><p>후보 생성은 Seed로 재현됩니다. 전체 경우의 수가 아닌 이번에 선정한 후보 범위입니다.${plan.skippedSizes.length?' 인원 부족으로 제외: '+plan.skippedSizes.join(', '):''}</p>`;
+  }
   function progress(job) {
     if (!job) {el('Progress').textContent='실행 대기 중';el('ProgressBar').value=0;el('Timing').textContent='경과 — · 예상 잔여 —';return;}
     const percent=job.total ? job.completed/job.total*100 : 0;
@@ -44,6 +59,7 @@ const SimulationPage = (() => {
       table.querySelector('thead tr').insertAdjacentHTML('afterbegin','<th>삭제 선택</th>');
       table.querySelectorAll('tbody tr').forEach((row,i)=>{
         const job=jobs[i],cell=document.createElement('td'),check=document.createElement('input');
+        if(job.settings.focus)row.cells[1].textContent=`캐릭터 집중 분석 · ${number(job.total)}회 · seed ${job.settings.seed}`;
         check.type='checkbox';check.checked=deleteSelection.has(job.simulationId);
         check.disabled=active(job)||deleting;check.setAttribute('aria-label',`${date(job.startedAt)} ${job.settings.teamSize} vs ${job.settings.teamSize} 기록 삭제 선택`);
         check.addEventListener('change',()=>{if(check.checked)deleteSelection.add(job.simulationId);else deleteSelection.delete(job.simulationId);history();});
@@ -109,6 +125,10 @@ const SimulationPage = (() => {
     el('MatchupClass').addEventListener('change',detail);detail();
   }
   function renderResult() {
+    if(result.focusPlan) {
+      el('Result').innerHTML=SimulationFocusReport.render(result)+`<p><a href="/api/simulations/${encodeURIComponent(selected)}/markdown" target="_blank" rel="noopener">보고서 Markdown</a> · <a href="/api/simulations/${encodeURIComponent(selected)}/json" target="_blank" rel="noopener">원본 JSON</a></p>`;
+      tab('focus');return;
+    }
     const s=result.summary;
     const recommendations=SimulationAnalysis.recommendCombinations(s,result.settings.minSamples);
     const combinationTable=rows=>rows.length ? `<div class="simulation-table-wrap"><table class="data-table"><thead><tr><th>조합</th><th>출전</th><th>승</th><th>패</th><th>무승부</th><th>시간 초과</th><th>관측 승률</th></tr></thead><tbody>${rows.map(c=>`<tr><th>${html(c.name)}</th><td>${number(c.battles)}</td><td>${number(c.wins)}</td><td>${number(c.losses)}</td><td>${number(c.draws)}</td><td>${number(c.timeouts)}</td><td>${number(c.winRate)}%</td></tr>`).join('')}</tbody></table></div>` : '<p>해당 조합이 없습니다.</p>';
@@ -172,6 +192,10 @@ const SimulationPage = (() => {
   }
   async function open() {
     error(null);
+    const previous=el('FocusCharacter').value;
+    el('FocusCharacter').innerHTML=characterJson.map((c,id)=>`<option value="${id}">${html(c.name)}</option>`).join('');
+    if([...el('FocusCharacter').options].some(o=>o.value===previous))el('FocusCharacter').value=previous;
+    el('FocusSettings').oninput=()=>{el('FocusPreview').textContent='설정이 바뀌었습니다. 미리보기를 다시 확인하세요.';};
     if(!targetsLoaded) {
       try {
         const data=await api('simulation-targets');
@@ -181,7 +205,24 @@ const SimulationPage = (() => {
     }
     await refresh();
   }
-  return {open,refresh,select,sort,
+  return {open,refresh,select,sort,tab,
+    async previewFocus() {
+      if(submitting||running)return;
+      if(!el('FocusSettings').closest('form').reportValidity())return;
+      submitting=true;controls();error(null);
+      try{showFocusPlan(await api('simulation-focus-plan',{method:'POST',body:JSON.stringify(focusSettings())}));}
+      catch(cause){error(cause);}finally{submitting=false;controls();}
+    },
+    async startFocus(event) {
+      event.preventDefault();if(submitting||running)return;
+      submitting=true;controls();error(null);
+      try {
+        const settings=focusSettings();
+        showFocusPlan(await api('simulation-focus-plan',{method:'POST',body:JSON.stringify(settings)}));
+        const job=await api('simulations',{method:'POST',body:JSON.stringify(settings)});
+        jobs.unshift(job);running=active(job)?job:null;await select(job.simulationId,true);progress(job);
+      }catch(cause){error(cause);}finally{submitting=false;controls();await refresh();}
+    },
     preset(value){if(value!=='custom')el('Count').value=value;else el('Count').focus();},
     async start(event){
       event.preventDefault();if(submitting || running)return;

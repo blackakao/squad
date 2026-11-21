@@ -3892,9 +3892,9 @@ function damageProxyAction(e,percent=20,priority=100,scope='all') {
 test('knight mount and demon brute branch on owned summon state and proxy owner damage', () => {
   const e=engine();
   const allSkills=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8'));
-  const ids=['skill_class_knight_magic_horse','skill_class_knight_haste_horse','skill_class_knight_summon_horse','skill_class_demon_brute'];
+  const ids=['skill_class_knight_magic_horse','skill_class_knight_haste_horse','skill_class_knight_summon_horse','skill_class_demon_brute','skill_class_demon_brute_spawn'];
   const actual=allSkills.filter(candidate=>ids.includes(candidate.id));
-  assert.equal(actual.length,4);
+  assert.equal(actual.length,5);
   e.skillsJson=e.normalizeSkillJson(actual);
   e.newEntities=['knight_magic_horse','demon_brute'].map(id=>JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','entities',`${id}.json`),'utf8')));
   vm.runInContext('entitiesJson.push(...newEntities)',e);
@@ -3925,17 +3925,18 @@ test('knight mount and demon brute branch on owned summon state and proxy owner 
 
   const demon=unit(e);demon.name='악마';demon.magic=60;demon.hp=demon.maxHp=500;
   const bruteSkill=e.skillsJson.find(candidate=>candidate.id==='skill_class_demon_brute');
-  e.dispatchSkillActions(demon,demon,bruteSkill,false);
+  e.dispatchSkillActions(demon,demon,e.getFormSkill(demon,bruteSkill),false);
   const brute=demon.summons.find(summon=>summon.alive);
-  assert.equal(brute.entityId,'demon_brute');assert.equal(brute.attackType,'magic');assert.equal(brute.magic,60);
+  assert.equal(brute.entityId,'demon_brute');assert.equal(brute.attackType,'magic');assert.equal(brute.magic,30);
   e.applyActionDamage(enemy,demon,{damageType:'fixed',coefficients:[{type:'fixed',value:100}]});
   assert.equal(demon.hp,460);assert.equal(brute.hp,940);
-  e.dispatchSkillActions(demon,demon,bruteSkill,false);
+  enemy.x=brute.x+5;enemy.y=brute.y;enemy.hp=enemy.maxHp=500;
+  e.dispatchSkillActions(demon,enemy,bruteSkill,false);
   assert.equal(demon.summons.filter(summon=>summon.alive).length,1);
-  assert.equal(brute.magic,75);
+  assert.equal(brute.magic,30);assert.equal(enemy.hp,440);
 });
 
-test('demon minions intercept one hit each and demon general uses an area basic attack',()=>{
+test('demon minions intercept lethal hits and demon general uses an area basic attack',()=>{
  const e=engine();
  const allSkills=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8'));
  const ids=['skill_class_demon_summon_minions','skill_class_demon_summon_general','skill_entity_demon_general_attack'];
@@ -3953,24 +3954,99 @@ test('demon minions intercept one hit each and demon general uses an area basic 
  assert.equal(demon.hp,500);assert.equal(demon.summons.filter(summon=>summon.alive && summon.entityId==='demon_minion').length,2);
  e.dispatchSkillActions(demon,primary,generalSkill,false);
  const general=demon.summons.find(summon=>summon.alive && summon.entityId==='demon_general');
- assert.equal(general.attackSkillId,'skill_entity_demon_general_attack');assert.equal(general.attackSpeed,2);
- assert.equal(primary.hp,480);assert.equal(near.hp,480);assert.equal(far.hp,500);
+ assert.equal(general.attackSkillId,'skill_entity_demon_general_attack');assert.equal(general.attackSpeed,1);
+ assert.equal(primary.hp,450);assert.equal(near.hp,450);assert.equal(far.hp,500);
  assert.equal(e.hasBattleState(primary,'stun'),true);assert.equal(e.hasBattleState(near,'stun'),true);assert.equal(e.hasBattleState(far,'stun'),false);
  primary.hp=near.hp=far.hp=500;near.x=general.x+10;near.y=general.y;far.x=general.x+100;far.y=general.y;
  const attack=e.getUnitSkill(general);e.applySkill(general,primary,attack);
- assert.equal(primary.hp,400);assert.equal(near.hp,400);assert.equal(far.hp,500);
+ assert.equal(primary.hp,480);assert.equal(near.hp,480);assert.equal(far.hp,500);
 });
 
 test('demon summon data and entity attack references match class rules',()=>{
  const skills=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8'));
  const characters=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','characters.json'),'utf8'));
  const find=id=>skills.find(skill=>skill.id===id),minions=find('skill_class_demon_summon_minions'),general=find('skill_class_demon_summon_general'),attack=find('skill_entity_demon_general_attack');
- assert.deepEqual([minions.castTime,minions.cooldown,minions.actions[0].count,minions.actions[0].duration,minions.actions[0].protectOwnerPercent],[1.5,10,3,5,100]);
- assert.deepEqual([general.castTime,general.cooldown,general.actions[0].duration,general.actions[1].area,general.actions[1].coefficients[0].value,general.actions[2].duration],[2,15,4,3,20,1]);
+ assert.deepEqual([minions.castTime,minions.cooldown,minions.actions[0].count,minions.actions[0].duration,minions.actions[0].protectOwnerPercent],[2,10,3,5,100]);
+ assert.deepEqual([general.castTime,general.cooldown,general.actions[0].duration,general.actions[1].area,general.actions[1].coefficients[0].value,general.actions[2].duration],[2,15,8,3,50,1]);
  assert.deepEqual([attack.slot,attack.actions[0].area,attack.actions[0].areaCenter,attack.actions[0].coefficients[0].value],['basic',3,'self',100]);
  const generalEntity=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','entities','demon_general.json'),'utf8'));
- assert.equal(generalEntity.attackSkillId,attack.id);assert.equal(generalEntity.stats.attackSpeed,2);
- assert.deepEqual(characters.find(character=>character.skillIds?.includes('skill_class_demon_brute')).skillIds,['skill_class_demon_brute',minions.id,general.id]);
+ assert.equal(generalEntity.attackSkillId,attack.id);assert.equal(generalEntity.stats.attackSpeed,1);
+ assert.deepEqual(characters.find(character=>character.skillIds?.includes('skill_class_demon_brute')).skillIds,['skill_class_demon_duty','skill_class_demon_brute',minions.id,general.id,'skill_class_demon_legion','skill_class_demon_king_ultimate']);
+});
+
+test('demon legion buffs only owned summons and revised templates inherit owner magic',()=>{
+ const e=engine();e.skillsJson=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'../data/skills.json'),'utf8')));
+ e.newEntities=['demon_brute','demon_minion','demon_general'].map(id=>JSON.parse(fs.readFileSync(path.join(__dirname,'../data/entities',id+'.json'),'utf8')));vm.runInContext('entitiesJson.push(...newEntities)',e);
+ const s=unit(e),ally=unit(e,'player',120),enemy=unit(e,'enemy',140);s.magic=200;ally.magic=50;const find=id=>e.getSkillById('skill_class_demon_'+id);
+ e.applySkill(s,s,find('summon_minions'));e.applySkill(s,enemy,find('summon_general'));
+ const minion=s.summons.find(x=>x.entityId==='demon_minion'),general=s.summons.find(x=>x.entityId==='demon_general');
+ assert.equal(minion.magic,10);assert.equal(minion.maxHp,10);assert.equal(minion.castSpeed,1.5);assert.equal(general.magic,40);assert.equal(general.maxHp,300);assert.equal(general.summonTicks,480);
+ e.applySkill(s,minion,find('legion'));assert.equal(minion.magic,12);assert.equal(general.magic,48);assert.equal(s.magic,200);assert.equal(ally.magic,50);
+ for(let i=0;i<300;i++)e.updateBattleEffects();assert.equal(minion.magic,10);assert.equal(general.magic,40);
+ s.skillIds=[find('basic_fitness').id];assert.equal(e.getSelectedOptionalStatEffects(s).find(x=>x.stat==='maxHp').value,500);
+});
+
+function demonEngine(options=[]) {
+ const e=engine();e.skillsJson=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'../data/skills.json'),'utf8')));
+ e.newEntities=['demon_brute','demon_minion','demon_general','demon_king'].map(id=>JSON.parse(fs.readFileSync(path.join(__dirname,'../data/entities',id+'.json'),'utf8')));vm.runInContext('entitiesJson.push(...newEntities)',e);
+ e.demon=id=>e.getSkillById('skill_class_demon_'+id);const s=e.owner=unit(e),t=e.target=unit(e,'enemy',130);s.magic=100;s.hp=s.maxHp=1000;t.hp=t.maxHp=10000;
+ s.skillIds=['duty','brute','summon_minions','summon_general','legion','king_ultimate',...options].map(id=>e.demon(id).id);
+ e.runtime=id=>e.getRuntimeSelectionSkill(s,e.getFormSkill(s,e.demon(id)));
+ e.cast=(id,target=t,override={})=>{const skill={...e.runtime(id),...override},resourceSpent=e.spendSkillResourceCosts(s,skill);e.startCast(s,{type:'skill',skill,target,resourceSpent});for(let i=0;s.pendingAction && i<500;i++)e.updateCast(s);return skill;};
+ e.tick=()=>{e.updateBattleEffects();e.updateSummonLifetimes();e.tickSkillCooldowns(s);};
+ e.publishBattleEvents([{type:'battle_entry',source:s,target:s}]);return e;
+}
+
+test('demon duty grants one percent magic and damage reduction per living owned summon without drift',()=>{
+ const e=demonEngine(),s=e.owner;e.cast('summon_minions',s);assert.equal(s.magic,103);assert.equal(e.getUnitIncomingRulePercent(s,'receivedDamagePercent'),97);
+ for(let i=0;i<10;i++)e.updateSummonSynergies();assert.equal(s.magic,103);
+ const m=s.summons[0];m.hp=0;e.syncAliveState(m);assert.equal(s.magic,102);assert.equal(e.getUnitIncomingRulePercent(s,'receivedDamagePercent'),98);assert.equal(e.getUnitBarrierValue(s),0);
+});
+
+test('demon brute variants use corrected half magic no lifetime and direct double magic command',()=>{
+ const e=demonEngine(),s=e.owner,t=e.target;let skill=e.runtime('brute');assert.equal(skill.castTime,3);assert.equal(skill.cooldown,0);assert.equal(skill.resourceCosts[0].value,30);
+ e.cast('brute',s);const b=s.summons[0];assert.equal(b.magic,50);assert.equal(b.summonTicks,null);assert.equal(s.mp,70);
+ t.x=b.x+5;t.y=b.y;skill=e.cast('brute',t);assert.equal(skill.castTime,1);assert.equal(s.mp,60);assert.equal(s.skillCooldowns[skill.id],600);assert.equal(t.hp,9900);
+ b.hp=0;e.syncAliveState(b);assert.equal(e.runtime('brute').castTime,3);
+ const f=demonEngine(['reliable_brute']);assert.equal(f.owner.summons.length,1);const brute=f.owner.summons[0];brute.hp=0;f.syncAliveState(brute);assert.equal(f.runtime('brute').castTime,2);
+});
+
+test('demon minions inherit weapon range and die on a single small direct or proxy hit',()=>{
+ const e=demonEngine(),s=e.owner;s.attackRange=9;e.cast('summon_minions',s);const minions=s.summons.slice();assert.equal(minions[0].attackRange,9);assert.equal(minions[0].maxHp,10);
+ const action=e.normalizeSkillAction({type:'deal_damage',damageType:'fixed',coefficients:[{type:'fixed',value:1}]});
+ e.applyActionDamage(e.target,minions[0],action);assert.equal(minions[0].alive,false);
+ const hp=s.hp;e.applyActionDamage(e.target,s,action);assert.equal(s.hp,hp);assert.equal(minions.filter(m=>m.alive).length,1);assert.equal(e.getUnitBarrierValue(s),0);
+});
+
+test('demon expiry rewards current summon magic and refunds only half of paid batch MP once',()=>{
+ const e=demonEngine(['gift_to_master','minion_horde']),s=e.owner;
+ e.cast('summon_minions',s,{resourceCosts:[{resource:'MP',mode:'fixed',value:20}]});assert.equal(s.mp,80);assert.equal(s.summons.length,4);
+ e.cast('legion',s);const magic=s.summons.reduce((sum,m)=>sum+m.magic,0);assert.equal(magic,24);s.mp=80;
+ // Expiry observes the minions' current (buffed) magic, before the legion buff ends.
+ for(const m of s.summons)m.summonTicks=1;e.updateSummonLifetimes();assert.equal(e.getUnitBarrierValue(s),24);assert.equal(s.mp,90);assert.equal(s.magic,100);
+ e.updateSummonLifetimes();assert.equal(e.getUnitBarrierValue(s),24);assert.equal(s.mp,90);
+});
+
+test('demon general choice blocks recast while alive halves magic and removes lifetime',()=>{
+ const e=demonEngine(['great_general']),s=e.owner;e.cast('summon_general');const g=s.summons[0];assert.equal(g.magic,10);assert.equal(g.summonTicks,null);assert.equal(e.canActivateSkill(s,e.runtime('summon_general')),false);
+ g.hp=0;e.syncAliveState(g);assert.equal(e.canActivateSkill(s,e.runtime('summon_general')),true);assert.equal(e.getUnitBarrierValue(s),0);
+});
+
+test('demon king is once after thirty seconds and reduces owner damage only while alive',()=>{
+ const e=demonEngine(),s=e.owner;vm.runInContext('combatEventTick=1799',e);assert.equal(e.canActivateSkill(s,e.runtime('king_ultimate')),false);vm.runInContext('combatEventTick=1800',e);
+ s.attackRange=8;e.cast('king_ultimate',s);const k=s.summons[0];assert.equal(k.maxHp,1500);assert.equal(k.magic,100);assert.equal(k.attackRange,8);assert.equal(k.summonTicks,900);assert.equal(e.getUnitIncomingRulePercent(s,'receivedDamagePercent'),79.2);assert.equal(e.canActivateSkill(s,e.runtime('king_ultimate')),false);
+ k.hp=0;e.syncAliveState(k);assert.equal(e.getUnitIncomingRulePercent(s,'receivedDamagePercent'),100);assert.equal(e.getUnitBarrierValue(s),0);
+});
+
+test('demon kings arrival triggers legion without extra cost and extends existing buffs by five seconds',()=>{
+ const e=demonEngine(['kings_arrival']),s=e.owner;e.cast('summon_minions',s);e.cast('legion',s);s.summons.forEach(m=>m.activeEffects.find(x=>x.id==='demon_legion').remainingTicks=120);
+ const mp=s.mp,cd=s.skillCooldowns[e.demon('legion').id];e.cast('king_ultimate',s);assert.equal(s.mp,mp);assert.equal(s.skillCooldowns[e.demon('legion').id],cd);
+ const minion=s.summons[0];assert.equal(minion.activeEffects.find(x=>x.id==='demon_legion').remainingTicks,420);const king=s.summons.find(x=>x.entityId==='demon_king');assert.equal(king.activeEffects.find(x=>x.id==='demon_legion').remainingTicks,300);
+});
+
+test('demon optional fourth selection is inactive and forced removal never pays expiry rewards',()=>{
+ const e=demonEngine(['basic_fitness','reliable_brute','minion_horde','great_general']),s=e.owner;e.cast('summon_general');assert.equal(s.summons.find(x=>x.entityId==='demon_general').summonTicks,480);
+ e.removeSummonedBattleUnit(s.summons[0]);assert.equal(e.getUnitBarrierValue(s),0);assert.equal(e.getSelectedOptionalStatEffects(s).find(x=>x.stat==='maxHp').value,500);
 });
 
 function basicActionEngine() {

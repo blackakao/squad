@@ -57,7 +57,8 @@ async function main(args = process.argv.slice(2)) {
     const engine=createEngine(saved.inputSnapshot,saved.settings);
     if (engine.engineHash!==saved.engineHash) throw new Error('Engine changed: use the original source revision to reproduce');
     if (fingerprint(saved.inputSnapshot)!==saved.dataHash) throw new Error('Input snapshot hash mismatch');
-    const result=engine.runBattle({...battle,maxSeconds:saved.settings.maxSeconds});
+    const focus=battle.focus?{...battle.focus,variant:saved.focusPlan.variants.find(v=>v.id===battle.focus.variantId)}:undefined;
+    const result=engine.runBattle({...battle,focus,maxSeconds:saved.settings.maxSeconds});
     if (JSON.stringify(result)!==JSON.stringify(battle)) throw new Error('Replay differs from saved result');
     console.log(JSON.stringify(result,null,2));
     return;

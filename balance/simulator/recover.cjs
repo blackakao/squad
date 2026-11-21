@@ -20,10 +20,10 @@ async function recover(directory) {
     ids.add(id);
     const length=Buffer.byteLength(line);
     entries.push({id,offset,length});offset+=length+1; // journal writer uses LF
-    compact.push({battleId:battle.battleId,teamA:battle.teamA,teamB:battle.teamB,winner:battle.winner,
+    compact.push({battleId:battle.battleId,focus:battle.focus,teamA:battle.teamA,teamB:battle.teamB,winner:battle.winner,
       termination:battle.termination,duration:battle.duration,characters:battle.characters.map(c=>({
         characterId:c.characterId,team:c.team,outcome:c.outcome,damageDealt:c.damageDealt,
-        healingDone:c.healingDone,contribution:c.contribution}))});
+        healingDone:c.healingDone,survivalTime:c.survivalTime,contribution:c.contribution}))});
   }
   entries.sort((a,b)=>a.id-b.id);compact.sort((a,b)=>Number(a.battleId.slice(7))-Number(b.battleId.slice(7)));
   const roster=input.inputSnapshot.characters.map((c,id)=>({id,name:c.name,role:c.role}));
@@ -35,6 +35,10 @@ async function recover(directory) {
     recovery:{recoveredAt:new Date().toISOString(),source:'battles.ndjson',originalError:job.error,partial:!complete},
     summary:aggregate(compact,roster,input.settings.minSamples)};
   if(job.workers)run.settings={...run.settings,workers:job.workers};
+  if(input.settings.focus) {
+    run.focusPlan=read('focus-plan.json');
+    run.focusSummary=require('./focus.cjs').summarizeFocus(compact,run.focusPlan,input.settings.minSamples);
+  }
   function* originalBattles() {
     const fd=fs.openSync(journal,'r');
     try {for(const entry of entries){const buffer=Buffer.alloc(entry.length);
