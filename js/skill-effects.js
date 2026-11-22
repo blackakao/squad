@@ -83,7 +83,8 @@ function normalizeSkillEffect(effect,type = "add_buff") {
     dispelMode:effect.dispelMode ?? "id",dispelTags:[...new Set((Array.isArray(effect.dispelTags) ? effect.dispelTags : String(effect.dispelTags ?? "").split(",")).map(tag=>String(tag).trim()).filter(Boolean))],dispelCategory:effect.dispelCategory ?? "general",dispelPolarity:effect.dispelPolarity ?? "any",
     ...(effect.immunity ? {immunity:{scope:effect.immunity.scope,category:effect.immunity.category,state:effect.immunity.state}} : {}),
     barrierMode:["fixed","coefficient"].includes(effect.barrierMode) ? effect.barrierMode : "maxPercent",
-    breakSkillId:String(effect.breakSkillId ?? "").trim(),
+    breakSkillId:String(effect.breakSkillId ?? "").trim(),expireSkillId:String(effect.expireSkillId ?? ""),
+    blockExternalTargeting:effect.blockExternalTargeting === true,stackAmount:Math.max(1,Math.floor(Number(effect.stackAmount) || 1)),
     echoHealPercent:Math.max(0,Number(effect.echoHealPercent ?? 100)),
     evadeDirect:effect.evadeDirect === true,holdAttacks:effect.holdAttacks === true,
     breakOnAttack:effect.breakOnAttack === true,
@@ -104,6 +105,8 @@ function normalizeSkillEffect(effect,type = "add_buff") {
     refundMpOnExpire:effect.refundMpOnExpire === true,
     guardHits:Math.max(1,Math.floor(Number(effect.guardHits) || 3)),
     countChoiceSkillId:String(effect.countChoiceSkillId ?? ""),
+    removeOnMovementTrigger:effect.removeOnMovementTrigger === true,
+    requiredMeleeTwoHand:effect.requiredMeleeTwoHand === true,
     requiredWeaponCategory:String(effect.requiredWeaponCategory ?? ""),
     requiredOwnedSummonAbsent:effect.requiredOwnedSummonAbsent === true,
     requiredOwnedSummonEntityId:String(effect.requiredOwnedSummonEntityId ?? effect.required_owned_summon_entity_id ?? "").trim(),
@@ -129,13 +132,14 @@ function normalizeSkillEffect(effect,type = "add_buff") {
     uses:Math.max(0,Math.min(100,Math.floor(Number(effect.uses) || 0))),
     consumeOn:effect.mode === "damage_immunity" ? "damaged" : Object.hasOwn(EFFECT_CONSUME_LABELS,effect.consumeOn) ? effect.consumeOn : "hit",
     consumePeriodic:effect.consumePeriodic === true,
-    maxStacks:Math.max(1, Math.min(100, Math.floor(Number(effect.maxStacks) || 1))),
+    maxStacks:Math.max(1, Math.min(1000, Math.floor(Number(effect.maxStacks) || 1))),
     stackMode:["refresh","stack","reject"].includes(effect.stackMode) ? effect.stackMode : "refresh",
     ...(effect.periodic ? {periodic:{type:effect.periodic.type,interval:Math.max(1/60,Number(effect.periodic.interval)),
       value:Number(effect.periodic.value),coefficient:normalizeCoefficient(effect.periodic.coefficient ?? {type:"fixed",value:effect.periodic.value}),
+      growthPercent:Math.max(0,Number(effect.periodic.growthPercent) || 0),healDamagePercent:Math.max(0,Number(effect.periodic.healDamagePercent) || 0),extraDamageTypes:(effect.periodic.extraDamageTypes ?? []).filter(type=>["physical","magic","fixed"].includes(type)),
       growthInterval:Math.max(0,Number(effect.periodic.growthInterval) || 0),growthValue:Math.max(0,Number(effect.periodic.growthValue) || 0),
       damageType:effect.periodic.damageType ?? "magic",resource:normalizeResourceReference(effect.periodic.resource,"HP"),
-      resourceDrains:(Array.isArray(effect.periodic.resourceDrains) ? effect.periodic.resourceDrains : []).map(drain=>({resource:normalizeResourceReference(drain.resource,"MP"),value:Math.max(0,Number(drain.value) || 0)})).filter(drain=>drain.value>0)}} : {})};
+      resourceDrains:(Array.isArray(effect.periodic.resourceDrains) ? effect.periodic.resourceDrains : []).map(drain=>({resource:normalizeResourceReference(drain.resource,"MP"),value:Math.max(0,Number(drain.value) || 0),transfer:drain.transfer === true})).filter(drain=>drain.value>0)}} : {})};
 }
 
 function renderEffectStackBonusRow(bonus={stat:"speed",mode:"percent",value:20,minStacks:10,perStack:false}) {
@@ -182,7 +186,7 @@ function renderTimedEffectFields(action) {
       <label>효과 태그 (쉼표 구분)<input class="skill-effect-tags" value="${escapeHtml((effect.tags ?? []).join(", "))}" placeholder="예: disease"></label>
       <label>지속시간 (초, 0: 전투 종료까지)<input class="skill-effect-duration" type="number" min="0" step="0.1" value="${action.duration ?? 5}"></label>
       <label>재적용 방식<select class="skill-effect-stack-mode"><option value="refresh" ${effect.stackMode === "refresh" ? "selected" : ""}>시간 갱신</option><option value="stack" ${effect.stackMode === "stack" ? "selected" : ""}>중첩 증가 + 시간 갱신</option><option value="reject" ${effect.stackMode === "reject" ? "selected" : ""}>효과가 있으면 대상 선택 제외</option></select></label>
-      <label>최대 중첩<input class="skill-effect-max-stacks" type="number" min="1" max="100" value="${effect.maxStacks}"></label>
+      <label>최대 중첩<input class="skill-effect-max-stacks" type="number" min="1" max="1000" value="${effect.maxStacks}"></label>
       <label><input class="skill-effect-refund-mp" type="checkbox" ${effect.refundMpOnExpire ? "checked" : ""}> 자연 만료 시 실제 소모 MP 반환</label>
       <label>사용 횟수 (0: 횟수 제한 없음)<input class="skill-effect-uses" type="number" min="0" max="100" step="1" value="${effect.uses ?? 0}"></label>
       <label><input class="skill-effect-break-attack" type="checkbox" ${effect.breakOnAttack ? "checked" : ""}>공격 실행 시 해제</label>
@@ -193,6 +197,7 @@ function renderTimedEffectFields(action) {
       <label>이동 ST 소모 (%)<input class="skill-effect-movement-st-cost-percent" type="number" min="0" step="1" value="${effect.movementStCostPercent ?? 100}"></label>
       <label>이동 발동 거리 (m, 0: 없음)<input class="skill-effect-movement-trigger-distance" type="number" min="0" step="0.1" value="${effect.movementTriggerDistance ?? 0}"></label>
       <label>이동 발동 상태<select class="skill-effect-movement-trigger-state">${options(STATE_LABELS,effect.movementTriggerState ?? "stun")}</select></label>
+      <label>이동 발동 후 원 효과 해제<input class="skill-effect-remove-on-movement" type="checkbox" ${effect.removeOnMovementTrigger ? "checked" : ""}></label>
       <label>이동 발동 상태 지속시간 (초)<input class="skill-effect-movement-trigger-duration" type="number" min="0" step="0.1" value="${effect.movementTriggerDuration ?? 0}"></label>
       <small>효과가 적용된 뒤 누적 이동 거리가 기준에 도달하면 지정 상태를 1회 부여합니다.</small>
       <div data-action-field="effectBuff">
@@ -208,6 +213,7 @@ function renderTimedEffectFields(action) {
           <label>보호막 유지 중 받는 피해 (%)<input class="skill-effect-barrier-received" type="number" min="0" value="${effect.receivedDamagePercent ?? 100}"></label>
           <label>공격 소진 시 1회 재생성 (%)<input class="skill-effect-barrier-recreate" type="number" min="0" value="${effect.breakRecreatePercent ?? 0}"></label>
           <label>보호막 수치 기준<select class="skill-effect-barrier-mode"><option value="maxPercent" ${!["fixed","coefficient"].includes(effect.barrierMode) ? "selected" : ""}>대상 최대 HP의 %</option><option value="coefficient" ${effect.barrierMode === "coefficient" ? "selected" : ""}>액션 계수</option><option value="fixed" ${effect.barrierMode === "fixed" ? "selected" : ""}>고정량</option></select></label>
+          <label>자연 만료 시 실행할 스킬 ID<input class="skill-effect-expire-skill" value="${escapeHtml(effect.expireSkillId ?? '')}"></label>
           <label>공격으로 소진 시 실행할 스킬 ID<input class="skill-effect-break-skill" value="${escapeHtml(effect.breakSkillId ?? "")}"></label>
         </div>
         <div class="skill-effect-reflect-settings ${effect.mode === "damage_reflect" ? "" : "hidden"}">
@@ -257,6 +263,10 @@ function renderTimedEffectFields(action) {
         <label>계산 방식<select class="skill-effect-periodic-coefficient-calc"><option value="percent" ${periodicCoefficient.calc === "percent" ? "selected" : ""}>퍼센트</option><option value="flat" ${periodicCoefficient.calc === "flat" ? "selected" : ""}>고정 가산</option></select></label>
         <label>중첩당 회당 값<input class="skill-effect-periodic-value" type="number" min="0" step="0.1" value="${periodicCoefficient.value}"></label>
         <label>증가 간격 (초, 0: 증가 없음)<input class="skill-effect-periodic-growth-interval" type="number" min="0" step="0.1" value="${periodic.growthInterval ?? 0}"></label>
+        <label>틱마다 피해 증가 (%)<input class="skill-effect-periodic-growth-percent" type="number" min="0" value="${periodic.growthPercent ?? 0}"></label>
+        <label>실제 피해 대비 HP 흡수 (%)<input class="skill-effect-periodic-heal-damage" type="number" min="0" value="${periodic.healDamagePercent ?? 0}"></label>
+        <label>추가 피해 유형<input class="skill-effect-periodic-extra-types" value="${escapeHtml((periodic.extraDamageTypes ?? []).join(','))}" placeholder="physical,magic"></label>
+        <label>흡수할 추가 자원<input class="skill-effect-periodic-transfer-drains" value="${escapeHtml((periodic.resourceDrains ?? []).filter(d=>d.transfer).map(d=>d.resource).join(','))}" placeholder="MP"></label>
         <label>간격당 값 증가<input class="skill-effect-periodic-growth-value" type="number" min="0" step="0.1" value="${periodic.growthValue ?? 0}"></label>
         <label>피해 타입<select class="skill-effect-periodic-damage">${options({physical:"물리",magic:"마법",fixed:"고정"},periodic.damageType)}</select></label>
         <label>회복 자원<select class="skill-effect-periodic-resource">${renderResourceOptions(periodic.resource)}</select></label>
@@ -274,6 +284,7 @@ function readSkillEffectFromRow(row) {
       stat:bonus.querySelector('.skill-bonus-stat').value,mode:bonus.querySelector('.skill-bonus-mode').value,
       value:Number(bonus.querySelector('.skill-bonus-value').value),minStacks:Number(bonus.querySelector('.skill-bonus-min-stacks').value),perNStacks:Number(bonus.querySelector('.skill-bonus-per-n-stacks')?.value || 0),perStack:bonus.querySelector('.skill-bonus-per-stack').checked
     })),
+    expireSkillId:value("expire-skill") ?? "",blockExternalTargeting:row.querySelector('.skill-action-row')?.dataset?.blockExternalTargeting === 'true' || row.dataset?.blockExternalTargeting === 'true',
     barrierMode:value("barrier-mode") ?? "maxPercent",breakSkillId:value("break-skill") ?? "",
     reactionSkillId:value("reaction-skill") ?? "",
     movementSpeedPercent:Number(value("movement-speed-percent") ?? 100),
@@ -284,11 +295,13 @@ function readSkillEffectFromRow(row) {
     value:Number(value("value")),nextCastTimePercent:Number(value("next-cast-time-percent")),nextResourceCostPercent:Number(value("next-resource-cost-percent")),nextCooldownPercent:Number(value("next-cooldown-percent")),reflectPercent:Number(value("reflect-percent")),reflectScope:value("reflect-scope"),reflectDamageType:value("reflect-damage-type"),proxyPercent:Number(value("proxy-percent")),proxyPriority:Number(value("proxy-priority")),proxyScope:value("proxy-scope"),maxStacks:Number(value("max-stacks")),stackMode:value("stack-mode"),
     dispelLimit:Number(value("dispel-limit")),dispelKinds:row.querySelector(".skill-effect-dispel-mixed")?.checked ? ["buff","state"] : [],
     echoHealPercent:Number(value("echo-heal")),breakOnAttack:row.querySelector(".skill-effect-break-attack")?.checked ?? false,uses:Number(value("uses")),consumeOn:value("consume-on"),consumePeriodic:row.querySelector('.skill-effect-consume-periodic')?.checked ?? false,counterOnMelee:row.querySelector('.skill-effect-counter-on-melee')?.checked ?? false,
+    removeOnMovementTrigger:row.querySelector(".skill-effect-remove-on-movement")?.checked === true,
     movementStCostPercent:Number(value("movement-st-cost-percent")),movementTriggerDistance:Number(value("movement-trigger-distance")),movementTriggerState:value("movement-trigger-state"),movementTriggerDuration:Number(value("movement-trigger-duration")),
     ...(value("periodic-type") ? {periodic:{type:value("periodic-type"),interval:Number(value("periodic-interval")),value:Number(value("periodic-value")),
       coefficient:{type:value("periodic-coefficient-type"),field:value("periodic-coefficient-field"),calc:value("periodic-coefficient-calc"),value:Number(value("periodic-value"))},
+      growthPercent:Number(value("periodic-growth-percent")),healDamagePercent:Number(value("periodic-heal-damage")),extraDamageTypes:String(value("periodic-extra-types") ?? "").split(",").map(t=>t.trim()).filter(Boolean),
       growthInterval:Number(value("periodic-growth-interval")),growthValue:Number(value("periodic-growth-value")),damageType:value("periodic-damage"),resource:value("periodic-resource"),
-      resourceDrains:String(value("periodic-resource-drains") ?? "").split(",").map(entry=>{const [resource,amount]=entry.split(":");return {resource:String(resource ?? "").trim(),value:Number(amount)};}).filter(drain=>drain.resource && Number.isFinite(drain.value) && drain.value>0)}} : {})};
+      resourceDrains:String(value("periodic-resource-drains") ?? "").split(",").map(entry=>{const [resource,amount]=entry.split(":");return {resource:String(resource ?? "").trim(),value:Number(amount),transfer:String(value("periodic-transfer-drains") ?? "").split(",").map(r=>r.trim()).includes(String(resource ?? "").trim())};}).filter(drain=>drain.resource && Number.isFinite(drain.value) && drain.value>0)}} : {})};
 }
 
 function updateSkillEffectModeVisibility(select) {
@@ -662,7 +675,7 @@ function getLifeCycleForm(unit) {
 }
 
 function isUnitBattleTargetable(unit) {
-  return !unit?.fusedInto && unit?.targetable !== false && !getUnitBattleForm(unit)?.untargetable;
+  return !unit?.fusedInto && unit?.targetable !== false && !(unit?.activeEffects ?? []).some(effect=>effect.blockExternalTargeting) && !getUnitBattleForm(unit)?.untargetable;
 }
 
 function getLethalTransformationPassive(unit) {
@@ -941,7 +954,7 @@ function updateSummonSynergies() {
 function getSelectedOptionalStatEffects(unit) {
   return limitOptionalSkillIds(unit?.skillIds).map(getSkillById).filter(skill=>skill?.slot === "optional" && !isUnitSkillDisabled(unit,skill))
     .flatMap(skill=>(skill.selectionModifier?.statEffects ?? []).filter(effect=>(!effect.requiredWeaponCount || (unit.weaponAttacks ?? []).length>=effect.requiredWeaponCount) && (!effect.requiredWeaponCategory ||
-      (unit.weaponAttacks ?? []).some(weapon=>weapon.weaponCategory === effect.requiredWeaponCategory)))
+      (unit.weaponAttacks ?? []).some(weapon=>weapon.weaponCategory === effect.requiredWeaponCategory)) && (!effect.requiredMeleeTwoHand || (unit.weaponAttacks ?? []).some(weapon=>{const category=(typeof categoriesJson !== "undefined" ? categoriesJson.weapons : typeof DEFAULT_CATEGORIES !== "undefined" ? DEFAULT_CATEGORIES.weapons : []).find(c=>c.key===weapon.weaponCategory);return category?.handType === "twoHand" && category.attackRange<=1;})))
       .map(effect=>({...effect,kind:"buff",stacks:effect.countChoiceSkillId ? getSelectedSummonCount(unit,effect.countChoiceSkillId) : 1})));
 }
 
@@ -1142,11 +1155,14 @@ function applyTimedEffectAction(source,target,action,skill,execution=null) {
   const existingAny = target.activeEffects.find(effect => effect.kind === kind && effect.id === config.id);
   if (config.stackMode === "reject" && existingAny) return;
   const existing = target.activeEffects.find(effect => effect.kind === kind && effect.id === config.id && effect.casterId === source.effectCasterId);
-  const stacks = config.stackMode === "stack" ? Math.min(config.maxStacks,(existing?.stacks ?? 0)+1) : 1;
+  const stacks = config.stackMode === "stack" ? Math.min(config.maxStacks,(existing?.stacks ?? 0)+(config.stackAmount || 1)) : Math.min(config.maxStacks,config.stackAmount || 1);
   const sourceBase=(target.effectBaseStats?.[config.sourceStat]?.value ?? Number(target[config.sourceStat])) || 0;
   const periodicCoefficient=config.periodic?.coefficient;
   const periodicSourceBase=periodicCoefficient?.type === "calculated" ? getCoefficientBaseValue(periodicCoefficient,source,target) : 0;
-  const instance = {...config,periodic:config.periodic,periodicSourceBase,periodicElapsedTicks:0,immunity:config.immunity,kind,stacks,casterId:source.effectCasterId,casterName:source.name,
+  if (action.refreshOwnedDebuffs) for (const old of target.activeEffects) {
+    if (old.casterId === source.effectCasterId && old.polarity === "harmful" && old.tags?.includes("disease") && (!skill?.className || getSkillById(old.skillId)?.className===skill.className) && old.initialDurationTicks>0) old.remainingTicks=old.initialDurationTicks;
+  }
+  const instance = {...config,initialDurationTicks:action.duration>0 ? Math.ceil(action.duration*BASE_ATTACK_COOLDOWN) : null,periodic:config.periodic,periodicSourceBase,periodicElapsedTicks:0,immunity:config.immunity,kind,stacks,casterId:source.effectCasterId,casterName:source.name,
     reservedWeaponSlots:reservedWeapons.map(state=>state.weapon.slot),weaponsReleased:false,
     storedDamage:0,
     damageTaken:0,breakDamageThreshold:Math.max(0,Number(target.maxHp) || 0)*config.breakDamagePercent/100,
@@ -1206,7 +1222,8 @@ function applyPeriodicEffect(target,effect) {
   const coefficient=periodic.coefficient ?? {type:"fixed",value:periodic.value};
   const growthTicks=periodic.growthInterval > 0 ? periodic.growthInterval * BASE_ATTACK_COOLDOWN : 0;
   const growthSteps=growthTicks > 0 ? Math.floor((effect.periodicElapsedTicks ?? 0)/growthTicks) : 0;
-  const inputValue=Number(coefficient.value) + growthSteps * (Number(periodic.growthValue) || 0);
+  const percentSteps=Math.max(0,Math.floor((effect.periodicElapsedTicks ?? 0)/(periodic.interval*BASE_ATTACK_COOLDOWN))-1);
+  const inputValue=(Number(coefficient.value) + growthSteps * (Number(periodic.growthValue) || 0))*Math.pow(1+(periodic.growthPercent || 0)/100,percentSteps);
   const base=Number(effect.periodicSourceBase) || 0;
   const amount=(coefficient.type === "fixed" ? inputValue : coefficient.calc === "percent" ? base*inputValue/100 : base+inputValue) * effect.stacks;
   const action = {coefficients:[{type:"fixed",value:amount}],damageType:periodic.damageType,healResource:periodic.resource,periodic:true};
@@ -1217,10 +1234,14 @@ function applyPeriodicEffect(target,effect) {
       state.castTimer=0;state.target=null;
       publishBattleEvents([{type:"cast_interrupt",source:target,target,skill,reason:effect.name}]);
     }
-  } else if (periodic.type === "damage") applyActionDamage(source,target,action,skill);
+  } else if (periodic.type === "damage") {
+    let actual=applyActionDamage(source,target,action,skill);
+    for (const type of periodic.extraDamageTypes ?? []) if (target.alive) actual+=applyActionDamage(source,target,{...action,damageType:type},skill);
+    if (periodic.healDamagePercent>0 && actual>0 && source.alive) applyActionHeal(source,source,{healResource:"HP",periodic:true,coefficients:[{type:"fixed",value:actual*periodic.healDamagePercent/100}]},skill);
+  }
   else applyActionHeal(source,target,action,skill);
   for (const drain of periodic.resourceDrains ?? []) {
-    applyActionResourceDrain(source,target,{type:"drain_resource",drainResource:drain.resource,coefficients:[{type:"fixed",value:drain.value*effect.stacks}],periodic:true},skill);
+    applyActionResourceDrain(source,target,{type:"drain_resource",drainResource:drain.resource,transferDrainedResource:drain.transfer === true,coefficients:[{type:"fixed",value:drain.value*effect.stacks}],periodic:true},skill);
   }
 }
 
@@ -1362,6 +1383,7 @@ function updateDelayedEffectRepeats(unit,previousEntries=null) {
 }
 
 function updateBattleEffects() {
+  const expiredReactions=[];
   updateSummonSynergies();
   [...playerSquad,...enemySquad].forEach(unit => {
     updateGuardianRuntime(unit);
@@ -1407,6 +1429,7 @@ function updateBattleEffects() {
       }
       if (!unit.alive) return false;
       if (effect.remainingTicks === null || --effect.remainingTicks > 0) return true;
+      if (effect.expireSkillId && unit.alive) expiredReactions.push({unit,skillId:effect.expireSkillId});
       if (effect.mode === "damage_recovery" && effect.storedDamage>0) {
         applyActionHeal(unit,unit,{healResource:"HP",coefficients:[{type:"fixed",value:effect.storedDamage*effect.value/100}]},{id:effect.skillId,name:effect.name,triggered:true});
       }
@@ -1437,6 +1460,14 @@ function updateBattleEffects() {
       updateDelayedEffectRepeats(unit,previousRepeats);
     }
   });
+  for (const row of expiredReactions) {
+    const reaction=getSkillById(row.skillId);
+    if (row.unit.alive && reaction && isSkillExecutable(reaction) && !isUnitSkillDisabled(row.unit,reaction)) {
+      publishBattleEvents([{type:"barrier_break",source:row.unit,target:row.unit,skill:reaction,reason:"자연 만료"}]);
+      applySkill(row.unit,row.unit,{...reaction,triggered:true});
+    }
+  }
+
 }
 
 function getBattleEffectLabel(unit) {
@@ -1452,6 +1483,7 @@ function processMovementEffectTriggers(unit) {
     if (effect.movementTriggerConsumed || !(effect.movementTriggerDistance > 0) || !(effect.movementTriggerDuration > 0)) continue;
     if ((Number(unit.moveDistanceTotal) || 0) - (Number(effect.movementStartDistance) || 0) < effect.movementTriggerDistance) continue;
     effect.movementTriggerConsumed=true;
+    if (effect.removeOnMovementTrigger) {unit.activeEffects=unit.activeEffects.filter(active=>active!==effect);recalculateBattleBuffs(unit);}
     const source=[...playerSquad,...enemySquad].find(candidate=>candidate.effectCasterId === effect.casterId) ?? unit;
     applyTimedEffectAction(source,unit,{type:"add_state",duration:effect.movementTriggerDuration,effect:{
       id:`${effect.id}_movement_trigger`,name:`${effect.name} · 이동 발동`,state:effect.movementTriggerState,

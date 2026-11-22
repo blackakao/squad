@@ -22,7 +22,7 @@ function createFocusPlan(engine,settings) {
     attributes.push(Object.fromEntries(catalog.stats.map((stat,i)=>[stat.key,[a,b,c].includes(i)?50:0])));
   const skillSets=options.varySkills ? combinations(catalog.optionalSkills) :
     [character.skillIds.filter(id=>catalog.optionalSkills.some(s=>s.id===id))];
-  const dimensions=[attributes,skillSets,...catalog.slots.map(slot=>options.varyEquipment ?
+  const dimensions=[options.varyStats===false?[character.attributes]:attributes,skillSets,...catalog.slots.map(slot=>options.varyEquipment ?
     ['',...slot.items.map(item=>item.id)] : [character.equipment[slot.key] || ''])];
   const space=dimensions.reduce((total,values)=>total*BigInt(values.length),1n);
   const random=seededRandom(settings.seed),randBig=()=>BigInt(Math.floor(random()*4294967296));
@@ -35,13 +35,16 @@ function createFocusPlan(engine,settings) {
     let index=cursor;cursor=(cursor+stride)%space;examined++;
     const picked=dimensions.map(values=>{const value=values[Number(index%BigInt(values.length))];index/=BigInt(values.length);return value;});
     const normalized=engine.normalizeFocus(options.characterId,{attributes:picked[0],
-      skillIds:[...catalog.fixedSkillIds,...picked[1]],equipment:Object.fromEntries(catalog.slots.map((slot,i)=>[slot.key,picked[i+2]]))});
+      skillIds:options.varySkills?[...catalog.fixedSkillIds,...picked[1]]:character.skillIds,equipment:Object.fromEntries(catalog.slots.map((slot,i)=>[slot.key,picked[i+2]]))});
     const signature=fingerprint(normalized);
     if(seen.has(signature))continue;
     seen.add(signature);variants.push({id:'setting-'+(variants.length+1),...normalized});
   }
   if(!variants.length)throw Error('유효한 세팅 후보가 없습니다.');
-  const sizes=[1,3,10].filter(size=>engine.roster.length>=size*2);
+  if(options.teamSize!==undefined && ![1,3,10].includes(options.teamSize))throw Error('분석 규모를 확인해 주세요.');
+  if(options.teamSize && engine.roster.length<options.teamSize*2)throw Error(`${options.teamSize}:${options.teamSize}에는 등록 캐릭터 ${options.teamSize*2}명이 필요합니다.`);
+  const requestedSizes=options.teamSize?[options.teamSize]:[1,3,10];
+  const sizes=requestedSizes.filter(size=>engine.roster.length>=size*2);
   const block=variants.length*options.repeats;
   let remaining=settings.count;
   const stages=sizes.map((teamSize,i)=>{
@@ -49,12 +52,12 @@ function createFocusPlan(engine,settings) {
     return {teamSize,planned:count};
   });
   return {version:1,characterId:options.characterId,name:catalog.name,
-    statAllocation:'50/50/50',rawSpace:space.toString(),examined:examined.toString(),
+    statAllocation:options.varyStats===false?'현재 스탯 고정':'50/50/50',rawSpace:space.toString(),examined:examined.toString(),
     exhaustiveRaw:examined===space,variants,stages,repeats:options.repeats,
-    skippedSizes:[1,3,10].filter(size=>!sizes.includes(size)),
+    skippedSizes:requestedSizes.filter(size=>!sizes.includes(size)),
     catalog:{stats:catalog.stats,skills:catalog.skills,slots:catalog.slots},
-    notes:['장비 후보에는 미착용과 현재 등록된 착용 가능 아이템을 포함합니다. 양손 무기 규칙 적용 후 동일 세팅은 합칩니다.',
-      '선택 스킬 0~3개를 비교하며 상호 배타 규칙을 지킵니다. 고정 스킬의 선택 분기·룬은 현재 설정을 유지합니다.',
+    notes:[options.varyEquipment?'장비 후보에는 미착용과 현재 등록된 착용 가능 아이템을 포함합니다. 양손 무기 규칙 적용 후 동일 세팅은 합칩니다.':'아이템은 현재 장착 상태로 고정합니다.',
+      options.varySkills?'선택 스킬 0~3개를 비교하며 상호 배타 규칙을 지킵니다. 고정 스킬의 선택 분기·룬은 현재 설정을 유지합니다.':'선택 스킬은 현재 설정으로 고정합니다. 선택 분기·룬도 유지합니다.',
       '분석 캐릭터의 장비 세트는 해당 세팅 1개로 고정합니다. 다른 캐릭터는 현재 저장된 세팅을 사용합니다.',
       '세팅 후보를 모두 측정했다고 전체 가능한 세팅을 탐색한 것은 아닙니다. 무작위로 선정한 후보 범위 안에서 비교합니다.']};
 }
@@ -108,7 +111,7 @@ function focusMarkdown(run) {
     const equipment=plan.catalog.slots.map(s=>`${s.label}: ${s.items.find(i=>i.id===v.equipment[s.key])?.name||'미착용'}`).join(', ');
     return `${stats}\n\n스킬: ${skills}\n\n장비: ${equipment}`;
   };
-  return `# 캐릭터 집중 분석 보고서 · ${esc(plan.name)}\n\n상태: ${run.status} · ${run.completed}/${run.settings.count}회 · Seed ${run.settings.seed}\n\n원시 조합 공간 ${plan.rawSpace}개, 중복 제거 후 선정 후보 ${plan.variants.length}개. 스탯 50/50/50.\n\n${plan.notes.map(n=>'- '+n).join('\n')}\n\n규모별로 승률을 비교합니다. 무승부·시간 초과를 분모에 포함하며 최소 ${summary.minSamples}회 미만은 임시 후보입니다. 순위는 관측값이며 통계적 우월성을 확정하지 않습니다.\n\n`+
+  return `# 캐릭터 집중 분석 보고서 · ${esc(plan.name)}\n\n상태: ${run.status} · ${run.completed}/${run.settings.count}회 · Seed ${run.settings.seed}\n\n원시 조합 공간 ${plan.rawSpace}개, 중복 제거 후 선정 후보 ${plan.variants.length}개. 스탯 ${plan.statAllocation || '50/50/50'}.\n\n${plan.notes.map(n=>'- '+n).join('\n')}\n\n규모별로 승률을 비교합니다. 무승부·시간 초과를 분모에 포함하며 최소 ${summary.minSamples}회 미만은 임시 후보입니다. 순위는 관측값이며 통계적 우월성을 확정하지 않습니다.\n\n`+
     summary.stages.map(stage=>`## ${stage.teamSize} vs ${stage.teamSize}: ${stage.completed}/${stage.planned}회\n\n${stage.best?`최고 관측 후보 ${stage.best}${stage.provisional?' (표본 부족)':''} · 최고 승률 동률 ${stage.tiedBest}개`:'미측정'}\n\n| 세팅 | 출전 | 승 | 패 | 무승부 | 시간 초과 | 승률 | DPS | HPS | 표본 |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n`+
       stage.ranking.filter(r=>r.battles).map(r=>`| ${r.variantId} | ${r.battles} | ${r.wins} | ${r.losses} | ${r.draws} | ${r.timeouts} | ${r.winRate.toFixed(2)}% | ${r.dps.toFixed(2)} | ${r.hps.toFixed(2)} | ${r.lowSample?'부족':'충족'} |`).join('\n')).join('\n\n')+
     '\n\n## 세팅 명세\n\n'+plan.variants.map(v=>`### ${v.id}\n\n${describe(v)}`).join('\n\n')+'\n';

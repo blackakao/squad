@@ -41,6 +41,7 @@ function clearBattleChannel(unit) {
 }
 
 function startBattleChannel(unit,action,skill) {
+  if (isUltimateSkill(skill)) {unit.skillUseCounts ??= {};unit.skillUseCounts[skill.id]=(unit.skillUseCounts[skill.id] || 0)+1;}
   const channel=normalizeSkillChannel(skill.channel);
   unit.channelAction={...action,skill};
   unit.channelTimer=Math.max(1,Math.ceil(channel.duration*BASE_ATTACK_COOLDOWN));

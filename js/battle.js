@@ -3,6 +3,7 @@ function resetUnitForBattle(unit) {
   unit.fusedInto=null;
   unit.reloadCharges={};unit.reloadExtra={};
   unit.damageStorage=null;unit.directAttackers=new Map();unit.guardianRuntimeSignature="";
+  unit.initialPassiveStacksApplied=new Set();
   unit.killChainWindows=new Map();unit.killChainMarks=new Map();
   unit.delayedSkillActions=[];
   unit.combatFocusTarget=null;unit.summonSynergySignature="";
@@ -679,7 +680,7 @@ function updateRuntimeRuleOverrides() {
 }
 
 function canSquadContinueBattle(squad) {
-  return squad.some(unit => !isBattleDefeatState(unit) && ((unit.alive && isUnitBattleTargetable(unit)) || (!unit.isSummon && unit.isWaiting
+  return squad.some(unit => !isBattleDefeatState(unit) && ((unit.alive && (isUnitBattleTargetable(unit) || (unit.activeEffects ?? []).some(effect=>effect.blockExternalTargeting))) || (!unit.isSummon && unit.isWaiting
     && (unit.isReserve || unit.entryTicks > 0 || unit.reviveTicks > 0))));
 }
 
@@ -1380,6 +1381,8 @@ function resolveSkillCast(unit, action) {
     return;
   }
 
+  const mirrored=getMagicMirrorReturn(unit,action.target,skill);
+  if (mirrored) {skill=mirrored;action={...action,target:unit};}
   completeReloadCast(unit,skill,action.reloadInfo);
   if (skill.killChain) unit.killChainWindows?.delete(skill.id);
   unit.skillUseCounts ??= {};unit.skillUseCounts[skill.id]=(unit.skillUseCounts[skill.id] || 0)+1;
@@ -1671,6 +1674,7 @@ function moveUnitWithCollision(unit,desiredX,desiredY,{sweep=true}={}) {
 }
 
 function createBattleField(source,target,action,skill) {
+  if (skill?.maintainedField && battleFields.some(field=>field.source===source && field.skill?.id===skill.id)) return;
   if (source?.isEntityPreview) return;
   const center=action.fieldCenter === "self" || action.target === "self" ? source : target;
   if (!center || !(action.fieldInterval > 0) || (action.fieldShape === "line" ? !(action.fieldWidth > 0) : !(action.fieldRadius > 0))) return;
@@ -1761,8 +1765,19 @@ function updateBattleFields() {
       if (--field.nextTick<=0) field.nextTick=Math.max(1,Math.ceil(action.fieldInterval*BASE_ATTACK_COOLDOWN));
       return field.remainingTicks === null || --field.remainingTicks>0;
     }
+    if (action.fieldEntryActions?.length) {
+      const enemies=source.side === "enemy" ? playerSquad : enemySquad;
+      const inside=new Set(enemies.filter(unit=>unit.alive && isUnitBattleTargetable(unit) && isUnitInsideBattleField(unit,field)));
+      for (const target of inside) if (!field.insideTargets?.has(target)) for (const entry of action.fieldEntryActions) applySkillAction(source,target,entry,skill);
+      field.insideTargets=inside;
+    }
     if (--field.nextTick <= 0) {
       field.nextTick=Math.max(1,Math.ceil(action.fieldInterval*BASE_ATTACK_COOLDOWN));
+      if (action.fieldTickHpCost>0) {
+        if (!source.alive || source.hp<action.fieldTickHpCost) return false;
+        applyActionResourceDrain(source,source,{drainResource:"HP",coefficients:[{type:"fixed",value:action.fieldTickHpCost}],periodic:true},skill);
+        if (!source.alive) return false;
+      }
       const own=source.side === "enemy" ? enemySquad : playerSquad;
       const other=source.side === "enemy" ? playerSquad : enemySquad;
       const resource=action.fieldEffect === "heal" ? getResourceField(action.healResource) : null;
@@ -2414,3 +2429,14 @@ function gameLoop() {
 }
 
 
+
+// A mirror redirects a paid MP skill once; it preserves the original caster's stats and costs.
+function getMagicMirrorReturn(source,target,skill) {
+  if (!source?.alive || source===target || skill._mirrorReturned || skill.triggered || skill.slot === "basic"
+    || !getSkillResourceCosts(skill).some(cost=>cost.resource === "MP" && cost.value>0)) return null;
+  const mirror=battleFields.find(field=>field.source.alive && field.source.side!==source.side && field.action.reflectMpSkills
+    && (field.remainingTicks===null || field.remainingTicks>0) && Math.hypot(source.x-field.x,source.y-field.y)<=field.action.fieldRadius*ATTACK_RANGE_UNIT);
+  if (!mirror) return null;
+  const redirect=action=>({...action,target:"self",allowSelfTarget:true,rangeMode:"custom",rangeValue:100000,area:0,chainCount:0,splashPercent:0,battlefieldArea:false,fieldCenter:"self",reflected:true});
+  return {...skill,_mirrorReturned:true,actions:skill.actions.map(redirect),channel:skill.channel ? {...skill.channel,startActions:(skill.channel.startActions ?? []).map(redirect),endActions:(skill.channel.endActions ?? []).map(redirect)} : skill.channel};
+}

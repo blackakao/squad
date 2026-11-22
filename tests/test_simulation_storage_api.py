@@ -52,18 +52,19 @@ class StorageApiTest(unittest.TestCase):
                         except OSError:
                             time.sleep(.1)
                     focus_settings = {'count': 3, 'maxSeconds': 1, 'minSamples': 1, 'workers': 2,
-                        'focus': {'characterId': 0, 'candidateLimit': 1, 'repeats': 1,
+                        'focus': {'characterId': 0, 'candidateLimit': 1, 'repeats': 1, 'teamSize': 3, 'varyStats': False,
                                   'varySkills': True, 'varyEquipment': True}}
                     preview_request = urllib.request.Request(f'http://127.0.0.1:{port}/api/simulation-focus-plan',
                         data=json.dumps(focus_settings).encode(), headers={'Content-Type': 'application/json'})
                     with urllib.request.urlopen(preview_request, timeout=30) as response:
                         preview = json.load(response)
-                    self.assertEqual([s['planned'] for s in preview['stages']], [1, 1, 1])
+                    self.assertEqual(preview['stages'], [{'teamSize': 3, 'planned': 3}])
+                    self.assertEqual(preview['statAllocation'], '현재 스탯 고정')
                     focus_job = request(method='POST', body=focus_settings)
                     self.assertEqual(finish(focus_job)['status'], 'COMPLETED')
                     focus_result = request('/' + focus_job['simulationId'] + '/result')
                     self.assertEqual(focus_result['focusPlan'], preview)
-                    self.assertEqual([s['completed'] for s in focus_result['focusSummary']['stages']], [1, 1, 1])
+                    self.assertEqual([s['completed'] for s in focus_result['focusSummary']['stages']], [3])
                     self.assertNotIn('results', focus_result)
                     self.assertTrue((root / 'balance/jobs' / focus_job['simulationId'] / 'focus-plan.json').exists())
                     focus_directory = root / 'balance/jobs' / focus_job['simulationId']

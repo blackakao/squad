@@ -2142,7 +2142,7 @@ test('soul reaper definitions and state-specific skill UI preserve shared slot a
 function keratinEngine() {
  const e=engine();e.skillsJson=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','skills.json'),'utf8')));
  e.keratin=id=>e.getSkillById('skill_class_keratin_'+id);e.owner=unit(e);e.owner.hp=e.owner.maxHp=1000;e.owner.attackRange=1;
- e.owner.skillIds=['shell','molt','repulsive_shield','pity'].map(id=>e.keratin(id).id);
+ e.owner.skillIds=['shell','gas','repulsive_shield','pity','swamp','metamorphosis_ultimate'].map(id=>e.keratin(id).id);
  e.attack=(source,target,value=1,extra={})=>{
   const hit=e.normalizeSkillAction({type:'deal_damage',target:'enemy',rangeMode:'custom',rangeValue:1,damageType:'physical',coefficients:[{type:'fixed',value}],...extra});
   return e.applyActionDamage(source,target,{...hit,...extra},{id:'keratin_test_hit',slot:'active',actions:[hit]});
@@ -2172,7 +2172,7 @@ test('repulsive shield bursts once only when its own remaining amount is exhaust
  s.skillIds=[e.keratin('repulsive_shield').id];s.bp=s.maxBp=30;e.applySkill(s,s,e.keratin('repulsive_shield'));assert.equal(e.getUnitBarrierValue(s),130);
  assert.equal(e.attack(enemy,s,60),60);assert.equal(e.getUnitBarrierValue(s),70);assert.equal(enemy.hp,1000);
  assert.equal(e.attack(enemy,s,40),40);assert.equal(s.hp,1000);assert.equal(s.bp,30);assert.equal(enemy.hp,950);assert.equal(near.hp,950);assert.equal(far.hp,1000);assert.equal(ally.hp,100);
- assert.equal(enemy.speed,8);assert.ok(Math.abs(enemy.effectAttackRateMultiplier-.7)<1e-10);
+ assert.equal(enemy.speed,8);assert.ok(Math.abs(enemy.attackSpeed-1.3)<1e-10);
  e.attack(enemy,s,30);assert.equal(enemy.hp,950);assert.equal(e.getUnitBarrierValue(s),0);
  assert.equal(e.getBattleEvents('barrier_break').length,1);
 });
@@ -2192,13 +2192,13 @@ test('repulsive shield expiry dispel refresh and friendly damage never explode',
 test('keratin molt uses three meter self area and independent defenses; pity chooses the higher offensive stat',()=>{
  const e=keratinEngine(),s=e.owner,near=unit(e,'enemy',130),far=unit(e,'enemy',131);s.atk=100;
  e.applySkill(s,near,e.keratin('molt'));assert.equal(near.hp,20);assert.equal(far.hp,100);assert.equal(s.defense,5);assert.equal(s.resistance,5);
- near.atk=150;near.magic=200;e.applySkill(s,near,e.keratin('pity'));assert.equal(near.atk,150);assert.equal(near.magic,100);
- far.atk=200;far.magic=150;e.applySkill(s,far,e.keratin('pity'));assert.equal(far.atk,100);assert.equal(far.magic,150);
+ near.atk=150;near.magic=200;e.applySkill(s,near,e.keratin('pity'));assert.equal(near.atk,150);assert.equal(near.magic,140);
+ far.atk=200;far.magic=150;e.applySkill(s,far,e.keratin('pity'));assert.equal(far.atk,140);assert.equal(far.magic,150);
  for(let i=0;i<300;i++)e.updateBattleEffects();assert.equal(s.defense,undefined);assert.equal(near.magic,200);assert.equal(far.atk,200);
 });
 
 test('keratin skill metadata preserves main weapon range, explicit exception, internal reaction and repeated normalization',()=>{
- const e=keratinEngine();assert.equal(e.getSkillsForClass('각질형').length,4);assert.equal(e.getEquippedSkills(e.owner).length,3);
+ const e=keratinEngine();assert.equal(e.getSkillsForClass('각질형').length,12);assert.equal(e.getEquippedSkills(e.owner).length,5);
  for(const id of ['shell','molt','repulsive_shield'])assert.ok(e.keratin(id).actions.every(a=>a.rangeMode==='mainWeapon'));
  assert.equal(e.keratin('pity').actions[0].rangeMode,'custom');assert.equal(e.keratin('pity').actions[0].rangeValue,5);
  const before=JSON.stringify(e.skillsJson);assert.equal(JSON.stringify(e.normalizeSkillJson(e.skillsJson)),before);
@@ -4725,17 +4725,17 @@ test('disease skill data and self exclusions match their class rules',()=>{
  assert.equal(find('skill_class_serum_transfusion').actions[0].allowSelfTarget,false);
  const virus=find('skill_class_disease_virus'),wound=find('skill_class_disease_open_wound');
  assert.equal(virus.castTime,1.5);assert.equal(virus.actions[0].duration,10);assert.equal(virus.actions[0].effect.periodic.coefficient.value,40);
- assert.equal(wound.castTime,1.5);assert.equal(wound.actions[0].duration,0);assert.equal(wound.actions[0].effect.stackMode,'reject');
- assert.equal(wound.actions[0].effect.periodic.growthInterval,10);assert.equal(wound.actions[0].effect.periodic.growthValue,1);
+ assert.equal(wound.castTime,3);assert.equal(wound.actions[0].duration,15);assert.equal(wound.actions[0].effect.stackMode,'refresh');
+ assert.equal(wound.actions[0].effect.periodic.growthPercent,3);assert.equal(wound.actions[0].effect.periodic.coefficient.value,10);
  const characters=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','characters.json'),'utf8'));
  const weak=find('skill_class_disease_weakening_disease'),pain=find('skill_class_disease_pain_amplification');
- assert.deepEqual(virus.actions[0].effect.tags,['disease']);assert.deepEqual(wound.actions[0].effect.tags,['disease']);
- assert.deepEqual([weak.castTime,weak.cooldown,weak.actions[0].duration],[.5,8,5]);
- assert.deepEqual([weak.actions[0].effect.movementStCostPercent,weak.actions[0].effect.movementTriggerDistance,weak.actions[0].effect.movementTriggerState,weak.actions[0].effect.movementTriggerDuration],[200,10,'stun',2]);
- assert.deepEqual([pain.cooldown,pain.channel.duration,pain.channel.interval,pain.channel.lockTarget],[7,3,1,true]);
- assert.deepEqual(pain.actions[0].coefficients.map(coefficient=>[coefficient.field,coefficient.value,coefficient.effectTag ?? '']),[['magic',100,''],['targetEffectTagStacks',30,'disease']]);
+ assert.deepEqual(virus.actions[0].effect.tags,['disease']);assert.deepEqual(wound.actions[0].effect.tags,['bleed','disease']);
+ assert.deepEqual([weak.castTime,weak.cooldown,weak.actions[0].duration],[.5,15,5]);
+ assert.deepEqual([weak.actions[0].effect.movementStCostPercent,weak.actions[0].effect.movementTriggerDistance,weak.actions[0].effect.movementTriggerState,weak.actions[0].effect.movementTriggerDuration],[200,10,'stun',3]);
+ assert.deepEqual([pain.cooldown,pain.channel.duration,pain.channel.interval,pain.channel.lockTarget],[10,3,1,true]);
+ assert.deepEqual(pain.actions[0].coefficients.map(coefficient=>[coefficient.field,coefficient.value,coefficient.effectTag ?? '']),[['magic',100,'']]);assert.equal(pain.actions[0].ownedDebuffDamagePercent,30);
  const e=engine();assert.equal(e.isSkillExecutable(e.normalizeSkillJson([weak])[0]),true);assert.equal(e.isSkillExecutable(e.normalizeSkillJson([pain])[0]),true);
- assert.deepEqual(characters.find(character=>character.skillIds?.includes(virus.id)).skillIds,[virus.id,wound.id,weak.id,pain.id]);
+ assert.deepEqual(characters.find(character=>character.skillIds?.includes(virus.id)).skillIds,['skill_class_disease_invisible_disease',virus.id,wound.id,weak.id,pain.id,'skill_class_disease_incurable_ultimate']);
 });
 
 test('movement disease doubles movement ST cost and stuns once after ten metres',()=>{
@@ -5395,4 +5395,190 @@ test('berserker dual wield qualification is conditional and flame afterimage cha
 test('berserker interrupting strikes stop casts without adding a stun and options beyond the first three remain inactive',()=>{
  const e=berserkerEngine(['interrupting_strikes']),s=e.owner,t=e.target;t.pendingAction={type:'skill',skill:e.runtime('flame_slash'),target:s};t.castTimer=100;t.castDuration=100;e.applySkill(s,t,e.runtime('fire_strike'));assert.equal(t.pendingAction,null);assert.equal(t.castTimer,0);assert.equal(e.hasBattleState(t,'stun'),false);
  const limited=berserkerEngine(['blood_heat','pain_opportunity','qualification','flame_afterimage']);assert.equal(limited.runtime('flame_slash').actions[1].coefficients[0].value,20);
+});
+
+function magicHunterEngine(options=[]) {
+ const e=engine();e.skillsJson=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'../data/skills.json'),'utf8')));
+ e.hunter=id=>e.getSkillById('skill_class_magic_hunter_'+id);e.owner=unit(e);e.target=unit(e,'enemy',130);
+ e.owner.skillIds=['trivial_magic','depletion','weakness','shattering_throw','triple_hop','magic_mirror',...options].map(id=>e.hunter(id).id);
+ e.owner.atk=10;e.target.hp=e.target.maxHp=1000;e.runtime=id=>e.getRuntimeSelectionSkill(e.owner,e.hunter(id));return e;
+}
+test('magic hunter depletion only rewards newly exhausted MP and holds its target',()=>{
+ for(const [mp,damage] of [[0,13],[5,16.9],[10,16.9],[11,13]]) {
+  const e=magicHunterEngine();e.target.mp=mp;const other=unit(e,'enemy',135);other.mp=50;
+  e.dispatchSkillActions(e.owner,e.target,e.runtime('depletion'),false);
+  assert(Math.abs(e.target.hp-(1000-damage))<1e-8);assert.equal(e.target.mp,Math.max(0,mp-10));assert.equal(other.mp,50);
+ }
+ const e=magicHunterEngine(['resource_exhaustion']);assert.equal(e.runtime('depletion').actions[0].coefficients[0].value,15);assert.equal(e.runtime('trivial_magic').actions[0].coefficients[0].value,7);
+});
+test('magic hunter trivial magic comparison refreshes without stacking',()=>{
+ const e=magicHunterEngine(),s=e.owner,t=e.target;t.magic=30;t.defense=20;
+ e.applySkill(s,t,e.runtime('trivial_magic'));assert.equal(t.mp,95);assert.equal(t.defense,10);
+ e.applySkill(s,t,e.runtime('trivial_magic'));assert.equal(t.defense,10);assert.equal(t.activeEffects.length,1);
+ e.clearBattleEffects(t);t.magic=s.magic;e.applySkill(s,t,e.runtime('trivial_magic'));assert.equal(t.activeEffects.length,0);
+});
+test('magic hunter throw clears BP and timed barriers then roots only when selected',()=>{
+ const e=magicHunterEngine(['crushing_step']),s=e.owner,t=e.target;t.bp=20;
+ e.applySkill(s,t,skill(e,{type:'add_buff',target:'enemy',duration:10,effect:{id:'shield',mode:'barrier',barrierMode:'fixed',value:30}}));
+ e.applySkill(s,t,e.runtime('shattering_throw'));assert.equal(t.bp,0);assert.equal(e.getTimedBarriers(t).length,0);assert(e.hasBattleState(t,'root'));
+});
+test('magic hunter mirror returns MP skills once and excludes self basic free and outside casts',()=>{
+ const e=magicHunterEngine(),s=e.owner,t=e.target;e.applySkill(s,t,e.runtime('magic_mirror'));
+ const attack=skill(e,{type:'deal_damage',target:'enemy',damageType:'magic',coefficients:[{type:'fixed',value:12}]});attack.resourceCosts=[{resource:'MP',mode:'fixed',value:10}];attack.slot='active';
+ const returned=e.getMagicMirrorReturn(t,s,attack);assert(returned);assert.equal(returned.actions[0].target,'self');e.applySkill(t,t,returned);assert.equal(t.hp,988);assert.equal(s.hp,100);
+ assert.equal(e.getMagicMirrorReturn(t,s,returned),null);assert.equal(e.getMagicMirrorReturn(t,t,attack),null);
+ assert.equal(e.getMagicMirrorReturn(t,s,{...attack,resourceCosts:[]}),null);assert.equal(e.getMagicMirrorReturn(t,s,{...attack,slot:'basic'}),null);
+ t.x=500;assert.equal(e.getMagicMirrorReturn(t,s,attack),null);t.x=130;vm.runInContext('battleFields[0].remainingTicks=0',e);assert.equal(e.getMagicMirrorReturn(t,s,attack),null);
+});
+test('magic hunter resource recycling pays full MP only when ST is missing and selected',()=>{
+ const e=magicHunterEngine(['resource_recycling']),s=e.owner;s.st=95;
+ for(let i=0;i<60;i++)e.updateRepeatingPassives(s);assert.equal(s.mp,90);assert.equal(s.st,100);
+ for(let i=0;i<60;i++)e.updateRepeatingPassives(s);assert.equal(s.mp,90);
+ s.st=10;s.mp=9;for(let i=0;i<60;i++)e.updateRepeatingPassives(s);assert.equal(s.mp,9);assert.equal(s.st,10);
+ s.mp=100;s.skillIds.push(...['mental_breakdown','crushing_step','resource_exhaustion'].map(id=>e.hunter(id).id));
+ s.skillIds=s.skillIds.filter(id=>id!==e.hunter('resource_recycling').id);for(let i=0;i<60;i++)e.updateRepeatingPassives(s);assert.equal(s.mp,100);
+});
+test('magic hunter hops move three meters and linked mental breakdown ends with weakness',()=>{
+ const e=magicHunterEngine(['mental_breakdown']),s=e.owner,t=e.target;t.x=190;
+ e.applySkill(s,t,e.getRuntimeComboSkill(s,e.runtime('triple_hop')));assert.equal(s.x,130);
+ t.x=150;e.applySkill(s,t,e.runtime('weakness'));assert.equal(t.magic,10);assert.equal(t.effectCastTimeMultiplier,2);
+ t.activeEffects=t.activeEffects.filter(effect=>effect.id!=='magic_hunter_weakness');e.recalculateBattleBuffs(t);assert.equal(t.effectCastTimeMultiplier,1);
+});
+
+test('magic hunter guard checks melee two handed category and optional limit',()=>{
+ const e=magicHunterEngine(['dukes_guard']);e.owner.resistance=0;e.categoriesJson={weapons:[{key:'sword',handType:'twoHand',attackRange:1},{key:'bow',handType:'twoHand',attackRange:5},{key:'one',handType:'oneHand',attackRange:1}]};
+ for(const [key,expected] of [['sword',20],['bow',0],['one',0]]){e.owner.weaponAttacks=[{weaponCategory:key}];e.recalculateBattleBuffs(e.owner);assert.equal(e.owner.resistance,expected);}
+ const f=magicHunterEngine(['mental_breakdown','crushing_step','resource_exhaustion','resource_recycling']);f.owner.st=0;for(let i=0;i<60;i++)f.updateRepeatingPassives(f.owner);assert.equal(f.owner.mp,100);
+});
+test('magic hunter mirror cast completion redirects the actual dispatch and hops share final cooldown',()=>{
+ const e=magicHunterEngine(),s=e.owner,t=e.target;e.applySkill(s,t,e.runtime('magic_mirror'));
+ const attack=skill(e,{type:'deal_damage',target:'enemy',damageType:'magic',coefficients:[{type:'fixed',value:12}]});attack.resourceCosts=[{resource:'MP',mode:'fixed',value:10}];attack.slot='active';
+ e.resolveSkillCast(t,{type:'skill',skill:attack,target:s,resourceSpent:{MP:10}});assert.equal(t.hp,988);assert.equal(s.hp,100);
+ const f=magicHunterEngine(),u=f.owner;f.target.x=190;
+ for(let i=0;i<3;i++){const hop=f.getRuntimeComboSkill(u,f.runtime('triple_hop')),spent=f.spendSkillResourceCosts(u,hop);f.resolveSkillCast(u,{type:'skill',skill:hop,target:f.target,resourceSpent:spent});assert.equal(u.skillCooldowns[hop.id],i===2?900:30);}
+ assert.equal(u.st,97);
+});
+
+test('magic hunter actual basic hits proc MP drain and mirror optional increases enemy magic only',()=>{
+ const e=magicHunterEngine(['diffuse_reflection']),s=e.owner,t=e.target;t.magic=30;t.defense=20;
+ const basic=skill(e,{type:'deal_damage',target:'enemy',damageType:'physical',coefficients:[{type:'fixed',value:1}]});basic.slot='basic';e.skillsJson.push(basic);
+ e.applySkill(s,t,basic);assert.equal(t.mp,95);assert.equal(t.defense,10);
+ e.applySkill(s,t,e.runtime('magic_mirror'));assert.equal(t.magic,39);assert.equal(s.magic,20);
+ assert.equal(e.skillsJson.filter(x=>x.className==='마법사냥꾼').length,12);
+});
+
+test('magic hunter definitions normalize idempotently',()=>{
+ const e=magicHunterEngine();const one=e.skillsJson,two=e.normalizeSkillJson(one);
+ for(const definition of one.filter(x=>x.className==='마법사냥꾼'))assert(e.isSkillExecutable(definition),definition.id);
+ for(let i=0;i<one.length;i++){assert.deepEqual(two[i],one[i],one[i].id);assert.equal(JSON.stringify(two[i]),JSON.stringify(one[i]),one[i].id);}
+});
+
+function diseaseEngine(options=[]) {
+ const e=engine();e.skillsJson=e.normalizeSkillJson(JSON.parse(fs.readFileSync(path.join(__dirname,'../data/skills.json'),'utf8')));
+ e.disease=id=>e.getSkillById('skill_class_disease_'+id);e.owner=unit(e);e.target=unit(e,'enemy',105);
+ const s=e.owner,t=e.target;s.magic=100;s.hp=10;s.maxHp=1000;s.mp=s.maxMp=1000;t.hp=t.maxHp=10000;t.atk=100;
+ s.skillIds=['invisible_disease','virus','open_wound','weakening_disease','pain_amplification','incurable_ultimate',...options].map(id=>e.disease(id).id);
+ e.runtime=id=>e.getRuntimeSelectionSkill(s,e.disease(id));e.tick=n=>{for(let i=0;i<n;i++)e.updateBattleEffects();};return e;
+}
+test('disease redesign passive actual basic proc heals actual damage and optional doubles periodic damage',()=>{
+ for(const [options,damage] of [[[],5],[['visible_disease'],10]]) {
+  const e=diseaseEngine(options),s=e.owner,t=e.target;
+  const basic=skill(e,{type:'deal_damage',target:'enemy',coefficients:[{type:'fixed',value:1}]});basic.slot='basic';e.skillsJson.push(basic);e.applySkill(s,t,basic);
+  assert.equal(t.activeEffects.length,1);e.tick(60);assert.equal(t.hp,10000-1-damage);assert.equal(s.hp,10+damage);
+  e.clearBattleEffects(t);t.hp=2;e.applySkill(s,t,e.runtime('invisible_disease'));e.tick(60);assert.equal(s.hp,12+damage);
+ }
+});
+test('disease redesign wound grows three percent after first pulse and lasts fifteen seconds',()=>{
+ const e=diseaseEngine(),s=e.owner,t=e.target;e.applySkill(s,t,e.runtime('open_wound'));let previous=t.hp;
+ for(let i=0;i<3;i++){e.tick(60);assert(Math.abs(previous-t.hp-10*Math.pow(1.03,i))<1e-7);previous=t.hp;}
+ assert(t.activeEffects[0].tags.includes('bleed'));e.tick(720);assert.equal(t.activeEffects.length,0);
+});
+test('disease redesign pain counts only own unique disease debuffs and rechecks each pulse',()=>{
+ const e=diseaseEngine(),s=e.owner,t=e.target;e.applySkill(s,t,e.runtime('virus'));e.applySkill(s,t,e.runtime('weakening_disease'));
+ const other=unit(e,'player',120);e.applySkill(other,t,e.runtime('open_wound'));
+ const foreign=skill(e,{type:'add_state',target:'enemy',duration:10,effect:{id:'foreign_disease',state:'periodic',polarity:'harmful',tags:['disease'],periodic:{type:'damage',interval:1,value:1}}});foreign.className='다른 직업';e.skillsJson.push(foreign);e.applySkill(s,t,foreign);
+ e.applySkill(s,t,e.runtime('pain_amplification'));assert.equal(t.hp,9840);
+ e.clearBattleEffects(t);e.applySkill(s,t,e.runtime('pain_amplification'));assert.equal(t.hp,9740);
+});
+test('disease redesign channel begins instantly pays once runs three seconds and heals actual damage',()=>{
+ const e=diseaseEngine(['healing_disease']),s=e.owner,t=e.target;const pain=e.runtime('pain_amplification');s.role='melee';
+ const spent=e.spendSkillResourceCosts(s,pain);e.startCast(s,{type:'skill',skill:pain,target:t,resourceSpent:spent});assert.equal(s.castTimer,0);assert(s.channelAction);assert.equal(s.mp,980);
+ for(let i=0;i<180;i++)e.updateBattleChannel(s);assert.equal(t.hp,9700);assert.equal(s.hp,40);assert.equal(s.mp,980);assert.equal(s.channelAction,null);assert.equal(s.skillCooldowns[pain.id],600);
+});
+test('disease redesign weakening removes itself and linked attack reduction when movement triggers',()=>{
+ const e=diseaseEngine(['severe_weakness']),s=e.owner,t=e.target;e.applySkill(s,t,e.runtime('weakening_disease'));assert.equal(t.atk,70);assert.equal(e.getMovementStCostPercent(t),200);
+ t.moveDistanceTotal=10;e.processMovementEffectTriggers(t);assert.equal(e.getMovementStCostPercent(t),100);assert.equal(t.atk,100);
+ assert.equal(t.activeEffects.filter(x=>x.state==='stun')[0].remainingTicks,180);assert(!t.activeEffects.some(x=>x.id==='disease_weakening'));
+});
+test('disease redesign incurable has two damage types is permanent dispellable and ultimate gated',()=>{
+ const e=diseaseEngine(),s=e.owner,t=e.target,u=e.runtime('incurable_ultimate');assert.equal(u.castTime,1);assert(u.resourceCosts.every(cost=>cost.value===0));
+ vm.runInContext('combatEventTick=1799',e);assert.equal(e.canActivateSkill(s,u),false);vm.runInContext('combatEventTick=1800',e);assert.equal(e.canActivateSkill(s,u),true);
+ e.applySkill(s,t,u);assert.equal(t.activeEffects.length,1);assert.equal(t.activeEffects[0].remainingTicks,null);assert.equal(t.activeEffects[0].dispellable,true);e.tick(60);assert.equal(t.hp,9980);
+ s.skillUseCounts[u.id]=1;assert.equal(e.canActivateSkill(s,u),false);e.clearBattleEffects(t);e.tick(60);assert.equal(t.hp,9980);
+});
+test('disease redesign relapse refreshes only own disease duration without resetting tick growth',()=>{
+ const e=diseaseEngine(['relapse']),s=e.owner,t=e.target;e.applySkill(s,t,e.runtime('open_wound'));e.tick(120);
+ const own=t.activeEffects[0],other=unit(e,'player',120);e.applySkill(other,t,e.runtime('virus'));e.tick(30);const foreign=t.activeEffects.find(x=>x.casterId===other.effectCasterId),remaining=foreign.remainingTicks,elapsed=own.periodicElapsedTicks;
+ e.applySkill(s,t,e.runtime('incurable_ultimate'));assert.equal(own.remainingTicks,900);assert.equal(own.periodicElapsedTicks,elapsed);assert.equal(foreign.remainingTicks,remaining);
+});
+test('disease redesign psychic virus transfers only actual MP and options obey three slot limit',()=>{
+ const e=diseaseEngine(['psychic_virus','already_happened','visible_disease','healing_disease']),s=e.owner,t=e.target;s.mp=50;t.mp=.5;
+ assert.equal(e.runtime('open_wound').castTime,1);assert.equal(e.runtime('pain_amplification').actions[0].damageHealPercent || 0,0);
+ e.applySkill(s,t,e.runtime('virus'));e.tick(60);assert.equal(t.mp,0);assert.equal(s.mp,50.5);e.tick(60);assert.equal(s.mp,50.5);
+});
+test('disease redesign metadata normalizes repeatedly and all twelve definitions are supported',()=>{
+ const e=diseaseEngine();assert.equal(e.skillsJson.filter(x=>x.className==='질병형').length,12);
+ const next=e.normalizeSkillJson(e.skillsJson);assert.equal(JSON.stringify(next),JSON.stringify(e.skillsJson));
+ for(const x of next.filter(x=>x.className==='질병형'))assert(e.isSkillExecutable(x),x.id);
+});
+
+function keratinRedesign(options=[]) {
+ const e=keratinEngine();e.owner.skillIds=['shell','gas','repulsive_shield','pity','swamp','metamorphosis_ultimate',...options].map(id=>e.keratin(id).id);
+ e.runtime=id=>e.getRuntimeSelectionSkill(e.owner,e.keratin(id));e.ticks=n=>{for(let i=0;i<n;i++)e.updateBattleFields();};return e;
+}
+test('keratin redesign gas follows owner pays every second and cannot duplicate',()=>{
+ const e=keratinRedesign(),s=e.owner,t=unit(e,'enemy',115);s.atk=100;t.hp=t.maxHp=1000;
+ const gas=e.runtime('gas');e.applySkill(s,t,gas);e.applySkill(s,t,gas);assert.equal(e.canActivateSkill(s,gas),false);e.ticks(60);assert.equal(s.hp,990);assert.equal(t.hp,970);
+ t.x=200;e.ticks(60);assert.equal(s.hp,980);assert.equal(t.hp,970);s.x=190;e.ticks(60);assert.equal(t.hp,940);
+ s.hp=9;e.ticks(60);assert.equal(s.hp,9);assert.equal(e.canActivateSkill(s,gas),false);
+});
+test('keratin redesign gas optional trades coefficient for four meter radius',()=>{
+ const e=keratinRedesign(['noxious_gas']),s=e.owner,t=unit(e,'enemy',139);s.atk=100;t.hp=t.maxHp=1000;
+ const gas=e.runtime('gas');assert.equal(gas.actions[0].fieldRadius,4);assert.equal(gas.actions[0].rangeValue,4);e.applySkill(s,t,gas);e.ticks(60);assert(Math.abs(t.hp-980)<1e-8);
+});
+test('keratin redesign initial stacks cap and spike apply only when selected and once per entry',()=>{
+ const e=keratinRedesign(['trained_shell','excess_shell','spikes']),s=e.owner,t=unit(e,'enemy',105);t.hp=t.maxHp=100000;
+ e.publishBattleEvents([{type:'battle_entry',source:s,target:s}]);assert.equal(s.activeEffects[0].stacks,30);assert.equal(s.defense,3);
+ e.publishBattleEvents([{type:'battle_entry',source:s,target:s}]);assert.equal(s.activeEffects[0].stacks,30);
+ e.attack(t,s,1);assert.equal(t.hp,100000-62);
+ for(let i=0;i<150;i++)e.attack(t,s,1);assert.equal(s.activeEffects[0].stacks,150);assert.equal(s.defense,15);
+ e.resetUnitForBattle(s);e.publishBattleEvents([{type:'battle_entry',source:s,target:s}]);assert.equal(s.activeEffects[0].stacks,30);
+});
+test('keratin redesign natural expiry reaction bursts once and dispel never bursts',()=>{
+ for(const reason of ['expiry','dispel','attack']) {
+  const e=keratinRedesign(['self_burst']),s=e.owner,t=unit(e,'enemy',110);t.hp=t.maxHp=1000;s.skillIds=[e.keratin('repulsive_shield').id,e.keratin('self_burst').id];
+  e.applySkill(s,s,e.runtime('repulsive_shield'));
+  if(reason==='dispel')e.applyTimedEffectAction(t,s,e.normalizeSkillAction({type:'delete_buff',effect:{id:'keratin_repulsive_shield',dispelMode:'id'}}));
+  if(reason==='attack')e.attack(t,s,100);
+  for(let i=0;i<180;i++)e.updateBattleEffects();
+  assert.equal(t.hp,reason==='dispel'?1000:950);assert.equal(e.getBattleEvents('barrier_break').length,reason==='dispel'?0:1);
+ }
+});
+test('keratin redesign swamp roots on entry only and reapplies after leaving',()=>{
+ const e=keratinRedesign(['fall_into_swamp']),s=e.owner,t=unit(e,'enemy',130);t.speed=10;t.attackSpeed=1;
+ e.applySkill(s,t,e.runtime('swamp'));e.ticks(1);assert(e.hasBattleState(t,'root'));const root=t.activeEffects.find(x=>x.state==='root');assert.equal(root.remainingTicks,120);
+ for(let i=0;i<120;i++){e.updateBattleEffects();e.updateBattleFields();}assert(!e.hasBattleState(t,'root'));
+ t.x=300;e.ticks(1);t.x=130;e.ticks(1);assert(e.hasBattleState(t,'root'));assert.equal(t.speed,6);assert.equal(t.effectCastTimeMultiplier,1.1);
+});
+test('keratin redesign metamorphosis blocks external targeting heals self and keeps squad alive',()=>{
+ const e=keratinRedesign(),s=e.owner,t=unit(e,'enemy',105),ally=unit(e,'player',110);s.hp=100;
+ const ult=e.runtime('metamorphosis_ultimate');e.startCast(s,{type:'skill',skill:ult,target:s,resourceSpent:{}});assert(s.channelAction);assert.equal(e.isUnitBattleTargetable(s),false);assert.equal(e.canSquadContinueBattle([s]),true);
+ e.attack(t,s,100);assert.equal(s.hp,100);e.applyActionHeal(ally,s,{healResource:'HP',coefficients:[{type:'fixed',value:100}]});assert.equal(s.hp,100);
+ for(let i=0;i<600;i++)e.updateBattleChannel(s);assert.equal(s.hp,700);assert.equal(s.channelAction,null);assert.equal(e.isUnitBattleTargetable(s),true);assert.equal(s.skillUseCounts[ult.id],1);assert.equal(e.canActivateSkill(s,ult),false);
+ e.attack(t,s,1);assert.equal(s.hp,699);
+});
+test('keratin redesign metamorphosis cleans targeting on interruption and optional fourth is inactive',()=>{
+ const e=keratinRedesign(['spikes','excess_shell','self_burst','trained_shell']),s=e.owner;e.publishBattleEvents([{type:'battle_entry',source:s,target:s}]);assert.equal(s.activeEffects.length,0);
+ const ult=e.runtime('metamorphosis_ultimate');e.startCast(s,{type:'skill',skill:ult,target:s,resourceSpent:{}});e.finishBattleChannel(s,'test');assert.equal(e.isUnitBattleTargetable(s),true);
+ assert.equal(JSON.stringify(e.normalizeSkillJson(e.skillsJson)),JSON.stringify(e.skillsJson));
 });

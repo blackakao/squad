@@ -32,7 +32,7 @@ const SimulationPage = (() => {
     return {count:Number(el('FocusCount').value),teamSize:1,seed:Number(el('FocusSeed').value),maxSeconds:Number(el('FocusMaxSeconds').value),
       minSamples:Number(el('FocusMinSamples').value),workers:Number(el('FocusWorkers').value),
       focus:{characterId:Number(el('FocusCharacter').value),candidateLimit:Number(el('FocusCandidates').value),
-        repeats:Number(el('FocusRepeats').value),varySkills:el('FocusSkills').checked,varyEquipment:el('FocusEquipment').checked}};
+        repeats:1,teamSize:Number(el('FocusTeamSize').value),varyStats:el('FocusStats').checked,varySkills:el('FocusSkills').checked,varyEquipment:el('FocusEquipment').checked}};
   }
   function showFocusPlan(plan) {
     el('FocusPreview').innerHTML=`<p>${html(plan.name)} · 원시 조합 공간 ${html(plan.rawSpace)}개 · 중복 제거한 선정 후보 ${plan.variants.length}개</p><p>${plan.stages.map(s=>`${s.teamSize}:${s.teamSize} ${number(s.planned)}회`).join(' → ')}</p><p>후보 생성은 Seed로 재현됩니다. 전체 경우의 수가 아닌 이번에 선정한 후보 범위입니다.${plan.skippedSizes.length?' 인원 부족으로 제외: '+plan.skippedSizes.join(', '):''}</p>`;
@@ -127,7 +127,7 @@ const SimulationPage = (() => {
   function renderResult() {
     if(result.focusPlan) {
       el('Result').innerHTML=SimulationFocusReport.render(result)+`<p><a href="/api/simulations/${encodeURIComponent(selected)}/markdown" target="_blank" rel="noopener">보고서 Markdown</a> · <a href="/api/simulations/${encodeURIComponent(selected)}/json" target="_blank" rel="noopener">원본 JSON</a></p>`;
-      tab('focus');return;
+      SimulationFocusReport.bind(el('Result'),result);tab('focus');return;
     }
     const s=result.summary;
     const recommendations=SimulationAnalysis.recommendCombinations(s,result.settings.minSamples);

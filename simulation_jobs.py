@@ -177,12 +177,17 @@ class SimulationJobs:
                 if type(value) is not int or not low <= value <= high:
                     raise SimulationError(f"집중 분석 {key}: {low}~{high} 정수를 입력해 주세요.")
                 checked[key] = value
-            for key in ("varySkills", "varyEquipment"):
+            for key in ("varyStats", "varySkills", "varyEquipment"):
                 value = focus.get(key, True)
                 if type(value) is not bool:
                     raise SimulationError("스킬/장비 변경 여부는 참/거짓이어야 합니다.")
                 checked[key] = value
-            result.update(focus=checked, teamSize=1)
+            if "teamSize" in focus:
+                size = focus["teamSize"]
+                if type(size) is not int or size not in (1, 3, 10):
+                    raise SimulationError("집중 분석 규모는 1, 3, 10 중 선택해 주세요.")
+                checked["teamSize"] = size
+            result.update(focus=checked, teamSize=checked.get("teamSize", 1))
         return result
 
     def focus_preview(self, values):

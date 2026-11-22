@@ -195,7 +195,8 @@
         ]
       }
     ],
-    "icon": "assets/images/skills/궁사_멀티샷.png"
+    "icon": "assets/images/skills/궁사_멀티샷.png",
+    "description": "사정거리-주장비, 공격력계수 125%, 대상 3체(단 주대상에게서 5m 이내를 벗어나면 대상에게서 선택되지 않는다), 즉시시전, 재사용대기시간 5초"
   },
   {
     "id": "skill_class_archer_power_shot",
@@ -221,7 +222,8 @@
         ]
       }
     ],
-    "icon": "assets/images/skills/궁사_강한사격.png"
+    "icon": "assets/images/skills/궁사_강한사격.png",
+    "description": "적에게 강한 사격을 가한다."
   },
   {
     "id": "skill_class_knight_charge",
@@ -276,7 +278,8 @@
         "rangeValue": 6
       }
     ],
-    "icon": "assets/images/skills/기사_돌진.png"
+    "icon": "assets/images/skills/기사_돌진.png",
+    "description": "대상에게 강렬하게 돌진한다, 상대를 넉백시킨다."
   },
   {
     "id": "skill_class_mage_arrow",
@@ -308,7 +311,8 @@
         ]
       }
     ],
-    "icon": "assets/images/skills/마법사_마법화살.png"
+    "icon": "assets/images/skills/마법사_마법화살.png",
+    "description": "대상 1체에게 마력만큼 공격"
   },
   {
     "id": "skill_class_mage_barrier",
@@ -349,7 +353,8 @@
         }
       }
     ],
-    "icon": "assets/images/skills/마법사_보호막.png"
+    "icon": "assets/images/skills/마법사_보호막.png",
+    "description": "나에게 보호막을 시전"
   },
   {
     "id": "skill_class_mage_quick",
@@ -381,7 +386,8 @@
         ]
       }
     ],
-    "icon": "assets/images/skills/마법사_마법강타.png"
+    "icon": "assets/images/skills/마법사_마법강타.png",
+    "description": "즉시 대상을 공격한다."
   },
   {
     "id": "skill_class_priest_smite",
@@ -420,7 +426,8 @@
         ]
       }
     ],
-    "icon": "assets/images/skills/_-20261026221836127698.png"
+    "icon": "assets/images/skills/_-20261026221836127698.png",
+    "description": "대상 1체를 공격"
   },
   {
     "id": "skill_class_priest_barrier",
@@ -465,7 +472,8 @@
         }
       }
     ],
-    "icon": "assets/images/skills/_-20261026221853945748.png"
+    "icon": "assets/images/skills/_-20261026221853945748.png",
+    "description": "아군 1체에게 보호막 계수-마력의 80%"
   },
   {
     "id": "skill_class_marine_bash",
@@ -595,7 +603,8 @@
         "targetCooldownEffectName": "과다투약 금지"
       }
     ],
-    "icon": "assets/images/skills/의무병_이나르간신.png"
+    "icon": "assets/images/skills/의무병_이나르간신.png",
+    "description": "아군 한명을 강력 회복시킨다."
   },
   {
     "id": "skill_class_medic_first_aid",
@@ -637,7 +646,8 @@
       "lockTarget": true,
       "receivedDamagePercent": 100
     },
-    "icon": "assets/images/skills/의무병_응급처치.png"
+    "icon": "assets/images/skills/의무병_응급처치.png",
+    "description": "아군을 지속시간동안 치유한다."
   },
   {
     "id": "skill_class_medic_endurance",
@@ -677,7 +687,8 @@
         }
       }
     ],
-    "icon": "assets/images/skills/의무병_야전지구력.png"
+    "icon": "assets/images/skills/의무병_야전지구력.png",
+    "description": "지속시간동안 받는 피해를 감소시키고, st를 회복한다."
   },
   {
     "id": "skill_class_dancer_scatter",
@@ -1588,7 +1599,8 @@
           "polarity": "harmful"
         }
       }
-    ]
+    ],
+    "description": "상대를 내려찍어 강한 피해를 입히고 받는 피해를 증가시킨다."
   },
   {
     "icon": "assets/images/skills/승려_금강역사의 부적.png",
@@ -1611,7 +1623,8 @@
           "receivedDamagePercent": 10
         }
       }
-    ]
+    ],
+    "description": "아군 1명에게 높은 피해를 감소 시켜주는 금강역사의 부적을 붙인다."
   },
   {
     "icon": "assets/images/skills/승려_진심의 마음.png",
@@ -1688,7 +1701,8 @@
           "value": 20
         }
       ]
-    }
+    },
+    "description": "자신의 공격속도-20% 증가"
   },
   {
     "icon": "assets/images/skills/승려_미간 강타.png",
@@ -1760,7 +1774,7 @@
     "name": "화염술사 · 점화",
     "className": "화염술사",
     "icon": "assets/images/skills/화염술사_점화.png",
-    "description": "",
+    "description": "상대를 화염으로 강타한다.",
     "slot": "active",
     "cooldown": 0,
     "castTime": 1.5,
@@ -1929,7 +1943,7 @@
     "name": "화염술사 · 드렁큰 올리지",
     "className": "화염술사",
     "icon": "assets/images/skills/화염술사_드렁큰 올리지.png",
-    "description": "",
+    "description": "강하게 마법 공격을 한다.",
     "slot": "active",
     "cooldown": 12,
     "castTime": 3,
@@ -2321,13 +2335,14 @@
         ]
       }
     ],
-    "icon": "assets/images/skills/흑마법사_암흑물기.png"
+    "icon": "assets/images/skills/흑마법사_암흑물기.png",
+    "description": "적을 공격하고 체력을 회복한다."
   },
   {
     "id": "skill_class_warlock_barrier",
-    "name": "흑마법사 · 보호막",
+    "name": "흑마법사 · 보호막 (레거시)",
     "className": "흑마법사",
-    "description": "",
+    "description": "개편 전 흑마법사 보호막 정의(보존용). 현재 4스킬은 암흑지대입니다.",
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
@@ -2405,14 +2420,15 @@
         "fieldMovementStCostMinimum": 0,
         "fieldAuras": []
       }
-    ]
+    ],
+    "internal": true
   },
   {
     "id": "skill_class_taboo_attack",
     "name": "금기술사 · 금기-공격",
     "className": "금기술사",
     "icon": "assets/images/skills/금기술사_금기 공격.png",
-    "description": "",
+    "description": "무속성 고정 피해",
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
@@ -2539,13 +2555,14 @@
         }
       }
     ],
-    "icon": "assets/images/skills/인형술사_악귀저주.png"
+    "icon": "assets/images/skills/인형술사_악귀저주.png",
+    "description": "아군 1체를 회복하고 적응형 능력치를 올려준다."
   },
   {
     "id": "skill_class_spellblade_strike",
     "name": "마검사 · 근접강공 (기본형)",
     "className": "마검사",
-    "description": "",
+    "description": "근접강공+도발",
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
@@ -2629,7 +2646,7 @@
     "id": "skill_class_spellblade_ranged",
     "name": "마검사 · 원거리공격 (기본형)",
     "className": "마검사",
-    "description": "",
+    "description": "원거리공격+연쇄",
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
@@ -2713,7 +2730,7 @@
     "id": "skill_class_spellblade_heal",
     "name": "마검사 · 개인 치유",
     "className": "마검사",
-    "description": "",
+    "description": "개인 대상 1체 치유",
     "slot": "active",
     "cooldown": 8,
     "castTime": 0.5,
@@ -2825,7 +2842,8 @@
         ]
       }
     ],
-    "icon": "assets/images/skills/마법사_마법폭발.png"
+    "icon": "assets/images/skills/마법사_마법폭발.png",
+    "description": "대상과 주변을 마법으로 공격한다"
   },
   {
     "id": "skill_class_guardian_whirl",
@@ -3165,7 +3183,8 @@
         ]
       }
     ],
-    "internal": true
+    "internal": true,
+    "description": "피해, 물리공격-공격력-100%+[노력]으로 저장된 피해의 20%"
   },
   {
     "icon": "assets/images/skills/수호자_마법수호.png",
@@ -3182,7 +3201,8 @@
         "skill_class_guardian_endurance"
       ],
       "attackerResistanceAdd": 2
-    }
+    },
+    "description": "[헌신의 수호자]가 저항력-2 도 증가 시킴"
   },
   {
     "icon": "assets/images/skills/수호자_노력의 진가.png",
@@ -3199,7 +3219,8 @@
         "skill_class_guardian_effort_strike"
       ],
       "storedDamagePercent": 50
-    }
+    },
+    "description": "[노력의 일격]의 [노력]으로 저장된 피해의 50%까지 피해를 입힌다."
   },
   {
     "icon": "assets/images/skills/수호자_생명친화.png",
@@ -3219,7 +3240,8 @@
           "value": 120
         }
       ]
-    }
+    },
+    "description": "받는 치유량-20% 증가"
   },
   {
     "icon": "assets/images/skills/수호자_질긴생명.png",
@@ -3236,7 +3258,8 @@
         "skill_class_guardian_devotion"
       ],
       "shareCasterDefensePercent": 50
-    }
+    },
+    "description": "[헌신] 대상이 지속시간동안 수호자의 방어력, 저항력의 절반을 얻는다"
   },
   {
     "icon": "assets/images/skills/수호자_끝까지.png",
@@ -3254,14 +3277,15 @@
       ],
       "effectDurationAdd": 2,
       "tauntAfterDeath": true
-    }
+    },
+    "description": "[끝없는 희생]의 지속-2 증가, 지속시간 중에 체력을 다 소진해도 도발은 끝나지 않는다. 죽은 대상에게 헛방을 집중시키게 만든다."
   },
   {
     "id": "skill_class_fiend_armageddon",
     "name": "마귀 · 아마겟돈",
     "className": "마귀",
     "icon": "assets/images/skills/마귀_아마겟돈.png",
-    "description": "",
+    "description": "원거리 광역 폭발 공격",
     "slot": "active",
     "cooldown": 8,
     "castTime": 1,
@@ -3400,7 +3424,8 @@
           "skillId": "skill_class_tamer_select_raptor"
         }
       ]
-    }
+    },
+    "description": "야수를 데리고 다닐 수 있다."
   },
   {
     "icon": "assets/images/skills/조련사_살상명령.png",
@@ -3692,7 +3717,8 @@
         "limit": 1
       }
     ],
-    "internal": true
+    "internal": true,
+    "description": "공격속도 1.0"
   },
   {
     "id": "skill_class_tamer_select_elephant",
@@ -3712,7 +3738,8 @@
         "limit": 1
       }
     ],
-    "internal": true
+    "internal": true,
+    "description": "공격속도-3.0, 시전속도-1.0, 공격력-200, hp-1500, 방어력-30, 저항력-10, 상대의 공격을 막아주는 든든한 탱커형 야수"
   },
   {
     "id": "skill_class_tamer_select_raptor",
@@ -3732,7 +3759,8 @@
         "limit": 1
       }
     ],
-    "internal": true
+    "internal": true,
+    "description": "공격속도-1.5, 시전속도-0.5, 공격력-120, hp-500, 방어력-5, 저항력-15, 적을 방해하는 방해형 야수"
   },
   {
     "icon": "assets/images/skills/조련사_찢어발기기.png",
@@ -3759,7 +3787,8 @@
         ]
       }
     ],
-    "internal": true
+    "internal": true,
+    "description": "적을 찢어 발긴다."
   },
   {
     "icon": "assets/images/skills/조련사_물어뜯기.png",
@@ -3786,7 +3815,8 @@
         ]
       }
     ],
-    "internal": true
+    "internal": true,
+    "description": "적을 물어 뜯는다."
   },
   {
     "icon": "assets/images/skills/조련사_몸부풀리기.png",
@@ -3808,7 +3838,8 @@
         }
       }
     ],
-    "internal": true
+    "internal": true,
+    "description": "몸을 부풀려 받는 피해를 감소시킨다."
   },
   {
     "icon": "assets/images/skills/조련사_코끼리 함성.png",
@@ -3833,7 +3864,8 @@
         }
       }
     ],
-    "internal": true
+    "internal": true,
+    "description": "고함을 질러 상대를 도발한다."
   },
   {
     "icon": "assets/images/skills/조련사_쪼기.png",
@@ -3862,7 +3894,8 @@
         }
       }
     ],
-    "internal": true
+    "internal": true,
+    "description": "적의 시전을 방해한다."
   },
   {
     "icon": "assets/images/skills/조련사_들이받기.png",
@@ -3887,7 +3920,8 @@
         }
       }
     ],
-    "internal": true
+    "internal": true,
+    "description": "적을 들이받아 기절시킬다."
   },
   {
     "icon": "assets/images/skills/갑사_공학자.png",
@@ -4407,7 +4441,8 @@
         "limit": 1,
         "limitScope": "entity"
       }
-    ]
+    ],
+    "description": "움직이는 해태로봇을 설치, 느리게 이동하면서 근접공격을 한다."
   },
   {
     "icon": "assets/images/skills/갑사_긴급재설치.png",
@@ -4800,9 +4835,9 @@
     "name": "질병형 · 바이러스",
     "className": "질병형",
     "icon": "assets/images/skills/질병형_바이러스.png",
-    "description": "적에게 바이러스를 감염시켜 10초 동안 1초마다 마력의 40%, 총 마력의 400%만큼 마법 피해를 줍니다.",
+    "description": "MP 15/시전 1.5초/CD 2초. 10초간 매초 마력 40% 마법 피해. 중첩 없이 지속시간 갱신.",
     "slot": "active",
-    "cooldown": 8,
+    "cooldown": 2,
     "castTime": 1.5,
     "castReceivedDamagePercent": 100,
     "channel": {
@@ -4816,7 +4851,7 @@
       {
         "resource": "MP",
         "mode": "fixed",
-        "value": 10
+        "value": 15
       }
     ],
     "actions": [
@@ -4844,7 +4879,9 @@
           "state": "periodic",
           "category": "magic",
           "polarity": "harmful",
-          "tags": [],
+          "tags": [
+            "disease"
+          ],
           "dispellable": true,
           "dispelMode": "id",
           "dispelTags": [],
@@ -4939,10 +4976,10 @@
     "name": "질병형 · 벌어지는 상처",
     "className": "질병형",
     "icon": "assets/images/skills/질병형_벌어지는 상처.png",
-    "description": "아직 출혈이 없는 적에게 죽을 때까지 지속되는 출혈을 부여합니다. 1초마다 마력의 5% 물리 피해를 주며 10초마다 계수가 1%p 증가합니다.",
+    "description": "MP 20/시전 3초/CD 2초. 15초 출혈. 첫 틱 마력 10% 물리 피해, 이후 매초 직전 피해 대비 3% 증가. 중첩 없이 갱신.",
     "slot": "active",
-    "cooldown": 8,
-    "castTime": 1.5,
+    "cooldown": 2,
+    "castTime": 3,
     "castReceivedDamagePercent": 100,
     "channel": {
       "duration": 0,
@@ -4955,7 +4992,7 @@
       {
         "resource": "MP",
         "mode": "fixed",
-        "value": 10
+        "value": 20
       }
     ],
     "actions": [
@@ -4983,7 +5020,10 @@
           "state": "periodic",
           "category": "physical",
           "polarity": "harmful",
-          "tags": [],
+          "tags": [
+            "bleed",
+            "disease"
+          ],
           "dispellable": true,
           "dispelMode": "id",
           "dispelTags": [],
@@ -5012,23 +5052,23 @@
           "consumeOn": "hit",
           "consumePeriodic": false,
           "maxStacks": 1,
-          "stackMode": "reject",
+          "stackMode": "refresh",
           "periodic": {
             "type": "damage",
             "interval": 1,
-            "value": 5,
+            "value": 10,
             "coefficient": {
               "type": "calculated",
               "field": "magic",
               "calc": "percent",
-              "value": 5,
-              "effectId": ""
+              "value": 10
             },
-            "growthInterval": 10,
-            "growthValue": 1,
+            "growthInterval": 0,
+            "growthValue": 0,
             "damageType": "physical",
             "resource": "HP",
-            "resourceDrains": []
+            "resourceDrains": [],
+            "growthPercent": 3
           }
         },
         "chainCount": 0,
@@ -5056,7 +5096,7 @@
         "movePlacement": "target",
         "moveSpeed": 1,
         "distance": 0,
-        "duration": 0,
+        "duration": 15,
         "fieldShape": "circle",
         "fieldRadius": 0,
         "fieldWidth": 2,
@@ -5078,9 +5118,9 @@
     "name": "질병형 · 쇠약의 질병",
     "className": "질병형",
     "icon": "assets/images/skills/질병형_쇠약의 질병.png",
-    "description": "적에게 5초간 쇠약의 질병을 부여합니다. 이동 중 ST 소모가 2배가 되며, 효과 적용 후 10m를 이동하면 2초간 기절합니다.",
+    "description": "MP 5/시전 0.5초/CD 15초/지속 5초. 이동 ST 소모 두 배. 누적 10m 이동 시 원 질병 해제 후 3초 기절.",
     "slot": "active",
-    "cooldown": 8,
+    "cooldown": 15,
     "castTime": 0.5,
     "castReceivedDamagePercent": 100,
     "channel": {
@@ -5094,7 +5134,7 @@
       {
         "resource": "MP",
         "mode": "fixed",
-        "value": 10
+        "value": 5
       }
     ],
     "actions": [
@@ -5122,7 +5162,9 @@
           "state": "periodic",
           "category": "magic",
           "polarity": "harmful",
-          "tags": [],
+          "tags": [
+            "disease"
+          ],
           "dispellable": true,
           "dispelMode": "id",
           "dispelTags": [],
@@ -5143,15 +5185,16 @@
           "proxyPriority": 100,
           "proxyScope": "all",
           "counterOnMelee": false,
-          "movementStCostPercent": 100,
-          "movementTriggerDistance": 0,
+          "movementStCostPercent": 200,
+          "movementTriggerDistance": 10,
           "movementTriggerState": "stun",
-          "movementTriggerDuration": 0,
+          "movementTriggerDuration": 3,
           "uses": 0,
           "consumeOn": "hit",
           "consumePeriodic": false,
           "maxStacks": 1,
-          "stackMode": "refresh"
+          "stackMode": "refresh",
+          "removeOnMovementTrigger": true
         },
         "chainCount": 0,
         "chainRange": 3,
@@ -5200,9 +5243,9 @@
     "name": "질병형 · 고통증폭",
     "className": "질병형",
     "icon": "assets/images/skills/질병형_고통증폭.png",
-    "description": "한 대상에게 3초간 집중하여 1초마다 마력의 100% 마법 피해를 줍니다. 대상에게 걸린 질병형 해로운 효과 중첩 하나당 피해량이 마력의 30%만큼 증가합니다.",
+    "description": "즉시 시작/3초 채널링/매초 마력 100% 마법 피해. 대상에게 자신이 부여한 질병형 디버프 종류당 피해 30% 증가. MP 20/CD 10초.",
     "slot": "active",
-    "cooldown": 7,
+    "cooldown": 10,
     "castTime": 0,
     "castReceivedDamagePercent": 100,
     "channel": {
@@ -5216,7 +5259,7 @@
       {
         "resource": "MP",
         "mode": "fixed",
-        "value": 10
+        "value": 20
       }
     ],
     "actions": [
@@ -5246,15 +5289,7 @@
             "type": "calculated",
             "field": "magic",
             "calc": "percent",
-            "value": 100,
-            "effectId": ""
-          },
-          {
-            "type": "calculated",
-            "field": "atk",
-            "calc": "percent",
-            "value": 30,
-            "effectId": ""
+            "value": 100
           }
         ],
         "healResource": "HP",
@@ -5283,7 +5318,8 @@
         "fieldMovementStCostCenter": 0,
         "fieldMovementStCostFalloff": 0,
         "fieldMovementStCostMinimum": 0,
-        "fieldAuras": []
+        "fieldAuras": [],
+        "ownedDebuffDamagePercent": 30
       }
     ]
   },
@@ -5455,7 +5491,8 @@
     "summonRequirement": {
       "ownedSummonEntityId": "knight_magic_horse",
       "ownedSummonCondition": "alive"
-    }
+    },
+    "description": "말을 타고 있다면 공격속도가 빨라진다."
   },
   {
     "id": "skill_class_demon_brute",
@@ -5938,7 +5975,8 @@
         "fieldMovementStCostMinimum": 0,
         "fieldAuras": []
       }
-    ]
+    ],
+    "internal": true
   },
   {
     "icon": "assets/images/skills/악마_악마군단.png",
@@ -6108,7 +6146,8 @@
     "summonRequirement": {
       "ownedSummonEntityId": "demon_brute",
       "ownedSummonCondition": "absent"
-    }
+    },
+    "description": "[덩치]를 재소환한다."
   },
   {
     "icon": "assets/images/skills/악마_악마의 왕.png",
@@ -6229,7 +6268,8 @@
           "castTimeAdd": -1
         }
       ]
-    }
+    },
+    "description": "전투 시작 시 [덩치]가 소환되 있는채로 시작한다. [덩치소환]의 시전-2로 감소"
   },
   {
     "icon": "assets/images/skills/악마_대장군님.png",
@@ -6258,7 +6298,8 @@
         "ownedSummonEntityId": "demon_general",
         "ownedSummonCondition": "absent"
       }
-    }
+    },
+    "description": "[악마장군]이 영구한 소환수가 된다. [악마장군]은 더이상 소환 하는 스킬이 되지 않으며, [악마장군]이 소멸 되면 다시 사용할 수 있다. [악마장군]의 마력이 절반으로 떨어진다."
   },
   {
     "icon": "assets/images/skills/악마_졸개무리.png",
@@ -6280,7 +6321,8 @@
           "limitAdd": 1
         }
       ]
-    }
+    },
+    "description": "[졸개]가 1마리 더 소환된다."
   },
   {
     "icon": "assets/images/skills/악마_왕의 강림.png",
@@ -6302,7 +6344,8 @@
           "extendDuration": true
         }
       ]
-    }
+    },
+    "description": "[악마의 왕] 사용 시 [악마군단]이 사용된다. 이미 사용중이라면 지속시간이 그만큼 늘어난다."
   },
   {
     "icon": "assets/images/skills/악마_주인님께 드리는 선물.png",
@@ -6319,7 +6362,8 @@
         "skill_class_demon_duty"
       ],
       "summonExpiryRefundPercent": 50
-    }
+    },
+    "description": "[악마의 소임]을 마치고 돌아가는 소환수가 있다면 소모한 mp의 절반을 회복한다."
   },
   {
     "id": "skill_class_berserker_fire_strike",
@@ -6703,7 +6747,8 @@
       "chance": 100,
       "allowMultiplePerTick": true
     },
-    "icon": "assets/images/skills/성직자_감응.png"
+    "icon": "assets/images/skills/성직자_감응.png",
+    "description": "축복이 걸린 대상에게는 내가 입히는 피해량 혹은 회복량의 5%만큼 회복한다."
   },
   {
     "id": "skill_class_priest_blessing",
@@ -6739,7 +6784,8 @@
         }
       }
     ],
-    "icon": "assets/images/skills/성직자_축복.png"
+    "icon": "assets/images/skills/성직자_축복.png",
+    "description": "아군 대상에게 30초간 능력치 증가"
   },
   {
     "id": "skill_class_assassin_ambush",
@@ -6781,7 +6827,8 @@
         "rangeValue": 5
       }
     ],
-    "icon": "assets/images/skills/암살자_기습.png"
+    "icon": "assets/images/skills/암살자_기습.png",
+    "description": "대상의 뒤에서 나타나고 200% 물리피해"
   },
   {
     "id": "skill_class_assassin_death_sentence",
@@ -6835,7 +6882,8 @@
         }
       }
     ],
-    "icon": "assets/images/skills/암살자_사형선고.png"
+    "icon": "assets/images/skills/암살자_사형선고.png",
+    "description": "상대에게 사형선고와 같은 디버프를 부여."
   },
   {
     "id": "skill_class_mage_element_lightning",
@@ -8096,7 +8144,8 @@
           "requiredWeaponCategory": "twoHandAxe"
         }
       ]
-    }
+    },
+    "description": "도끼 무기 사용시 공격력+25(한손)/50(양손) 증가"
   },
   {
     "icon": "assets/images/skills/집행가_범죄도시.png",
@@ -8113,7 +8162,8 @@
         "skill_class_executioner_execute"
       ],
       "cooldownAdd": -2
-    }
+    },
+    "description": "[사형집행]의 재사용-2 감소"
   },
   {
     "icon": "assets/images/skills/집행가_처형인의 미소.png",
@@ -8668,7 +8718,8 @@
           "reactionInheritRemaining": true
         }
       }
-    ]
+    ],
+    "description": "적에게 피해를 주고 튕겨내는 파도를 소환한다."
   },
   {
     "icon": "assets/images/skills/제독_절망의 파도.png",
@@ -8697,7 +8748,8 @@
         "areaCenter": "target",
         "radialKnockback": 7
       }
-    ]
+    ],
+    "description": "거대한 절망의 파도로 적들을 공격하고 적을 와해시킨다."
   },
   {
     "icon": "assets/images/skills/제독_짠물.png",
@@ -8731,7 +8783,8 @@
           }
         }
       ]
-    }
+    },
+    "description": "[파도]의 피해 대상의 버프 1을 제거 한다."
   },
   {
     "icon": "assets/images/skills/제독_죽음의 소용돌이.png",
@@ -8755,7 +8808,8 @@
           "value": 115
         }
       ]
-    }
+    },
+    "description": "[소용돌이] 안의 대상이 받는 피해 15% 증가"
   },
   {
     "icon": "assets/images/skills/제독_검은바다.png",
@@ -8809,7 +8863,8 @@
         "skill_class_admiral_tidal_wave"
       ],
       "bowlingPercent": 50
-    }
+    },
+    "description": "[해일]로 넉백 될 시 넉백 되는 경로에 적군이 있다면 [해일]피해의 50%만큼 같이 피해를 입힌다."
   },
   {
     "icon": "assets/images/skills/제독_재장전.png",
@@ -8896,7 +8951,8 @@
         }
       }
     ],
-    "internal": true
+    "internal": true,
+    "description": "적에게 피해를 주고 튕겨내는 파도를 소환한다."
   },
   {
     "id": "skill_class_admiral_tidal_wave",
@@ -11249,7 +11305,8 @@
     "icon": "assets/images/skills/저격수_그림자 대피.png",
     "activation": {
       "selfHpAtMost": 30
-    }
+    },
+    "description": "위급한 이상황을 벗어나 그림자 속으로 숨습니다."
   },
   {
     "icon": "assets/images/skills/화염술사_불꽃.png",
@@ -11288,7 +11345,8 @@
           "dispellable": true
         }
       }
-    ]
+    ],
+    "description": "화염술사의 모든 스킬은 상대에게 '불꽃' 디버프를 남김"
   },
   {
     "icon": "assets/images/skills/화염술사_불꽃도마뱀.png",
@@ -11334,7 +11392,8 @@
           }
         }
       }
-    ]
+    ],
+    "description": "불꽃 도마뱀을 적에게 부착해 피해를 입힌다."
   },
   {
     "icon": "assets/images/skills/인형술사_인형의 주인.png",
@@ -11370,7 +11429,8 @@
       "event": "battle_entry",
       "chance": 100,
       "healingCurseDuration": 30
-    }
+    },
+    "description": "인형의 주인, 인형에게 명령을 내리고 인형의 저주에 빠져있다."
   },
   {
     "icon": "assets/images/skills/인형술사_악귀공격.png",
@@ -11408,7 +11468,8 @@
         "commandHealRadius": 5,
         "commandHealPercent": 100
       }
-    ]
+    ],
+    "description": "인형에게 명령을 내려 공격한다."
   },
   {
     "icon": "assets/images/skills/인형술사_저주받은 교단.png",
@@ -11443,7 +11504,8 @@
           "echoHealPercent": 100
         }
       }
-    ]
+    ],
+    "description": "우리는 저주받은 교단이다."
   },
   {
     "icon": "assets/images/skills/인형술사_인형의 춤.png",
@@ -11498,7 +11560,8 @@
           }
         ]
       }
-    ]
+    ],
+    "description": "인형과 함께 춤을 춰 주변 적을 무찌른다."
   },
   {
     "icon": "assets/images/skills/룬술사_룬.png",
@@ -11524,7 +11587,8 @@
         "type": "install_runes",
         "target": "self"
       }
-    ]
+    ],
+    "description": "룬술사는 룬을 3개 선택해서 전장에 설치할 수 있다."
   },
   {
     "icon": "assets/images/skills/룬술사_룬일격.png",
@@ -11563,7 +11627,8 @@
         "target": "self",
         "runeAdvanceSeconds": 1
       }
-    ]
+    ],
+    "description": "무기에 룬의 기운을 담아 강타 한다."
   },
   {
     "icon": "assets/images/skills/룬술사_달룬.png",
@@ -11588,7 +11653,8 @@
           }
         ]
       }
-    ]
+    ],
+    "description": "발동효과-회복, 범위-20, 설치위치-아군, 발동시간-8, 회복-hp-마력2%"
   },
   {
     "icon": "assets/images/skills/룬술사_초승달룬.png",
@@ -11611,7 +11677,8 @@
           }
         ]
       }
-    ]
+    ],
+    "description": "발동효과-회복, 범위-15, 설치위치-아군, 발동시간-10, 회복-mp-20"
   },
   {
     "icon": "assets/images/skills/룬술사_총알룬.png",
@@ -11635,7 +11702,8 @@
           "value": 100
         }
       }
-    ]
+    ],
+    "description": "발동효과-버프, 범위-20, 설치위치-아군, 발동시간-10, 지속-1"
   },
   {
     "icon": "assets/images/skills/룬술사_불꽃룬.png",
@@ -11660,7 +11728,8 @@
           }
         ]
       }
-    ]
+    ],
+    "description": "발동효과-피해, 범위-15, 설치위치-적, 계수-마력-30%, 발동시간-10"
   },
   {
     "icon": "assets/images/skills/응원가_모두 힘내.png",
@@ -11712,7 +11781,8 @@
         "areaCenter": "self",
         "maxTargets": 0
       }
-    ]
+    ],
+    "description": "한번 힘내보자"
   },
   {
     "icon": "assets/images/skills/응원가_응원-정열.png",
@@ -11763,7 +11833,8 @@
         "areaCenter": "self",
         "maxTargets": 0
       }
-    ]
+    ],
+    "description": "주변에 정열을 새겨준다!"
   },
   {
     "icon": "assets/images/skills/응원가_자 날뛰어봐.png",
@@ -11811,7 +11882,8 @@
           }
         }
       }
-    ]
+    ],
+    "description": "아군에게 면역 효과를 부여하고 자유롭게 활동 할 수 있게 합니다."
   },
   {
     "icon": "assets/images/skills/정령술사_강화정령.png",
@@ -11837,7 +11909,8 @@
       "event": "battle_entry",
       "chance": 100,
       "repeatInterval": 7
-    }
+    },
+    "description": "지원 소환수, 버프, 재사용-5, 시전-0, 지속-5"
   },
   {
     "icon": "assets/images/skills/정령술사_강화정령.png",
@@ -11874,7 +11947,8 @@
         },
         "allowSelfTarget": false
       }
-    ]
+    ],
+    "description": "지원 소환수, 버프, 재사용-5, 시전-0, 지속-5"
   },
   {
     "icon": "assets/images/skills/정령술사_회복정령.png",
@@ -11900,7 +11974,8 @@
       "event": "battle_entry",
       "chance": 100,
       "repeatInterval": 7
-    }
+    },
+    "description": "원거리 지원 소환수, 치유, 재사용-3, hp회복-주인마력의1%, 시전-0"
   },
   {
     "icon": "assets/images/skills/정령술사_회복정령.png",
@@ -11929,7 +12004,8 @@
           }
         ]
       }
-    ]
+    ],
+    "description": "원거리 지원 소환수, 치유, 재사용-3, hp회복-주인마력의1%, 시전-0"
   },
   {
     "icon": "assets/images/skills/정령술사_파괴정령.png",
@@ -11955,7 +12031,8 @@
       "event": "battle_entry",
       "chance": 100,
       "repeatInterval": 7
-    }
+    },
+    "description": "원거리 딜러 소환수, 원거리 마법공격, 재사용-3, 주인마력의 2%, 시전-0"
   },
   {
     "icon": "assets/images/skills/정령술사_파괴정령.png",
@@ -11984,7 +12061,8 @@
           }
         ]
       }
-    ]
+    ],
+    "description": "원거리 딜러 소환수, 원거리 마법공격, 재사용-3, 주인마력의 2%, 시전-0"
   },
   {
     "icon": "assets/images/skills/정령술사_정령술사.png",
@@ -12016,7 +12094,8 @@
         }
       ]
     },
-    "summonCounterChoiceId": "skill_class_spirit_choice"
+    "summonCounterChoiceId": "skill_class_spirit_choice",
+    "description": "정령술사는 정령을 선택해서 다룬다."
   },
   {
     "icon": "assets/images/skills/정령술사_정령의 탄생.png",
@@ -12059,7 +12138,8 @@
         "limit": 5,
         "duration": 0
       }
-    ]
+    ],
+    "description": "대상을 타격하고, 정령의 탄생을 기원합니다."
   },
   {
     "icon": "assets/images/skills/정령술사_정령희생.png",
@@ -12099,7 +12179,8 @@
     "summonCost": {
       "choiceSkillId": "skill_class_spirit_choice",
       "count": 1
-    }
+    },
+    "description": "정령을 희생하여 아군들을 치유합니다."
   },
   {
     "icon": "assets/images/skills/정령술사_정령폭발.png",
@@ -12138,7 +12219,8 @@
     "summonCost": {
       "choiceSkillId": "skill_class_spirit_choice",
       "count": 1
-    }
+    },
+    "description": "정령을 희생하여 적군들을 공격합니다."
   },
   {
     "icon": "assets/images/skills/정령술사_정령정화.png",
@@ -12198,7 +12280,8 @@
     "summonCost": {
       "choiceSkillId": "skill_class_spirit_choice",
       "count": 1
-    }
+    },
+    "description": "정령을 희생하여 범위의 아군에게 해로운 효과를 적에게는 이로운 효과를 각각 제거합니다."
   },
   {
   "id": "skill_class_serum_regeneration",
@@ -12497,265 +12580,266 @@
   }
 },
   {
-  "id": "skill_class_keratin_shell",
-  "name": "각질형 · 돌연변이 껍질",
-  "className": "각질형",
-  "slot": "passive",
-  "castTime": 0,
-  "cooldown": 0,
-  "resourceCosts": [
-    {
-      "resource": "MP",
-      "mode": "fixed",
-      "value": 0
-    }
-  ],
-  "actions": [
-    {
-      "type": "add_buff",
-      "target": "self",
-      "rangeMode": "mainWeapon",
-      "coefficients": [],
-      "duration": 0,
-      "effect": {
-        "id": "keratin_stacks",
-        "name": "각질",
-        "stat": "defense",
-        "mode": "flat",
-        "value": 0,
-        "maxStacks": 100,
-        "stackMode": "stack",
-        "stackBonuses": [
-          {
-            "stat": "defense",
-            "mode": "flat",
-            "value": 1,
-            "minStacks": 10,
-            "perNStacks": 10
-          },
-          {
-            "stat": "attackSpeed",
-            "mode": "attack_rate_percent",
-            "value": -3,
-            "minStacks": 10,
-            "perNStacks": 10
-          }
-        ]
+    "id": "skill_class_keratin_shell",
+    "name": "각질형 · 돌연변이 껍질",
+    "className": "각질형",
+    "slot": "passive",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 0
       }
-    },
-    {
-      "type": "deal_damage",
-      "target": "enemy",
-      "rangeMode": "mainWeapon",
-      "coefficients": [
-        {
-          "type": "calculated",
-          "field": "sourceEffectIdStacks",
-          "calc": "percent",
-          "value": 100,
-          "effectId": "keratin_stacks"
+    ],
+    "actions": [
+      {
+        "type": "add_buff",
+        "target": "self",
+        "rangeMode": "mainWeapon",
+        "coefficients": [],
+        "duration": 0,
+        "effect": {
+          "id": "keratin_stacks",
+          "name": "각질",
+          "stat": "defense",
+          "mode": "flat",
+          "value": 0,
+          "maxStacks": 100,
+          "stackMode": "stack",
+          "stackBonuses": [
+            {
+              "stat": "defense",
+              "mode": "flat",
+              "value": 1,
+              "minStacks": 10,
+              "perNStacks": 10
+            },
+            {
+              "stat": "attackSpeed",
+              "mode": "attack_rate_percent",
+              "value": -3,
+              "minStacks": 10,
+              "perNStacks": 10
+            }
+          ]
         }
-      ],
-      "damageType": "fixed",
-      "reflected": true
-    }
-  ],
-  "description": "근접 직접 피해를 받을 때 각질 1스택(최대 100)을 쌓고 현재 스택만큼 고정 반사 피해. 10스택마다 방어력 +1, 공격속도 -3%. 전투 종료까지 유지.",
-  "passiveTrigger": {
-    "event": "damaged",
-    "meleeOnly": true,
-    "allowMultiplePerTick": true
+      },
+      {
+        "type": "deal_damage",
+        "target": "enemy",
+        "rangeMode": "mainWeapon",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "sourceEffectIdStacks",
+            "calc": "percent",
+            "value": 100,
+            "effectId": "keratin_stacks"
+          }
+        ],
+        "damageType": "physical",
+        "reflected": true
+      }
+    ],
+    "description": "근접 직접 피해를 받을 때 각질 1스택(최대 100)을 쌓고 현재 스택만큼 고정 반사 피해. 10스택마다 방어력 +1, 공격속도 -3%. 전투 종료까지 유지.",
+    "passiveTrigger": {
+      "event": "damaged",
+      "meleeOnly": true,
+      "allowMultiplePerTick": true
+    },
+    "icon": "assets/images/skills/각질형_돌연변이 껍질.png"
   },
-  "icon": "assets/images/skills/각질형_돌연변이 껍질.png"
-},
   {
     "icon": "assets/images/skills/각질형_탈피.png",
-  "id": "skill_class_keratin_molt",
-  "name": "각질형 · 탈피",
-  "className": "각질형",
-  "slot": "active",
-  "castTime": 0,
-  "cooldown": 5,
-  "resourceCosts": [
-    {
-      "resource": "MP",
-      "mode": "fixed",
-      "value": 0
-    }
-  ],
-  "actions": [
-    {
-      "type": "deal_damage",
-      "target": "enemy",
-      "rangeMode": "mainWeapon",
-      "coefficients": [
-        {
-          "type": "calculated",
-          "field": "atk",
-          "calc": "percent",
-          "value": 80
-        }
-      ],
-      "area": 3,
-      "areaCenter": "self",
-      "damageType": "physical"
-    },
-    {
-      "type": "add_buff",
-      "target": "self",
-      "rangeMode": "mainWeapon",
-      "coefficients": [],
-      "duration": 3,
-      "effect": {
-        "id": "keratin_hardened_shell",
-        "name": "단단해진 껍질",
-        "stat": "defense",
-        "mode": "flat",
-        "value": 5,
-        "stackBonuses": [
-          {
-            "stat": "resistance",
-            "mode": "flat",
-            "value": 5,
-            "minStacks": 1
-          }
-        ]
+    "id": "skill_class_keratin_molt",
+    "name": "각질형 · 탈피",
+    "className": "각질형",
+    "slot": "active",
+    "castTime": 0,
+    "cooldown": 5,
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 0
       }
-    }
-  ],
-  "description": "자신 주변 반경 3m에 공격력 80% 물리 피해를 주고 3초간 방어력·저항력 +5. 각질 스택을 소모하지 않는다."
-},
+    ],
+    "actions": [
+      {
+        "type": "deal_damage",
+        "target": "enemy",
+        "rangeMode": "mainWeapon",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "atk",
+            "calc": "percent",
+            "value": 80
+          }
+        ],
+        "area": 3,
+        "areaCenter": "self",
+        "damageType": "physical"
+      },
+      {
+        "type": "add_buff",
+        "target": "self",
+        "rangeMode": "mainWeapon",
+        "coefficients": [],
+        "duration": 3,
+        "effect": {
+          "id": "keratin_hardened_shell",
+          "name": "단단해진 껍질",
+          "stat": "defense",
+          "mode": "flat",
+          "value": 5,
+          "stackBonuses": [
+            {
+              "stat": "resistance",
+              "mode": "flat",
+              "value": 5,
+              "minStacks": 1
+            }
+          ]
+        }
+      }
+    ],
+    "description": "개편 전 탈피 정의(보존용). 현재 기본 스킬은 역겨운 가스로 대체.",
+    "internal": true
+  },
   {
     "icon": "assets/images/skills/각질형_역겨운 보호막.png",
-  "id": "skill_class_keratin_repulsive_shield",
-  "name": "각질형 · 역겨운 보호막",
-  "className": "각질형",
-  "slot": "active",
-  "castTime": 0,
-  "cooldown": 10,
-  "resourceCosts": [
-    {
-      "resource": "MP",
-      "mode": "fixed",
-      "value": 0
-    }
-  ],
-  "actions": [
-    {
-      "type": "add_buff",
-      "target": "self",
-      "rangeMode": "mainWeapon",
-      "coefficients": [],
-      "duration": 3,
-      "effect": {
-        "id": "keratin_repulsive_shield",
-        "name": "역겨운 보호막",
-        "stat": "defense",
-        "mode": "barrier",
-        "value": 10,
-        "barrierMode": "maxPercent",
-        "breakSkillId": "skill_class_keratin_shield_burst"
+    "id": "skill_class_keratin_repulsive_shield",
+    "name": "각질형 · 역겨운 보호막",
+    "className": "각질형",
+    "slot": "active",
+    "castTime": 0,
+    "cooldown": 10,
+    "resourceCosts": [
+      {
+        "resource": "ST",
+        "mode": "fixed",
+        "value": 10
       }
-    }
-  ],
-  "description": "최대 HP 10% 보호막을 3초간 부여한다. 적의 공격으로 소진되면 반경 4m 적에게 최대 HP 5% 물리 피해와 끈적이는 껍질조각을 3초간 부여한다. 만료·해제 시 폭발하지 않는다."
-},
+    ],
+    "actions": [
+      {
+        "type": "add_buff",
+        "target": "self",
+        "rangeMode": "mainWeapon",
+        "coefficients": [],
+        "duration": 3,
+        "effect": {
+          "id": "keratin_repulsive_shield",
+          "name": "역겨운 보호막",
+          "stat": "defense",
+          "mode": "barrier",
+          "value": 10,
+          "barrierMode": "maxPercent",
+          "breakSkillId": "skill_class_keratin_shield_burst"
+        }
+      }
+    ],
+    "description": "최대 HP 10% 보호막을 3초간 부여한다. 적의 공격으로 소진되면 반경 4m 적에게 최대 HP 5% 물리 피해와 끈적이는 껍질조각을 3초간 부여한다. 만료·해제 시 폭발하지 않는다."
+  },
   {
     "icon": "assets/images/skills/각질형_역겨운 보호막.png",
-  "id": "skill_class_keratin_shield_burst",
-  "name": "각질형 · 역겨운 보호막 파열",
-  "className": "각질형",
-  "slot": "basic",
-  "castTime": 0,
-  "cooldown": 0,
-  "resourceCosts": [
-    {
-      "resource": "MP",
-      "mode": "fixed",
-      "value": 0
-    }
-  ],
-  "actions": [
-    {
-      "type": "deal_damage",
-      "target": "enemy",
-      "rangeMode": "mainWeapon",
-      "coefficients": [
-        {
-          "type": "calculated",
-          "field": "maxHp",
-          "calc": "percent",
-          "value": 5
-        }
-      ],
-      "area": 4,
-      "areaCenter": "self",
-      "damageType": "physical"
-    },
-    {
-      "type": "add_buff",
-      "target": "enemy",
-      "rangeMode": "mainWeapon",
-      "coefficients": [],
-      "area": 4,
-      "areaCenter": "self",
-      "duration": 3,
-      "effect": {
-        "id": "keratin_sticky_fragments",
-        "name": "끈적이는 껍질조각",
-        "stat": "attackSpeed",
-        "mode": "attack_rate_percent",
-        "value": -30,
-        "polarity": "harmful",
-        "stackBonuses": [
-          {
-            "stat": "speed",
-            "mode": "percent",
-            "value": -20,
-            "minStacks": 1
-          }
-        ]
+    "id": "skill_class_keratin_shield_burst",
+    "name": "각질형 · 역겨운 보호막 파열",
+    "className": "각질형",
+    "slot": "basic",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 0
       }
-    }
-  ],
-  "internal": true,
-  "description": "역겨운 보호막이 적의 공격으로 소진될 때만 실행하는 내부 반응."
-},
+    ],
+    "actions": [
+      {
+        "type": "deal_damage",
+        "target": "enemy",
+        "rangeMode": "mainWeapon",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "maxHp",
+            "calc": "percent",
+            "value": 5
+          }
+        ],
+        "area": 4,
+        "areaCenter": "self",
+        "damageType": "physical"
+      },
+      {
+        "type": "add_buff",
+        "target": "enemy",
+        "rangeMode": "mainWeapon",
+        "coefficients": [],
+        "area": 4,
+        "areaCenter": "self",
+        "duration": 3,
+        "effect": {
+          "id": "keratin_sticky_fragments",
+          "name": "끈적이는 껍질조각",
+          "stat": "attackSpeed",
+          "mode": "percent",
+          "value": 30,
+          "polarity": "harmful",
+          "stackBonuses": [
+            {
+              "stat": "speed",
+              "mode": "percent",
+              "value": -20,
+              "minStacks": 1
+            }
+          ]
+        }
+      }
+    ],
+    "internal": true,
+    "description": "역겨운 보호막이 적의 공격으로 소진될 때만 실행하는 내부 반응."
+  },
   {
     "icon": "assets/images/skills/각질형_동정의 시선.png",
-  "id": "skill_class_keratin_pity",
-  "name": "각질형 · 동정의 시선",
-  "className": "각질형",
-  "slot": "active",
-  "castTime": 1,
-  "cooldown": 15,
-  "resourceCosts": [
-    {
-      "resource": "MP",
-      "mode": "fixed",
-      "value": 0
-    }
-  ],
-  "actions": [
-    {
-      "type": "add_buff",
-      "target": "enemy",
-      "rangeMode": "custom",
-      "coefficients": [],
-      "rangeValue": 5,
-      "duration": 5,
-      "effect": {
-        "id": "keratin_reluctance",
-        "name": "왠지 때리기 싫음",
-        "stat": "adaptiveOffense",
-        "mode": "flat",
-        "value": -100,
-        "polarity": "harmful"
+    "id": "skill_class_keratin_pity",
+    "name": "각질형 · 동정의 시선",
+    "className": "각질형",
+    "slot": "active",
+    "castTime": 1,
+    "cooldown": 15,
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 20
       }
-    }
-  ],
-  "description": "5m 적 하나에게 왠지 때리기 싫음을 5초 부여한다. 적용 시 공격력·마력 중 높은 능력치 하나가 100 감소한다."
-},
+    ],
+    "actions": [
+      {
+        "type": "add_buff",
+        "target": "enemy",
+        "rangeMode": "custom",
+        "coefficients": [],
+        "rangeValue": 5,
+        "duration": 5,
+        "effect": {
+          "id": "keratin_reluctance",
+          "name": "동정의 시선",
+          "stat": "adaptiveOffense",
+          "mode": "percent",
+          "value": -30,
+          "polarity": "harmful"
+        }
+      }
+    ],
+    "description": "5초간 대상의 높은 공격 능력치(공격력 또는 마력) 30% 감소. MP 20/시전 1초/CD 15초/5m."
+  },
   {
     "icon": "assets/images/skills/영혼수확자_육신과 영혼.png",
   "id": "skill_class_soul_reaper_soul_and_body",
@@ -13268,7 +13352,8 @@
     "summonRequirement": {
       "ownedSummonEntityId": "knight_magic_horse",
       "ownedSummonCondition": "absent"
-    }
+    },
+    "description": "마법말을 소환한다."
   },
   {
     "icon": "assets/images/skills/기사_궤뚫기.png",
@@ -13313,7 +13398,8 @@
           "mode": "flat"
         }
       }
-    ]
+    ],
+    "description": "대상의 방어구를 궤뚫어 피해와 함께 방어력을 감소 시킨다."
   },
   {
     "icon": "assets/images/skills/기사_회전베기.png",
@@ -13394,7 +13480,8 @@
         }
       ],
       "stepCooldown": 0.5
-    }
+    },
+    "description": "주변적을 강력하게 2회 걸쳐 베어낸다."
   },
   {
     "icon": "assets/images/skills/기사_마구간.png",
@@ -13417,7 +13504,8 @@
         "skill_class_knight_summon_horse"
       ],
       "cooldownAdd": -5
-    }
+    },
+    "description": "[마법말소환]의 재사용대기시간이 5초 감소"
   },
   {
     "icon": "assets/images/skills/기사_취약한 상태.png",
@@ -13456,7 +13544,8 @@
           }
         }
       ]
-    }
+    },
+    "description": "[마법말]에서 하차한 상태에서 방어력이 10 증가"
   },
   {
     "icon": "assets/images/skills/기사_진군.png",
@@ -13512,7 +13601,8 @@
           "maxTargets": 1
         }
       ]
-    }
+    },
+    "description": "[가속]사용시 주변 5m 이내 아군 1명에게 동시 적용"
   },
   {
     "icon": "assets/images/skills/기사_전장의 지배자.png",
@@ -13536,7 +13626,8 @@
       ],
       "cooldownAdd": -3,
       "knockbackDistanceAdd": 2
-    }
+    },
+    "description": "[돌진]의 재사용 3초 감소, 넉백거리+2"
   },
   {
     "icon": "assets/images/skills/기사_먹잇감.png",
@@ -13573,7 +13664,8 @@
           }
         }
       ]
-    }
+    },
+    "description": "[궤뚫기] 디버프 대상이 이동속도가 50% 감소"
   },
   {
     "icon": "assets/images/skills/기사_회전풍.png",
@@ -13596,7 +13688,8 @@
         "skill_class_knight_spinning_slash"
       ],
       "areaAdd": 3
-    }
+    },
+    "description": "[회전베기]의 범위+3"
   },
   {
     "icon": "assets/images/skills/마법사_얼음.png",
@@ -13699,7 +13792,8 @@
       "requiredChoiceOptionId": "lightning",
       "splashPercent": 50,
       "splashRadius": 3
-    }
+    },
+    "description": "[번개] 선택시 피해 복제효과 20% 증가, 제한 거리 증가 1m"
   },
   {
     "icon": "assets/images/skills/마법사_폭발성.png",
@@ -13727,7 +13821,8 @@
       "resourceTypes": [
         "MP"
       ]
-    }
+    },
+    "description": "[마법폭발]의 범위 2, 데미지 20%, 소모mp 20% 증가"
   },
   {
     "icon": "assets/images/skills/마법사_금지된 원소-얼음.png",
@@ -13749,7 +13844,8 @@
       "targetSkillIds": [
         "skill_class_mage_element_ice"
       ]
-    }
+    },
+    "description": "[속성선택]에 [얼음]이 추가된다."
   },
   {
     "icon": "assets/images/skills/마법사_효율화살.png",
@@ -13775,7 +13871,8 @@
       "resourceTypes": [
         "MP"
       ]
-    }
+    },
+    "description": "[마법화살]의 mp소모 50% 감소"
   },
   {
     "icon": "assets/images/skills/마법사_재생의 보호막.png",
@@ -13829,7 +13926,8 @@
           ]
         }
       ]
-    }
+    },
+    "description": "[보호막] 사용 시 디버프 1개 제거, 보호막양의 50% hp 회복"
   },
   {
     "icon": "assets/images/skills/마법사_얼얼한 강타.png",
@@ -13869,7 +13967,8 @@
           }
         }
       ]
-    }
+    },
+    "description": "[마법강타]의 재사용-2 감소, 피해 입은 대상 기절 2초"
   },
   {
     "icon": "assets/images/skills/저격수_매소환.png",
@@ -13938,7 +14037,8 @@
           "requiredWeaponCategory": "crossbow"
         }
       ]
-    }
+    },
+    "description": "석궁의 전문가가 된다. 석궁 장비 시 공격력 40 추가"
   },
   {
     "icon": "assets/images/skills/저격수_헤드샷.png",
@@ -13961,7 +14061,8 @@
         "skill_class_sniper_shot"
       ],
       "stationaryTargetBonusPercent": 30
-    }
+    },
+    "description": "상대의 머리를 노려 강한 피해를 입힘. [저격]의 이동하지 않을 시 추가 피해 30%로 증가"
   },
   {
     "icon": "assets/images/skills/저격수_공성전문가.png",
@@ -13985,7 +14086,8 @@
       ],
       "transformDamageMinRange": 5,
       "transformDamagePercent": 20
-    }
+    },
+    "description": "멀리 있는 대상을 더 강하게 공격함. [집중] 사용 시 적이 5m이상 거리에 있으면 공격력 20% 추가 적용"
   },
   {
     "icon": "assets/images/skills/저격수_매의친구.png",
@@ -14008,7 +14110,8 @@
         "skill_class_sniper_falcon"
       ],
       "consecutiveUses": 2
-    }
+    },
+    "description": "[매소환]을 시전하고 재사용대기시간이 적용되지 않고 1번 더 시전할 수 있다."
   },
   {
     "icon": "assets/images/skills/저격수_편안한 상태.png",
@@ -14031,7 +14134,8 @@
         "skill_class_sniper_mode"
       ],
       "transformHealPercent": 2
-    }
+    },
+    "description": "[집중] 모드 시 매초 hp가 2%가 회복"
   },
   {
     "icon": "assets/images/skills/저격수_튼튼한 내구성.png",
@@ -14066,7 +14170,8 @@
           "mode": "flat"
         }
       ]
-    }
+    },
+    "description": "hp500, 저항력 5 증가"
   },
   {
     "icon": "assets/images/skills/화염술사_꺼지지 않는 불씨.png",
@@ -14089,7 +14194,8 @@
         "skill_class_fire_flame"
       ],
       "effectDurationAdd": 2
-    }
+    },
+    "description": "[불꽃]의 지속시간 2초 증가"
   },
   {
     "icon": "assets/images/skills/화염술사_폭발점화.png",
@@ -14113,7 +14219,8 @@
       ],
       "splashPercent": 30,
       "splashRadius": 3
-    }
+    },
+    "description": "[점화] 시전 시 주변 3m에 피해의 30%를 입힘"
   },
   {
     "icon": "assets/images/skills/화염술사_총명.png",
@@ -14152,7 +14259,8 @@
           }
         }
       ]
-    }
+    },
+    "description": "int 5증가, 침묵 면역"
   },
   {
     "icon": "assets/images/skills/화염술사_엄마아빠 도마뱀.png",
@@ -14179,7 +14287,8 @@
       "resourceTypes": [
         "MP"
       ]
-    }
+    },
+    "description": "[불꽃도마뱀] 시전 시 1회 복사 된다, mp 소모량이 3배가 된다."
   },
   {
     "icon": "assets/images/skills/화염술사_빠른 명상.png",
@@ -14203,7 +14312,8 @@
       ],
       "channelDurationAdd": -1,
       "coefficientPercent": 130
-    }
+    },
+    "description": "[명상]의 채널링 시간이 1초 감소, 회복량은 매초 13%를 회복"
   },
   {
     "icon": "assets/images/skills/화염술사_폭발광.png",
@@ -14226,7 +14336,8 @@
         "skill_class_fire_drunken"
       ],
       "consecutiveUses": 2
-    }
+    },
+    "description": "[드렁큰 올리지] 사용 후 즉시 재사용 대기시간에 구애받지 않고 1회 더 사용 가능"
   },
   {
     "icon": "assets/images/skills/암살자_빠른 승부.png",
@@ -14305,7 +14416,8 @@
           "stackMode": "refresh"
         }
       }
-    ]
+    ],
+    "description": "상대에게 상처독을 부여한다."
   },
   {
     "icon": "assets/images/skills/암살자_은신.png",
@@ -14434,7 +14546,8 @@
           }
         }
       ]
-    }
+    },
+    "description": "[빠른승부]의 지속시간동안 공격속도가 30% 증가"
   },
   {
     "icon": "assets/images/skills/암살자_집행에 대한 공포.png",
@@ -14486,7 +14599,8 @@
           }
         }
       ]
-    }
+    },
+    "description": "[사형선고]의 대상의 이동속도 30%, 공격속도 20% 감소"
   },
   {
     "icon": "assets/images/skills/암살자_멀리보는 자.png",
@@ -14525,7 +14639,8 @@
           "targetPreviousDamage": true
         }
       ]
-    }
+    },
+    "description": "[기습]의 사정거리+3, [기습] 대상에게 2초간 기절"
   },
   {
     "icon": "assets/images/skills/암살자_찢어진독.png",
@@ -14566,7 +14681,8 @@
           }
         }
       ]
-    }
+    },
+    "description": "[상처독]이 지속시간동안 마력 20%를 감소"
   },
   {
     "icon": "assets/images/skills/암살자_빠른발걸음.png",
@@ -14594,7 +14710,8 @@
           "value": 20
         }
       ]
-    }
+    },
+    "description": "기본 이동속도가 20% 증가"
   },
   {
     "icon": "assets/images/skills/암살자_달의화신.png",
@@ -14617,7 +14734,8 @@
         "skill_class_assassin_rune_blade_ultimate"
       ],
       "effectDurationAdd": 2
-    }
+    },
+    "description": "[룬블레이드] 지속시간이 2초 증가"
   },
   {
     "icon": "assets/images/skills/정령술사_정령혼란.png",
@@ -14652,7 +14770,8 @@
           }
         ]
       }
-    ]
+    ],
+    "description": "정령 3개체를 희생하여 광역 회복"
   },
   {
     "icon": "assets/images/skills/정령술사_다다익선.png",
@@ -14672,7 +14791,8 @@
         "skill_class_spirit_birth"
       ],
       "summonLimitAdd": 2
-    }
+    },
+    "description": "정령의 최대 유지치가 2 증가"
   },
   {
     "icon": "assets/images/skills/정령술사_정령순환계.png",
@@ -14691,7 +14811,8 @@
         "skill_class_spirit_passive_destroy"
       ],
       "repeatIntervalAdd": -2
-    }
+    },
+    "description": "정령의 추가 생성시간-2"
   },
   {
     "icon": "assets/images/skills/정령술사_거룩한희생.png",
@@ -14710,7 +14831,8 @@
       "summonCostAdd": 1,
       "areaAdd": 1,
       "coefficientPercent": 133.33333333333334
-    }
+    },
+    "description": "[정령희생]의 정령 희생이 1증가 하지만, 범위+1, 계수-마력200%가 된다."
   },
   {
     "icon": "assets/images/skills/정령술사_정령의왕.png",
@@ -14733,7 +14855,8 @@
           "countChoiceSkillId": "skill_class_spirit_choice"
         }
       ]
-    }
+    },
+    "description": "소환되어 있는 정령 1개체당 마력이 3% 증가"
   },
   {
     "icon": "assets/images/skills/정령술사_불공정한 정화.png",
@@ -14769,7 +14892,8 @@
           }
         }
       ]
-    }
+    },
+    "description": "[정령정화]시 적군은 2초간 침묵 시킴"
   },
   {
     "icon": "assets/images/skills/정령술사_빠른 명령.png",
@@ -14791,7 +14915,8 @@
           "value": -0.8
         }
       ]
-    }
+    },
+    "description": "시전시간-0.8"
   },
   {
     "icon": "assets/images/skills/흑마법사_광속시전.png",
@@ -14807,7 +14932,8 @@
     "passiveTrigger": {
       "event": "battle_entry",
       "chance": 100
-    }
+    },
+    "description": "흑마법사의 생명력을 담보로 빠른 시전을 행한다."
   },
   {
     "icon": "assets/images/skills/흑마법사_암흑 번개.png",
@@ -14842,7 +14968,8 @@
           }
         ]
       }
-    ]
+    ],
+    "description": "여러 대상에게 연계되는 피해를 입힘."
   },
   {
     "icon": "assets/images/skills/흑마법사_암흑용.png",
@@ -14901,7 +15028,8 @@
           }
         }
       ]
-    }
+    },
+    "description": "암흑의 용을 불러 적을 지속시간동안 괴롭힙니다."
   },
   {
     "icon": "assets/images/skills/흑마법사_암흑지대.png",
@@ -14941,7 +15069,8 @@
           "stackMode": "refresh"
         }
       }
-    ]
+    ],
+    "description": "암흑의 지대를 펼쳐 저항력을 감소 시킨다."
   },
   {
     "icon": "assets/images/skills/흑마법사_암흑붕괴.png",
@@ -14986,7 +15115,8 @@
         ]
       }
     ],
-    "maxUses": 1
+    "maxUses": 1,
+    "description": "주변 적에게 강력한 암흑 피해를 입히고 입힌 피해만큼 hp 회복"
   },
   {
     "icon": "assets/images/skills/흑마법사_악마물기.png",
@@ -15003,7 +15133,8 @@
         "skill_class_warlock_bite"
       ],
       "healCoefficientAdd": 50
-    }
+    },
+    "description": "[암흑물기]의 회복량이 마력-50% 증가"
   },
   {
     "icon": "assets/images/skills/흑마법사_압도적인 자.png",
@@ -15020,7 +15151,8 @@
         "skill_class_warlock_dragon"
       ],
       "channelReceivedDamagePercent": 85
-    }
+    },
+    "description": "[암흑용] 시전 중 받는 피해 15% 감소"
   },
   {
     "icon": "assets/images/skills/흑마법사_번개술사.png",
@@ -15037,7 +15169,8 @@
         "skill_class_warlock_lightning"
       ],
       "cooldownAdd": -2
-    }
+    },
+    "description": "[암흑 번개]의 재사용-2 감소"
   },
   {
     "icon": "assets/images/skills/흑마법사_이로운 지대.png",
@@ -15077,7 +15210,8 @@
           }
         }
       ]
-    }
+    },
+    "description": "[암흑지대] 에 방어력-10 감소 효과 추가"
   },
   {
     "icon": "assets/images/skills/흑마법사_근검절약.png",
@@ -15094,7 +15228,8 @@
         "skill_class_warlock_instant_cast"
       ],
       "instantCastHpPerTenth": 8
-    }
+    },
+    "description": "[광속시전]의 hp 소모량-8로 감소"
   },
   {
     "icon": "assets/images/skills/흑마법사_타락한 천재.png",
@@ -15137,7 +15272,8 @@
           "value": -5
         }
       ]
-    }
+    },
+    "description": "hp-500, 방어력-5, 저항력-5 증가, 마력-5% 감소"
   },
   {
     "icon": "assets/images/skills/궁사_치명타.png",
@@ -15156,7 +15292,8 @@
     "passiveTrigger": {
       "event": "battle_entry",
       "chance": 100
-    }
+    },
+    "description": "일반공격 5회 시 2배의 공격력으로 일반 공격을 가한다."
   },
   {
     "icon": "assets/images/skills/궁사_방벽설치.png",
@@ -15191,7 +15328,8 @@
           "guardHits": 3
         }
       }
-    ]
+    ],
+    "description": "내 피해를 3회 막아주는 방벽 감싼다."
   },
   {
     "icon": "assets/images/skills/궁사_밀쳐내기.png",
@@ -15245,7 +15383,8 @@
         "requirePreviousDamage": true,
         "targetPreviousDamage": true
       }
-    ]
+    ],
+    "description": "근접한 적에게 피해를 입히고 밀어내고 느려지게 한다."
   },
   {
     "icon": "assets/images/skills/궁사_궁도.png",
@@ -15290,7 +15429,8 @@
         }
       }
     ],
-    "maxUses": 1
+    "maxUses": 1,
+    "description": "자신의 공속을 상승시키고 자신을 강화시킴"
   },
   {
     "icon": "assets/images/skills/궁사_치명적인 남자.png",
@@ -15307,7 +15447,8 @@
         "skill_class_archer_critical"
       ],
       "basicAttackEvery": 4
-    }
+    },
+    "description": "[치명타]의 발동 조건이 4회로 감소"
   },
   {
     "icon": "assets/images/skills/궁사_궁술.png",
@@ -15333,7 +15474,8 @@
           "requiredWeaponCategory": "bow"
         }
       ]
-    }
+    },
+    "description": "활을 무기로 사용시 공격력+50"
   },
   {
     "icon": "assets/images/skills/궁사_쿼드로플샷.png",
@@ -15362,7 +15504,8 @@
           "dispellable": true
         }
       ]
-    }
+    },
+    "description": "[멀티샷]의 대상1체 추가된다. 공격력+10%"
   },
   {
     "icon": "assets/images/skills/궁사_지구력.png",
@@ -15391,7 +15534,8 @@
           "dispellable": true
         }
       ]
-    }
+    },
+    "description": "[방벽]의 hp+300, 자신의hp+300"
   },
   {
     "icon": "assets/images/skills/궁사_날카로운 사격.png",
@@ -15408,7 +15552,8 @@
         "skill_class_archer_power_shot"
       ],
       "defenseIgnoreFlat": 15
-    }
+    },
+    "description": "[강한사격] 시 상대의 방어력을 15 무시 합니다."
   },
   {
     "icon": "assets/images/skills/궁사_집중력.png",
@@ -15426,7 +15571,8 @@
       ],
       "castTimeAdd": 1,
       "coefficientPercent": 130
-    }
+    },
+    "description": "[강한사격]이 시전시간이 +1초 늘어납니다. 공격력이 30% 증가"
   },
   {
     "icon": "assets/images/skills/성직자_신성폭발.png",
@@ -15474,7 +15620,8 @@
           }
         ]
       }
-    ]
+    ],
+    "description": "시전시간-1.5초, 범위 10m, 공격력 계수- 마력 20%, 아군에게는 치유를 적군에게는 피해를 입힘."
   },
   {
     "icon": "assets/images/skills/성직자_부활.png",
@@ -15497,7 +15644,8 @@
         "revivePosition": "death"
       }
     ],
-    "maxUses": 1
+    "maxUses": 1,
+    "description": "아군을 부활시킨다."
   },
   {
     "icon": "assets/images/skills/성직자_빠른축복.png",
@@ -15515,7 +15663,8 @@
       ],
       "castTimePercent": 0,
       "resourceCostAdd": 5
-    }
+    },
+    "description": "[축복] 시전시간-0 으로 고정, [축복]의 소모mp-5 증가"
   },
   {
     "icon": "assets/images/skills/성직자_강림.png",
@@ -15532,7 +15681,8 @@
         "skill_class_priest_revival_ultimate"
       ],
       "reviveInvulnerable": 6
-    }
+    },
+    "description": "[부활]을 받은 아군에게 6초간 무적 부여"
   },
   {
     "icon": "assets/images/skills/성직자_온화함.png",
@@ -15549,7 +15699,8 @@
         "skill_class_priest_resonance"
       ],
       "coefficientPercent": 200
-    }
+    },
+    "description": "[감응]의 체력 회복량이 10%로 증가"
   },
   {
     "icon": "assets/images/skills/성직자_신속강타.png",
@@ -15566,7 +15717,8 @@
         "skill_class_priest_smite"
       ],
       "castTimeAdd": -1
-    }
+    },
+    "description": "[신성강타]의 시전시간-2초로 감소"
   },
   {
     "icon": "assets/images/skills/성직자_내면의 보호막.png",
@@ -15583,7 +15735,8 @@
         "skill_class_priest_barrier"
       ],
       "barrierBreakRecreatePercent": 50
-    }
+    },
+    "description": "[신성보호막]이 파괴 되면(공격을 받아), 50% 효율의 보호막 재생성"
   },
   {
     "icon": "assets/images/skills/성직자_환원.png",
@@ -15600,7 +15753,8 @@
         "skill_class_priest_blessing"
       ],
       "effectRefundMpOnExpire": true
-    }
+    },
+    "description": "[축복]이 만료되면 소모된 mp 반환"
   },
   {
     "icon": "assets/images/skills/의무병_역전용사.png",
@@ -15659,7 +15813,8 @@
         "magic"
       ],
       "includePeriodic": true
-    }
+    },
+    "description": "각종 피해를 입었을 시 강력한 저항력을 가집니다."
   },
   {
     "icon": "assets/images/skills/의무병_각성제.png",
@@ -15683,7 +15838,8 @@
         "reviveStPercent": 100,
         "revivePosition": "death"
       }
-    ]
+    ],
+    "description": "전투불능인 아군을 6초간 움직이게 합니다."
   },
   {
     "icon": "assets/images/skills/의무병_응급후송.png",
@@ -15725,7 +15881,8 @@
         ]
       }
     ],
-    "maxUses": 1
+    "maxUses": 1,
+    "description": "아군의 체력이 10% 미만으로 떨어지면 즉시 아군을 최후방으로 보내고 체력을 회복시킨다."
   },
   {
     "icon": "assets/images/skills/의무병_전장의 발.png",
@@ -15752,7 +15909,8 @@
           "stackMode": "refresh"
         }
       ]
-    }
+    },
+    "description": "이동속도-20% 증가"
   },
   {
     "icon": "assets/images/skills/의무병_과다처방.png",
@@ -15769,7 +15927,8 @@
         "skill_class_medic_inargansin"
       ],
       "targetCooldownAdd": -3
-    }
+    },
+    "description": "[과다투약 금지]의 지속시간 3초 감소"
   },
   {
     "icon": "assets/images/skills/의무병_의무협약.png",
@@ -15786,7 +15945,8 @@
         "skill_class_medic_first_aid"
       ],
       "channelReceivedDamagePercent": 85
-    }
+    },
+    "description": "[응급처치] 시 받는 피해 15% 감소"
   },
   {
     "icon": "assets/images/skills/의무병_좀비.png",
@@ -15804,7 +15964,8 @@
       ],
       "temporaryReviveAttackRatePercent": 20,
       "temporaryReviveCastTimePercent": 80
-    }
+    },
+    "description": "[각성제] 지속시간 동안 공격속도-20% 증가, 시전시간-20% 감소"
   },
   {
     "icon": "assets/images/skills/의무병_역전용사의 역습.png",
@@ -15840,7 +16001,8 @@
           }
         }
       ]
-    }
+    },
+    "description": "[역전용사] 발동 시 공격력-20% 증가"
   },
   {
     "icon": "assets/images/skills/의무병_부가치유.png",
@@ -15882,7 +16044,8 @@
           }
         }
       ]
-    }
+    },
+    "description": "[집중치료] 시 회복이 발동 될때 마다 질병, 독, 출혈 중 1개를 제거"
   },
   {
     "icon": "assets/images/skills/성기사_징벌대상.png",
@@ -15901,7 +16064,8 @@
     "passiveTrigger": {
       "event": "hit",
       "chance": 100
-    }
+    },
+    "description": "신성한 이름으로 격퇴한다."
   },
   {
     "icon": "assets/images/skills/성기사_심판의검.png",
@@ -15952,7 +16116,8 @@
           "dispellable": true
         }
       }
-    ]
+    ],
+    "description": "신성한 검을 내려 타격한다."
   },
   {
     "icon": "assets/images/skills/성기사_성흔.png",
@@ -15988,7 +16153,8 @@
           "stackMode": "refresh"
         }
       }
-    ]
+    ],
+    "description": "나에게 성흔 내려 내가 입는 피해의 20%를 [징벌대상]에게 전이시킴"
   },
   {
     "icon": "assets/images/skills/성기사_마법수호자.png",
@@ -16044,7 +16210,8 @@
           "stackMode": "refresh"
         }
       }
-    ]
+    ],
+    "description": "방패를 올려 주문을 방어한다."
   },
   {
     "icon": "assets/images/skills/성기사_빛의 섬광.png",
@@ -16103,7 +16270,8 @@
           "uses": 1
         }
       }
-    ]
+    ],
+    "description": "주변에 빛을 방출하여 실명시키고 피해를 입힘"
   },
   {
     "icon": "assets/images/skills/성기사_신의 가호.png",
@@ -16160,7 +16328,8 @@
         }
       }
     ],
-    "maxUses": 1
+    "maxUses": 1,
+    "description": "신의 가호를 받아 아군의 받는 피해를 감소시킨다."
   },
   {
     "icon": "assets/images/skills/성기사_나홀로 외로이.png",
@@ -16177,7 +16346,8 @@
         "skill_class_paladin_stigmata"
       ],
       "markHealingLinkPercent": 20
-    }
+    },
+    "description": "[성흔]이 내가 받는 치유의 효과의 20%도 [징벌대상]에게 피해를 입힌다."
   },
   {
     "icon": "assets/images/skills/성기사_신앙심.png",
@@ -16216,7 +16386,8 @@
           "stackMode": "refresh"
         }
       ]
-    }
+    },
+    "description": "성기사의 방어력-5% 감소 시키고, 저항력-15% 증가"
   },
   {
     "icon": "assets/images/skills/성기사_성경구독.png",
@@ -16233,7 +16404,8 @@
         "skill_class_paladin_punishment"
       ],
       "basicAttackMpGain": 1
-    }
+    },
+    "description": "일반 공격 시 mp-1 회복"
   },
   {
     "icon": "assets/images/skills/성기사_희미한 빛.png",
@@ -16251,7 +16423,8 @@
       ],
       "areaAdd": 3,
       "coefficientPercent": 50
-    }
+    },
+    "description": "[빛의 섬광]의 범위-3 증가, 공격력-20%로 감소"
   },
   {
     "icon": "assets/images/skills/성기사_신성한 심판.png",
@@ -16268,7 +16441,8 @@
         "skill_class_paladin_punishment"
       ],
       "markMagicDamagePercent": 120
-    }
+    },
+    "description": "[징벌대상]에게 주는 마법 피해 20% 증가"
   },
   {
     "icon": "assets/images/skills/성기사_반사광.png",
@@ -16285,7 +16459,8 @@
         "skill_class_paladin_magic_guardian"
       ],
       "reflectBlockedMagic": true
-    }
+    },
+    "description": "[마법수호자]로 방어한 1회의 마법 공격을 반사한다.(그대로 돌려줌)"
   },
   {
     "icon": "assets/images/skills/해병_방패대포.png",
@@ -17180,5 +17355,1013 @@
       "interruptOnHit": true
     },
     "description": "장착 시 불의일격의 각 타격이 적중하면 대상의 진행 중인 시전을 즉시 차단한다. 별도 기절은 부여하지 않는다."
+  },
+  {
+    "icon": "assets/images/skills/마법사냥꾼_마법쇠약.png",
+    "id": "skill_class_magic_hunter_weakness",
+    "name": "마법사냥꾼 · 마법쇠약",
+    "className": "마법사냥꾼",
+    "slot": "active",
+    "castTime": 0.5,
+    "cooldown": 15,
+    "resourceCosts": [
+      {
+        "resource": "ST",
+        "value": 15
+      }
+    ],
+    "actions": [
+      {
+        "type": "add_buff",
+        "target": "enemy",
+        "rangeMode": "custom",
+        "rangeValue": 5,
+        "duration": 5,
+        "effect": {
+          "id": "magic_hunter_weakness",
+          "name": "마법쇠약",
+          "stat": "magic",
+          "mode": "percent",
+          "value": -50,
+          "maxStacks": 1,
+          "stackMode": "refresh",
+          "polarity": "harmful",
+          "dispellable": true
+        }
+      }
+    ],
+    "description": "5m 적의 마력을 5초간 50% 감소. ST 15, 시전 0.5초, 재사용 15초."
+  },
+  {
+    "icon": "assets/images/skills/마법사냥꾼_정신붕괴.png",
+    "id": "skill_class_magic_hunter_mental_breakdown",
+    "name": "마법사냥꾼 · 정신붕괴",
+    "className": "마법사냥꾼",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_magic_hunter_weakness"
+      ],
+      "additionalActions": [
+        {
+          "type": "add_buff",
+          "target": "enemy",
+          "rangeMode": "custom",
+          "rangeValue": 5,
+          "duration": 0,
+          "requiredTargetEffectId": "magic_hunter_weakness",
+          "requiredTargetEffectCaster": "self",
+          "effect": {
+            "id": "magic_hunter_mental_breakdown",
+            "name": "정신붕괴",
+            "stat": "castSpeed",
+            "mode": "cast_time_percent",
+            "value": 100,
+            "linkedEffectId": "magic_hunter_weakness",
+            "polarity": "harmful",
+            "dispellable": false,
+            "maxStacks": 1,
+            "stackMode": "refresh"
+          }
+        }
+      ]
+    },
+    "description": "자신의 마법쇠약이 유지되는 동안 대상의 시전시간을 두 배로 늘립니다. 선택한 경우에만 적용됩니다."
+  },
+  {
+    "icon": "assets/images/skills/마법사냥꾼_하찮은 마력.png",
+    "id": "skill_class_magic_hunter_trivial_magic",
+    "lockExecutionTarget": true,
+    "name": "마법사냥꾼 · 하찮은 마력",
+    "className": "마법사냥꾼",
+    "slot": "passive",
+    "cooldown": 0,
+    "castTime": 0,
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "drain_resource",
+        "target": "enemy",
+        "rangeMode": "mainWeapon",
+        "coefficients": [
+          {
+            "type": "fixed",
+            "field": "atk",
+            "calc": "percent",
+            "value": 5
+          }
+        ],
+        "drainResource": "MP"
+      },
+      {
+        "type": "add_buff",
+        "target": "enemy",
+        "rangeMode": "mainWeapon",
+        "coefficients": [
+          {
+            "type": "fixed",
+            "field": "atk",
+            "calc": "percent",
+            "value": 0
+          }
+        ],
+        "duration": 5,
+        "targetStatAboveSource": "magic",
+        "effect": {
+          "id": "magic_hunter_trivial_magic",
+          "name": "하찮은 마력",
+          "stat": "defense",
+          "mode": "flat",
+          "value": -10,
+          "polarity": "harmful",
+          "dispellable": true,
+          "maxStacks": 1,
+          "stackMode": "refresh"
+        }
+      }
+    ],
+    "passiveTrigger": {
+      "event": "hit",
+      "chance": 100,
+      "basicAttackOnly": true,
+      "allowMultiplePerTick": true
+    },
+    "description": "기본 공격 적중 시 대상 MP 5 감소. 대상 마력이 자신보다 높으면 5초 방어력 -10, 중첩 없이 갱신."
+  },
+  {
+    "icon": "assets/images/skills/마법사냥꾼_마력고갈.png",
+    "id": "skill_class_magic_hunter_depletion",
+    "lockExecutionTarget": true,
+    "name": "마법사냥꾼 · 마력고갈",
+    "className": "마법사냥꾼",
+    "slot": "active",
+    "cooldown": 5,
+    "castTime": 0,
+    "resourceCosts": [
+      {
+        "resource": "ST",
+        "mode": "fixed",
+        "value": 5
+      }
+    ],
+    "actions": [
+      {
+        "type": "drain_resource",
+        "target": "enemy",
+        "rangeMode": "mainWeapon",
+        "coefficients": [
+          {
+            "type": "fixed",
+            "field": "atk",
+            "calc": "percent",
+            "value": 10
+          }
+        ],
+        "drainResource": "MP"
+      },
+      {
+        "type": "deal_damage",
+        "target": "enemy",
+        "rangeMode": "mainWeapon",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "atk",
+            "calc": "percent",
+            "value": 130
+          }
+        ],
+        "damageType": "physical",
+        "exhaustionBonusPercent": 30
+      }
+    ],
+    "description": "대상 MP 10 감소 후 공격력 130% 물리 피해. 이번 감소로 MP가 양수에서 0이 된 경우에만 피해 30% 증가. 원래 MP 0이면 추가 증가 없음."
+  },
+  {
+    "icon": "assets/images/skills/마법사냥꾼_분쇄의 투척.png",
+    "id": "skill_class_magic_hunter_shattering_throw",
+    "lockExecutionTarget": true,
+    "name": "마법사냥꾼 · 분쇄의 투척",
+    "className": "마법사냥꾼",
+    "slot": "active",
+    "cooldown": 15,
+    "castTime": 0.5,
+    "resourceCosts": [
+      {
+        "resource": "ST",
+        "mode": "fixed",
+        "value": 10
+      }
+    ],
+    "actions": [
+      {
+        "type": "deal_damage",
+        "target": "enemy",
+        "rangeMode": "custom",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "atk",
+            "calc": "percent",
+            "value": 40
+          }
+        ],
+        "damageType": "physical",
+        "clearBarriers": true,
+        "rangeValue": 5
+      }
+    ],
+    "description": "공격력 40% 물리 피해 후 대상의 BP와 시간제 보호막 전체 제거."
+  },
+  {
+    "icon": "assets/images/skills/마법사냥꾼_3단 뛰기.png",
+    "id": "skill_class_magic_hunter_triple_hop",
+    "name": "마법사냥꾼 · 3단 뛰기",
+    "className": "마법사냥꾼",
+    "slot": "active",
+    "cooldown": 15,
+    "castTime": 0,
+    "resourceCosts": [
+      {
+        "resource": "ST",
+        "mode": "fixed",
+        "value": 1
+      }
+    ],
+    "actions": [
+      {
+        "type": "move",
+        "target": "enemy",
+        "rangeMode": "custom",
+        "coefficients": [
+          {
+            "type": "fixed",
+            "field": "atk",
+            "calc": "percent",
+            "value": 0
+          }
+        ],
+        "moveType": "Dash",
+        "moveMeters": 3,
+        "rangeValue": 9
+      }
+    ],
+    "combo": {
+      "stepCooldown": 0.5,
+      "stages": [
+        {
+          "name": "1단 뛰기",
+          "actions": [
+            {
+              "type": "move",
+              "target": "enemy",
+              "rangeMode": "custom",
+              "coefficients": [
+                {
+                  "type": "fixed",
+                  "field": "atk",
+                  "calc": "percent",
+                  "value": 0
+                }
+              ],
+              "moveType": "Dash",
+              "moveMeters": 3,
+              "rangeValue": 9
+            }
+          ]
+        },
+        {
+          "name": "2단 뛰기",
+          "actions": [
+            {
+              "type": "move",
+              "target": "enemy",
+              "rangeMode": "custom",
+              "coefficients": [
+                {
+                  "type": "fixed",
+                  "field": "atk",
+                  "calc": "percent",
+                  "value": 0
+                }
+              ],
+              "moveType": "Dash",
+              "moveMeters": 3,
+              "rangeValue": 9
+            }
+          ]
+        },
+        {
+          "name": "3단 뛰기",
+          "actions": [
+            {
+              "type": "move",
+              "target": "enemy",
+              "rangeMode": "custom",
+              "coefficients": [
+                {
+                  "type": "fixed",
+                  "field": "atk",
+                  "calc": "percent",
+                  "value": 0
+                }
+              ],
+              "moveType": "Dash",
+              "moveMeters": 3,
+              "rangeValue": 9
+            }
+          ]
+        }
+      ]
+    },
+    "description": "단계마다 ST 1을 소모하여 대상 방향으로 최대 3m씩 세 번 도약. 단계 사이 0.5초, 완주 후 재사용 15초."
+  },
+  {
+    "icon": "assets/images/skills/마법사냥꾼_마법거울.png",
+    "id": "skill_class_magic_hunter_magic_mirror",
+    "name": "마법사냥꾼 · 마법거울",
+    "className": "마법사냥꾼",
+    "slot": "ultimate",
+    "cooldown": 0,
+    "castTime": 0.5,
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "create_field",
+        "target": "enemy",
+        "rangeMode": "custom",
+        "coefficients": [
+          {
+            "type": "fixed",
+            "field": "atk",
+            "calc": "percent",
+            "value": 0
+          }
+        ],
+        "fieldEffect": "none",
+        "fieldRadius": 5,
+        "fieldShape": "circle",
+        "fieldCenter": "target",
+        "fieldInterval": 1,
+        "duration": 6,
+        "reflectMpSkills": true,
+        "rangeValue": 5
+      }
+    ],
+    "description": "5m 이내에 반경 5m 거울을 6초 설치. 범위 안 적이 시전을 완료하는 MP 소모 스킬을 자신에게 되돌림. 자기 대상·기본 공격·발동·재반사 제외. 전투 30초 이후 1회."
+  },
+  {
+    "icon": "assets/images/skills/마법사냥꾼_공작대.png",
+    "id": "skill_class_magic_hunter_dukes_guard",
+    "name": "마법사냥꾼 · 공작대",
+    "className": "마법사냥꾼",
+    "slot": "optional",
+    "cooldown": 0,
+    "castTime": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "statEffects": [
+        {
+          "id": "magic_hunter_dukes_guard",
+          "stat": "resistance",
+          "mode": "flat",
+          "value": 20,
+          "requiredMeleeTwoHand": true
+        }
+      ]
+    },
+    "description": "기본 사거리 1m 이하 양손 무기 장착 시 저항력 +20. 중복 장착해도 한 번 적용."
+  },
+  {
+    "icon": "assets/images/skills/마법사냥꾼_난반사.png",
+    "id": "skill_class_magic_hunter_diffuse_reflection",
+    "name": "마법사냥꾼 · 난반사",
+    "className": "마법사냥꾼",
+    "slot": "optional",
+    "cooldown": 0,
+    "castTime": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_magic_hunter_magic_mirror"
+      ],
+      "additionalActions": [
+        {
+          "type": "add_buff",
+          "target": "enemy",
+          "rangeMode": "custom",
+          "coefficients": [
+            {
+              "type": "fixed",
+              "field": "atk",
+              "calc": "percent",
+              "value": 0
+            }
+          ],
+          "duration": 6,
+          "area": 5,
+          "areaCenter": "target",
+          "effect": {
+            "id": "magic_hunter_diffuse",
+            "name": "난반사",
+            "stat": "magic",
+            "mode": "percent",
+            "value": 30,
+            "polarity": "beneficial",
+            "dispellable": true,
+            "maxStacks": 1,
+            "stackMode": "refresh"
+          },
+          "rangeValue": 5
+        }
+      ]
+    },
+    "description": "마법거울 설치 시 해당 범위 적의 마력을 6초간 30% 증가."
+  },
+  {
+    "icon": "assets/images/skills/마법사냥꾼_발걸음 분쇄.png",
+    "id": "skill_class_magic_hunter_crushing_step",
+    "name": "마법사냥꾼 · 발걸음 분쇄",
+    "className": "마법사냥꾼",
+    "slot": "optional",
+    "cooldown": 0,
+    "castTime": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_magic_hunter_shattering_throw"
+      ],
+      "additionalActions": [
+        {
+          "type": "add_state",
+          "target": "enemy",
+          "rangeMode": "custom",
+          "coefficients": [
+            {
+              "type": "fixed",
+              "field": "atk",
+              "calc": "percent",
+              "value": 0
+            }
+          ],
+          "duration": 3,
+          "effect": {
+            "id": "magic_hunter_root",
+            "name": "발걸음 분쇄",
+            "state": "root",
+            "polarity": "harmful",
+            "dispellable": true,
+            "maxStacks": 1,
+            "stackMode": "refresh"
+          },
+          "rangeValue": 5
+        }
+      ]
+    },
+    "description": "분쇄의 투척 대상에게 3초간 속박 추가."
+  },
+  {
+    "icon": "assets/images/skills/마법사냥꾼_자원의 고갈.png",
+    "id": "skill_class_magic_hunter_resource_exhaustion",
+    "name": "마법사냥꾼 · 자원의 고갈",
+    "className": "마법사냥꾼",
+    "slot": "optional",
+    "cooldown": 0,
+    "castTime": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_magic_hunter_trivial_magic",
+        "skill_class_magic_hunter_depletion"
+      ],
+      "resourceDrainPercent": 150
+    },
+    "description": "하찮은 마력의 MP 감소 5→7, 마력고갈의 MP 감소 10→15."
+  },
+  {
+    "icon": "assets/images/skills/마법사냥꾼_자원재사용.png",
+    "id": "skill_class_magic_hunter_resource_recycling",
+    "name": "마법사냥꾼 · 자원재사용",
+    "className": "마법사냥꾼",
+    "slot": "optional",
+    "cooldown": 0,
+    "castTime": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "repeatResourceExchange": {
+      "from": "MP",
+      "to": "ST",
+      "cost": 10,
+      "gain": 10
+    },
+    "description": "ST가 최대치 미만이면 매초 MP 10을 지불하여 ST 10 회복. MP가 부족하면 발동하지 않음."
+  },
+  {
+    "icon": "assets/images/skills/질병형_숟가락 들 힘도 없는 쇠약함.png",
+    "id": "skill_class_disease_severe_weakness",
+    "name": "질병형 · 숟가락 들 힘도 없는 쇠약함",
+    "className": "질병형",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "description": "자신의 쇠약의 질병이 유지되는 동안 대상 공격력 30% 감소. 선택 시에만 적용.",
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_disease_weakening_disease"
+      ],
+      "additionalActions": [
+        {
+          "type": "add_buff",
+          "target": "enemy",
+          "rangeMode": "mainWeapon",
+          "duration": 0,
+          "requiredTargetEffectId": "disease_weakening",
+          "requiredTargetEffectCaster": "self",
+          "effect": {
+            "id": "disease_severe_weakness",
+            "name": "숟가락 들 힘도 없는 쇠약함",
+            "stat": "atk",
+            "mode": "percent",
+            "value": -30,
+            "polarity": "harmful",
+            "dispellable": false,
+            "linkedEffectId": "disease_weakening",
+            "maxStacks": 1,
+            "stackMode": "refresh"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "icon": "assets/images/skills/질병형_티나지 않는 질병.png",
+    "id": "skill_class_disease_invisible_disease",
+    "name": "질병형 · 티나지 않는 질병",
+    "className": "질병형",
+    "slot": "passive",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "add_state",
+        "target": "enemy",
+        "rangeMode": "mainWeapon",
+        "duration": 10,
+        "effect": {
+          "id": "disease_invisible",
+          "name": "티나지 않는 질병",
+          "state": "periodic",
+          "category": "magic",
+          "polarity": "harmful",
+          "tags": [
+            "disease"
+          ],
+          "dispellable": true,
+          "maxStacks": 1,
+          "stackMode": "refresh",
+          "periodic": {
+            "type": "damage",
+            "interval": 1,
+            "value": 5,
+            "coefficient": {
+              "type": "calculated",
+              "field": "magic",
+              "calc": "percent",
+              "value": 5
+            },
+            "damageType": "magic",
+            "resource": "HP",
+            "healDamagePercent": 100
+          }
+        }
+      }
+    ],
+    "passiveTrigger": {
+      "event": "hit",
+      "chance": 100,
+      "basicAttackOnly": true,
+      "allowMultiplePerTick": true
+    },
+    "description": "기본 공격 시 10초간 매초 마력 5% 마법 피해. 실제 피해 전부를 자신의 HP로 흡수. 중첩 없이 갱신."
+  },
+  {
+    "icon": "assets/images/skills/질병형_불치병.png",
+    "id": "skill_class_disease_incurable_ultimate",
+    "name": "질병형 · 불치병",
+    "className": "질병형",
+    "slot": "ultimate",
+    "castTime": 1,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "add_state",
+        "target": "enemy",
+        "rangeMode": "mainWeapon",
+        "duration": 0,
+        "effect": {
+          "id": "disease_incurable",
+          "name": "불치병",
+          "state": "periodic",
+          "category": "magic",
+          "polarity": "harmful",
+          "tags": [
+            "disease"
+          ],
+          "dispellable": true,
+          "maxStacks": 1,
+          "stackMode": "refresh",
+          "periodic": {
+            "type": "damage",
+            "interval": 1,
+            "value": 10,
+            "coefficient": {
+              "type": "calculated",
+              "field": "magic",
+              "calc": "percent",
+              "value": 10
+            },
+            "damageType": "magic",
+            "resource": "HP",
+            "healDamagePercent": 0,
+            "extraDamageTypes": [
+              "physical"
+            ]
+          }
+        },
+        "area": 6,
+        "areaCenter": "self"
+      }
+    ],
+    "description": "비용 없음/시전 1초. 자신 주변 6m 적에게 무기한 불치병. 매초 마력 10% 마법+10% 물리 피해. 해제 가능. 전투 30초 이후 1회."
+  },
+  {
+    "icon": "assets/images/skills/질병형_정신파 바이러스.png",
+    "id": "skill_class_disease_psychic_virus",
+    "name": "질병형 · 정신파 바이러스",
+    "className": "질병형",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_disease_virus"
+      ],
+      "periodicMpTransfer": 1
+    },
+    "description": "바이러스가 매초 대상 MP를 최대 1 흡수."
+  },
+  {
+    "icon": "assets/images/skills/질병형_회복의 질병.png",
+    "id": "skill_class_disease_healing_disease",
+    "name": "질병형 · 회복의 질병",
+    "className": "질병형",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_disease_pain_amplification"
+      ],
+      "damageHealPercent": 10
+    },
+    "description": "고통증폭의 실제 피해 10%만큼 자신의 HP 회복."
+  },
+  {
+    "icon": "assets/images/skills/질병형_재발병.png",
+    "id": "skill_class_disease_relapse",
+    "name": "질병형 · 재발병",
+    "className": "질병형",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_disease_incurable_ultimate"
+      ],
+      "refreshOwnedDebuffs": true
+    },
+    "description": "불치병 대상에게 자신이 부여한 질병 디버프의 남은 지속시간을 초기 지속시간으로 복원."
+  },
+  {
+    "icon": "assets/images/skills/질병형_조금 티나는 질병.png",
+    "id": "skill_class_disease_visible_disease",
+    "name": "질병형 · 조금 티나는 질병",
+    "className": "질병형",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_disease_invisible_disease"
+      ],
+      "periodicDamagePercent": 200
+    },
+    "description": "티나지 않는 질병의 피해 두 배."
+  },
+  {
+    "icon": "assets/images/skills/질병형_이미 벌어진 일.png",
+    "id": "skill_class_disease_already_happened",
+    "name": "질병형 · 이미 벌어진 일",
+    "className": "질병형",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_disease_open_wound"
+      ],
+      "castTimeAdd": -2
+    },
+    "description": "벌어지는 상처의 시전시간을 1초로 감소(3초→1초)."
+  },
+  {
+    "icon": "assets/images/skills/각질형_늪지대.png",
+    "id": "skill_class_keratin_swamp",
+    "name": "각질형 · 늪지대",
+    "className": "각질형",
+    "slot": "active",
+    "castTime": 2,
+    "cooldown": 30,
+    "resourceCosts": [
+      {
+        "resource": "MP",
+        "mode": "fixed",
+        "value": 20
+      }
+    ],
+    "description": "5m 이내에 반경 4m 늪을 10초 생성. 내부 적 이동속도 -40%·공격속도 -10%·시전시간 +10%.",
+    "actions": [
+      {
+        "type": "create_field",
+        "target": "enemy",
+        "rangeMode": "custom",
+        "rangeValue": 5,
+        "fieldCenter": "target",
+        "fieldShape": "circle",
+        "fieldRadius": 4,
+        "fieldInterval": 1,
+        "fieldEffect": "none",
+        "duration": 10,
+        "coefficients": [],
+        "fieldAuras": [
+          {
+            "target": "enemy",
+            "stat": "speed",
+            "mode": "percent",
+            "value": -40
+          },
+          {
+            "target": "enemy",
+            "stat": "attackSpeed",
+            "mode": "attack_rate_percent",
+            "value": -10
+          },
+          {
+            "target": "enemy",
+            "stat": "castSpeed",
+            "mode": "cast_time_percent",
+            "value": 10
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "icon": "assets/images/skills/각질형_돌연변이 스파이크.png",
+    "id": "skill_class_keratin_spikes",
+    "name": "각질형 · 돌연변이 스파이크",
+    "className": "각질형",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "description": "돌연변이 껍질의 물리 반사 피해를 스택의 두 배로 증가.",
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_keratin_shell"
+      ],
+      "coefficientPercent": 200
+    }
+  },
+  {
+    "icon": "assets/images/skills/각질형_역겨운 가스.png",
+    "id": "skill_class_keratin_gas",
+    "name": "각질형 · 역겨운 가스",
+    "className": "각질형",
+    "slot": "active",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "create_field",
+        "target": "enemy",
+        "rangeMode": "custom",
+        "rangeValue": 2,
+        "fieldCenter": "self",
+        "fieldFollowSource": true,
+        "fieldShape": "circle",
+        "fieldRadius": 2,
+        "fieldInterval": 1,
+        "fieldEffect": "deal_damage",
+        "duration": 0,
+        "fieldTickHpCost": 10,
+        "damageType": "magic",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "atk",
+            "calc": "percent",
+            "value": 30
+          }
+        ]
+      }
+    ],
+    "maintainedField": true,
+    "description": "주변 2m 적에게 매초 공격력 30% 마법 피해. 활성 중 적 유무와 관계없이 매초 HP 10 소모. 중복 활성 불가. HP 10 미만이면 종료, 정확히 10이면 소모로 사망할 수 있음."
+  },
+  {
+    "icon": "assets/images/skills/각질형_변태.png",
+    "id": "skill_class_keratin_metamorphosis_ultimate",
+    "name": "각질형 · 변태",
+    "className": "각질형",
+    "slot": "ultimate",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [
+      {
+        "type": "heal",
+        "target": "self",
+        "healResource": "HP",
+        "rangeMode": "mainWeapon",
+        "coefficients": [
+          {
+            "type": "calculated",
+            "field": "maxHp",
+            "calc": "percent",
+            "value": 6
+          }
+        ]
+      }
+    ],
+    "channel": {
+      "duration": 10,
+      "interval": 1,
+      "interruptOnDamage": false,
+      "lockTarget": true,
+      "receivedDamagePercent": 100,
+      "startActions": [
+        {
+          "type": "add_buff",
+          "target": "self",
+          "rangeMode": "mainWeapon",
+          "duration": 0,
+          "effect": {
+            "id": "keratin_metamorphosis",
+            "name": "변태",
+            "stat": "defense",
+            "mode": "flat",
+            "value": 0,
+            "blockExternalTargeting": true,
+            "dispellable": false,
+            "maxStacks": 1,
+            "stackMode": "refresh"
+          }
+        }
+      ]
+    },
+    "description": "즉시/비용 없음/10초 채널. 매초 최대 HP 6% 회복. 채널 중 외부 피해·회복의 대상 지정 차단. 자신의 회복은 허용. 전투 30초 이후 1회."
+  },
+  {
+    "icon": "assets/images/skills/각질형_역겁의 껍질.png",
+    "id": "skill_class_keratin_excess_shell",
+    "name": "각질형 · 역겁의 껍질",
+    "className": "각질형",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_keratin_shell"
+      ],
+      "maxStacksAdd": 50
+    },
+    "description": "[돌연변이 껍질]의 스택 최대치-50 증가"
+  },
+  {
+    "icon": "assets/images/skills/각질형_스스로 터지는 보호막.png",
+    "id": "skill_class_keratin_self_burst",
+    "name": "각질형 · 스스로 터지는 보호막",
+    "className": "각질형",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_keratin_repulsive_shield"
+      ],
+      "barrierExpireReaction": true
+    },
+    "description": "[역겨운 보호막]이 조건부 공격이 아닌 지속시간이 만료되어 해제되도 디버프와 피해를 입힌다."
+  },
+  {
+    "icon": "assets/images/skills/각질형_늪에 빠지다.png",
+    "id": "skill_class_keratin_fall_into_swamp",
+    "name": "각질형 · 늪에 빠지다",
+    "className": "각질형",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_keratin_swamp"
+      ],
+      "fieldEntryActions": [
+        {
+          "type": "add_state",
+          "target": "enemy",
+          "rangeMode": "custom",
+          "rangeValue": 100000,
+          "duration": 2,
+          "effect": {
+            "id": "keratin_swamp_root",
+            "name": "늪에 빠지다",
+            "state": "root",
+            "polarity": "harmful",
+            "dispellable": true,
+            "maxStacks": 1,
+            "stackMode": "refresh"
+          }
+        }
+      ]
+    },
+    "description": "[늪지대]에 들어올 시 2초간 속박"
+  },
+  {
+    "icon": "assets/images/skills/각질형_지독한 가스냄새.png",
+    "id": "skill_class_keratin_noxious_gas",
+    "name": "각질형 · 지독한 가스냄새",
+    "className": "각질형",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_keratin_gas"
+      ],
+      "coefficientPercent": 66.66666666666667,
+      "fieldRadiusAdd": 2
+    },
+    "description": "[역겨운 가스]의 피해량-20%로 감소, 범위-4로 증가"
+  },
+  {
+    "icon": "assets/images/skills/각질형_단련되어있는 껍질.png",
+    "id": "skill_class_keratin_trained_shell",
+    "name": "각질형 · 단련되어있는 껍질",
+    "className": "각질형",
+    "slot": "optional",
+    "castTime": 0,
+    "cooldown": 0,
+    "resourceCosts": [],
+    "actions": [],
+    "selectionModifier": {
+      "targetSkillIds": [
+        "skill_class_keratin_shell"
+      ],
+      "initialStacks": 30
+    },
+    "description": "[돌연변이 껍질]이 30스택 주어진 상태로 전투 돌입"
   }
 ]

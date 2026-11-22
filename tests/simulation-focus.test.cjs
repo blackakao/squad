@@ -8,6 +8,23 @@ const inputSnapshot=loadData(),targetMarkdown=fs.readFileSync(path.join(ROOT,'do
 const characterId=Math.max(0,inputSnapshot.characters.findIndex(c=>c.name==='기사'));
 const settings={count:12,teamSize:1,seed:321,maxSeconds:1,minSamples:2,workers:1,
   focus:{characterId,candidateLimit:2,repeats:2,varySkills:true,varyEquipment:true}};
+test('independent sizes spend the entire budget and unchecked settings stay current',()=>{
+  const engine=createEngine(inputSnapshot,settings),current=engine.focusCatalog(characterId).character;
+  for(const teamSize of [1,3,10]) {
+    const options={...settings,count:7,focus:{...settings.focus,teamSize,varyStats:false,varySkills:false,varyEquipment:false}};
+    const plan=createFocusPlan(engine,options);
+    assert.equal(plan.variants.length,1);
+    assert.deepEqual(plan.stages,[{teamSize,planned:7}]);
+    assert.deepEqual(plan.variants[0].attributes,current.attributes);
+    assert.deepEqual(plan.variants[0].skillIds,current.skillIds);
+    assert.deepEqual(plan.variants[0].equipment,current.equipment);
+    assert.equal(plan.statAllocation,'현재 스탯 고정');
+    const task=createFocusSampler(plan,options,engine.roster.length)();
+    assert.equal(task.teamA.length,teamSize);
+  }
+  const small=createEngine({...inputSnapshot,characters:inputSnapshot.characters.slice(0,2)},settings);
+  assert.throws(()=>createFocusPlan(small,{...settings,focus:{...settings.focus,characterId:0,teamSize:10}}),/20/);
+});
 test('focus candidates use 50/50/50, valid skills/equipment, deterministic unique sampling without mutating input',()=>{
   const before=JSON.stringify(inputSnapshot),engine=createEngine(inputSnapshot,settings);
   const plan=createFocusPlan(engine,settings),again=createFocusPlan(engine,settings);

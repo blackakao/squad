@@ -103,8 +103,8 @@ function createEngine(data = loadData(), {width = 400, height = 300} = {}) {
         stats:CHARACTER_STAT_DEFS,statMax:CHARACTER_STAT_MAX,statTotal:CHARACTER_STAT_TOTAL,
         fixedSkillIds:[...new Set([...character.skillIds.filter(key=>getSkillById(key)?.slot!=='optional'),...skills.filter(s=>s.slot!=='optional').map(s=>s.id)])],
         optionalSkills:skills.filter(s=>s.slot==='optional').map(s=>({id:s.id,name:s.name,exclusiveSkillIds:s.exclusiveSkillIds || []})),
-        skills:skills.map(s=>({id:s.id,name:s.name})),
-        slots:getCharacterEquipmentSlots(character).map(slot=>({...slot,items:itemsJson.filter(item=>canEquipItemToSlot(item,slot.key,character)).map(item=>({id:item.id,name:item.name}))}))};
+        skills:skills.map(s=>({id:s.id,name:s.name,slot:s.slot,icon:s.icon || ''})),
+        slots:getCharacterEquipmentSlots(character).map(slot=>({...slot,items:itemsJson.filter(item=>canEquipItemToSlot(item,slot.key,character)).map(item=>({id:item.id,name:item.name,icon:item.icon || '',image:item.image || '',weaponCategory:item.weaponCategory,armorCategory:item.armorCategory,slot:item.slot}))}))};
     };
     globalThis.focusNormalize = (id,variant) => {
       const base=characterJson[id],equipment=createEquipmentSlots({},base);

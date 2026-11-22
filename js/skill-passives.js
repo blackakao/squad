@@ -111,6 +111,16 @@ function readPassiveTriggerForm() {
 function updateRepeatingPassives(unit) {
   if (!unit.alive || unit.isWaiting || unit.isReserve || unit.isEntityPreview) return;
   unit.passiveRepeatTimers ??= {};
+  for (const option of limitOptionalSkillIds(unit.skillIds).map(getSkillById).filter(skill=>skill?.slot === "optional" && skill.repeatResourceExchange && !isUnitSkillDisabled(unit,skill))) {
+    const rule=option.repeatResourceExchange;
+    const key=`exchange:${option.id}`;
+    unit.passiveRepeatTimers[key] ??= BASE_ATTACK_COOLDOWN;
+    if (--unit.passiveRepeatTimers[key]>0) continue;
+    unit.passiveRepeatTimers[key]=BASE_ATTACK_COOLDOWN;
+    if (getUnitResourceCurrent(unit,rule.to)>=getUnitResourceMax(unit,rule.to) || getUnitResourceCurrent(unit,rule.from)<rule.cost) continue;
+    applyActionResourceDrain(unit,unit,{drainResource:rule.from,coefficients:[{type:"fixed",value:rule.cost}]},option);
+    applyActionHeal(unit,unit,{healResource:rule.to,coefficients:[{type:"fixed",value:rule.gain}]},option);
+  }
   for (const base of resolveSelectedSkillIds(unit.skillIds,unit.skillSelections).map(getSkillById)) {
     const passive=base?.slot === "passive" ? getRuntimeSelectionSkill(unit,base) : base;
     const seconds=Number(passive?.passiveTrigger?.repeatInterval) || 0;
@@ -177,6 +187,17 @@ function handlePassiveBattleEvent(event, context) {
   const owner = event.type === "damaged" ? context.target : context.source;
   if (!owner?.alive || owner.isEntityPreview) return;
   if (triggerType === "kill" && (!context.target || context.target.side === owner.side || event.reason !== "HP 소진")) return;
+  if (event.type === "battle_entry") {
+    owner.initialPassiveStacksApplied ??= new Set();
+    for (const base of resolveSelectedSkillIds(owner.skillIds,owner.skillSelections).map(getSkillById).filter(skill=>skill?.slot === "passive" && !isUnitSkillDisabled(owner,skill))) {
+      if (owner.initialPassiveStacksApplied.has(base.id)) continue;
+      const amount=getSelectedSkillModifiers(owner,base).reduce((sum,m)=>sum+(m.initialStacks || 0),0);
+      if (!(amount>0)) continue;
+      const runtime=getRuntimeSelectionSkill(owner,base);
+      for (const action of runtime.actions.filter(action=>action.target === "self" && action.effect?.stackMode === "stack")) applyTimedEffectAction(owner,owner,{...action,effect:{...action.effect,stackAmount:amount}},runtime);
+      owner.initialPassiveStacksApplied.add(base.id);
+    }
+  }
   const preferred = event.type === "battle_entry" ? owner : event.type === "damaged" ? context.source : context.target;
   const skills = resolveSelectedSkillIds(owner.skillIds, owner.skillSelections).map(getSkillById).filter(skill => skill?.slot === "passive" && isSkillExecutable(skill) && !isUnitSkillDisabled(owner,skill)).map(skill => getRuntimeSelectionSkill(owner,getRuntimeItemSkill(owner,skill)));
   for (const configuredSkill of skills) {

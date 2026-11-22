@@ -1,5 +1,7 @@
 # 데이터 구조
 
+- 2026-11-22 집중 분석 `settings.focus`에 `varyStats`(생략 시 true), `teamSize`(선택적 1/3/10)를 추가했습니다. teamSize 지정 시 단일 규모로 전체 예산을 실행하며 생략한 과거 설정은 자동 단계로 처리합니다. 후보 카탈로그의 skills에 slot/icon, items에 icon/image/weaponCategory/armorCategory/slot을 보존합니다. 과거 필드 누락은 보고서에서 텍스트로 대체합니다.
+
 ### 캐릭터 집중 분석 저장 계약 (2026-11-21)
 
 - 기존 Job 설정에 선택적 `focus: {characterId, candidateLimit, repeats, varySkills, varyEquipment}`를 추가합니다. characterId는 실행 당시 캐릭터 배열 인덱스입니다. 집중 분석은 teamSize=1로 시작하지만 각 전투의 실제 규모는 별도로 기록합니다.
@@ -558,3 +560,15 @@ Entity의 선택 불리언 `mainSummon`은 전투 상태창의 주인 아래 표
 - 실행 규칙 `killChain: {window, initialTargetHpBelow}`는 명시된 궁의 연쇄 사용권이다. 대상 액션의 엄격한 초기 HP 조건과 함께 저장한다. 선택 `killChainAssist`는 궁 실제 피해 표식 후 제한 시간 안의 다른 사망 원인도 인정한다.
 - 런타임 `killChainWindows`는 스킬 ID→사용권 만료 틱, `killChainMarks`는 대상→스킬별 피해 시점/선택 인정/설정이다. 완료 때 기존 창을 소모하고 사망 이벤트에서만 새 창을 연다. `_killChainAuthorized`는 창 안에서 시작한 시전의 완료 허가이며 저장하지 않는다. 사망/전투 초기화 때 두 맵을 비운다. `ultimate_rearm` 이벤트와 전투 툴팁으로 사용권을 표시한다.
 - 효과 모드 `received_damage_percent`는 받는 피해 배율이다. 기존 `linkedEffectId`를 같은 시전자의 속박 상태와 연결해 해제/만료를 따른다. 액션 `settledDamage`는 이전 실제 피해 등으로 이미 정산한 수치의 공방 배율 중복 적용을 막는다. 면역·보호막 처리는 유지하며 메타데이터는 관리 편집 왕복에서 보존한다.
+
+### 마법사냥꾼 실행 규칙 (2026-11-22)
+
+스킬 `lockExecutionTarget`은 후속 액션의 선호 대상 교체를 차단한다. 액션 `targetStatAboveSource`는 같은 능력치의 대상>시전자 조건, `exhaustionBonusPercent`는 이번 실행에서 자원을 소진한 대상의 피해 증폭, `clearBarriers`는 피해 후 전체 BP/시간제 보호막 제거, `moveMeters`는 최대 고정 이동 거리, `reflectMpSkills`는 거울 필드다. 선택 보정 `resourceDrainPercent`는 자원 감소 계수 배율(소수점 버림), `statEffects.requiredMeleeTwoHand`는 근접 양손 무기 분류 조건이다. 선택 스킬 `repeatResourceExchange:{from,to,cost,gain}`는 매초 목적 자원 부족/출발 자원 충분 조건으로 교환한다. 직렬화 실행 계약은 [스킬 엔진](SKILL_ENGINE.md#마법사냥꾼-재개편--2026-11-22)을 참조한다.
+
+### 질병형 실행 필드 (2026-11-22)
+
+주기 효과 `growthPercent`는 첫 틱 이후 틱별 비율 성장, `healDamagePercent`는 실제 피해 대비 HP 흡수, `extraDamageTypes`는 같은 양의 추가 피해 유형, `resourceDrains[].transfer`는 실제 감소한 자원의 시전자 이전이다. 이동 효과 `removeOnMovementTrigger`는 거리 조건 발동 시 원 효과를 제거한다. 액션 `ownedDebuffDamagePercent`는 자신의 같은 직업 질병 태그 효과 종류당 피해 증가, `damageHealPercent`는 실제 피해 대비 HP 치유, `refreshOwnedDebuffs`는 자신의 같은 직업 질병 효과의 `initialDurationTicks`로 남은 시간을 복원한다. 초기 지속시간은 전투 런타임 상태이며 무한 효과는 null이다. 선택 보정의 동명 필드 및 `periodicDamagePercent`·`periodicMpTransfer`로 조건부 적용한다. [스킬 계약](SKILL_ENGINE.md#질병형-재개편--2026-11-22).
+
+### 각질형 실행 필드 (2026-11-22)
+
+`maintainedField`는 동일 소유자/스킬 필드 중복을 막는다. 필드 액션 `fieldTickHpCost`는 매 틱 고정 HP 비용, `fieldEntryActions`는 범위 진입 때만 실행할 액션이다. 선택 `maxStacksAdd`·`initialStacks`는 최대/첫 진입 스택, `barrierExpireReaction`은 보호막 파열을 자연 만료에도 실행한다. 효과 `expireSkillId`는 자연 만료 후 실행할 내부 스킬, `blockExternalTargeting`은 외부 대상 지정·피해·회복 차단, `stackAmount`는 스택 부여량이다. 초기 적용 Set과 필드 내부 대상 Set은 저장하지 않는 전투 상태다. [스킬 계약](SKILL_ENGINE.md#각질형-재개편--2026-11-22).
